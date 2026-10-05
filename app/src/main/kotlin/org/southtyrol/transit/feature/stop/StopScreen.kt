@@ -32,6 +32,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.rounded.ExpandMore
+import androidx.compose.material.icons.rounded.ExpandLess
+import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -107,6 +112,12 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
     val scope = rememberCoroutineScope()
     var refreshing by remember { mutableStateOf(false) }
     var showAllLines by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    var pickTime by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    if (pickTime) org.southtyrol.transit.feature.common.DateTimePickerDialogs(
+        initial = state.start,
+        onPicked = { pickTime = false; viewModel.setTime(it) },
+        onDismiss = { pickTime = false },
+    )
     val dark = LocalDarkTheme.current
     val language = AppLanguage.current()
 
@@ -155,7 +166,28 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
                 }
             }
             item { SectionHeader(stringResource(if (state.arrivals) R.string.stop_arrivals else R.string.stop_departures)) }
+            item {
+                // When: live ("Now") or a chosen date and time, plus a way back to live.
+                Row(Modifier.padding(horizontal = 16.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    androidx.compose.material3.FilterChip(
+                        selected = !state.live,
+                        onClick = { pickTime = true },
+                        leadingIcon = { androidx.compose.material3.Icon(androidx.compose.material.icons.Icons.Rounded.Schedule, contentDescription = null, modifier = Modifier.size(18.dp)) },
+                        label = { Text(state.start?.let { Format.dateTime(it) } ?: stringResource(R.string.stop_time_now)) },
+                    )
+                    if (!state.live) androidx.compose.material3.TextButton(onClick = viewModel::now) { Text(stringResource(R.string.stop_back_to_now)) }
+                }
+            }
             val list = board?.departures.orEmpty()
+            if (list.isNotEmpty()) item {
+                androidx.compose.material3.TextButton(
+                    onClick = viewModel::earlier, enabled = !state.loadingMore,
+                    modifier = Modifier.padding(horizontal = 8.dp),
+                ) {
+                    androidx.compose.material3.Icon(androidx.compose.material.icons.Icons.Rounded.ExpandLess, contentDescription = null)
+                    Text(stringResource(if (state.arrivals) R.string.stop_earlier_arrivals else R.string.stop_earlier_departures), modifier = Modifier.padding(start = 8.dp))
+                }
+            }
             when {
                 state.loading && list.isEmpty() -> item { TransitLoading() }
                 state.error != null && list.isEmpty() -> item { ErrorState(state.error!!, onRetry = { scope.launch { viewModel.refresh(force = true) } }) }
@@ -166,6 +198,16 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
                         onClick = if (d.tripLinked) ({ navigator.trip(d.tripId, d.serviceDate.toString()) }) else null,
                         modifier = Modifier.padding(horizontal = 16.dp).animateItem(),
                     )
+                }
+            }
+            if (state.loadingMore) item { TransitLoading() }
+            if (list.isNotEmpty() || !state.live) item {
+                androidx.compose.material3.TextButton(
+                    onClick = viewModel::later, enabled = !state.loadingMore,
+                    modifier = Modifier.padding(horizontal = 8.dp),
+                ) {
+                    androidx.compose.material3.Icon(androidx.compose.material.icons.Icons.Rounded.ExpandMore, contentDescription = null)
+                    Text(stringResource(if (state.arrivals) R.string.stop_later_arrivals else R.string.stop_later_departures), modifier = Modifier.padding(start = 8.dp))
                 }
             }
             val points = state.platforms.map { it.point }.filter { it.isValid }

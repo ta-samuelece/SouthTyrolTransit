@@ -108,9 +108,7 @@
     <string name="fare_value_card">With a value card (e.g. Südtirol Pass)</string>
     <string name="fare_reported_by_planner">Prices as reported by the public journey planner for an adult. They are not calculated by this app; the official tariff applies.</string>
     <string name="fare_unavailable">Fare information is unavailable from the public API for this connection.</string>
-    <string name="fare_tickets_link">Tickets and tariff information</string>
     <string name="tickets_title">Tickets</string>
-    <string name="tickets_teaser">Buying tickets is handled by the official service.</string>
     <string name="tickets_headline">Tickets are sold by the official service</string>
     <string name="tickets_explanation">This independent app cannot sell or validate tickets: there is no public interface for ticket purchase or validation. Please use the official südtirolmobil / altoadigemobilità channels, ticket machines or sales points.</string>
     <string name="tickets_open_official">Open official ticket information</string>
@@ -322,4 +320,10 @@
     <string name="update_failed_package">The downloaded file is not an update for this app.</string>
     <string name="update_failed_not_newer">The downloaded build is not newer than the installed one.</string>
     <string name="update_failed_signature">This update is signed with a different key than the installed app, so Android would refuse it. Install it manually from the release page (this needs uninstalling the current version first).</string>
+    <string name="stop_time_now">Now</string>
+    <string name="stop_back_to_now">Back to now</string>
+    <string name="stop_earlier_departures">Earlier departures</string>
+    <string name="stop_later_departures">Later departures</string>
+    <string name="stop_earlier_arrivals">Earlier arrivals</string>
+    <string name="stop_later_arrivals">Later arrivals</string>
 </resources>

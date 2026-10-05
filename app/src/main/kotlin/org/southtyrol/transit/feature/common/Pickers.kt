@@ -39,6 +39,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.material.icons.rounded.MyLocation
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -241,7 +242,37 @@ class MapPickerViewModel @Inject constructor(
     saved: SavedRepository,
     private val language: LanguageProvider,
     schedule: TransitScheduleDataSource,
+    private val location: org.southtyrol.transit.location.LocationProvider,
 ) : ViewModel() {
+    private val _user = MutableStateFlow<Point?>(null)
+    val user: StateFlow<Point?> = _user.asStateFlow()
+    private val _camera = MutableStateFlow<CameraRequest>(CameraRequest.Center(Geo.Bolzano, 13.8))
+    val camera: StateFlow<CameraRequest> = _camera.asStateFlow()
+    private val _locationProblem = MutableStateFlow<org.southtyrol.transit.location.LocationResult?>(null)
+    val locationProblem: StateFlow<org.southtyrol.transit.location.LocationResult?> = _locationProblem.asStateFlow()
+
+    fun hasLocationPermission() = location.hasPermission()
+
+    /** Centres on the device position; [quiet] skips the error message (used when opening the picker). */
+    fun locate(quiet: Boolean = false) = viewModelScope.launch {
+        when (val r = location.current()) {
+            is org.southtyrol.transit.location.LocationResult.Found -> {
+                _user.value = r.point
+                _camera.value = CameraRequest.Center(r.point, 15.5, key = _camera.value.key + 1)
+            }
+            else -> if (!quiet) _locationProblem.value = r
+        }
+    }
+
+    fun locationDenied() { _locationProblem.value = org.southtyrol.transit.location.LocationResult.PermissionDenied }
+    fun clearLocationProblem() { _locationProblem.value = null }
+
+    /** Starts where the user is when location is already allowed, else at the first saved stop or Bolzano. */
+    fun start(fallback: Point?) {
+        if (fallback != null && _camera.value.key == 0) _camera.value = CameraRequest.Center(fallback, 13.8, key = 1)
+        if (location.hasPermission()) locate(quiet = true)
+    }
+
     private val _stops = MutableStateFlow<List<Stop>>(emptyList())
     val stops: StateFlow<List<Stop>> = _stops.asStateFlow()
     val savedStops: StateFlow<List<Stop>> = SavedStopsFlow(saved, schedule, language).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -274,15 +305,27 @@ fun MapPickerDialog(
     val stops by viewModel.stops.collectAsStateWithLifecycle()
     val saved by viewModel.savedStops.collectAsStateWithLifecycle()
     val viewport by viewModel.center.collectAsStateWithLifecycle()
+    val user by viewModel.user.collectAsStateWithLifecycle()
+    val camera by viewModel.camera.collectAsStateWithLifecycle()
+    val problem by viewModel.locationProblem.collectAsStateWithLifecycle()
     val dark = LocalDarkTheme.current
     val savedKeys = saved.map { it.id }.toSet()
-    val content = remember(stops, saved) {
+    val content = remember(stops, saved, user) {
         val loaded = stops.map { MapMarker(it.id, it.point, MarkerKind.STOP, highlighted = it.id in savedKeys) }
         val extra = saved.filter { s -> stops.none { it.id == s.id } }.map { MapMarker(it.id, it.point, MarkerKind.STOP, highlighted = true) }
-        MapContent(stops = loaded + extra, clusterStops = false)
+        MapContent(stops = loaded + extra, clusterStops = false, pois = listOfNotNull(user?.let { MapMarker("me", it, MarkerKind.USER) }))
     }
     val byId = remember(stops, saved) { (stops + saved).associateBy { it.id } }
-    val camera = remember { CameraRequest.Center(saved.firstOrNull()?.point ?: Geo.Bolzano, 13.8) }
+    LaunchedEffect(Unit) { viewModel.start(saved.firstOrNull()?.point) }
+    val requestLocation = rememberLocationPermission { granted -> if (granted) viewModel.locate() else viewModel.locationDenied() }
+    val snackbar = remember { androidx.compose.material3.SnackbarHostState() }
+    val deniedText = stringResource(R.string.location_denied)
+    val unavailableText = stringResource(R.string.location_unavailable)
+    LaunchedEffect(problem) {
+        val p = problem ?: return@LaunchedEffect
+        snackbar.showSnackbar(if (p is org.southtyrol.transit.location.LocationResult.PermissionDenied) deniedText else unavailableText)
+        viewModel.clearLocationProblem()
+    }
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
         Box(Modifier.fillMaxSize()) {
             TransitMap(
@@ -308,6 +351,11 @@ fun MapPickerDialog(
                     FilledTonalIconButton(onClick = onDismiss) { Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.action_cancel)) }
                 }
             }
+            androidx.compose.material3.FloatingActionButton(
+                onClick = { if (viewModel.hasLocationPermission()) viewModel.locate() else requestLocation() },
+                modifier = Modifier.align(Alignment.BottomEnd).navigationBarsPadding().padding(end = 16.dp, bottom = if (allowPoint) 96.dp else 24.dp),
+            ) { Icon(Icons.Rounded.MyLocation, contentDescription = stringResource(R.string.map_center_me)) }
+            androidx.compose.material3.SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(bottom = 96.dp))
             if (allowPoint) {
                 Button(
                     onClick = { viewport?.center?.let(onPoint) },
@@ -320,5 +368,35 @@ fun MapPickerDialog(
                 }
             }
         }
+    }
+}
+
+/** Date then time picker (in South Tyrol time); [onPicked] receives the chosen moment. */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+fun DateTimePickerDialogs(initial: java.time.Instant?, onPicked: (java.time.Instant) -> Unit, onDismiss: () -> Unit) {
+    val start = (initial ?: java.time.Instant.now()).atZone(org.southtyrol.transit.model.TransitZone)
+    var date by rememberSaveable { mutableStateOf<Long?>(null) }
+    if (date == null) {
+        val initialMillis = start.toLocalDate().atStartOfDay(java.time.ZoneOffset.UTC).toInstant().toEpochMilli()
+        val dateState = androidx.compose.material3.rememberDatePickerState(initialSelectedDateMillis = initialMillis)
+        androidx.compose.material3.DatePickerDialog(
+            onDismissRequest = onDismiss,
+            confirmButton = { androidx.compose.material3.TextButton(onClick = { date = dateState.selectedDateMillis ?: initialMillis }) { Text(stringResource(R.string.action_next)) } },
+            dismissButton = { androidx.compose.material3.TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+        ) { androidx.compose.material3.DatePicker(dateState) }
+    } else {
+        val timeState = androidx.compose.material3.rememberTimePickerState(start.hour, start.minute)
+        androidx.compose.material3.TimePickerDialog(
+            onDismissRequest = onDismiss,
+            title = { Text(stringResource(R.string.planner_pick_time)) },
+            confirmButton = {
+                androidx.compose.material3.TextButton(onClick = {
+                    val day = java.time.Instant.ofEpochMilli(date!!).atZone(java.time.ZoneOffset.UTC).toLocalDate()
+                    onPicked(day.atTime(timeState.hour, timeState.minute).atZone(org.southtyrol.transit.model.TransitZone).toInstant())
+                }) { Text(stringResource(R.string.action_done)) }
+            },
+            dismissButton = { androidx.compose.material3.TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+        ) { androidx.compose.material3.TimePicker(timeState) }
     }
 }

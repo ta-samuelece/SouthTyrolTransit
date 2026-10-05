@@ -102,9 +102,7 @@
     <string name="fare_value_card">Mit Wertkarte (z. B. Südtirol Pass)</string>
     <string name="fare_reported_by_planner">Preise für Erwachsene, wie von der öffentlichen Fahrplanauskunft gemeldet. Sie werden nicht von dieser App berechnet; es gilt der offizielle Tarif.</string>
     <string name="fare_unavailable">Für diese Verbindung liefert die öffentliche Schnittstelle keine Preisinformation.</string>
-    <string name="fare_tickets_link">Tickets und Tarifinformationen</string>
     <string name="tickets_title">Tickets</string>
-    <string name="tickets_teaser">Der Ticketkauf erfolgt über den offiziellen Dienst.</string>
     <string name="tickets_headline">Tickets gibt es beim offiziellen Dienst</string>
     <string name="tickets_explanation">Diese unabhängige App kann keine Tickets verkaufen oder entwerten: Dafür gibt es keine öffentliche Schnittstelle. Bitte nutze die offiziellen Kanäle von südtirolmobil, Fahrkartenautomaten oder Verkaufsstellen.</string>
     <string name="tickets_open_official">Offizielle Ticketinfos öffnen</string>
@@ -308,4 +306,10 @@
     <string name="update_failed_package">Die heruntergeladene Datei ist kein Update für diese App.</string>
     <string name="update_failed_not_newer">Der heruntergeladene Build ist nicht neuer als der installierte.</string>
     <string name="update_failed_signature">Dieses Update ist mit einem anderen Schlüssel signiert als die installierte App, daher würde Android es ablehnen. Installiere es manuell über die Release-Seite (dazu muss die aktuelle Version zuerst deinstalliert werden).</string>
+    <string name="stop_time_now">Jetzt</string>
+    <string name="stop_back_to_now">Zurück zu jetzt</string>
+    <string name="stop_earlier_departures">Frühere Abfahrten</string>
+    <string name="stop_later_departures">Spätere Abfahrten</string>
+    <string name="stop_earlier_arrivals">Frühere Ankünfte</string>
+    <string name="stop_later_arrivals">Spätere Ankünfte</string>
 </resources>

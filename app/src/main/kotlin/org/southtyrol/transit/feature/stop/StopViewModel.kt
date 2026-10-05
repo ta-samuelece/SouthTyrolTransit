@@ -50,7 +50,18 @@ data class StopState(
     val loadedAt: Instant? = null,
     val error: DataError? = null,
     val distanceMeters: Double? = null,
-)
+    /** Start of the shown window; null = live ("now", moving with time). */
+    val start: Instant? = null,
+    /** End of the shown window; null = [DEFAULT_WINDOW] after the start. */
+    val end: Instant? = null,
+    /** Extending the window while the current board stays visible. */
+    val loadingMore: Boolean = false,
+) {
+    val live: Boolean get() = start == null && end == null
+}
+
+private val DEFAULT_WINDOW: Duration = Duration.ofHours(4)
+private val STEP: Duration = Duration.ofHours(1)
 
 @HiltViewModel(assistedFactory = StopViewModel.Factory::class)
 class StopViewModel @AssistedInject constructor(
@@ -83,7 +94,7 @@ class StopViewModel @AssistedInject constructor(
 
     /** Scheduled board merged with the latest realtime snapshot (recomputed on every RT refresh). */
     val board: StateFlow<Board?> = combine(_state, realtime.snapshot, alertState) { s, snapshot, a ->
-        if (s.loadedAt == null) null else departures.merge(s.scheduled, s.source, snapshot, a.alerts, s.arrivals)
+        if (s.loadedAt == null) null else departures.merge(s.scheduled, s.source, snapshot, a.alerts, s.arrivals, keepFrom = s.start)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     init {
@@ -104,11 +115,13 @@ class StopViewModel @AssistedInject constructor(
         val s = _state.value
         val now = Instant.now()
         if (force || s.loadedAt == null || Duration.between(s.loadedAt, now) > Duration.ofMinutes(1)) {
+            val from = s.start ?: now
+            val until = s.end ?: from.plus(DEFAULT_WINDOW)
             try {
-                val (list, source) = departures.load(stationKey, s.arrivals, now, language.current())
-                _state.update { it.copy(scheduled = list, source = source, loadedAt = now, loading = false, error = null) }
+                val (list, source) = departures.load(stationKey, s.arrivals, from, language.current(), Duration.between(from, until).coerceAtLeast(STEP))
+                _state.update { it.copy(scheduled = list, source = source, loadedAt = now, loading = false, loadingMore = false, error = null) }
             } catch (e: DataException) {
-                _state.update { it.copy(loading = false, error = e.error) }
+                _state.update { it.copy(loading = false, loadingMore = false, error = e.error) }
             }
         }
         if (_state.value.source == BoardSource.SCHEDULE) departures.pollRealtime()
@@ -117,6 +130,29 @@ class StopViewModel @AssistedInject constructor(
     fun setArrivals(value: Boolean) {
         if (value == _state.value.arrivals) return
         _state.update { it.copy(arrivals = value, loading = true, loadedAt = null, scheduled = emptyList()) }
+        viewModelScope.launch { refresh(force = true) }
+    }
+
+    /** Shows departures from an hour before the current window start. */
+    fun earlier() = reload { s ->
+        val from = s.start ?: Instant.now()
+        s.copy(start = from.minus(STEP), end = s.end ?: from.plus(DEFAULT_WINDOW))
+    }
+
+    /** Extends the window by an hour (keeps what is shown). */
+    fun later() = reload { s ->
+        // A live board stays live (keeps moving with time); only its end moves out.
+        s.copy(end = (s.end ?: (s.start ?: Instant.now()).plus(DEFAULT_WINDOW)).plus(STEP))
+    }
+
+    /** Starts the board at a chosen date and time. */
+    fun setTime(time: Instant) = reload(clear = true) { it.copy(start = time, end = null) }
+
+    /** Back to the live board. */
+    fun now() = reload(clear = true) { it.copy(start = null, end = null) }
+
+    private fun reload(clear: Boolean = false, change: (StopState) -> StopState) {
+        _state.update { change(it).let { n -> if (clear) n.copy(loading = true, loadedAt = null, scheduled = emptyList()) else n.copy(loadingMore = true) } }
         viewModelScope.launch { refresh(force = true) }
     }
 

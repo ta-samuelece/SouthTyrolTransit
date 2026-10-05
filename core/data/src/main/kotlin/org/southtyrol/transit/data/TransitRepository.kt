@@ -233,14 +233,18 @@ class DepartureRepository(
     /** Scheduled departures for a station from GTFS, or the EFA board when no schedule is cached. */
     suspend fun load(stationKey: String, arrivals: Boolean, from: Instant, language: String, window: Duration = Duration.ofHours(4)): Pair<List<Departure>, BoardSource> {
         return if (schedule.isAvailable()) {
-            schedule.scheduledDepartures(listOf(stationKey), from.minusSeconds(15 * 60), from.plus(window), arrivals, language, 120) to BoardSource.SCHEDULE
+            schedule.scheduledDepartures(listOf(stationKey), from.minusSeconds(15 * 60), from.plus(window), arrivals, language, (window.toHours() * 30).toInt().coerceIn(120, 400)) to BoardSource.SCHEDULE
         } else {
-            network.departures(stationKey, from, arrivals, language, 40) to BoardSource.NETWORK
+            // The online board is limited by count, not time: ask for more when a longer window is shown.
+            network.departures(stationKey, from, arrivals, language, (window.toHours() * 10).toInt().coerceIn(40, 150)) to BoardSource.NETWORK
         }
     }
 
-    /** Applies realtime and alert flags; drops departures that have clearly left. */
-    fun merge(list: List<Departure>, source: BoardSource, snapshot: RealtimeSnapshot, alerts: List<ServiceAlert>, arrivals: Boolean, now: Instant = clock()): Board {
+    /**
+     * Applies realtime and alert flags; drops departures that have clearly left, or, when the board
+     * starts at a chosen time ([keepFrom]), those before that time.
+     */
+    fun merge(list: List<Departure>, source: BoardSource, snapshot: RealtimeSnapshot, alerts: List<ServiceAlert>, arrivals: Boolean, now: Instant = clock(), keepFrom: Instant? = null): Board {
         val feed = FreshnessPolicy.feed(snapshot.updatesFetchedAt, now)
         val merged = list.map { d ->
             val withRt = if (source == BoardSource.SCHEDULE && feed == Freshness.LIVE) RealtimeMerge.departure(d, snapshot.update(d.tripId, d.serviceDate), now, arrivals) else d
@@ -248,7 +252,7 @@ class DepartureRepository(
             withRt.copy(hasAlert = active.any { AlertMatcher.affectsDeparture(it, withRt) })
         }.filter { d ->
             val keep = if (d.state == ServiceState.CANCELLED) d.scheduled else d.best
-            !keep.isBefore(now.minusSeconds(60))
+            !keep.isBefore(keepFrom ?: now.minusSeconds(60))
         }.sortedBy { it.best }
         val realtimeState = if (source == BoardSource.NETWORK) (if (merged.any { it.freshness == Freshness.LIVE }) Freshness.LIVE else Freshness.SCHEDULED) else feed
         return Board(merged, source, realtimeState, if (source == BoardSource.NETWORK) now else snapshot.updatesFetchedAt)

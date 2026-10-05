@@ -104,9 +104,7 @@
     <string name="fare_value_card">Con carta valore (es. Alto Adige Pass)</string>
     <string name="fare_reported_by_planner">Prezzi per adulti come indicati dal servizio orari pubblico. Non sono calcolati da questa app; vale la tariffa ufficiale.</string>
     <string name="fare_unavailable">Per questo collegamento l\'interfaccia pubblica non fornisce informazioni sulla tariffa.</string>
-    <string name="fare_tickets_link">Biglietti e informazioni tariffarie</string>
     <string name="tickets_title">Biglietti</string>
-    <string name="tickets_teaser">L\'acquisto dei biglietti avviene tramite il servizio ufficiale.</string>
     <string name="tickets_headline">I biglietti si acquistano dal servizio ufficiale</string>
     <string name="tickets_explanation">Questa app indipendente non può vendere né convalidare biglietti: non esiste un\'interfaccia pubblica per farlo. Usa i canali ufficiali di altoadigemobilità, le biglietterie automatiche o i punti vendita.</string>
     <string name="tickets_open_official">Apri le informazioni ufficiali sui biglietti</string>
@@ -312,4 +310,10 @@
     <string name="update_failed_package">Il file scaricato non è un aggiornamento di questa app.</string>
     <string name="update_failed_not_newer">La build scaricata non è più recente di quella installata.</string>
     <string name="update_failed_signature">Questo aggiornamento è firmato con una chiave diversa da quella dell\'app installata, quindi Android lo rifiuterebbe. Installalo manualmente dalla pagina della release (prima va disinstallata la versione attuale).</string>
+    <string name="stop_time_now">Adesso</string>
+    <string name="stop_back_to_now">Torna ad adesso</string>
+    <string name="stop_earlier_departures">Partenze precedenti</string>
+    <string name="stop_later_departures">Partenze successive</string>
+    <string name="stop_earlier_arrivals">Arrivi precedenti</string>
+    <string name="stop_later_arrivals">Arrivi successivi</string>
 </resources>

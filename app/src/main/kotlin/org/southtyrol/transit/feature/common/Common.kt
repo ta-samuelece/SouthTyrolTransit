@@ -123,7 +123,7 @@ fun DepartureRow(
     val time = Format.time(departure.best)
     val platform = departure.platform.takeIf { it.isNotBlank() }?.let { stringResource(org.southtyrol.transit.design.R.string.ds_platform, it) }
     val modeName = Format.mode(departure.mode)
-    val countdown = Format.countdown(departure.best, now)
+    val countdown = if (Format.minutesUntil(departure.best, now) < -1) Format.time(departure.best) else Format.countdown(departure.best, now)
     val alertText = if (departure.hasAlert) stringResource(org.southtyrol.transit.design.R.string.ds_has_alert) else null
     val description = listOfNotNull("$modeName ${departure.line}", departure.destination, countdown, time, delay, platform, alertText).joinToString(", ")
     SegmentedListItem(

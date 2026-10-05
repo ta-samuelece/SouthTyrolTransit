@@ -27,7 +27,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.DirectionsWalk
-import androidx.compose.material.icons.rounded.ConfirmationNumber
 import androidx.compose.material.icons.rounded.ExpandLess
 import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.SyncAlt
@@ -158,7 +157,7 @@ fun JourneyDetailContent(journey: Journey, navigator: Navigator, modifier: Modif
             if (previous != null && previous.mode.isTransit && leg.mode.isTransit) TransferRow(Duration.between(previous.bestArrival, leg.bestDeparture))
             if (leg.mode == TransportMode.WALK) WalkLeg(leg) else TransitLeg(leg, now, onStop = { gid -> navigator.stop(gid) })
         }
-        item { FareSection(journey, onTickets = navigator::tickets) }
+        item { FareSection(journey) }
     }
 }
 
@@ -268,7 +267,7 @@ private fun StopLine(scheduled: Instant, predicted: Instant?, name: String, plat
 
 /** Fares exactly as returned by the planner; otherwise an explicit "unavailable" with guidance. */
 @Composable
-private fun FareSection(journey: Journey, onTickets: () -> Unit) {
+private fun FareSection(journey: Journey) {
     SectionHeader(stringResource(R.string.fare_title))
     OutlinedCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -279,11 +278,6 @@ private fun FareSection(journey: Journey, onTickets: () -> Unit) {
                 Text(stringResource(R.string.fare_reported_by_planner), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             } else {
                 Text(stringResource(R.string.fare_unavailable), style = MaterialTheme.typography.bodyMedium)
-            }
-            TextButton(onClick = onTickets) {
-                Icon(Icons.Rounded.ConfirmationNumber, contentDescription = null)
-                Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.fare_tickets_link))
             }
         }
     }

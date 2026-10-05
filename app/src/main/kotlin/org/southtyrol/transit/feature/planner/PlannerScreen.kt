@@ -30,7 +30,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccessibleForward
 import androidx.compose.material.icons.rounded.Bookmark
 import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.ConfirmationNumber
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.LocationOn
@@ -58,7 +57,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedListItem
@@ -213,18 +211,6 @@ fun PlannerScreen(navigator: Navigator, viewModel: PlannerViewModel = hiltViewMo
                 itemsIndexed(recentJourneys, key = { _, it -> "recent:" + it.id }) { index, item ->
                     val route = item.route ?: return@itemsIndexed
                     RouteItem(item.label, Icons.Rounded.History, index, recentJourneys.size) { viewModel.useRoute(route.first, route.second) }
-                }
-            }
-            item {
-                OutlinedCard(onClick = navigator::tickets, modifier = Modifier.fillMaxWidth()) {
-                    Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Rounded.ConfirmationNumber, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                        Spacer(Modifier.size(12.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(stringResource(R.string.tickets_title), style = MaterialTheme.typography.titleSmall)
-                            Text(stringResource(R.string.tickets_teaser), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    }
                 }
             }
         }

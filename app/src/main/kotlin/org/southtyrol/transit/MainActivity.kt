@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -53,6 +54,14 @@ class MainActivity : AppCompatActivity() {
                 ThemeMode.SYSTEM -> isSystemInDarkTheme()
                 ThemeMode.LIGHT -> false
                 ThemeMode.DARK -> true
+            }
+            // System bar icons follow the app's theme, not the system's: with the phone in dark mode and the
+            // app set to Light, "auto" would keep white icons on a light background.
+            DisposableEffect(dark) {
+                val transparent = android.graphics.Color.TRANSPARENT
+                val style = if (dark) SystemBarStyle.dark(transparent) else SystemBarStyle.light(transparent, transparent)
+                enableEdgeToEdge(statusBarStyle = style, navigationBarStyle = style)
+                onDispose {}
             }
             TransitTheme(darkTheme = dark, dynamicColor = settings.dynamicColor) {
                 CompositionLocalProvider(LocalMapStyle provides defaultStyle, LocalDarkTheme provides dark) {

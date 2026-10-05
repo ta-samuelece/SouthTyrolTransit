@@ -170,8 +170,10 @@ fun Countdown(
     val target = predicted ?: scheduled
     val cancelled = state == ServiceState.CANCELLED || state == ServiceState.SKIPPED
     val live = freshness == Freshness.LIVE && predicted != null
+    // Departures that have clearly left (shown when browsing earlier times) get their clock time, not "Now".
+    val past = Format.minutesUntil(target, now) < -1
     Column(modifier, horizontalAlignment = Alignment.End) {
-        val text = if (cancelled) Format.time(scheduled) else Format.countdown(target, now)
+        val text = if (cancelled) Format.time(scheduled) else if (past) Format.time(target) else Format.countdown(target, now)
         AnimatedContent(text, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "countdown") { value ->
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 if (live && !cancelled) Icon(Icons.Rounded.Podcasts, contentDescription = stringResource(R.string.ds_live), tint = status.live, modifier = Modifier.size(16.dp))
@@ -180,6 +182,7 @@ fun Countdown(
                     style = TimeStyles.large,
                     color = when {
                         cancelled -> status.cancelled
+                        past -> MaterialTheme.colorScheme.onSurfaceVariant
                         live -> status.live
                         else -> MaterialTheme.colorScheme.onSurface
                     },
@@ -188,7 +191,7 @@ fun Countdown(
                 )
             }
         }
-        if (!cancelled && Format.minutesUntil(target, now) < 60) {
+        if (!cancelled && !past && Format.minutesUntil(target, now) < 60) {
             Text(Format.time(target), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }

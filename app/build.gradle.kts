@@ -10,7 +10,9 @@ plugins {
 
 /** Optional overrides from local.properties or environment; nothing secret is required by default. */
 val local = Properties().apply { rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) } }
-fun setting(key: String, env: String): String = (local.getProperty(key) ?: System.getenv(env) ?: "").replace("\\", "\\\\").replace("\"", "\\\"")
+fun raw(key: String, env: String): String = local.getProperty(key) ?: System.getenv(env) ?: ""
+/** Escaped for use inside a BuildConfig string literal. */
+fun setting(key: String, env: String): String = raw(key, env).replace("\\", "\\\\").replace("\"", "\\\"")
 
 android {
     namespace = "org.southtyrol.transit"
@@ -20,11 +22,13 @@ android {
         applicationId = "org.southtyrol.transit"
         minSdk = 26
         targetSdk = 37
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.1.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "MAP_STYLE_LIGHT", "\"${setting("map.styleUrl", "TRANSIT_MAP_STYLE_URL")}\"")
         buildConfigField("String", "MAP_STYLE_DARK", "\"${setting("map.styleUrlDark", "TRANSIT_MAP_STYLE_URL_DARK")}\"")
+        // GitHub "owner/repo" whose latest release is offered as an in-app update ("none" disables it).
+        buildConfigField("String", "UPDATE_REPO", "\"${setting("update.repo", "TRANSIT_UPDATE_REPO").ifBlank { "ta-samuelece/SouthTyrolTransit" }}\"")
     }
 
     buildFeatures {
@@ -37,8 +41,21 @@ android {
         targetCompatibility = JavaVersion.VERSION_21
     }
 
+    // Optional release signing from local.properties or environment (never committed). In-app updates
+    // only install when every release is signed with the same key, so keep that keystore safe.
+    val releaseStore = raw("release.storeFile", "TRANSIT_RELEASE_STORE_FILE")
+    signingConfigs {
+        if (releaseStore.isNotBlank()) create("release") {
+            storeFile = rootProject.file(releaseStore)
+            storePassword = raw("release.storePassword", "TRANSIT_RELEASE_STORE_PASSWORD")
+            keyAlias = raw("release.keyAlias", "TRANSIT_RELEASE_KEY_ALIAS")
+            keyPassword = raw("release.keyPassword", "TRANSIT_RELEASE_KEY_PASSWORD")
+        }
+    }
+
     buildTypes {
         release {
+            signingConfigs.findByName("release")?.let { signingConfig = it }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")

@@ -39,6 +39,10 @@ data class UserSettings(
     val startTab: StartTab = StartTab.PLAN,
     val showStops: Boolean = true,
     val locateButton: LocateButtonPosition = LocateButtonPosition.BOTTOM_END,
+    /** Ask GitHub for a newer release when the app starts (nothing installs without confirmation). */
+    val autoUpdateCheck: Boolean = true,
+    /** A release version the user chose to skip; not offered again automatically. */
+    val skippedUpdate: String = "",
 )
 
 /** The app language currently in effect (per-app locale or system), as a BCP-47 tag. */
@@ -64,6 +68,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val startTab = stringPreferencesKey("startTab")
         val stops = booleanPreferencesKey("showStops")
         val locate = stringPreferencesKey("locateButton")
+        val autoUpdate = booleanPreferencesKey("autoUpdateCheck")
+        val skipped = stringPreferencesKey("skippedUpdate")
     }
 
     val settings: Flow<UserSettings> = store.data
@@ -82,6 +88,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
                 startTab = p[Keys.startTab]?.let { runCatching { StartTab.valueOf(it) }.getOrNull() } ?: StartTab.PLAN,
                 showStops = p[Keys.stops] ?: true,
                 locateButton = p[Keys.locate]?.let { runCatching { LocateButtonPosition.valueOf(it) }.getOrNull() } ?: LocateButtonPosition.BOTTOM_END,
+                autoUpdateCheck = p[Keys.autoUpdate] ?: true,
+                skippedUpdate = p[Keys.skipped] ?: "",
             )
         }
 
@@ -99,4 +107,6 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
     suspend fun setStartTab(value: StartTab) { store.edit { it[Keys.startTab] = value.name } }
     suspend fun setShowStops(value: Boolean) { store.edit { it[Keys.stops] = value } }
     suspend fun setLocateButton(value: LocateButtonPosition) { store.edit { it[Keys.locate] = value.name } }
+    suspend fun setAutoUpdateCheck(value: Boolean) { store.edit { it[Keys.autoUpdate] = value } }
+    suspend fun setSkippedUpdate(value: String) { store.edit { it[Keys.skipped] = value } }
 }

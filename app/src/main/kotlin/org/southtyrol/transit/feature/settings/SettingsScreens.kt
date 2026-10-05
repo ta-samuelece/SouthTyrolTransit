@@ -248,6 +248,12 @@ fun SettingsScreen(navigator: Navigator, viewModel: SettingsViewModel = hiltView
         }
 
         item {
+            SettingsGroup(stringResource(R.string.settings_updates)) {
+                org.southtyrol.transit.update.UpdateSettings(switchRow = { label, hint, checked, onChange -> SwitchRow(label, hint, checked, onChange) })
+            }
+        }
+
+        item {
             SettingsGroup(stringResource(R.string.settings_more)) {
                 LinkRow(stringResource(R.string.tickets_title), Icons.Rounded.ConfirmationNumber, navigator::tickets)
                 LinkRow(stringResource(R.string.about_title), Icons.Rounded.Info, navigator::about)

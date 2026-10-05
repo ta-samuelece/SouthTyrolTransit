@@ -237,6 +237,45 @@ Toolchain: AGP 9.4.1, Kotlin 2.4.20, Gradle 9.8.0, compileSdk 37.1, targetSdk 37
 - Replace the EFA departure board with SIRI-ET if published officially.
 - Line colour mapping (operator-provided) once available.
 
+## In-app updates and publishing a release
+
+The app updates itself from **GitHub Releases** of
+[ta-samuelece/SouthTyrolTransit](https://github.com/ta-samuelece/SouthTyrolTransit):
+
+- On start (switchable in Settings → App updates) and on "Check for updates", it asks
+  `api.github.com/repos/<repo>/releases/latest`. Drafts and pre-releases are ignored.
+- If the release tag (e.g. `v0.2.0`) is newer than the installed `versionName`, it offers the update with the release notes:
+  **Update**, **Later** or **Skip this version**.
+- The APK asset (a name containing `release` is preferred; `debug` builds are never preferred) is downloaded with progress.
+  Before installing, the app checks that the APK is **this app**, has a **higher `versionCode`**, and is signed with the
+  **same certificate** as the installed app.
+- It then opens Android's package installer. The first time, Android asks to allow "install unknown apps" for this app,
+  and every install needs the user's confirmation. Nothing installs silently.
+- The repository is set by `update.repo` in `local.properties` (or `TRANSIT_UPDATE_REPO`). Set it to `none` to build
+  without updates (e.g. for an app-store build).
+
+### Publishing a release
+
+1. Bump **both** `versionCode` (+1) and `versionName` in `app/build.gradle.kts`.
+2. Build a signed release with the **same key every time**. Android refuses updates signed with another key, so losing the
+   keystore means users must uninstall and reinstall. Create a key once and keep it (and its passwords) safe and out of git:
+   ```bash
+   keytool -genkeypair -v -keystore release.jks -alias southtyroltransit -keyalg RSA -keysize 4096 -validity 36500
+   ```
+   ```properties
+   # local.properties
+   release.storeFile=/absolute/path/to/release.jks
+   release.storePassword=...
+   release.keyAlias=southtyroltransit
+   release.keyPassword=...
+   ```
+   (or the environment variables `TRANSIT_RELEASE_STORE_FILE`, `TRANSIT_RELEASE_STORE_PASSWORD`, `TRANSIT_RELEASE_KEY_ALIAS`,
+   `TRANSIT_RELEASE_KEY_PASSWORD`). Then `./gradlew assembleRelease` produces a signed `app-release.apk`.
+3. On GitHub, create a release with tag `vX.Y.Z` (matching `versionName`), write the notes, and attach the APK, e.g.
+   `SouthTyrolTransit-X.Y.Z-release.apk`. Publish it (not as a draft or pre-release).
+
+Installed apps will offer the update on their next start.
+
 ## License
 
 Public domain, via [The Unlicense](LICENSE). Do whatever you want with this code: no permission, attribution or

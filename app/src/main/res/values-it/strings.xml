@@ -284,4 +284,32 @@
         <item quantity="many">%d avvisi</item>
         <item quantity="other">%d avvisi</item>
     </plurals>
+    <string name="settings_updates">Aggiornamenti dell\'app</string>
+    <string name="settings_version">Versione installata: %s</string>
+    <string name="settings_auto_update">Cerca aggiornamenti all\'avvio</string>
+    <string name="settings_auto_update_hint">All\'apertura chiede a GitHub l\'ultima versione. Nulla viene installato senza la tua conferma.</string>
+    <string name="update_check_now">Cerca aggiornamenti</string>
+    <string name="update_checking">Ricerca di aggiornamenti…</string>
+    <string name="update_up_to_date">Hai l\'ultima versione.</string>
+    <string name="update_to">Aggiorna a %s</string>
+    <string name="update_disabled">Gli aggiornamenti in-app sono disattivati in questa build.</string>
+    <string name="update_available_title">Aggiornamento disponibile</string>
+    <string name="update_available_body">È disponibile la versione %1$s. Hai la %2$s.</string>
+    <string name="update_whats_new">Novità</string>
+    <string name="update_now">Aggiorna</string>
+    <string name="update_later">Più tardi</string>
+    <string name="update_skip">Salta questa versione</string>
+    <string name="update_downloading">Download dell\'aggiornamento…</string>
+    <string name="update_ready_title">La versione %s è pronta</string>
+    <string name="update_ready">Android ti chiederà di confermare l\'installazione. La prima volta ti chiederà anche di consentire a questa app di installare aggiornamenti.</string>
+    <string name="update_install">Installa</string>
+    <string name="update_retry">Riprova</string>
+    <string name="update_open_page">Apri la pagina della release</string>
+    <string name="update_failed_title">Aggiornamento non installato</string>
+    <string name="update_failed_network">Impossibile contattare GitHub per cercare aggiornamenti.</string>
+    <string name="update_failed_no_apk">L\'ultima release non contiene un file APK.</string>
+    <string name="update_failed_download">Il download non è riuscito. Controlla la connessione e riprova.</string>
+    <string name="update_failed_package">Il file scaricato non è un aggiornamento di questa app.</string>
+    <string name="update_failed_not_newer">La build scaricata non è più recente di quella installata.</string>
+    <string name="update_failed_signature">Questo aggiornamento è firmato con una chiave diversa da quella dell\'app installata, quindi Android lo rifiuterebbe. Installalo manualmente dalla pagina della release (prima va disinstallata la versione attuale).</string>
 </resources>

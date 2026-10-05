@@ -148,6 +148,9 @@ fun TransitApp(startTab: StartTab = StartTab.PLAN) {
         if (reduced || isTabSwitch()) fadeOut(tween(120)) else slideOutHorizontally(tween(300)) { it / 5 } + fadeOut(tween(200))
     }
 
+    // Offers a newer GitHub release (if any) on start; also shows download progress for manual updates.
+    org.southtyrol.transit.update.UpdatePrompt()
+
     NavigationSuiteScaffold(
         navigationItems = {
             TopLevel.entries.forEach { item ->

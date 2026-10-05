@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ds_now">Now</string>
+    <plurals name="ds_minutes_short">
+        <item quantity="one">%d min</item>
+        <item quantity="other">%d min</item>
+    </plurals>
+    <string name="ds_duration_hm">%1$d h %2$02d min</string>
+    <string name="ds_duration_m">%d min</string>
+    <string name="ds_delay_late">+%d</string>
+    <string name="ds_delay_early">−%d</string>
+    <plurals name="ds_delay_late_a11y">
+        <item quantity="one">%d minute late</item>
+        <item quantity="other">%d minutes late</item>
+    </plurals>
+    <plurals name="ds_delay_early_a11y">
+        <item quantity="one">%d minute early</item>
+        <item quantity="other">%d minutes early</item>
+    </plurals>
+    <string name="ds_on_time">On time</string>
+    <string name="ds_live">Live</string>
+    <string name="ds_scheduled">Scheduled</string>
+    <string name="ds_stale">Not current</string>
+    <string name="ds_realtime_unavailable">Live data unavailable</string>
+    <string name="ds_cancelled">Cancelled</string>
+    <string name="ds_skipped">Stop skipped</string>
+    <string name="ds_added">Extra service</string>
+    <string name="ds_platform">Platform %s</string>
+    <string name="ds_platform_short">Pl. %s</string>
+    <string name="ds_updated_ago">Updated %s</string>
+    <string name="ds_age_seconds">%d s ago</string>
+    <string name="ds_age_minutes">%d min ago</string>
+    <string name="ds_age_hours">%d h ago</string>
+    <string name="ds_age_days">%d d ago</string>
+    <string name="ds_meters">%d m</string>
+    <string name="ds_kilometers">%.1f km</string>
+    <string name="ds_retry">Try again</string>
+    <string name="ds_loading">Loading</string>
+    <string name="ds_has_alert">Service notice</string>
+    <string name="ds_wheelchair_accessible">Wheelchair accessible</string>
+
+    <string name="ds_error_offline">You are offline. Downloaded timetables stay available.</string>
+    <string name="ds_error_timeout">The server took too long to answer.</string>
+    <string name="ds_error_throttled">Too many requests right now. Please wait a moment.</string>
+    <string name="ds_error_server">The service is temporarily unavailable (error %d).</string>
+    <string name="ds_error_parse">The service sent data this app could not read.</string>
+    <string name="ds_error_no_schedule">The timetable has not been downloaded yet.</string>
+    <string name="ds_error_not_found">Nothing was found.</string>
+    <string name="ds_error_planner">The journey planner could not find a connection.</string>
+    <string name="ds_error_origin">The start location could not be identified.</string>
+    <string name="ds_error_destination">The destination could not be identified.</string>
+    <string name="ds_error_same">Start and destination are the same.</string>
+    <string name="ds_error_unknown">Something went wrong.</string>
+
+    <string name="ds_mode_bus">Bus</string>
+    <string name="ds_mode_city_bus">City bus</string>
+    <string name="ds_mode_train">Train</string>
+    <string name="ds_mode_cable_car">Cable car</string>
+    <string name="ds_mode_funicular">Funicular</string>
+    <string name="ds_mode_tram">Tram</string>
+    <string name="ds_mode_on_demand">On-demand bus</string>
+    <string name="ds_mode_walk">Walk</string>
+    <string name="ds_mode_other">Other</string>
+    <string name="ds_line_a11y">%1$s line %2$s</string>
+</resources>

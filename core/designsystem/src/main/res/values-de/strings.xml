@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ds_now">Jetzt</string>
+    <plurals name="ds_minutes_short">
+        <item quantity="one">%d Min.</item>
+        <item quantity="other">%d Min.</item>
+    </plurals>
+    <string name="ds_duration_hm">%1$d Std. %2$02d Min.</string>
+    <string name="ds_duration_m">%d Min.</string>
+    <string name="ds_delay_late">+%d</string>
+    <string name="ds_delay_early">−%d</string>
+    <plurals name="ds_delay_late_a11y">
+        <item quantity="one">%d Minute verspätet</item>
+        <item quantity="other">%d Minuten verspätet</item>
+    </plurals>
+    <plurals name="ds_delay_early_a11y">
+        <item quantity="one">%d Minute zu früh</item>
+        <item quantity="other">%d Minuten zu früh</item>
+    </plurals>
+    <string name="ds_on_time">Pünktlich</string>
+    <string name="ds_live">Live</string>
+    <string name="ds_scheduled">Fahrplan</string>
+    <string name="ds_stale">Nicht aktuell</string>
+    <string name="ds_realtime_unavailable">Echtzeitdaten nicht verfügbar</string>
+    <string name="ds_cancelled">Fällt aus</string>
+    <string name="ds_skipped">Halt entfällt</string>
+    <string name="ds_added">Zusatzfahrt</string>
+    <string name="ds_platform">Gleis/Steig %s</string>
+    <string name="ds_platform_short">Gl. %s</string>
+    <string name="ds_updated_ago">Aktualisiert %s</string>
+    <string name="ds_age_seconds">vor %d s</string>
+    <string name="ds_age_minutes">vor %d Min.</string>
+    <string name="ds_age_hours">vor %d Std.</string>
+    <string name="ds_age_days">vor %d Tagen</string>
+    <string name="ds_meters">%d m</string>
+    <string name="ds_kilometers">%.1f km</string>
+    <string name="ds_retry">Erneut versuchen</string>
+    <string name="ds_loading">Wird geladen</string>
+    <string name="ds_has_alert">Hinweis zum Betrieb</string>
+    <string name="ds_wheelchair_accessible">Rollstuhlgerecht</string>
+
+    <string name="ds_error_offline">Keine Verbindung. Bereits geladene Fahrpläne bleiben verfügbar.</string>
+    <string name="ds_error_timeout">Der Server hat zu lange nicht geantwortet.</string>
+    <string name="ds_error_throttled">Gerade zu viele Anfragen. Bitte kurz warten.</string>
+    <string name="ds_error_server">Der Dienst ist vorübergehend nicht erreichbar (Fehler %d).</string>
+    <string name="ds_error_parse">Der Dienst hat Daten gesendet, die die App nicht lesen kann.</string>
+    <string name="ds_error_no_schedule">Der Fahrplan wurde noch nicht heruntergeladen.</string>
+    <string name="ds_error_not_found">Nichts gefunden.</string>
+    <string name="ds_error_planner">Die Fahrplanauskunft hat keine Verbindung gefunden.</string>
+    <string name="ds_error_origin">Der Startort konnte nicht erkannt werden.</string>
+    <string name="ds_error_destination">Das Ziel konnte nicht erkannt werden.</string>
+    <string name="ds_error_same">Start und Ziel sind identisch.</string>
+    <string name="ds_error_unknown">Etwas ist schiefgelaufen.</string>
+
+    <string name="ds_mode_bus">Bus</string>
+    <string name="ds_mode_city_bus">Stadtbus</string>
+    <string name="ds_mode_train">Zug</string>
+    <string name="ds_mode_cable_car">Seilbahn</string>
+    <string name="ds_mode_funicular">Standseilbahn</string>
+    <string name="ds_mode_tram">Straßenbahn</string>
+    <string name="ds_mode_on_demand">Rufbus</string>
+    <string name="ds_mode_walk">Fußweg</string>
+    <string name="ds_mode_other">Sonstiges</string>
+    <string name="ds_line_a11y">%1$s Linie %2$s</string>
+</resources>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ladin (lld). UI strings fall back to German via the per-app locale list (lld,de,it); only
+     strings verified by Ladin speakers belong here. Feed texts in Ladin are shown when provided. -->
+<resources>
+    <string name="language_ladin">Ladin</string>
+</resources>

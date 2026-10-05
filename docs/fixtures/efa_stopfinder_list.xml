@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<itdRequest version="10.6.33.33" language="de" lengthUnit="METER" sessionID="0" client="curl/8.7.1" clientIP="" serverID="" virtDir="apb" calcTime="162.921" now="2026-10-04T20:03:59" nowWD="1" logRequestId="3e70be756cf79594">
+  <itdVersionInfo>
+    <ptKernel>
+      <appVersion>10.6.33.5 build 27.07.2026 01:49:49</appVersion>
+      <dataFormat>EFA10_06_01</dataFormat>
+      <dataBuild>2026-10-01T00:05:40</dataBuild>
+    </ptKernel>
+  </itdVersionInfo>
+  <itdStopFinderRequest requestID="0">
+    <itdOdv type="any" usage="sf" anyObjFilter="0">
+      <itdOdvPlace state="identified" method="itp">
+        <odvPlaceElem omc="22021011" placeID="4" value="22021011:4" mainPlace="1" stateless="placeID:22021011:4">Brixen</odvPlaceElem>
+        <odvPlaceInput></odvPlaceInput>
+      </itdOdvPlace>
+      <itdOdvName state="identified" method="itp">
+        <itdMessage type="error" module="BROKER" code="-8010"></itdMessage>
+        <odvNameElem selected="1" matchQuality="819" x="11.650012" y="46.709991" mapName="WGS84[DD.DDDDD]" id="66000998" omc="22021011" placeID="4" anyType="stop" anyTypeSort="2" locality="Brixen" objectName="Bahnhof Brixen" buildingName="" buildingNumber="" postCode="" streetName="" nameKey="" mainLocality="Brixen" stateless="66000998" gid="it:22021:998">Brixen, Bahnhof Brixen</odvNameElem>
+        <infoLink>
+          <paramList>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>creationTime</name>
+              <value>09/08/26 17:38</value>
+            </param>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>lastModificationTime</name>
+              <value>31/08/26 08:39</value>
+            </param>
+          </paramList>
+          <infoLinkText>Bahnhof Brixen</infoLinkText>
+          <infoLinkURL>http://10.240.145.20:80/ics/XSLT_CM_SHOWADDINFO_REQUEST?infoID=22401_STA&amp;seqID=22</infoLinkURL>
+          <infoLinkImage/>
+          <infoText>
+            <content>&lt;p&gt;&lt;span lang="DE"&gt;Im Zeitraum &lt;strong&gt;vom 6. September bis einschlie&amp;szlig;lich 16. Oktober&lt;/strong&gt;&amp;nbsp;werden die Aufz&amp;uuml;ge am Bahnhof Brixen vollst&amp;auml;ndig ausgetauscht. Die bestehenden Aufz&amp;uuml;ge haben das Ende ihrer Lebensdauer erreicht. Aus technischen Gr&amp;uuml;nden k&amp;ouml;nnen die Arbeiten nicht bis zur Er&amp;ouml;ffnung der zweiten Unterf&amp;uuml;hrung aufgeschoben werden.&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&lt;span lang="DE"&gt;Um die Beeintr&amp;auml;chtigungen so gering wie m&amp;ouml;glich zu halten, wurde der Zeitraum bewusst au&amp;szlig;erhalb der sommerlichen Hauptreisezeit und im Anschluss an die Streckensperrung der Brennerbahn im Juli gew&amp;auml;hlt.&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&lt;span lang="DE"&gt;Die Arbeiten werden im Auftrag des Infrastrukturbetreibers RFI durchgef&amp;uuml;hrt.&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&lt;span lang="DE"&gt;Ein Gep&amp;auml;cktr&amp;auml;gerdienst ist vor Ort verf&amp;uuml;gbar.&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;Stand: 31.08.2026&lt;/p&gt;</content>
+            <subtitle>Bahnhof Brixen</subtitle>
+            <subject>Austausch der Aufzüge</subject>
+            <additionalText></additionalText>
+            <image></image>
+            <outputClientText>
+              <htmlText></htmlText>
+              <wmlText></wmlText>
+              <smsText></smsText>
+              <speechText></speechText>
+            </outputClientText>
+          </infoText>
+        </infoLink>
+        <odvNameInput>Brixen</odvNameInput>
+      </itdOdvName>
+      <itdOdvAssignedStops select="0">
+        <itdOdvAssignedStop stopID="66000998" x="11.650012" y="46.709991" mapName="WGS84[DD.DDDDD]" value="66000998:Bahnhof Brixen" place="Brixen" nameWithPlace="Brixen, Bahnhof Brixen" distanceTime="0" isTransferStop="0" vm="100" gid="it:22021:998">Bahnhof Brixen</itdOdvAssignedStop>
+      </itdOdvAssignedStops>
+    </itdOdv>
+    <itdDateTime ttpFrom="20251101" ttpTo="20261212">
+      <itdDate weekday="1" year="2026" month="10" day="4"/>
+      <itdTime hour="20" minute="3"/>
+    </itdDateTime>
+  </itdStopFinderRequest>
+</itdRequest>

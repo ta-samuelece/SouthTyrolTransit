@@ -1,0 +1,3109 @@
+{
+  "header": {
+    "gtfs_realtime_version": "2.0",
+    "incrementality": "FULL_DATASET",
+    "timestamp": 1791134100
+  },
+  "entity": [
+    {
+      "id": "518",
+      "vehicle": {
+        "trip": {
+          "trip_id": "403.TA.1-201-26a-5.5.H",
+          "route_id": "1-201-26a-5",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "518",
+          "label": "201"
+        },
+        "position": {
+          "latitude": 46.5135,
+          "longitude": 11.2707
+        },
+        "stop_id": "it:22021:456:0:9733",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "3112",
+      "vehicle": {
+        "trip": {
+          "trip_id": "9.T3.84-263-26a-3.3.H",
+          "route_id": "84-263-26a-3",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "3112",
+          "label": "263"
+        },
+        "position": {
+          "latitude": 46.6294,
+          "longitude": 10.7546
+        },
+        "stop_id": "it:22021:109:0:40634",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "5310",
+      "vehicle": {
+        "trip": {
+          "trip_id": "65.TA.87-421-26a-6.10.H",
+          "route_id": "87-421-26a-6",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "5310",
+          "label": "421"
+        },
+        "position": {
+          "latitude": 46.8148,
+          "longitude": 11.7223
+        },
+        "stop_id": "it:22021:1179:1:9039",
+        "current_status": "STOPPED_AT",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "3305",
+      "vehicle": {
+        "trip": {
+          "trip_id": "57.TA.83-176-26a-2.7.R",
+          "route_id": "83-176-26a-2",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "3305",
+          "label": "176"
+        },
+        "position": {
+          "latitude": 46.5166,
+          "longitude": 11.5075
+        },
+        "stop_id": "it:22021:1630:0:1510",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "9604",
+      "vehicle": {
+        "trip": {
+          "trip_id": "57.TA.90-441-26a-4.7.R",
+          "route_id": "90-441-26a-4",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "9604",
+          "label": "441"
+        },
+        "position": {
+          "latitude": 46.7733,
+          "longitude": 12.1809
+        },
+        "stop_id": "it:22021:1932:0:7714",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "3253",
+      "vehicle": {
+        "trip": {
+          "trip_id": "5.T3.81-122-26a-2.5.H",
+          "route_id": "81-122-26a-2",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "3253",
+          "label": "122"
+        },
+        "position": {
+          "latitude": 46.3206,
+          "longitude": 11.2743
+        },
+        "stop_id": "it:22021:650:0:9606",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "770",
+      "vehicle": {
+        "trip": {
+          "trip_id": "15.TA.1-225-26a-1.1.H",
+          "route_id": "1-225-26a-1",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "770",
+          "label": "225"
+        },
+        "position": {
+          "latitude": 46.6718,
+          "longitude": 11.2023
+        },
+        "stop_id": "it:22021:2265:0:662",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "667",
+      "vehicle": {
+        "trip": {
+          "trip_id": "278.TA.1-201-26a-5.11.R",
+          "route_id": "1-201-26a-5",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "667",
+          "label": "201"
+        },
+        "position": {
+          "latitude": 46.6574,
+          "longitude": 11.1675
+        },
+        "stop_id": "it:22021:2282:0:707",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "519",
+      "vehicle": {
+        "trip": {
+          "trip_id": "426.T3.1-210-26a-1.12.R",
+          "route_id": "1-210-26a-1",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "519",
+          "label": "210"
+        },
+        "position": {
+          "latitude": 46.6709,
+          "longitude": 11.1595
+        },
+        "stop_id": "it:22021:2278:0:718",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "6199",
+      "vehicle": {
+        "trip": {
+          "trip_id": "56.TA.86-345-26a-4.5.H",
+          "route_id": "86-345-26a-4",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "6199",
+          "label": "345"
+        },
+        "position": {
+          "latitude": 46.638,
+          "longitude": 11.5588
+        },
+        "stop_id": "it:22021:1074:0:8733",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "5339",
+      "vehicle": {
+        "trip": {
+          "trip_id": "95.TA.6-250-B-26a-21.10.R",
+          "route_id": "6-250-B-26a-21",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "5339",
+          "label": "B250"
+        },
+        "position": {
+          "latitude": 46.6601,
+          "longitude": 11.0359
+        },
+        "stop_id": "it:22021:200:0:9",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791133872
+      }
+    },
+    {
+      "id": "9127",
+      "vehicle": {
+        "trip": {
+          "trip_id": "19.TA.89-451-26a-4.1.H",
+          "route_id": "89-451-26a-4",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "9127",
+          "label": "451"
+        },
+        "position": {
+          "latitude": 46.8992,
+          "longitude": 11.8162
+        },
+        "stop_id": "it:22021:1864:0:7621",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "2114",
+      "vehicle": {
+        "trip": {
+          "trip_id": "69.TA.82-185-26a-1.2.H",
+          "route_id": "82-185-26a-1",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "2114",
+          "label": "185"
+        },
+        "position": {
+          "latitude": 46.4794,
+          "longitude": 11.4975
+        },
+        "stop_id": "it:22021:966:0:8963",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "5328",
+      "vehicle": {
+        "trip": {
+          "trip_id": "14.TA.85-312-26a-1.2.H",
+          "route_id": "85-312-26a-1",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "5328",
+          "label": "312"
+        },
+        "position": {
+          "latitude": 46.9029,
+          "longitude": 11.4301
+        },
+        "stop_id": "it:22021:2838:0:2501",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "2124",
+      "vehicle": {
+        "trip": {
+          "trip_id": "44.TA.82-182-26a-2.9.R",
+          "route_id": "82-182-26a-2",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "2124",
+          "label": "182"
+        },
+        "position": {
+          "latitude": 46.4457,
+          "longitude": 11.482
+        },
+        "stop_id": "it:22021:3550:0:35502",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "9610",
+      "vehicle": {
+        "trip": {
+          "trip_id": "103.TA.89-450-26a-7.12.H",
+          "route_id": "89-450-26a-7",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "9610",
+          "label": "450"
+        },
+        "position": {
+          "latitude": 47.0158,
+          "longitude": 12.0288
+        },
+        "stop_id": "it:22021:1818:0:7513",
+        "current_status": "STOPPED_AT",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "6180",
+      "vehicle": {
+        "trip": {
+          "trip_id": "149.TA.86-330-26a-2.12.R",
+          "route_id": "86-330-26a-2",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "6180",
+          "label": "330"
+        },
+        "position": {
+          "latitude": 46.6446,
+          "longitude": 11.629
+        },
+        "stop_id": "it:22021:1021:0:8655",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "5348",
+      "vehicle": {
+        "trip": {
+          "trip_id": "43.TA.6-250-B-26a-21.10.R",
+          "route_id": "6-250-B-26a-21",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "5348",
+          "label": "B250"
+        },
+        "position": {
+          "latitude": 46.6643,
+          "longitude": 10.5824
+        },
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "5337",
+      "vehicle": {
+        "trip": {
+          "trip_id": "8.TA.6-250-B-26a-21.8.H",
+          "route_id": "6-250-B-26a-21",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "5337",
+          "label": "B250"
+        },
+        "position": {
+          "latitude": 46.6504,
+          "longitude": 11.0059
+        },
+        "stop_id": "it:22021:174:0:94",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "3105",
+      "vehicle": {
+        "trip": {
+          "trip_id": "8.TA.81-135-3-26a-4.10.H",
+          "route_id": "81-135-3-26a-4",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "3105",
+          "label": "135.3"
+        },
+        "position": {
+          "latitude": 46.4188,
+          "longitude": 11.2461
+        },
+        "stop_id": "it:22021:845:0:8075",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "9107",
+      "vehicle": {
+        "trip": {
+          "trip_id": "33.TA.88-465-26a-6.2.R",
+          "route_id": "88-465-26a-6",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "9107",
+          "label": "465"
+        },
+        "position": {
+          "latitude": 46.5832,
+          "longitude": 11.913
+        },
+        "stop_id": "it:22021:1304:0:1580",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134034
+      }
+    },
+    {
+      "id": "6161",
+      "vehicle": {
+        "trip": {
+          "trip_id": "48.TA.86-321-26a-2.3.H",
+          "route_id": "86-321-26a-2",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "6161",
+          "label": "321"
+        },
+        "position": {
+          "latitude": 46.6945,
+          "longitude": 11.6592
+        },
+        "stop_id": "it:22021:2574:0:2150",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "3800",
+      "vehicle": {
+        "trip": {
+          "trip_id": "7.TA.84-271-26a-4.2.H",
+          "route_id": "84-271-26a-4",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "3800",
+          "label": "271"
+        },
+        "position": {
+          "latitude": 46.5857,
+          "longitude": 10.5442
+        },
+        "stop_id": "it:22021:2634:0:6929",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "473",
+      "vehicle": {
+        "trip": {
+          "trip_id": "67.T3.1-B08-26a-7.13.R",
+          "route_id": "1-B08-26a-7",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "473",
+          "label": "8"
+        },
+        "position": {
+          "latitude": 46.5004,
+          "longitude": 11.3421
+        },
+        "stop_id": "it:22021:2097:0:5019",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "642",
+      "vehicle": {
+        "trip": {
+          "trip_id": "10.TA.80-120-26a-5.6.H",
+          "route_id": "80-120-26a-5",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "642",
+          "label": "120"
+        },
+        "position": {
+          "latitude": 46.2587,
+          "longitude": 11.2304
+        },
+        "stop_id": "it:22021:657:0:9510",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "5306",
+      "vehicle": {
+        "trip": {
+          "trip_id": "91.TA.6-250-B-26a-21.8.H",
+          "route_id": "6-250-B-26a-21",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "5306",
+          "label": "B250"
+        },
+        "position": {
+          "latitude": 46.674,
+          "longitude": 11.1484
+        },
+        "current_status": "STOPPED_AT",
+        "timestamp": 1791133791
+      }
+    },
+    {
+      "id": "517",
+      "vehicle": {
+        "trip": {
+          "trip_id": "441.T3.1-211-26a-1.12.R",
+          "route_id": "1-211-26a-1",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "517",
+          "label": "211"
+        },
+        "position": {
+          "latitude": 46.6098,
+          "longitude": 11.1831
+        },
+        "stop_id": "it:22021:2294:1:475",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "5338",
+      "vehicle": {
+        "trip": {
+          "trip_id": "25.TA.87-401-26a-13.6.H",
+          "route_id": "87-401-26a-13",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "5338",
+          "label": "401"
+        },
+        "position": {
+          "latitude": 46.8154,
+          "longitude": 11.7236
+        },
+        "stop_id": "it:22021:1179:2:7023",
+        "current_status": "STOPPED_AT",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "6203",
+      "vehicle": {
+        "trip": {
+          "trip_id": "3.TA.86-339-26a-5.6.R",
+          "route_id": "86-339-26a-5",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "6203",
+          "label": "339"
+        },
+        "position": {
+          "latitude": 46.6828,
+          "longitude": 11.6234
+        },
+        "stop_id": "it:22021:2709:0:2341",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "515",
+      "vehicle": {
+        "trip": {
+          "trip_id": "1806.T3.1-110-26a-6.2.H",
+          "route_id": "1-110-26a-6",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "515",
+          "label": "110"
+        },
+        "position": {
+          "latitude": 46.4835,
+          "longitude": 11.3433
+        },
+        "stop_id": "it:22021:632:0:5045",
+        "current_status": "STOPPED_AT",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "3013",
+      "vehicle": {
+        "trip": {
+          "trip_id": "5.TA.22-158-26a-1.1.H",
+          "route_id": "22-158-26a-1",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "3013",
+          "label": "158"
+        },
+        "position": {
+          "latitude": 46.5121,
+          "longitude": 11.3309
+        },
+        "stop_id": "it:22021:3680:0:36801",
+        "current_status": "STOPPED_AT",
+        "timestamp": 1791133954
+      }
+    },
+    {
+      "id": "8103",
+      "vehicle": {
+        "trip": {
+          "trip_id": "34.TA.88-460-26a-13.18.R",
+          "route_id": "88-460-26a-13",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "8103",
+          "label": "460"
+        },
+        "position": {
+          "latitude": 46.7856,
+          "longitude": 11.9106
+        },
+        "stop_id": "it:22021:1191:0:1368",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "527",
+      "vehicle": {
+        "trip": {
+          "trip_id": "24.T3.1-B05-26a-7.3.H",
+          "route_id": "1-B05-26a-7",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "527",
+          "label": "5"
+        },
+        "position": {
+          "latitude": 46.493,
+          "longitude": 11.3265
+        },
+        "stop_id": "it:22021:2155:0:5006",
+        "current_status": "STOPPED_AT",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "490",
+      "vehicle": {
+        "trip": {
+          "trip_id": "419.T3.1-211-26a-1.12.R",
+          "route_id": "1-211-26a-1",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "490",
+          "label": "211"
+        },
+        "position": {
+          "latitude": 46.6574,
+          "longitude": 11.145
+        },
+        "stop_id": "it:22021:303:0:403",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "8098",
+      "vehicle": {
+        "trip": {
+          "trip_id": "33.TA.88-460-26a-13.18.R",
+          "route_id": "88-460-26a-13",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "8098",
+          "label": "460"
+        },
+        "position": {
+          "latitude": 46.5486,
+          "longitude": 11.875
+        },
+        "stop_id": "it:22021:1320:0:7342",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "680",
+      "vehicle": {
+        "trip": {
+          "trip_id": "6.T3.80-132-26a-2.4.H",
+          "route_id": "80-132-26a-2",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "680",
+          "label": "132"
+        },
+        "position": {
+          "latitude": 46.4135,
+          "longitude": 11.2439
+        },
+        "stop_id": "it:22021:762:0:9429",
+        "current_status": "STOPPED_AT",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "3773",
+      "vehicle": {
+        "trip": {
+          "trip_id": "8.TA.84-261-26a-5.15.H",
+          "route_id": "84-261-26a-5",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "3773",
+          "label": "261"
+        },
+        "position": {
+          "latitude": 46.6773,
+          "longitude": 11.1258
+        },
+        "stop_id": "it:22021:2502:0:99",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "9603",
+      "vehicle": {
+        "trip": {
+          "trip_id": "48.TA.90-441-26a-4.4.H",
+          "route_id": "90-441-26a-4",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "9603",
+          "label": "441"
+        },
+        "position": {
+          "latitude": 46.7308,
+          "longitude": 12.2237
+        },
+        "stop_id": "it:22021:1213:0:7087",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "615",
+      "vehicle": {
+        "trip": {
+          "trip_id": "23.TA.80-240-26a-1.5.H",
+          "route_id": "80-240-26a-1",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "615",
+          "label": "240"
+        },
+        "position": {
+          "latitude": 46.8168,
+          "longitude": 11.241
+        },
+        "stop_id": "it:22021:240:0:338",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "617",
+      "vehicle": {
+        "trip": {
+          "trip_id": "53.TA.80-240-26a-1.14.R",
+          "route_id": "80-240-26a-1",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "617",
+          "label": "240"
+        },
+        "position": {
+          "latitude": 46.6956,
+          "longitude": 11.1744
+        },
+        "stop_id": "it:22021:225:0:312",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "3501",
+      "vehicle": {
+        "trip": {
+          "trip_id": "69.TA.84-261-26a-5.15.H",
+          "route_id": "84-261-26a-5",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "3501",
+          "label": "261"
+        },
+        "position": {
+          "latitude": 46.7384,
+          "longitude": 10.832
+        },
+        "stop_id": "it:22021:194:0:263",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "624",
+      "vehicle": {
+        "trip": {
+          "trip_id": "110.T3.80-231-26a-3.2.H",
+          "route_id": "80-231-26a-3",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "624",
+          "label": "231"
+        },
+        "position": {
+          "latitude": 46.6689,
+          "longitude": 11.1831
+        },
+        "stop_id": "it:22021:2261:0:654",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "2111",
+      "vehicle": {
+        "trip": {
+          "trip_id": "54.TA.82-181-26a-2.1.H",
+          "route_id": "82-181-26a-2",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "2111",
+          "label": "181"
+        },
+        "position": {
+          "latitude": 46.4137,
+          "longitude": 11.4262
+        },
+        "stop_id": "it:22021:2624:0:2162",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "3806",
+      "vehicle": {
+        "trip": {
+          "trip_id": "27.TA.84-271-26a-4.6.R",
+          "route_id": "84-271-26a-4",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "3806",
+          "label": "271"
+        },
+        "position": {
+          "latitude": 46.5718,
+          "longitude": 10.5503
+        },
+        "stop_id": "it:22021:81:0:158",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "9113",
+      "vehicle": {
+        "trip": {
+          "trip_id": "70.TA.89-450-26a-7.18.R",
+          "route_id": "89-450-26a-7",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "9113",
+          "label": "450"
+        },
+        "position": {
+          "latitude": 46.9953,
+          "longitude": 11.9816
+        },
+        "stop_id": "it:22021:1812:0:7502",
+        "current_status": "STOPPED_AT",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "686",
+      "vehicle": {
+        "trip": {
+          "trip_id": "64.TA.80-204-26a-4.1.H",
+          "route_id": "80-204-26a-4",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "686",
+          "label": "204"
+        },
+        "position": {
+          "latitude": 46.5473,
+          "longitude": 11.2576
+        },
+        "stop_id": "it:22021:451:0:9803",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "2108",
+      "vehicle": {
+        "trip": {
+          "trip_id": "42.TA.82-185-26a-1.3.R",
+          "route_id": "82-185-26a-1",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "2108",
+          "label": "185"
+        },
+        "position": {
+          "latitude": 46.4984,
+          "longitude": 11.3612
+        },
+        "stop_id": "it:22021:2958:0:2724",
+        "current_status": "STOPPED_AT",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "4025",
+      "vehicle": {
+        "trip": {
+          "trip_id": "9.TA.21-234-26a-1.10.H",
+          "route_id": "21-234-26a-1",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "4025",
+          "label": "234"
+        },
+        "position": {
+          "latitude": 46.7058,
+          "longitude": 11.2059
+        },
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "2116",
+      "vehicle": {
+        "trip": {
+          "trip_id": "31.TA.82-142-26a-2.1.H",
+          "route_id": "82-142-26a-2",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "2116",
+          "label": "142"
+        },
+        "position": {
+          "latitude": 46.3966,
+          "longitude": 11.3922
+        },
+        "stop_id": "it:22021:728:0:1050",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "740",
+      "vehicle": {
+        "trip": {
+          "trip_id": "46.T3.1-214-26a-1.9.H",
+          "route_id": "1-214-26a-1",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "740",
+          "label": "214"
+        },
+        "position": {
+          "latitude": 46.6001,
+          "longitude": 11.1576
+        },
+        "stop_id": "it:22021:372:0:507",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "5312",
+      "vehicle": {
+        "trip": {
+          "trip_id": "6.TA.6-250-B-26a-21.8.H",
+          "route_id": "6-250-B-26a-21",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "5312",
+          "label": "B250"
+        },
+        "position": {
+          "latitude": 46.6679,
+          "longitude": 10.5821
+        },
+        "stop_id": "it:22021:36:1:40020",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "3793",
+      "vehicle": {
+        "trip": {
+          "trip_id": "89.TA.90-442-26a-4.2.H",
+          "route_id": "90-442-26a-4",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "3793",
+          "label": "442"
+        },
+        "position": {
+          "latitude": 46.732,
+          "longitude": 12.141
+        },
+        "stop_id": "it:22021:1948:0:7747",
+        "current_status": "STOPPED_AT",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "764",
+      "vehicle": {
+        "trip": {
+          "trip_id": "15.TA.80-150-26a-5.6.H",
+          "route_id": "80-150-26a-5",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "764",
+          "label": "150"
+        },
+        "position": {
+          "latitude": 46.6651,
+          "longitude": 11.3645
+        },
+        "stop_id": "it:22021:535:0:9137",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134014
+      }
+    },
+    {
+      "id": "508",
+      "vehicle": {
+        "trip": {
+          "trip_id": "1850.T3.1-110-26a-6.17.R",
+          "route_id": "1-110-26a-6",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "508",
+          "label": "110"
+        },
+        "position": {
+          "latitude": 46.4988,
+          "longitude": 11.34
+        },
+        "stop_id": "it:22021:2099:0:5017",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "3791",
+      "vehicle": {
+        "trip": {
+          "trip_id": "34.TA.90-442-26a-4.3.R",
+          "route_id": "90-442-26a-4",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "3791",
+          "label": "442"
+        },
+        "position": {
+          "latitude": 46.7323,
+          "longitude": 12.1409
+        },
+        "stop_id": "it:22021:1947:0:7745",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "584",
+      "vehicle": {
+        "trip": {
+          "trip_id": "26.T3.80-132-26a-2.8.R",
+          "route_id": "80-132-26a-2",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "584",
+          "label": "132"
+        },
+        "position": {
+          "latitude": 46.5012,
+          "longitude": 11.3423
+        },
+        "stop_id": "it:22021:467:0:5027",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "5326",
+      "vehicle": {
+        "trip": {
+          "trip_id": "53.TA.87-421-26a-6.13.R",
+          "route_id": "87-421-26a-6",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "5326",
+          "label": "421"
+        },
+        "position": {
+          "latitude": 46.8006,
+          "longitude": 11.9207
+        },
+        "stop_id": "it:22021:1706:0:7204",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "449",
+      "vehicle": {
+        "trip": {
+          "trip_id": "161.T3.1-215-26a-2.5.R",
+          "route_id": "1-215-26a-2",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "449",
+          "label": "215"
+        },
+        "position": {
+          "latitude": 46.6097,
+          "longitude": 11.1875
+        },
+        "stop_id": "it:22021:486:0:485",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "3801",
+      "vehicle": {
+        "trip": {
+          "trip_id": "49.TA.83-170-26a-3.10.R",
+          "route_id": "83-170-26a-3",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "3801",
+          "label": "170"
+        },
+        "position": {
+          "latitude": 46.5399,
+          "longitude": 11.5608
+        },
+        "stop_id": "it:22021:866:0:40036",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "486",
+      "vehicle": {
+        "trip": {
+          "trip_id": "330.T3.1-M01-26a-1.6.H",
+          "route_id": "1-M01-26a-1",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "486",
+          "label": "1"
+        },
+        "position": {
+          "latitude": 46.669,
+          "longitude": 11.1643
+        },
+        "stop_id": "it:22021:2278:0:718",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "9201",
+      "vehicle": {
+        "trip": {
+          "trip_id": "37.TA.89-450-26a-7.12.H",
+          "route_id": "89-450-26a-7",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "9201",
+          "label": "450"
+        },
+        "position": {
+          "latitude": 46.8678,
+          "longitude": 11.949
+        },
+        "stop_id": "it:22021:1795:0:7461",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "3818",
+      "vehicle": {
+        "trip": {
+          "trip_id": "56.TA.83-360-26a-4.3.R",
+          "route_id": "83-360-26a-4",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "3818",
+          "label": "360"
+        },
+        "position": {
+          "latitude": 46.6435,
+          "longitude": 11.57
+        },
+        "stop_id": "it:22021:988:0:8233",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "520",
+      "vehicle": {
+        "trip": {
+          "trip_id": "403.T3.1-210-26a-1.2.H",
+          "route_id": "1-210-26a-1",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "520",
+          "label": "210"
+        },
+        "position": {
+          "latitude": 46.6128,
+          "longitude": 11.1905
+        },
+        "stop_id": "it:22021:487:0:777",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "3812",
+      "vehicle": {
+        "trip": {
+          "trip_id": "28.TA.83-360-26a-4.1.H",
+          "route_id": "83-360-26a-4",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "3812",
+          "label": "360"
+        },
+        "position": {
+          "latitude": 46.5588,
+          "longitude": 11.7284
+        },
+        "stop_id": "it:22021:1133:0:8831",
+        "current_status": "STOPPED_AT",
+        "timestamp": 1791133892
+      }
+    },
+    {
+      "id": "3823",
+      "vehicle": {
+        "trip": {
+          "trip_id": "14.TA.83-350-26a-4.4.H",
+          "route_id": "83-350-26a-4",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "3823",
+          "label": "350"
+        },
+        "position": {
+          "latitude": 46.5849,
+          "longitude": 11.6341
+        },
+        "stop_id": "it:22021:1122:0:8809",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "700",
+      "vehicle": {
+        "trip": {
+          "trip_id": "53.T3.80-231-26a-3.6.R",
+          "route_id": "80-231-26a-3",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "700",
+          "label": "231"
+        },
+        "position": {
+          "latitude": 46.6754,
+          "longitude": 11.1887
+        },
+        "stop_id": "it:22021:2019:0:9643",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "794",
+      "vehicle": {
+        "trip": {
+          "trip_id": "19.T3.1-B14-26a-2.1.H",
+          "route_id": "1-B14-26a-2",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "794",
+          "label": "14"
+        },
+        "position": {
+          "latitude": 46.4962,
+          "longitude": 11.3573
+        },
+        "stop_id": "it:22021:2084:0:5028",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "665",
+      "vehicle": {
+        "trip": {
+          "trip_id": "119.TA.80-131-26a-1.3.R",
+          "route_id": "80-131-26a-1",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "665",
+          "label": "131"
+        },
+        "position": {
+          "latitude": 46.4886,
+          "longitude": 11.3021
+        },
+        "stop_id": "it:22021:812:0:5343",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "477",
+      "vehicle": {
+        "trip": {
+          "trip_id": "724.T3.1-B03-26a-6.19.R",
+          "route_id": "1-B03-26a-6",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "477",
+          "label": "3"
+        },
+        "position": {
+          "latitude": 46.4972,
+          "longitude": 11.3401
+        },
+        "stop_id": "it:22021:2100:0:5040",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "736",
+      "vehicle": {
+        "trip": {
+          "trip_id": "11.TA.80-152-26a-1.6.R",
+          "route_id": "80-152-26a-1",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "736",
+          "label": "152"
+        },
+        "position": {
+          "latitude": 46.6627,
+          "longitude": 11.3636
+        },
+        "stop_id": "it:22021:534:0:9136",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "2120",
+      "vehicle": {
+        "trip": {
+          "trip_id": "26.TA.82-184-26a-7.2.H",
+          "route_id": "82-184-26a-7",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "2120",
+          "label": "184"
+        },
+        "position": {
+          "latitude": 46.4073,
+          "longitude": 11.5062
+        },
+        "stop_id": "it:22021:904:0:6834",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134014
+      }
+    },
+    {
+      "id": "483",
+      "vehicle": {
+        "trip": {
+          "trip_id": "27.T3.1-B10-B-26a-7.1.H",
+          "route_id": "1-B10-B-26a-7",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "483",
+          "label": "10B"
+        },
+        "position": {
+          "latitude": 46.4827,
+          "longitude": 11.322
+        },
+        "stop_id": "it:22021:2174:0:5180",
+        "current_status": "STOPPED_AT",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "528",
+      "vehicle": {
+        "trip": {
+          "trip_id": "29.T3.1-B10-A-26a-7.3.H",
+          "route_id": "1-B10-A-26a-7",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "528",
+          "label": "10A"
+        },
+        "position": {
+          "latitude": 46.4756,
+          "longitude": 11.3269
+        },
+        "stop_id": "it:22021:2209:0:5183",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "6121",
+      "vehicle": {
+        "trip": {
+          "trip_id": "27.T4.86-320-1-26a-2.1.H",
+          "route_id": "86-320-1-26a-2",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "6121",
+          "label": "320.1"
+        },
+        "position": {
+          "latitude": 46.7145,
+          "longitude": 11.6542
+        },
+        "stop_id": "it:22021:1532:0:8315",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "3301",
+      "vehicle": {
+        "trip": {
+          "trip_id": "14.TA.83-176-26a-2.3.H",
+          "route_id": "83-176-26a-2",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "3301",
+          "label": "176"
+        },
+        "position": {
+          "latitude": 46.5014,
+          "longitude": 11.4853
+        },
+        "stop_id": "it:22021:1636:0:1521",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "3522",
+      "vehicle": {
+        "trip": {
+          "trip_id": "30.TA.84-272-26a-1.2.R",
+          "route_id": "84-272-26a-1",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "3522",
+          "label": "272"
+        },
+        "position": {
+          "latitude": 46.6355,
+          "longitude": 10.6064
+        },
+        "stop_id": "it:22021:75:1:37",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "8095",
+      "vehicle": {
+        "trip": {
+          "trip_id": "32.TA.88-460-26a-13.18.R",
+          "route_id": "88-460-26a-13",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "8095",
+          "label": "460"
+        },
+        "position": {
+          "latitude": 46.6877,
+          "longitude": 11.8954
+        },
+        "stop_id": "it:22021:1269:0:7311",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "2126",
+      "vehicle": {
+        "trip": {
+          "trip_id": "12.TA.82-180-26a-2.5.R",
+          "route_id": "82-180-26a-2",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "2126",
+          "label": "180"
+        },
+        "position": {
+          "latitude": 46.4108,
+          "longitude": 11.6529
+        },
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "8302",
+      "vehicle": {
+        "trip": {
+          "trip_id": "2.T3.89-420-2-26a-6.9.H",
+          "route_id": "89-420-2-26a-6",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "8302",
+          "label": "420.2"
+        },
+        "position": {
+          "latitude": 46.8032,
+          "longitude": 11.9521
+        },
+        "stop_id": "it:22021:1768:0:40791",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "6216",
+      "vehicle": {
+        "trip": {
+          "trip_id": "16.TA.86-344-26a-6.3.H",
+          "route_id": "86-344-26a-6",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "6216",
+          "label": "344"
+        },
+        "position": {
+          "latitude": 46.6961,
+          "longitude": 11.6346
+        },
+        "stop_id": "it:22021:2663:0:2244",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "504",
+      "vehicle": {
+        "trip": {
+          "trip_id": "51.T3.1-B05-26a-7.6.R",
+          "route_id": "1-B05-26a-7",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "504",
+          "label": "5"
+        },
+        "position": {
+          "latitude": 46.5016,
+          "longitude": 11.3401
+        },
+        "stop_id": "it:22021:2161:0:5169",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "5375",
+      "vehicle": {
+        "trip": {
+          "trip_id": "75.TA.87-401-26a-13.2.H",
+          "route_id": "87-401-26a-13",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "5375",
+          "label": "401"
+        },
+        "position": {
+          "latitude": 46.7197,
+          "longitude": 11.6505
+        },
+        "stop_id": "it:22021:1143:0:8296",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134014
+      }
+    },
+    {
+      "id": "620",
+      "vehicle": {
+        "trip": {
+          "trip_id": "9.TA.80-120-26a-5.6.H",
+          "route_id": "80-120-26a-5",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "620",
+          "label": "120"
+        },
+        "position": {
+          "latitude": 46.4594,
+          "longitude": 11.333
+        },
+        "stop_id": "it:22021:635:0:1099",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "6175",
+      "vehicle": {
+        "trip": {
+          "trip_id": "12.T3.87-328-26a-9.13.H",
+          "route_id": "87-328-26a-9",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "6175",
+          "label": "328"
+        },
+        "position": {
+          "latitude": 46.7207,
+          "longitude": 11.6635
+        },
+        "stop_id": "it:22021:3158:0:7115",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "706",
+      "vehicle": {
+        "trip": {
+          "trip_id": "15.TA.80-245-26a-3.1.H",
+          "route_id": "80-245-26a-3",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "706",
+          "label": "245"
+        },
+        "position": {
+          "latitude": 46.5945,
+          "longitude": 11.0942
+        },
+        "stop_id": "it:22021:315:0:414",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "6165",
+      "vehicle": {
+        "trip": {
+          "trip_id": "150.TA.86-330-26a-2.13.R",
+          "route_id": "86-330-26a-2",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "6165",
+          "label": "330"
+        },
+        "position": {
+          "latitude": 46.6385,
+          "longitude": 11.7178
+        },
+        "stop_id": "it:22021:2586:0:1997",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "543",
+      "vehicle": {
+        "trip": {
+          "trip_id": "21.T3.1-B14-26a-2.1.H",
+          "route_id": "1-B14-26a-2",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "543",
+          "label": "14"
+        },
+        "position": {
+          "latitude": 46.4918,
+          "longitude": 11.353585
+        },
+        "stop_id": "it:22021:2188:0:5135",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791133994
+      }
+    },
+    {
+      "id": "482",
+      "vehicle": {
+        "trip": {
+          "trip_id": "28.T3.1-B10-A-26a-7.3.H",
+          "route_id": "1-B10-A-26a-7",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "482",
+          "label": "10A"
+        },
+        "position": {
+          "latitude": 46.4951,
+          "longitude": 11.3552
+        },
+        "stop_id": "it:22021:2192:0:5126",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "3839",
+      "vehicle": {
+        "trip": {
+          "trip_id": "19.TA.83-170-26a-3.4.H",
+          "route_id": "83-170-26a-3",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "3839",
+          "label": "170"
+        },
+        "position": {
+          "latitude": 46.499,
+          "longitude": 11.3706
+        },
+        "stop_id": "it:22021:581:0:5101",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "3107",
+      "vehicle": {
+        "trip": {
+          "trip_id": "15.TA.84-278-26a-3.1.H",
+          "route_id": "84-278-26a-3",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "3107",
+          "label": "278"
+        },
+        "position": {
+          "latitude": 46.6911,
+          "longitude": 10.5386
+        },
+        "stop_id": "it:22021:164:0:1918",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "626",
+      "vehicle": {
+        "trip": {
+          "trip_id": "14.TA.80-246-26a-3.2.R",
+          "route_id": "80-246-26a-3",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "626",
+          "label": "246"
+        },
+        "position": {
+          "latitude": 46.4933,
+          "longitude": 11.1314
+        },
+        "stop_id": "it:22021:391:0:9986",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "3798",
+      "vehicle": {
+        "trip": {
+          "trip_id": "73.TA.90-446-26a-7.1.H",
+          "route_id": "90-446-26a-7",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "3798",
+          "label": "446"
+        },
+        "position": {
+          "latitude": 46.6664,
+          "longitude": 12.3539
+        },
+        "stop_id": "it:22021:1997:0:7827",
+        "current_status": "STOPPED_AT",
+        "timestamp": 1791134014
+      }
+    },
+    {
+      "id": "9202",
+      "vehicle": {
+        "trip": {
+          "trip_id": "71.TA.89-450-26a-7.18.R",
+          "route_id": "89-450-26a-7",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "9202",
+          "label": "450"
+        },
+        "position": {
+          "latitude": 46.8641,
+          "longitude": 11.9484
+        },
+        "stop_id": "it:22021:1793:0:7458",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "6174",
+      "vehicle": {
+        "trip": {
+          "trip_id": "19.TA.86-345-26a-4.4.H",
+          "route_id": "86-345-26a-4",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "6174",
+          "label": "345"
+        },
+        "position": {
+          "latitude": 46.6401,
+          "longitude": 11.5147
+        },
+        "stop_id": "it:22021:3109:0:3043",
+        "current_status": "STOPPED_AT",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "3824",
+      "vehicle": {
+        "trip": {
+          "trip_id": "42.TA.83-350-26a-4.10.R",
+          "route_id": "83-350-26a-4",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "3824",
+          "label": "350"
+        },
+        "position": {
+          "latitude": 46.5972,
+          "longitude": 11.601
+        },
+        "stop_id": "it:22021:1119:0:8806",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "475",
+      "vehicle": {
+        "trip": {
+          "trip_id": "27.T3.1-B10-B-26a-7.1.H",
+          "route_id": "1-B10-B-26a-7",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "475",
+          "label": "10B"
+        },
+        "position": {
+          "latitude": 46.5015,
+          "longitude": 11.3126
+        },
+        "stop_id": "it:22021:463:0:5155",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "5323",
+      "vehicle": {
+        "trip": {
+          "trip_id": "15.TA.85-311-26a-3.1.H",
+          "route_id": "85-311-26a-3",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "5323",
+          "label": "311"
+        },
+        "position": {
+          "latitude": 46.966,
+          "longitude": 11.5728
+        },
+        "stop_id": "it:22021:2854:0:2520",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "619",
+      "vehicle": {
+        "trip": {
+          "trip_id": "22.TA.80-165-26a-3.10.H",
+          "route_id": "80-165-26a-3",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "619",
+          "label": "165"
+        },
+        "position": {
+          "latitude": 46.502,
+          "longitude": 11.4204
+        },
+        "stop_id": "it:22021:585:0:9305",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "529",
+      "vehicle": {
+        "trip": {
+          "trip_id": "687.T3.1-B03-26a-6.9.H",
+          "route_id": "1-B03-26a-6",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "529",
+          "label": "3"
+        },
+        "position": {
+          "latitude": 46.49,
+          "longitude": 11.331829
+        },
+        "stop_id": "it:22021:2122:0:5215",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "607",
+      "vehicle": {
+        "trip": {
+          "trip_id": "68.TA.80-240-26a-1.18.R",
+          "route_id": "80-240-26a-1",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "607",
+          "label": "240"
+        },
+        "position": {
+          "latitude": 46.8098,
+          "longitude": 11.2442
+        },
+        "stop_id": "it:22021:237:0:332",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "3830",
+      "vehicle": {
+        "trip": {
+          "trip_id": "27.TA.81-140-26a-4.2.R",
+          "route_id": "81-140-26a-4",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "3830",
+          "label": "140"
+        },
+        "position": {
+          "latitude": 46.3482,
+          "longitude": 11.2972
+        },
+        "stop_id": "it:22021:645:0:1126",
+        "current_status": "STOPPED_AT",
+        "timestamp": 1791134034
+      }
+    },
+    {
+      "id": "757",
+      "vehicle": {
+        "trip": {
+          "trip_id": "24.TA.80-152-26a-1.1.H",
+          "route_id": "80-152-26a-1",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "757",
+          "label": "152"
+        },
+        "position": {
+          "latitude": 46.6671,
+          "longitude": 11.3658
+        },
+        "stop_id": "it:22021:535:0:9137",
+        "current_status": "STOPPED_AT",
+        "timestamp": 1791134014
+      }
+    },
+    {
+      "id": "3705",
+      "vehicle": {
+        "trip": {
+          "trip_id": "24.TA.21-273-26a-4.4.R",
+          "route_id": "21-273-26a-4",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "3705",
+          "label": "273"
+        },
+        "position": {
+          "latitude": 46.8507,
+          "longitude": 10.5048
+        },
+        "stop_id": "it:22021:5:0:51",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791133872
+      }
+    },
+    {
+      "id": "5336",
+      "vehicle": {
+        "trip": {
+          "trip_id": "7.TA.6-250-B-26a-21.8.H",
+          "route_id": "6-250-B-26a-21",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "5336",
+          "label": "B250"
+        },
+        "position": {
+          "latitude": 46.6265,
+          "longitude": 10.7668
+        },
+        "stop_id": "it:22021:102:1:40752",
+        "current_status": "STOPPED_AT",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "9122",
+      "vehicle": {
+        "trip": {
+          "trip_id": "109.TA.89-450-26a-7.12.H",
+          "route_id": "89-450-26a-7",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "9122",
+          "label": "450"
+        },
+        "position": {
+          "latitude": 47.0501,
+          "longitude": 12.1264
+        },
+        "stop_id": "it:22021:1831:0:7535",
+        "current_status": "STOPPED_AT",
+        "timestamp": 1791133791
+      }
+    },
+    {
+      "id": "687",
+      "vehicle": {
+        "trip": {
+          "trip_id": "24.TA.80-240-26a-1.16.H",
+          "route_id": "80-240-26a-1",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "687",
+          "label": "240"
+        },
+        "position": {
+          "latitude": 46.7049,
+          "longitude": 11.184
+        },
+        "stop_id": "it:22021:228:0:319",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "395",
+      "vehicle": {
+        "trip": {
+          "trip_id": "386.T3.1-211-26a-1.5.H",
+          "route_id": "1-211-26a-1",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "395",
+          "label": "211"
+        },
+        "position": {
+          "latitude": 46.6708,
+          "longitude": 11.1589
+        },
+        "stop_id": "it:22021:2014:0:535",
+        "current_status": "STOPPED_AT",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "3208",
+      "vehicle": {
+        "trip": {
+          "trip_id": "15.TA.81-144-26a-3.4.R",
+          "route_id": "81-144-26a-3",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "3208",
+          "label": "144"
+        },
+        "position": {
+          "latitude": 46.3262,
+          "longitude": 11.3571
+        },
+        "stop_id": "it:22021:744:0:1166",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "3209",
+      "vehicle": {
+        "trip": {
+          "trip_id": "16.T3.81-122-26a-2.12.R",
+          "route_id": "81-122-26a-2",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "3209",
+          "label": "122"
+        },
+        "position": {
+          "latitude": 46.3125,
+          "longitude": 11.223
+        },
+        "stop_id": "it:22021:684:0:9450",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "3789",
+      "vehicle": {
+        "trip": {
+          "trip_id": "55.TA.90-431-26a-10.11.R",
+          "route_id": "90-431-26a-10",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "3789",
+          "label": "431"
+        },
+        "position": {
+          "latitude": 46.867,
+          "longitude": 12.113
+        },
+        "stop_id": "it:22021:1915:0:7672",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "5340",
+      "vehicle": {
+        "trip": {
+          "trip_id": "12.TA.85-310-26a-3.4.H",
+          "route_id": "85-310-26a-3",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "5340",
+          "label": "310"
+        },
+        "position": {
+          "latitude": 46.9028,
+          "longitude": 11.4298
+        },
+        "stop_id": "it:22021:1392:0:7938",
+        "current_status": "STOPPED_AT",
+        "timestamp": 1791133934
+      }
+    },
+    {
+      "id": "5314",
+      "vehicle": {
+        "trip": {
+          "trip_id": "29.TA.85-312-26a-1.4.R",
+          "route_id": "85-312-26a-1",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "5314",
+          "label": "312"
+        },
+        "position": {
+          "latitude": 46.887,
+          "longitude": 11.427
+        },
+        "stop_id": "it:22021:1419:0:1455",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "5379",
+      "vehicle": {
+        "trip": {
+          "trip_id": "61.TA.87-401-26a-13.12.R",
+          "route_id": "87-401-26a-13",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "5379",
+          "label": "401"
+        },
+        "position": {
+          "latitude": 46.793,
+          "longitude": 11.9309
+        },
+        "stop_id": "it:22021:2236:0:40781",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "2105",
+      "vehicle": {
+        "trip": {
+          "trip_id": "27.TA.82-142-26a-2.3.R",
+          "route_id": "82-142-26a-2",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "2105",
+          "label": "142"
+        },
+        "position": {
+          "latitude": 46.3172,
+          "longitude": 11.2618
+        },
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "5333",
+      "vehicle": {
+        "trip": {
+          "trip_id": "40.TA.6-250-B-26a-21.10.R",
+          "route_id": "6-250-B-26a-21",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "5333",
+          "label": "B250"
+        },
+        "position": {
+          "latitude": 46.6247,
+          "longitude": 10.7752
+        },
+        "stop_id": "it:22021:123:1:40032",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "6160",
+      "vehicle": {
+        "trip": {
+          "trip_id": "101.TA.86-321-26a-2.9.R",
+          "route_id": "86-321-26a-2",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "6160",
+          "label": "321"
+        },
+        "position": {
+          "latitude": 46.6674,
+          "longitude": 11.6888
+        },
+        "stop_id": "it:22021:1010:0:8367",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "3206",
+      "vehicle": {
+        "trip": {
+          "trip_id": "19.TA.81-135-3-26a-4.6.R",
+          "route_id": "81-135-3-26a-4",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "3206",
+          "label": "135.3"
+        },
+        "position": {
+          "latitude": 46.4456,
+          "longitude": 11.2551
+        },
+        "stop_id": "it:22021:831:0:1866",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "6191",
+      "vehicle": {
+        "trip": {
+          "trip_id": "86.TA.86-351-26a-7.13.R",
+          "route_id": "86-351-26a-7",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "6191",
+          "label": "351"
+        },
+        "position": {
+          "latitude": 46.5847,
+          "longitude": 11.6345
+        },
+        "stop_id": "it:22021:2514:0:1407",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "511",
+      "vehicle": {
+        "trip": {
+          "trip_id": "1848.T3.1-110-26a-6.17.R",
+          "route_id": "1-110-26a-6",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "511",
+          "label": "110"
+        },
+        "position": {
+          "latitude": 46.3987,
+          "longitude": 11.3181
+        },
+        "stop_id": "it:22021:2120:0:5066",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "496",
+      "vehicle": {
+        "trip": {
+          "trip_id": "150.TA.1-221-26a-1.1.H",
+          "route_id": "1-221-26a-1",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "496",
+          "label": "221"
+        },
+        "position": {
+          "latitude": 46.6864,
+          "longitude": 11.1582
+        },
+        "stop_id": "it:22021:2399:0:727",
+        "current_status": "STOPPED_AT",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "6197",
+      "vehicle": {
+        "trip": {
+          "trip_id": "27.TA.86-351-26a-7.2.H",
+          "route_id": "86-351-26a-7",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "6197",
+          "label": "351"
+        },
+        "position": {
+          "latitude": 46.6375,
+          "longitude": 11.5682
+        },
+        "stop_id": "it:22021:3054:0:2936",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "5329",
+      "vehicle": {
+        "trip": {
+          "trip_id": "13.TA.85-310-26a-3.4.H",
+          "route_id": "85-310-26a-3",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "5329",
+          "label": "310"
+        },
+        "position": {
+          "latitude": 46.7204,
+          "longitude": 11.6503
+        },
+        "stop_id": "it:22021:1143:0:7001",
+        "current_status": "STOPPED_AT",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "8100",
+      "vehicle": {
+        "trip": {
+          "trip_id": "12.T3.88-464-26a-5.5.R",
+          "route_id": "88-464-26a-5",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "8100",
+          "label": "464"
+        },
+        "position": {
+          "latitude": 46.681,
+          "longitude": 11.871
+        },
+        "stop_id": "it:22021:2:0:2344",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "400",
+      "vehicle": {
+        "trip": {
+          "trip_id": "20.T3.1-213-26a-2.1.H",
+          "route_id": "1-213-26a-2",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "400",
+          "label": "213"
+        },
+        "position": {
+          "latitude": 46.686,
+          "longitude": 11.1158
+        },
+        "stop_id": "it:22021:2043:0:569",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "458",
+      "vehicle": {
+        "trip": {
+          "trip_id": "103.T3.1-216-26a-4.10.R",
+          "route_id": "1-216-26a-4",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "458",
+          "label": "216"
+        },
+        "position": {
+          "latitude": 46.5434,
+          "longitude": 11.2019
+        },
+        "stop_id": "it:22021:2712:0:2322",
+        "current_status": "STOPPED_AT",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "548",
+      "vehicle": {
+        "trip": {
+          "trip_id": "359.T3.1-M01-26a-1.4.R",
+          "route_id": "1-M01-26a-1",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "548",
+          "label": "1"
+        },
+        "position": {
+          "latitude": 46.6775,
+          "longitude": 11.1464
+        },
+        "stop_id": "it:22021:2268:0:742",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "719",
+      "vehicle": {
+        "trip": {
+          "trip_id": "45.TA.80-165-26a-3.8.R",
+          "route_id": "80-165-26a-3",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "719",
+          "label": "165"
+        },
+        "position": {
+          "latitude": 46.5549,
+          "longitude": 11.4917
+        },
+        "stop_id": "it:22021:613:0:9333",
+        "current_status": "STOPPED_AT",
+        "timestamp": 1791133954
+      }
+    },
+    {
+      "id": "9118",
+      "vehicle": {
+        "trip": {
+          "trip_id": "12.TA.89-455-26a-2.1.H",
+          "route_id": "89-455-26a-2",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "9118",
+          "label": "455"
+        },
+        "position": {
+          "latitude": 46.9088,
+          "longitude": 11.9528
+        },
+        "stop_id": "it:22021:1881:0:9961",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "9115",
+      "vehicle": {
+        "trip": {
+          "trip_id": "12.TA.88-460-26a-13.7.H",
+          "route_id": "88-460-26a-13",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "9115",
+          "label": "460"
+        },
+        "position": {
+          "latitude": 46.6547,
+          "longitude": 11.91
+        },
+        "stop_id": "it:22021:1290:0:7318",
+        "current_status": "STOPPED_AT",
+        "timestamp": 1791134034
+      }
+    },
+    {
+      "id": "3014",
+      "vehicle": {
+        "trip": {
+          "trip_id": "32.TA.80-157-26a-3.7.H",
+          "route_id": "80-157-26a-3",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "3014",
+          "label": "157"
+        },
+        "position": {
+          "latitude": 46.5903,
+          "longitude": 11.2879
+        },
+        "stop_id": "it:22021:429:0:1423",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "3509",
+      "vehicle": {
+        "trip": {
+          "trip_id": "46.TA.83-172-26a-2.2.H",
+          "route_id": "83-172-26a-2",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "3509",
+          "label": "172"
+        },
+        "position": {
+          "latitude": 46.5754,
+          "longitude": 11.6239
+        },
+        "stop_id": "it:22021:885:0:8918",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "4020",
+      "vehicle": {
+        "trip": {
+          "trip_id": "8.TA.21-280-26a-1.1.H",
+          "route_id": "21-280-26a-1",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "4020",
+          "label": "280"
+        },
+        "position": {
+          "latitude": 46.7215,
+          "longitude": 10.5759
+        },
+        "stop_id": "it:22021:59:0:9496",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134034
+      }
+    },
+    {
+      "id": "6164",
+      "vehicle": {
+        "trip": {
+          "trip_id": "91.TA.86-342-26a-1.2.H",
+          "route_id": "86-342-26a-1",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "6164",
+          "label": "342"
+        },
+        "position": {
+          "latitude": 46.6943,
+          "longitude": 11.6293
+        },
+        "stop_id": "it:22021:1568:0:8257",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "731",
+      "vehicle": {
+        "trip": {
+          "trip_id": "53.TA.80-150-26a-5.7.R",
+          "route_id": "80-150-26a-5",
+          "direction_id": 1,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "731",
+          "label": "150"
+        },
+        "position": {
+          "latitude": 46.6583,
+          "longitude": 11.362
+        },
+        "stop_id": "it:22021:534:0:9136",
+        "current_status": "STOPPED_AT",
+        "timestamp": 1791134055
+      }
+    },
+    {
+      "id": "2127",
+      "vehicle": {
+        "trip": {
+          "trip_id": "53.TA.82-180-26a-2.1.H",
+          "route_id": "82-180-26a-2",
+          "direction_id": 0,
+          "start_date": "20261004",
+          "schedule_relationship": "SCHEDULED"
+        },
+        "vehicle": {
+          "id": "2127",
+          "label": "180"
+        },
+        "position": {
+          "latitude": 46.4209,
+          "longitude": 11.56
+        },
+        "stop_id": "it:22021:935:0:9891",
+        "current_status": "IN_TRANSIT_TO",
+        "timestamp": 1791134055
+      }
+    }
+  ]
+}

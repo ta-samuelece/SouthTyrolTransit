@@ -1,0 +1,128 @@
+package org.southtyrol.transit.feature.stop
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import org.southtyrol.transit.data.AlertMatcher
+import org.southtyrol.transit.data.AlertRepository
+import org.southtyrol.transit.data.Board
+import org.southtyrol.transit.data.BoardSource
+import org.southtyrol.transit.data.DepartureRepository
+import org.southtyrol.transit.data.LanguageProvider
+import org.southtyrol.transit.data.LineRepository
+import org.southtyrol.transit.data.RealtimeRepository
+import org.southtyrol.transit.data.SavedKind
+import org.southtyrol.transit.data.SavedRepository
+import org.southtyrol.transit.location.LocationProvider
+import org.southtyrol.transit.location.LocationResult
+import org.southtyrol.transit.model.DataError
+import org.southtyrol.transit.model.DataException
+import org.southtyrol.transit.model.Departure
+import org.southtyrol.transit.model.Geo
+import org.southtyrol.transit.model.Line
+import org.southtyrol.transit.model.Point
+import org.southtyrol.transit.model.ServiceAlert
+import org.southtyrol.transit.model.Stop
+import org.southtyrol.transit.model.TransitScheduleDataSource
+import java.time.Duration
+import java.time.Instant
+
+data class StopState(
+    val stop: Stop? = null,
+    val name: String = "",
+    val platforms: List<Stop> = emptyList(),
+    val lines: List<Line> = emptyList(),
+    val arrivals: Boolean = false,
+    val loading: Boolean = true,
+    val scheduled: List<Departure> = emptyList(),
+    val source: BoardSource = BoardSource.SCHEDULE,
+    val loadedAt: Instant? = null,
+    val error: DataError? = null,
+    val distanceMeters: Double? = null,
+)
+
+@HiltViewModel(assistedFactory = StopViewModel.Factory::class)
+class StopViewModel @AssistedInject constructor(
+    @Assisted("key") val stationKey: String,
+    @Assisted("name") initialName: String,
+    private val schedule: TransitScheduleDataSource,
+    private val departures: DepartureRepository,
+    private val realtime: RealtimeRepository,
+    private val lines: LineRepository,
+    private val saved: SavedRepository,
+    alerts: AlertRepository,
+    private val language: LanguageProvider,
+    private val location: LocationProvider,
+) : ViewModel() {
+    @AssistedFactory
+    interface Factory { fun create(@Assisted("key") stationKey: String, @Assisted("name") name: String): StopViewModel }
+
+    private val _state = MutableStateFlow(StopState(name = initialName))
+    val state: StateFlow<StopState> = _state.asStateFlow()
+
+    val isSaved = saved.isSaved(SavedKind.STOP, stationKey).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    private val alertState = alerts.state.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), org.southtyrol.transit.data.AlertsState())
+
+    /** Alerts for this stop or the lines serving it. */
+    val stopAlerts: StateFlow<List<ServiceAlert>> = combine(alertState, _state) { a, s ->
+        val now = Instant.now()
+        a.alerts.filter { alert -> alert.active(now) && (AlertMatcher.affectsStop(alert, stationKey) || s.lines.any { AlertMatcher.affectsLine(alert, it) }) }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    /** Scheduled board merged with the latest realtime snapshot (recomputed on every RT refresh). */
+    val board: StateFlow<Board?> = combine(_state, realtime.snapshot, alertState) { s, snapshot, a ->
+        if (s.loadedAt == null) null else departures.merge(s.scheduled, s.source, snapshot, a.alerts, s.arrivals)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    init {
+        viewModelScope.launch {
+            val lang = language.current()
+            val stop = runCatching { schedule.stop(stationKey, lang) }.getOrNull()
+            val platforms = runCatching { schedule.stationStops(stationKey, lang) }.getOrDefault(emptyList())
+            val served = runCatching { lines.atStop(stationKey) }.getOrDefault(emptyList())
+            _state.update { it.copy(stop = stop, name = stop?.name ?: it.name, platforms = platforms, lines = served) }
+            if (stop != null && location.hasPermission()) {
+                (location.current() as? LocationResult.Found)?.let { found -> _state.update { it.copy(distanceMeters = Geo.distance(found.point, stop.point)) } }
+            }
+        }
+    }
+
+    /** Reloads the scheduled board when it is older than a minute (or on demand). */
+    suspend fun refresh(force: Boolean = false) {
+        val s = _state.value
+        val now = Instant.now()
+        if (force || s.loadedAt == null || Duration.between(s.loadedAt, now) > Duration.ofMinutes(1)) {
+            try {
+                val (list, source) = departures.load(stationKey, s.arrivals, now, language.current())
+                _state.update { it.copy(scheduled = list, source = source, loadedAt = now, loading = false, error = null) }
+            } catch (e: DataException) {
+                _state.update { it.copy(loading = false, error = e.error) }
+            }
+        }
+        if (_state.value.source == BoardSource.SCHEDULE) departures.pollRealtime()
+    }
+
+    fun setArrivals(value: Boolean) {
+        if (value == _state.value.arrivals) return
+        _state.update { it.copy(arrivals = value, loading = true, loadedAt = null, scheduled = emptyList()) }
+        viewModelScope.launch { refresh(force = true) }
+    }
+
+    fun toggleSaved() = viewModelScope.launch {
+        val stop = _state.value.stop ?: Stop(stationKey, _state.value.name, _state.value.platforms.firstOrNull()?.point ?: Point(0.0, 0.0), stationKey = stationKey)
+        if (isSaved.value) saved.remove(SavedKind.STOP, stationKey) else saved.saveStop(stop)
+    }
+
+}

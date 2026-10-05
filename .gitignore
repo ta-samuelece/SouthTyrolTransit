@@ -1,0 +1,28 @@
+# Gradle / Kotlin
+.gradle/
+.kotlin/
+**/build/
+
+# Local machine setup (SDK path, optional map style URLs) and local toolchain downloads
+local.properties
+.tools/
+
+# IDEs and OS files
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Signing material: never commit keys
+*.jks
+*.keystore
+
+# Build outputs and captures (publish APKs as GitHub release assets instead)
+dist/
+captures/
+*.apk
+*.aab
+*.idsig
+
+# Private working notes
+goal.md

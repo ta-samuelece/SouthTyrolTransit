@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ds_now">Ora</string>
+    <plurals name="ds_minutes_short">
+        <item quantity="one">%d min</item>
+        <item quantity="many">%d min</item>
+        <item quantity="other">%d min</item>
+    </plurals>
+    <string name="ds_duration_hm">%1$d h %2$02d min</string>
+    <string name="ds_duration_m">%d min</string>
+    <string name="ds_delay_late">+%d</string>
+    <string name="ds_delay_early">−%d</string>
+    <plurals name="ds_delay_late_a11y">
+        <item quantity="one">%d minuto di ritardo</item>
+        <item quantity="many">%d minuti di ritardo</item>
+        <item quantity="other">%d minuti di ritardo</item>
+    </plurals>
+    <plurals name="ds_delay_early_a11y">
+        <item quantity="one">%d minuto di anticipo</item>
+        <item quantity="many">%d minuti di anticipo</item>
+        <item quantity="other">%d minuti di anticipo</item>
+    </plurals>
+    <string name="ds_on_time">In orario</string>
+    <string name="ds_live">Live</string>
+    <string name="ds_scheduled">Da orario</string>
+    <string name="ds_stale">Non aggiornato</string>
+    <string name="ds_realtime_unavailable">Dati in tempo reale non disponibili</string>
+    <string name="ds_cancelled">Soppressa</string>
+    <string name="ds_skipped">Fermata soppressa</string>
+    <string name="ds_added">Corsa aggiuntiva</string>
+    <string name="ds_platform">Binario/stallo %s</string>
+    <string name="ds_platform_short">Bin. %s</string>
+    <string name="ds_updated_ago">Aggiornato %s</string>
+    <string name="ds_age_seconds">%d s fa</string>
+    <string name="ds_age_minutes">%d min fa</string>
+    <string name="ds_age_hours">%d h fa</string>
+    <string name="ds_age_days">%d giorni fa</string>
+    <string name="ds_meters">%d m</string>
+    <string name="ds_kilometers">%.1f km</string>
+    <string name="ds_retry">Riprova</string>
+    <string name="ds_loading">Caricamento</string>
+    <string name="ds_has_alert">Avviso di servizio</string>
+    <string name="ds_wheelchair_accessible">Accessibile in sedia a rotelle</string>
+
+    <string name="ds_error_offline">Sei offline. Gli orari già scaricati restano disponibili.</string>
+    <string name="ds_error_timeout">Il server ha impiegato troppo tempo a rispondere.</string>
+    <string name="ds_error_throttled">Troppe richieste al momento. Attendi un attimo.</string>
+    <string name="ds_error_server">Il servizio non è temporaneamente disponibile (errore %d).</string>
+    <string name="ds_error_parse">Il servizio ha inviato dati che l\'app non riesce a leggere.</string>
+    <string name="ds_error_no_schedule">L\'orario non è ancora stato scaricato.</string>
+    <string name="ds_error_not_found">Nessun risultato.</string>
+    <string name="ds_error_planner">Il calcolo percorso non ha trovato collegamenti.</string>
+    <string name="ds_error_origin">Il luogo di partenza non è stato riconosciuto.</string>
+    <string name="ds_error_destination">La destinazione non è stata riconosciuta.</string>
+    <string name="ds_error_same">Partenza e destinazione coincidono.</string>
+    <string name="ds_error_unknown">Si è verificato un errore.</string>
+
+    <string name="ds_mode_bus">Autobus</string>
+    <string name="ds_mode_city_bus">Autobus urbano</string>
+    <string name="ds_mode_train">Treno</string>
+    <string name="ds_mode_cable_car">Funivia</string>
+    <string name="ds_mode_funicular">Funicolare</string>
+    <string name="ds_mode_tram">Tram</string>
+    <string name="ds_mode_on_demand">Bus a chiamata</string>
+    <string name="ds_mode_walk">A piedi</string>
+    <string name="ds_mode_other">Altro</string>
+    <string name="ds_line_a11y">%1$s linea %2$s</string>
+</resources>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<itdRequest version="10.6.33.33" language="de" lengthUnit="METER" sessionID="0" client="NC6" clientIP="" serverID="" virtDir="apb" calcTime="60.041" now="2026-10-04T19:19:40" nowWD="1" logRequestId="3e70be756cf6dcc7">
+  <itdVersionInfo>
+    <ptKernel>
+      <appVersion>10.6.33.5 build 27.07.2026 01:49:49</appVersion>
+      <dataFormat>EFA10_06_01</dataFormat>
+      <dataBuild>2026-10-01T00:05:40</dataBuild>
+    </ptKernel>
+  </itdVersionInfo>
+  <itdStopFinderRequest requestID="0">
+    <itdOdv type="any" usage="sf" anyObjFilter="0">
+      <itdOdvPlace state="identified" method="itp">
+        <odvPlaceElem omc="22021008" placeID="1" value="22021008:1" mainPlace="1" stateless="placeID:22021008:1">Bozen</odvPlaceElem>
+        <odvPlaceInput></odvPlaceInput>
+      </itdOdvPlace>
+      <itdOdvName state="identified" method="itp">
+        <itdMessage type="error" module="BROKER" code="-8010"></itdMessage>
+        <odvNameElem selected="1" matchQuality="986" x="680971.99" y="348068.00" mapName="APBV" id="66000468" omc="22021008" placeID="1" anyType="stop" anyTypeSort="2" locality="Bozen" objectName="Bahnhof Bozen" buildingName="" buildingNumber="" postCode="" streetName="" nameKey="" mainLocality="Bozen" stateless="66000468" gid="it:22021:468">Bozen, Bahnhof Bozen</odvNameElem>
+        <odvNameInput>Bozen</odvNameInput>
+      </itdOdvName>
+      <itdOdvAssignedStops select="0">
+        <itdOdvAssignedStop stopID="66000468" x="680971.99" y="348068.00" mapName="APBV" value="66000468:Bahnhof Bozen" place="Bozen" nameWithPlace="Bozen, Bahnhof Bozen" distanceTime="0" isTransferStop="0" vm="100" gid="it:22021:468">Bahnhof Bozen</itdOdvAssignedStop>
+      </itdOdvAssignedStops>
+    </itdOdv>
+    <itdDateTime ttpFrom="20251101" ttpTo="20261212">
+      <itdDate weekday="1" year="2026" month="10" day="4"/>
+      <itdTime hour="19" minute="19"/>
+    </itdDateTime>
+  </itdStopFinderRequest>
+</itdRequest>

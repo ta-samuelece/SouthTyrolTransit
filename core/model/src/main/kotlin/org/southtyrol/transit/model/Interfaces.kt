@@ -24,6 +24,12 @@ interface TransitScheduleDataSource {
     suspend fun stop(id: String, language: String): Stop?
     suspend fun stationStops(stationKey: String, language: String): List<Stop>
     suspend fun scheduledDepartures(stopIds: Collection<String>, from: Instant, until: Instant, arrivals: Boolean, language: String, limit: Int): List<Departure>
+
+    /**
+     * False when the arrivals board would show exactly the departures board: every call has the same
+     * arrival and departure time, no pickup/drop-off restriction, and no trip starts or ends here.
+     */
+    suspend fun arrivalsDiffer(stopIds: Collection<String>): Boolean = true
     suspend fun linesAtStops(stopIds: Collection<String>): List<Line>
     suspend fun searchLines(query: String): List<Line>
     suspend fun line(key: String): Line?

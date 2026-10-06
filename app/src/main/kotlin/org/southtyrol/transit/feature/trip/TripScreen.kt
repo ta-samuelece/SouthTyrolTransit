@@ -287,7 +287,7 @@ private fun TripStopRow(stop: TripStop, first: Boolean, last: Boolean, passed: B
 @Composable
 private fun TripNoticesCard(alerts: List<org.southtyrol.transit.model.ServiceAlert>, now: java.time.Instant, modifier: Modifier = Modifier) {
     var expanded by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(false) }
-    val language = org.southtyrol.transit.di.AppLanguage.current()
+    val language = org.southtyrol.transit.di.AppLanguage.textLanguages()
     val status = org.southtyrol.transit.design.LocalStatusColors.current
     val disruption = alerts.any { it.isDisruption }
     androidx.compose.material3.Card(

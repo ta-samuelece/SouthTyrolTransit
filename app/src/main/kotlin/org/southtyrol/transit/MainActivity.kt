@@ -31,6 +31,32 @@ import javax.inject.Inject
 class MainActivity : AppCompatActivity() {
     @Inject lateinit var settingsRepository: SettingsRepository
 
+    /** A stop to open, e.g. from the home-screen widget; consumed once shown. */
+    private val openStop = mutableStateOf<Pair<String, String>?>(null)
+
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        readStop(intent)
+    }
+
+    private fun readStop(intent: android.content.Intent?) {
+        val key = intent?.getStringExtra(EXTRA_STOP_KEY) ?: return
+        openStop.value = key to intent.getStringExtra(EXTRA_STOP_NAME).orEmpty()
+        intent.removeExtra(EXTRA_STOP_KEY)
+    }
+
+    companion object {
+        private const val EXTRA_STOP_KEY = "org.southtyrol.transit.STOP_KEY"
+        private const val EXTRA_STOP_NAME = "org.southtyrol.transit.STOP_NAME"
+
+        fun openStopIntent(context: android.content.Context, stopKey: String, name: String): android.content.Intent =
+            android.content.Intent(context, MainActivity::class.java)
+                .putExtra(EXTRA_STOP_KEY, stopKey).putExtra(EXTRA_STOP_NAME, name)
+                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP or android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                // Distinct data per stop so each widget's PendingIntent stays separate.
+                .setData(android.net.Uri.parse("southtyroltransit://stop/" + android.net.Uri.encode(stopKey)))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         // Keep the splash up until settings are read, so the chosen start tab opens directly.
         var initial: UserSettings? = null
@@ -40,6 +66,7 @@ class MainActivity : AppCompatActivity() {
             navigationBarStyle = SystemBarStyle.auto(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT),
         )
         super.onCreate(savedInstanceState)
+        if (savedInstanceState == null) readStop(intent)
         val defaultStyle = MapStyle(
             lightUrl = BuildConfig.MAP_STYLE_LIGHT.ifBlank { "https://tiles.openfreemap.org/styles/positron" },
             darkUrl = BuildConfig.MAP_STYLE_DARK.ifBlank { BuildConfig.MAP_STYLE_LIGHT.ifBlank { "https://tiles.openfreemap.org/styles/dark" } },
@@ -65,7 +92,7 @@ class MainActivity : AppCompatActivity() {
             }
             TransitTheme(darkTheme = dark, dynamicColor = settings.dynamicColor) {
                 CompositionLocalProvider(LocalMapStyle provides defaultStyle, LocalDarkTheme provides dark) {
-                    TransitApp(startTab = start.startTab)
+                    TransitApp(startTab = start.startTab, openStop = openStop.value, onStopOpened = { openStop.value = null })
                 }
             }
         }

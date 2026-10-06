@@ -171,6 +171,11 @@ class GtfsSchedule(private val store: ScheduleStore) : TransitScheduleDataSource
         result.sortedBy { it.scheduled }.distinctBy { it.key }.take(limit)
     }
 
+    override suspend fun arrivalsDiffer(stopIds: Collection<String>): Boolean = io {
+        val platforms = platformIds(this, stopIds)()
+        platforms.isEmpty() || arrivalsDiffer(platforms)
+    }
+
     /** Arrivals at the first stop of a trip are meaningless; GTFS sequences usually start at 0 or 1. */
     private fun firstSequence(row: BoardRow) = if (row.arrival == row.departure && row.sequence <= 1) row.sequence else Int.MIN_VALUE
 

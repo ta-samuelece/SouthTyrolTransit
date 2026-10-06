@@ -156,7 +156,8 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
                         state.distanceMeters?.let { Text(stringResource(R.string.stop_distance, Format.distance(it)), style = MaterialTheme.typography.labelLarge) }
                         if (state.stop?.wheelchair == Accessibility.ACCESSIBLE) WheelchairIcon()
                     }
-                    ConnectedToggleGroup(
+                    // Hidden where arrivals would just repeat the departures (most intermediate stops).
+                    if (state.showArrivalsToggle || state.arrivals) ConnectedToggleGroup(
                         options = listOf(false, true), selected = state.arrivals, onSelect = viewModel::setArrivals,
                         label = { stringResource(if (it) R.string.stop_arrivals else R.string.stop_departures) }, modifier = Modifier.fillMaxWidth(),
                     )

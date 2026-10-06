@@ -22,6 +22,17 @@ object AppLanguage : LanguageProvider {
         return locale.toLanguageTag()
     }
 
+    /**
+     * Languages for operator texts (service notices), most preferred first: the app language, then
+     * the phone's system languages. Notices often exist only in German and Italian, so someone using
+     * the app in English on a German phone gets German rather than an arbitrary fallback.
+     */
+    fun textLanguages(): String {
+        val system = android.content.res.Resources.getSystem().configuration.locales
+        val tags = listOf(current()) + (0 until system.size()).map { system[it].toLanguageTag() }
+        return tags.distinct().joinToString(",")
+    }
+
     fun selected(): Option {
         val locales = AppCompatDelegate.getApplicationLocales()
         if (locales.isEmpty) return Option.SYSTEM

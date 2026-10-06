@@ -65,6 +65,7 @@ import org.southtyrol.transit.model.ServiceAlert
 import org.southtyrol.transit.model.ServiceState
 import org.southtyrol.transit.model.Languages
 import org.southtyrol.transit.model.localized
+import org.southtyrol.transit.model.localizedLanguage
 import java.time.Instant
 
 /**
@@ -164,7 +165,9 @@ fun AlertCard(
     stopNames: List<String> = emptyList(),
 ) {
     var expanded by rememberSaveable(alert.id) { mutableStateOf(false) }
-    var shownLanguage by rememberSaveable(alert.id) { mutableStateOf(language) }
+    // Keyed by the app language too: after switching language in Settings the restored state must not
+    // keep showing the previous one.
+    var shownLanguage by rememberSaveable(alert.id, language) { mutableStateOf(language) }
     val status = LocalStatusColors.current
     val header = alert.headers.localized(shownLanguage)
     val body = alert.descriptions.localized(shownLanguage)
@@ -209,7 +212,7 @@ fun AlertCard(
                         Text(stringResource(R.string.alerts_language), style = MaterialTheme.typography.labelMedium)
                         languages.forEach { lang ->
                             androidx.compose.material3.FilterChip(
-                                selected = Languages.normalize(shownLanguage) == lang,
+                                selected = (alert.headers.localizedLanguage(shownLanguage) ?: alert.descriptions.localizedLanguage(shownLanguage)) == lang,
                                 onClick = { shownLanguage = lang },
                                 label = { Text(lang.uppercase()) },
                             )

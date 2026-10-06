@@ -125,12 +125,19 @@ private fun AnimatedContentTransitionScope<NavBackStackEntry>.isTabSwitch() =
     TopLevel.of(initialState.destination) != null && TopLevel.of(targetState.destination) != null
 
 @Composable
-fun TransitApp(startTab: StartTab = StartTab.PLAN) {
+fun TransitApp(startTab: StartTab = StartTab.PLAN, openStop: Pair<String, String>? = null, onStopOpened: () -> Unit = {}) {
     val nav = rememberNavController()
     val start = remember { TopLevel.of(startTab) }
     val navigator = remember(nav) { Navigator(nav, start) }
     val entry by nav.currentBackStackEntryAsState()
     LaunchedEffect(entry) { navigator.sync(entry?.destination) }
+    // Opened from the widget: show that stop under the Departures tab.
+    LaunchedEffect(openStop) {
+        val (key, name) = openStop ?: return@LaunchedEffect
+        navigator.select(TopLevel.DEPARTURES)
+        navigator.stop(key, name)
+        onStopOpened()
+    }
     val reduced = LocalReducedMotion.current
 
     // Material shared-axis style: sub-views slide in from the end and back out on (predictive)

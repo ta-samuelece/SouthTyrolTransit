@@ -25,11 +25,20 @@ object Languages {
      */
     fun efaStopFinder(tag: String): String = if (normalize(tag) in setOf("it", "lld")) "it" else "de"
 
-    fun fallbacks(tag: String): List<String> = when (normalize(tag)) {
-        "lld" -> listOf("lld", "de", "it", "en")
-        "de" -> listOf("de", "en", "it")
-        "it" -> listOf("it", "en", "de")
-        else -> listOf(normalize(tag), "en", "it", "de")
+    /**
+     * Preferred languages for multilingual content. [tag] is one language or a comma-separated
+     * preference list (app language first, then e.g. the phone's system languages).
+     */
+    fun fallbacks(tag: String): List<String> {
+        val preferred = tag.split(',').map { normalize(it.trim()) }.filter { it.isNotEmpty() }
+        val first = preferred.firstOrNull().orEmpty()
+        val network = when (first) {
+            "lld" -> listOf("lld", "de", "it", "en")
+            "de" -> listOf("de", "en", "it")
+            "it" -> listOf("it", "en", "de")
+            else -> listOf(first, "en", "it", "de")
+        }
+        return (preferred + network).distinct()
     }
 }
 
@@ -37,6 +46,15 @@ object Languages {
  * Picks the best translation of a multilingual value: requested language, then language-neutral
  * text (empty key), then the network's operating languages and English, then anything.
  */
+/** The language [localized] picks for this value (normalized), or null when it is empty. */
+fun Map<String, String>.localizedLanguage(language: String): String? {
+    val keys = entries.filter { it.value.isNotBlank() }.map { Languages.normalize(it.key) }.toSet()
+    val wanted = Languages.fallbacks(language)
+    if (wanted.first() in keys) return wanted.first()
+    if ("" in keys) return ""
+    return wanted.drop(1).firstOrNull { it in keys } ?: keys.firstOrNull()
+}
+
 fun Map<String, String>.localized(language: String): String {
     val values = entries.filter { it.value.isNotBlank() }.associate { Languages.normalize(it.key) to it.value }
     val wanted = Languages.fallbacks(language)
@@ -54,13 +72,18 @@ object TextNormalizer {
     fun key(text: String): String =
         separators.replace(marks.replace(Normalizer.normalize(text.lowercase(Locale.ROOT), Normalizer.Form.NFD), ""), " ").trim()
 
-    /** Converts the minimal HTML used in EFA AddInfo texts into plain text. */
+    private val breaks = Regex("(?i)<br\\s*/?>|</p>|</li>|</div>")
+    private val markup = Regex("(?i)</?(p|br|li|ul|ol|div|span|b|i|u|strong|em|a|font|h[1-6])(\\s[^>]*)?/?>")
+
+    /**
+     * Converts operator HTML (EFA AddInfo, GTFS-RT alert texts) into plain text: tags removed, every
+     * character reference decoded, and entity-encoded markup (&lt;p&gt;) unwrapped as well.
+     */
     fun stripHtml(html: String): String = html
-        .replace(Regex("(?i)<br\\s*/?>|</p>|</li>|</div>"), "\n")
-        .replace(Regex("<[^>]+>"), "")
-        .replace("&nbsp;", " ").replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", "\"").replace("&#39;", "'")
-        .replace(Regex("&#(\\d+);")) { m -> m.groupValues[1].toIntOrNull()?.let { String(Character.toChars(it)) } ?: "" }
-        .replace("&amp;", "&")
+        .replace(breaks, "\n").replace(Regex("<[^>]+>"), "")
+        .let(HtmlEntities::decode)
+        .replace(breaks, "\n").replace(markup, "")
+        .replace(' ', ' ')
         .lines().joinToString("\n") { it.trim() }
         .replace(Regex("\n{3,}"), "\n\n").trim()
 }

@@ -309,7 +309,7 @@ fun LineScreen(navigator: Navigator, key: String) {
                         }
                         if (alerts.isNotEmpty()) {
                             item { SectionHeader(stringResource(R.string.line_alerts)) }
-                            itemsIndexed(alerts, key = { _, a -> "a:" + a.id }) { _, alert -> AlertCard(alert, AppLanguage.current(), now, Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) }
+                            itemsIndexed(alerts, key = { _, a -> "a:" + a.id }) { _, alert -> AlertCard(alert, AppLanguage.textLanguages(), now, Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) }
                         }
                         item { SectionHeader(stringResource(R.string.line_next_trips)) }
                         val upcoming = trips.departures.take(12)

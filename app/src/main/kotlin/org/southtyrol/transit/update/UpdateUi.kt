@@ -134,10 +134,9 @@ fun UpdatePrompt(viewModel: UpdateViewModel = hiltViewModel()) {
                     Text(stringResource(R.string.update_available_body, s.release.version, viewModel.currentVersion))
                     if (s.release.notes.isNotBlank()) {
                         Text(stringResource(R.string.update_whats_new), style = MaterialTheme.typography.titleSmall)
-                        Text(
+                        org.southtyrol.transit.feature.common.MarkdownText(
                             s.release.notes,
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.heightIn(max = 220.dp).verticalScroll(rememberScrollState()),
+                            modifier = Modifier.heightIn(max = 280.dp).verticalScroll(rememberScrollState()),
                         )
                     }
                     TextButton(onClick = { viewModel.skip(s.release) }) { Text(stringResource(R.string.update_skip)) }

@@ -142,3 +142,41 @@ object RealtimeMerge {
         } to Freshness.LIVE
     }
 }
+
+/**
+ * Live times from the journey planner's departure monitor (EFA), applied to timetable departures that
+ * GTFS-RT has no prediction for. The GTFS-RT trip-updates feed is often empty while EFA still reports
+ * delays (the same source the planner shows), so without this a stop board would look on time.
+ * Matching: same line name and scheduled time within a minute; destination breaks ties. Each live
+ * entry is used at most once.
+ */
+object LiveOverlay {
+    private const val TOLERANCE_SECONDS = 60L
+
+    fun apply(list: List<Departure>, live: List<Departure>, observedAt: Instant?): List<Departure> {
+        val pool = live.filter { it.predicted != null || it.state == ServiceState.CANCELLED }.toMutableList()
+        if (pool.isEmpty()) return list
+        return list.map { d ->
+            if (d.predicted != null || d.state != ServiceState.NORMAL || d.freshness == Freshness.LIVE) return@map d
+            fun gap(it: Departure) = kotlin.math.abs(java.time.Duration.between(it.scheduled, d.scheduled).seconds)
+            val match = pool
+                .filter { lineKey(it.line) == lineKey(d.line) && gap(it) <= TOLERANCE_SECONDS }
+                .minByOrNull { gap(it) + if (similar(it.destination, d.destination)) 0 else 3600 }
+                // Trains are named differently ("REG" in the timetable, "R 16719" in EFA): fall back to
+                // the same mode, departing at the same minute, towards the same place.
+                ?: pool.filter { it.mode == d.mode && gap(it) <= TOLERANCE_SECONDS && similar(it.destination, d.destination) }.minByOrNull(::gap)
+                ?: return@map d
+            pool.remove(match)
+            if (match.state == ServiceState.CANCELLED) d.copy(state = ServiceState.CANCELLED, freshness = Freshness.LIVE, observedAt = observedAt)
+            else d.copy(predicted = d.scheduled.plus(java.time.Duration.between(match.scheduled, match.predicted)), freshness = Freshness.LIVE, observedAt = observedAt)
+        }
+    }
+
+    /** "201", " 201 ", "Bus 201" and "201 " compare equal; case and spacing are ignored. */
+    internal fun lineKey(line: String) = line.uppercase().replace(Regex("^(BUS|TRAM|ZUG|TRENO)\\s+"), "").replace(Regex("\\s+"), "")
+
+    private fun similar(a: String, b: String): Boolean {
+        val x = TextNormalizer.key(a); val y = TextNormalizer.key(b)
+        return x.isNotEmpty() && y.isNotEmpty() && (x.contains(y) || y.contains(x) || x.split(' ').intersect(y.split(' ').toSet()).any { it.length > 3 })
+    }
+}

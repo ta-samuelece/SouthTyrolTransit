@@ -183,6 +183,20 @@ interface ScheduleDao {
     )
     suspend fun arrivals(stopIds: Collection<String>, low: Int, high: Int, limit: Int): List<BoardRow>
 
+    @Query(
+        """
+        SELECT EXISTS(
+            SELECT 1 FROM stop_times st JOIN stops s ON s.idx = st.stopIdx
+            WHERE s.id IN (:stopIds) AND (
+                st.arrival != st.departure OR st.flags != 0
+                OR st.sequence = (SELECT MIN(x.sequence) FROM stop_times x WHERE x.tripIdx = st.tripIdx)
+                OR st.sequence = (SELECT MAX(x.sequence) FROM stop_times x WHERE x.tripIdx = st.tripIdx)
+            )
+        )
+        """,
+    )
+    suspend fun arrivalsDiffer(stopIds: Collection<String>): Boolean
+
     @Query("SELECT DISTINCT r.lineKey FROM stop_times st JOIN stops s ON s.idx = st.stopIdx JOIN trips t ON t.idx = st.tripIdx JOIN routes r ON r.id = t.routeId WHERE s.id IN (:stopIds)")
     suspend fun lineKeysAtStops(stopIds: Collection<String>): List<String>
 

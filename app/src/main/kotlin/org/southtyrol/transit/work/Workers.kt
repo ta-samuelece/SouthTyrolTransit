@@ -183,6 +183,7 @@ class AlertCheckWorker @AssistedInject constructor(
     override suspend fun doWork(): Result {
         if (!settings.current().alertNotifications || !Notifications.canPost(applicationContext)) return Result.success()
         val lang = language.current()
+        val textLang = org.southtyrol.transit.di.AppLanguage.textLanguages()
         alerts.refresh(lang, force = true)
         val state = alerts.state.first()
         val items = saved.saved.first()
@@ -199,9 +200,9 @@ class AlertCheckWorker @AssistedInject constructor(
         for (alert in relevant.take(5)) {
             val notification = NotificationCompat.Builder(applicationContext, Notifications.CHANNEL_ALERTS)
                 .setSmallIcon(R.drawable.ic_transit)
-                .setContentTitle(alert.headers.localized(lang).ifBlank { applicationContext.getString(R.string.alerts_title) })
-                .setContentText(alert.descriptions.localized(lang))
-                .setStyle(NotificationCompat.BigTextStyle().bigText(alert.descriptions.localized(lang)))
+                .setContentTitle(alert.headers.localized(textLang).ifBlank { applicationContext.getString(R.string.alerts_title) })
+                .setContentText(alert.descriptions.localized(textLang))
+                .setStyle(NotificationCompat.BigTextStyle().bigText(alert.descriptions.localized(textLang)))
                 .setContentIntent(Notifications.openAppIntent(applicationContext))
                 .setAutoCancel(true)
                 .build()

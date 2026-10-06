@@ -316,4 +316,21 @@
     <string name="stop_later_departures">Partenze successive</string>
     <string name="stop_earlier_arrivals">Arrivi precedenti</string>
     <string name="stop_later_arrivals">Arrivi successivi</string>
+    <string name="settings_app_icon">Icona dell\'app</string>
+    <string name="settings_app_icon_hint">Alcuni launcher mostrano la nuova icona dopo qualche istante; potrebbe essere necessario aggiungere di nuovo il collegamento nella schermata Home.</string>
+    <string name="icon_flowing_forest">Foresta fluente</string>
+    <string name="icon_abstract_silhouette">Silhouette astratta</string>
+    <string name="icon_dusk_peak">Vetta al tramonto</string>
+    <string name="icon_night_route">Percorso notturno</string>
+    <string name="icon_sunrise_basin">Conca all\'alba</string>
+    <string name="icon_teal_valley">Valle turchese</string>
+    <string name="widget_label">Prossime partenze</string>
+    <string name="widget_description">Prossimi bus e treni a una fermata a tua scelta</string>
+    <string name="widget_choose_stop">Scegli una fermata</string>
+    <string name="widget_tap_to_choose">Tocca per scegliere una fermata</string>
+    <string name="widget_updated">Aggiornato alle %s</string>
+    <string name="widget_update_failed">Aggiornamento non riuscito · dati delle %s</string>
+    <string name="widget_loading">Caricamento…</string>
+    <string name="widget_refresh">Aggiorna</string>
+    <string name="widget_on_time">in orario</string>
 </resources>

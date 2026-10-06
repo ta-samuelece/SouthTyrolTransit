@@ -45,6 +45,7 @@ import org.southtyrol.transit.model.Place
 import org.southtyrol.transit.model.PlaceType
 import org.southtyrol.transit.model.Point
 import org.southtyrol.transit.model.RealtimeFeed
+import org.southtyrol.transit.model.LiveOverlay
 import org.southtyrol.transit.model.RealtimeMerge
 import org.southtyrol.transit.model.RealtimeSnapshot
 import org.southtyrol.transit.model.Route
@@ -224,6 +225,9 @@ data class Board(
     val realtimeFetchedAt: Instant?,
 )
 
+/** Departure-monitor results used as a live overlay on a timetable board. */
+data class LiveTimes(val departures: List<Departure>, val fetchedAt: Instant)
+
 class DepartureRepository(
     private val schedule: TransitScheduleDataSource,
     private val network: DepartureBoardDataSource,
@@ -241,21 +245,51 @@ class DepartureRepository(
     }
 
     /**
+     * Live times from the online departure monitor for a timetable board, applied by [merge] where
+     * GTFS-RT has none. Empty on any error: the overlay is a best-effort extra.
+     */
+    suspend fun liveOverlay(stationKey: String, from: Instant, arrivals: Boolean, language: String): LiveTimes {
+        val list = try { network.departures(stationKey, from, arrivals, language, 80) } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (_: Exception) { emptyList() }
+        return LiveTimes(list, clock())
+    }
+
+    /** Whether the arrivals board would differ from the departures board (else the toggle is pointless). */
+    suspend fun arrivalsDiffer(stationKey: String): Boolean = !schedule.isAvailable() || runCatching { schedule.arrivalsDiffer(listOf(stationKey)) }.getOrDefault(true)
+
+    /**
      * Applies realtime and alert flags; drops departures that have clearly left, or, when the board
      * starts at a chosen time ([keepFrom]), those before that time.
      */
-    fun merge(list: List<Departure>, source: BoardSource, snapshot: RealtimeSnapshot, alerts: List<ServiceAlert>, arrivals: Boolean, now: Instant = clock(), keepFrom: Instant? = null): Board {
+    fun merge(
+        list: List<Departure>, source: BoardSource, snapshot: RealtimeSnapshot, alerts: List<ServiceAlert>, arrivals: Boolean,
+        now: Instant = clock(), keepFrom: Instant? = null, live: LiveTimes? = null,
+    ): Board {
         val feed = FreshnessPolicy.feed(snapshot.updatesFetchedAt, now)
-        val merged = list.map { d ->
-            val withRt = if (source == BoardSource.SCHEDULE && feed == Freshness.LIVE) RealtimeMerge.departure(d, snapshot.update(d.tripId, d.serviceDate), now, arrivals) else d
+        val overlayFresh = live != null && Duration.between(live.fetchedAt, now) < Duration.ofMinutes(3)
+        val gtfsRt = list.map { d -> if (source == BoardSource.SCHEDULE && feed == Freshness.LIVE) RealtimeMerge.departure(d, snapshot.update(d.tripId, d.serviceDate), now, arrivals) else d }
+        val withLive = if (source == BoardSource.SCHEDULE && overlayFresh) LiveOverlay.apply(gtfsRt, live!!.departures, live.fetchedAt) else gtfsRt
+        val merged = withLive.map { withRt ->
             val active = alerts.filter { it.active(now) }
             withRt.copy(hasAlert = active.any { AlertMatcher.affectsDeparture(it, withRt) })
         }.filter { d ->
             val keep = if (d.state == ServiceState.CANCELLED) d.scheduled else d.best
             !keep.isBefore(keepFrom ?: now.minusSeconds(60))
         }.sortedBy { it.best }
-        val realtimeState = if (source == BoardSource.NETWORK) (if (merged.any { it.freshness == Freshness.LIVE }) Freshness.LIVE else Freshness.SCHEDULED) else feed
-        return Board(merged, source, realtimeState, if (source == BoardSource.NETWORK) now else snapshot.updatesFetchedAt)
+        // "Live" only when some departure actually carries live data: a fresh but empty GTFS-RT feed
+        // must not make a pure timetable look live.
+        val anyLive = merged.any { it.freshness == Freshness.LIVE }
+        val realtimeState = when {
+            anyLive -> Freshness.LIVE
+            source == BoardSource.NETWORK || overlayFresh -> Freshness.SCHEDULED
+            feed == Freshness.LIVE -> Freshness.SCHEDULED
+            else -> feed
+        }
+        val fetchedAt = when {
+            source == BoardSource.NETWORK -> now
+            overlayFresh && (snapshot.updatesFetchedAt == null || live!!.fetchedAt.isAfter(snapshot.updatesFetchedAt)) -> live!!.fetchedAt
+            else -> snapshot.updatesFetchedAt
+        }
+        return Board(merged, source, realtimeState, fetchedAt)
     }
 
     fun refreshRealtime() = setOf(RealtimeFeed.TRIP_UPDATES)

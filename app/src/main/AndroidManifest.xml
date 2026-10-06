@@ -39,12 +39,86 @@
             android:name=".MainActivity"
             android:exported="true"
             android:theme="@style/Theme.Transit.Starting"
-            android:windowSoftInputMode="adjustResize">
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Launcher entries, one per selectable app icon (Settings > Appearance); exactly one is enabled. -->
+        <activity-alias
+            android:name=".IconFlowingForest"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_flowing_forest"
+            android:roundIcon="@mipmap/ic_launcher_flowing_forest"
+            android:targetActivity=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".IconAbstractSilhouette"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_abstract_silhouette"
+            android:roundIcon="@mipmap/ic_launcher_abstract_silhouette"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".IconDuskPeak"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_dusk_peak"
+            android:roundIcon="@mipmap/ic_launcher_dusk_peak"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".IconNightRoute"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_night_route"
+            android:roundIcon="@mipmap/ic_launcher_night_route"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".IconSunriseBasin"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_sunrise_basin"
+            android:roundIcon="@mipmap/ic_launcher_sunrise_basin"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".IconTealValley"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_teal_valley"
+            android:roundIcon="@mipmap/ic_launcher_teal_valley"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
 
         <!-- WorkManager is initialised on demand with the Hilt worker factory. -->
         <provider
@@ -62,6 +136,30 @@
             android:name="androidx.work.impl.foreground.SystemForegroundService"
             android:foregroundServiceType="dataSync"
             tools:node="merge" />
+
+        <!-- Home-screen widget: next departures at a chosen stop. -->
+        <receiver
+            android:name=".widget.DeparturesWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/departures_widget_info" />
+        </receiver>
+
+        <activity
+            android:name=".widget.WidgetConfigActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:label="@string/widget_choose_stop"
+            android:theme="@style/Theme.Transit">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
 
         <!-- Shares a downloaded update APK with the system installer. -->
         <provider

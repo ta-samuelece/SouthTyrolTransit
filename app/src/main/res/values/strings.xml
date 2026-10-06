@@ -326,4 +326,21 @@
     <string name="stop_later_departures">Later departures</string>
     <string name="stop_earlier_arrivals">Earlier arrivals</string>
     <string name="stop_later_arrivals">Later arrivals</string>
+    <string name="settings_app_icon">App icon</string>
+    <string name="settings_app_icon_hint">Some launchers take a moment to show the new icon; a shortcut on the home screen may need to be added again.</string>
+    <string name="icon_flowing_forest">Flowing Forest</string>
+    <string name="icon_abstract_silhouette">Abstract Silhouette</string>
+    <string name="icon_dusk_peak">Dusk Peak</string>
+    <string name="icon_night_route">Night Route</string>
+    <string name="icon_sunrise_basin">Sunrise Basin</string>
+    <string name="icon_teal_valley">Teal Valley</string>
+    <string name="widget_label">Next departures</string>
+    <string name="widget_description">Upcoming buses and trains at a stop of your choice</string>
+    <string name="widget_choose_stop">Choose a stop</string>
+    <string name="widget_tap_to_choose">Tap to choose a stop</string>
+    <string name="widget_updated">Updated %s</string>
+    <string name="widget_update_failed">Could not update · data from %s</string>
+    <string name="widget_loading">Loading…</string>
+    <string name="widget_refresh">Refresh</string>
+    <string name="widget_on_time">on time</string>
 </resources>

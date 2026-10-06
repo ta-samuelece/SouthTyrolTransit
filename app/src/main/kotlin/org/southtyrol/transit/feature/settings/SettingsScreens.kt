@@ -44,6 +44,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.ui.semantics.role
@@ -169,6 +171,9 @@ fun SettingsScreen(navigator: Navigator, viewModel: SettingsViewModel = hiltView
                     stringResource(when (it) { ThemeMode.SYSTEM -> R.string.theme_system; ThemeMode.LIGHT -> R.string.theme_light; ThemeMode.DARK -> R.string.theme_dark })
                 }, { viewModel.theme(it) })
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) SwitchRow(stringResource(R.string.settings_dynamic_color), null, prefs.dynamicColor) { viewModel.dynamic(it) }
+                ChipLabel(stringResource(R.string.settings_app_icon))
+                AppIconPicker()
+                Text(stringResource(R.string.settings_app_icon_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
 
@@ -431,3 +436,49 @@ fun TicketsScreen(navigator: Navigator, viewModel: TicketsViewModel = hiltViewMo
 
 @HiltViewModel
 class TicketsViewModel @Inject constructor(val ticketing: TicketingProvider) : ViewModel()
+
+/** The launcher icon variants as round previews; the selected one is outlined and checked. */
+@Composable
+private fun AppIconPicker() {
+    val context = LocalContext.current
+    var selected by remember { mutableStateOf(org.southtyrol.transit.ui.AppIcons.current(context)) }
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.selectableGroup()) {
+        org.southtyrol.transit.ui.AppIcon.entries.forEach { icon ->
+            val isSelected = icon == selected
+            val label = stringResource(icon.label)
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .width(76.dp)
+                    .selectable(selected = isSelected, role = Role.RadioButton) {
+                        if (!isSelected) {
+                            org.southtyrol.transit.ui.AppIcons.set(context, icon)
+                            selected = icon
+                        }
+                    },
+            ) {
+                Box(contentAlignment = Alignment.BottomEnd) {
+                    androidx.compose.foundation.Image(
+                        painter = androidx.compose.ui.res.painterResource(icon.preview),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(64.dp)
+                            .border(
+                                width = if (isSelected) 3.dp else 0.dp,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else androidx.compose.ui.graphics.Color.Transparent,
+                                shape = androidx.compose.foundation.shape.CircleShape,
+                            )
+                            .padding(if (isSelected) 5.dp else 0.dp),
+                    )
+                    if (isSelected) androidx.compose.material3.Surface(shape = androidx.compose.foundation.shape.CircleShape, color = MaterialTheme.colorScheme.primary) {
+                        Icon(Icons.Rounded.Check, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.padding(2.dp).size(16.dp))
+                    }
+                }
+                Text(
+                    label, style = MaterialTheme.typography.labelSmall, textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    maxLines = 2, modifier = Modifier.padding(top = 4.dp),
+                )
+            }
+        }
+    }
+}

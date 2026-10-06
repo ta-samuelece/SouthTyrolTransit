@@ -56,6 +56,10 @@ data class StopState(
     val end: Instant? = null,
     /** Extending the window while the current board stays visible. */
     val loadingMore: Boolean = false,
+    /** Live times from the departure monitor, overlaid where GTFS-RT has none. */
+    val liveTimes: org.southtyrol.transit.data.LiveTimes? = null,
+    /** False when arrivals would equal departures, so the toggle is hidden. */
+    val showArrivalsToggle: Boolean = false,
 ) {
     val live: Boolean get() = start == null && end == null
 }
@@ -94,7 +98,7 @@ class StopViewModel @AssistedInject constructor(
 
     /** Scheduled board merged with the latest realtime snapshot (recomputed on every RT refresh). */
     val board: StateFlow<Board?> = combine(_state, realtime.snapshot, alertState) { s, snapshot, a ->
-        if (s.loadedAt == null) null else departures.merge(s.scheduled, s.source, snapshot, a.alerts, s.arrivals, keepFrom = s.start)
+        if (s.loadedAt == null) null else departures.merge(s.scheduled, s.source, snapshot, a.alerts, s.arrivals, keepFrom = s.start, live = s.liveTimes)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     init {
@@ -103,7 +107,8 @@ class StopViewModel @AssistedInject constructor(
             val stop = runCatching { schedule.stop(stationKey, lang) }.getOrNull()
             val platforms = runCatching { schedule.stationStops(stationKey, lang) }.getOrDefault(emptyList())
             val served = runCatching { lines.atStop(stationKey) }.getOrDefault(emptyList())
-            _state.update { it.copy(stop = stop, name = stop?.name ?: it.name, platforms = platforms, lines = served) }
+            val toggle = departures.arrivalsDiffer(stationKey)
+            _state.update { it.copy(stop = stop, name = stop?.name ?: it.name, platforms = platforms, lines = served, showArrivalsToggle = toggle) }
             if (stop != null && location.hasPermission()) {
                 (location.current() as? LocationResult.Found)?.let { found -> _state.update { it.copy(distanceMeters = Geo.distance(found.point, stop.point)) } }
             }
@@ -124,12 +129,21 @@ class StopViewModel @AssistedInject constructor(
                 _state.update { it.copy(loading = false, loadingMore = false, error = e.error) }
             }
         }
-        if (_state.value.source == BoardSource.SCHEDULE) departures.pollRealtime()
+        val current = _state.value
+        if (current.source == BoardSource.SCHEDULE) {
+            departures.pollRealtime()
+            // Live times only exist around now; skip the overlay for boards far in the past or future.
+            val from = current.start ?: now
+            if (Duration.between(now, from).abs() < Duration.ofHours(3)) {
+                val live = departures.liveOverlay(stationKey, from.coerceAtLeast(now.minus(Duration.ofMinutes(30))), current.arrivals, language.current())
+                _state.update { if (it.arrivals == current.arrivals) it.copy(liveTimes = live) else it }
+            }
+        }
     }
 
     fun setArrivals(value: Boolean) {
         if (value == _state.value.arrivals) return
-        _state.update { it.copy(arrivals = value, loading = true, loadedAt = null, scheduled = emptyList()) }
+        _state.update { it.copy(arrivals = value, loading = true, loadedAt = null, scheduled = emptyList(), liveTimes = null) }
         viewModelScope.launch { refresh(force = true) }
     }
 

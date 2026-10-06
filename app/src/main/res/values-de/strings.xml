@@ -312,4 +312,21 @@
     <string name="stop_later_departures">Spätere Abfahrten</string>
     <string name="stop_earlier_arrivals">Frühere Ankünfte</string>
     <string name="stop_later_arrivals">Spätere Ankünfte</string>
+    <string name="settings_app_icon">App-Symbol</string>
+    <string name="settings_app_icon_hint">Manche Launcher zeigen das neue Symbol erst nach kurzer Zeit; eine Verknüpfung auf dem Startbildschirm muss eventuell neu angelegt werden.</string>
+    <string name="icon_flowing_forest">Fließender Wald</string>
+    <string name="icon_abstract_silhouette">Abstrakte Silhouette</string>
+    <string name="icon_dusk_peak">Gipfel in der Dämmerung</string>
+    <string name="icon_night_route">Nachtroute</string>
+    <string name="icon_sunrise_basin">Talkessel bei Sonnenaufgang</string>
+    <string name="icon_teal_valley">Türkises Tal</string>
+    <string name="widget_label">Nächste Abfahrten</string>
+    <string name="widget_description">Kommende Busse und Züge an einer Haltestelle deiner Wahl</string>
+    <string name="widget_choose_stop">Haltestelle wählen</string>
+    <string name="widget_tap_to_choose">Tippen, um eine Haltestelle zu wählen</string>
+    <string name="widget_updated">Aktualisiert %s</string>
+    <string name="widget_update_failed">Aktualisierung fehlgeschlagen · Stand %s</string>
+    <string name="widget_loading">Wird geladen…</string>
+    <string name="widget_refresh">Aktualisieren</string>
+    <string name="widget_on_time">pünktlich</string>
 </resources>

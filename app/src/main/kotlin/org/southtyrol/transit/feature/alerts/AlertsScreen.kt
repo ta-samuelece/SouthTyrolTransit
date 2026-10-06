@@ -140,7 +140,7 @@ fun AlertsScreen(navigator: Navigator, viewModel: AlertsViewModel = hiltViewMode
     var refreshing by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val now = rememberNow(60_000)
-    val language = AppLanguage.current()
+    val language = AppLanguage.textLanguages()
     PollWhileVisible(120_000) { viewModel.refresh() }
 
     Scaffold(topBar = { TopLevelBar(stringResource(R.string.alerts_title)) }) { padding ->

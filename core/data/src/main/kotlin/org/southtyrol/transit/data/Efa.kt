@@ -421,7 +421,7 @@ object EfaXml {
                 tripId = "efa:" + line?.a("stateless").orEmpty() + ":" + tripCode + ":" + scheduled.epochSecond,
                 stopId = d.a("gid").ifBlank { d.a("stopID") }, sequence = 0, routeId = line?.a("stateless").orEmpty(),
                 line = short, mode = mode, destination = line?.a("direction").orEmpty(), scheduled = scheduled,
-                predicted = rt.takeIf { realtime && !cancelled }, state = if (cancelled) ServiceState.CANCELLED else ServiceState.NORMAL,
+                predicted = (rt ?: delay?.takeIf { it in 0..600 && realtime }?.let { scheduled.plusSeconds(it * 60L) }).takeIf { realtime && !cancelled }, state = if (cancelled) ServiceState.CANCELLED else ServiceState.NORMAL,
                 freshness = if (realtime) Freshness.LIVE else Freshness.SCHEDULED, platform = d.a("platformName"),
                 observedAt = if (realtime) now else null, operator = line?.child("itdOperator")?.text("name").orEmpty(), tripLinked = false,
             )
@@ -440,7 +440,7 @@ object EfaXml {
                 val lang = Languages.normalize(link.a("language"))
                 val text = link.child("infoText")
                 val header = listOf(text?.text("subtitle"), link.text("infoLinkText")).firstOrNull { !it.isNullOrBlank() && !it.equals("Information", true) }
-                if (header != null) headers[lang] = header
+                if (header != null) headers[lang] = TextNormalizer.stripHtml(header)
                 val body = listOfNotNull(text?.text("subject")?.takeIf { it.isNotBlank() }, text?.text("content")?.let(TextNormalizer::stripHtml)?.takeIf { it.isNotBlank() }).joinToString("\n\n")
                 if (body.isNotBlank()) descriptions[lang] = body
             }

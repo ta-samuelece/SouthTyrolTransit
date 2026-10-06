@@ -76,7 +76,7 @@ object GtfsRealtimeParser {
             )
         }
 
-        fun G.TranslatedString.strings(): Map<String, String> = translationList.filter { it.text.isNotBlank() }.associate { (if (it.hasLanguage()) it.language else "").lowercase() to it.text.trim() }
+        fun G.TranslatedString.strings(): Map<String, String> = translationList.filter { it.text.isNotBlank() }.associate { (if (it.hasLanguage()) it.language else "").lowercase() to org.southtyrol.transit.model.TextNormalizer.stripHtml(it.text) }
 
         val alerts = feed.entityList.filter { it.hasAlert() && !it.isDeleted }.map { e ->
             val a = e.alert

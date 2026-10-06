@@ -202,7 +202,8 @@ class MapViewModel @Inject constructor(
                     val now = Instant.now()
                     val next = runCatching {
                         val (list, source) = departures.load(stop.id, false, now, language.current(), java.time.Duration.ofHours(2))
-                        departures.merge(list, source, realtime.snapshot.value, alertState.value.alerts, false, now).departures.take(5)
+                        val live = if (source == org.southtyrol.transit.data.BoardSource.SCHEDULE) departures.liveOverlay(stop.id, now, false, language.current()) else null
+                        departures.merge(list, source, realtime.snapshot.value, alertState.value.alerts, false, now, live = live).departures.take(5)
                     }.getOrDefault(emptyList())
                     _selection.update { s -> if (s is MapSelection.StopSel && s.stop.id == stop.id) s.copy(departures = next) else s }
                 }

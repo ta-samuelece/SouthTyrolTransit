@@ -1,4 +1,4 @@
-<p align="center"><img src="docs/icon-512.png" width="128" alt="App icon: mountains with a route between two stops"></p>
+<p align="center"><img src="docs/icon-512.png" width="128" alt="App icon: forested mountains with a route between two stops"></p>
 
 # South Tyrol Transit
 
@@ -8,6 +8,26 @@
 
 Unofficial Android app for public transport in South Tyrol / Alto Adige. Released into the public domain under
 [The Unlicense](LICENSE): do whatever you want with it.
+
+## Screenshots
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/screenshots/results.png" width="220" alt="Journey results from Bolzano to Merano"><br><sub>Journey results</sub></td>
+    <td align="center"><img src="docs/screenshots/journey.png" width="220" alt="Journey detail with route map and timeline"><br><sub>Journey detail</sub></td>
+    <td align="center"><img src="docs/screenshots/stop.png" width="220" alt="Departure board at Bolzano station"><br><sub>Live departure board</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/map.png" width="220" alt="Map with stops and a stop's next departures"><br><sub>Map with stop preview</sub></td>
+    <td align="center"><img src="docs/screenshots/alerts.png" width="220" alt="Service alerts with line and stop filter"><br><sub>Service alerts</sub></td>
+    <td align="center"><img src="docs/screenshots/settings.png" width="220" alt="Settings with language, theme and app icon choice"><br><sub>Settings and app icons</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/widget.png" width="220" alt="Home-screen widget with next departures"><br><sub>Home-screen widget</sub></td>
+    <td></td>
+    <td></td>
+  </tr>
+</table>
 
 ## 1. Purpose
 
@@ -20,7 +40,7 @@ It is built only on legitimate open data:
 - Open Data Hub mobility data
 - OpenStreetMap-based maps
 
-"South Tyrol Transit" and the package id `org.southtyrol.transit` are **placeholders**; rename them in `app/build.gradle.kts` and `strings.xml`. The launcher icon comes from `icons/Mountain Route App Icon.png`: the adaptive-icon layers in `res/mipmap-*/ic_launcher_foreground.png` are generated from it (black corners filled, art centred so both route stops fit the circular mask), and `res/drawable/ic_launcher_monochrome.xml` is its themed-icon silhouette.
+"South Tyrol Transit" and the package id `org.southtyrol.transit` are **placeholders**; rename them in `app/build.gradle.kts` and `strings.xml`. The launcher icons come from the PNGs in `icons/` (default: Flowing Forest; users pick one in Settings → Appearance). Run `python tools/generate_icons.py` after adding or changing one: it fills the black corners, centres the art so the route stays inside the circular mask, and writes the adaptive-icon layers, previews and launcher aliases' icons. `res/drawable/ic_launcher_monochrome.xml` is the themed-icon silhouette.
 
 ## 2. Unofficial status
 

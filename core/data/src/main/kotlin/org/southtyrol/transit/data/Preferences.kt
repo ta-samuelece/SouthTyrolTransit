@@ -21,6 +21,9 @@ enum class ThemeMode { SYSTEM, LIGHT, DARK }
 /** Tab shown when the app opens. */
 enum class StartTab { PLAN, DEPARTURES, MAP, ALERTS, SETTINGS }
 
+/** Which GitHub releases the in-app updater offers: only stable ones, or pre-releases ("previews") too. */
+enum class UpdateChannel { STABLE, PREVIEW }
+
 /** Where the map's "center on my position" button sits (or whether it is shown at all). */
 enum class LocateButtonPosition { BOTTOM_END, BOTTOM_CENTER, BOTTOM_START, HIDDEN }
 
@@ -43,6 +46,7 @@ data class UserSettings(
     val autoUpdateCheck: Boolean = true,
     /** A release version the user chose to skip; not offered again automatically. */
     val skippedUpdate: String = "",
+    val updateChannel: UpdateChannel = UpdateChannel.STABLE,
 )
 
 /** The app language currently in effect (per-app locale or system), as a BCP-47 tag. */
@@ -70,6 +74,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val locate = stringPreferencesKey("locateButton")
         val autoUpdate = booleanPreferencesKey("autoUpdateCheck")
         val skipped = stringPreferencesKey("skippedUpdate")
+        val channel = stringPreferencesKey("updateChannel")
     }
 
     val settings: Flow<UserSettings> = store.data
@@ -90,6 +95,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
                 locateButton = p[Keys.locate]?.let { runCatching { LocateButtonPosition.valueOf(it) }.getOrNull() } ?: LocateButtonPosition.BOTTOM_END,
                 autoUpdateCheck = p[Keys.autoUpdate] ?: true,
                 skippedUpdate = p[Keys.skipped] ?: "",
+                updateChannel = p[Keys.channel]?.let { runCatching { UpdateChannel.valueOf(it) }.getOrNull() } ?: UpdateChannel.STABLE,
             )
         }
 
@@ -109,4 +115,5 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
     suspend fun setLocateButton(value: LocateButtonPosition) { store.edit { it[Keys.locate] = value.name } }
     suspend fun setAutoUpdateCheck(value: Boolean) { store.edit { it[Keys.autoUpdate] = value } }
     suspend fun setSkippedUpdate(value: String) { store.edit { it[Keys.skipped] = value } }
+    suspend fun setUpdateChannel(value: UpdateChannel) { store.edit { it[Keys.channel] = value.name } }
 }

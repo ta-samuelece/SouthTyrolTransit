@@ -349,4 +349,10 @@
     <string name="trip_vehicle_approaching">Vehicle is on its way to this stop</string>
     <string name="trip_map_expand">Enlarge map</string>
     <string name="trip_map_collapse">Shrink map</string>
+    <string name="update_channel">Update channel</string>
+    <string name="update_channel_stable">Stable</string>
+    <string name="update_channel_preview">Preview</string>
+    <string name="update_channel_stable_hint">Only finished releases.</string>
+    <string name="update_channel_preview_hint">Also offers preview builds with new features before they are released. They may contain bugs. To go back, switch to Stable: you keep the preview until a newer stable version comes out.</string>
+    <string name="update_available_preview_title">Preview update available</string>
 </resources>

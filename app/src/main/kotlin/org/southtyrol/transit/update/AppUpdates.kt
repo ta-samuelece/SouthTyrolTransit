@@ -33,7 +33,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /** A published release that carries an installable APK. */
-data class AppRelease(val version: String, val notes: String, val pageUrl: String, val apkUrl: String, val apkSize: Long)
+data class AppRelease(val version: String, val notes: String, val pageUrl: String, val apkUrl: String, val apkSize: Long, val preview: Boolean = false)
 
 enum class UpdateError { NETWORK, NO_APK, DOWNLOAD, WRONG_PACKAGE, NOT_NEWER, SIGNATURE }
 
@@ -47,7 +47,11 @@ sealed interface UpdateState {
     data class Failed(val error: UpdateError, val release: AppRelease?) : UpdateState
 }
 
-/** Release versions like "v1.2.0" or "1.10.0-beta.1"; numeric parts compare numerically, a suffix ranks below the plain version. */
+/**
+ * Release versions like "v1.2.0" or "1.10.0-preview.2": numeric parts compare numerically, a suffix
+ * (pre-release) ranks below the plain version, and suffix parts compare numerically where they are
+ * numbers ("preview.10" is newer than "preview.9").
+ */
 object Versions {
     fun clean(tag: String): String = tag.trim().removePrefix("v").removePrefix("V")
 
@@ -64,14 +68,29 @@ object Versions {
             suffixA == suffixB -> 0
             suffixA == null -> 1
             suffixB == null -> -1
-            else -> suffixA.compareTo(suffixB)
+            else -> compareSuffix(suffixA, suffixB)
         }
+    }
+
+    private fun compareSuffix(a: String, b: String): Int {
+        val pa = a.split('.'); val pb = b.split('.')
+        for (i in 0 until maxOf(pa.size, pb.size)) {
+            val x = pa.getOrNull(i) ?: return -1
+            val y = pb.getOrNull(i) ?: return 1
+            val c = if (x.toIntOrNull() != null && y.toIntOrNull() != null) x.toInt().compareTo(y.toInt()) else x.compareTo(y)
+            if (c != 0) return c
+        }
+        return 0
     }
 
     fun isNewer(candidate: String, current: String) = compare(candidate, current) > 0
 }
 
-/** Parses GitHub's "latest release" response. Drafts, pre-releases and releases without an APK are ignored. */
+/**
+ * Parses GitHub release responses. The stable channel reads "latest release" (GitHub never returns a
+ * pre-release there); the preview channel reads the release list and takes the newest version of any
+ * kind. Drafts and releases without an APK are never offered.
+ */
 object ReleaseParser {
     @Serializable
     private data class Asset(val name: String, @SerialName("browser_download_url") val url: String, val size: Long = 0)
@@ -88,15 +107,25 @@ object ReleaseParser {
 
     private val json = Json { ignoreUnknownKeys = true }
 
-    /** Null when the release cannot be offered; [hasApk] distinguishes "no APK attached". */
-    fun parse(body: String): Pair<AppRelease?, Boolean> {
-        val r = json.decodeFromString<Release>(body)
-        if (r.draft || r.prerelease) return null to true
+    /** One release ("latest"). Null when it cannot be offered; [hasApk] distinguishes "no APK attached". */
+    fun parse(body: String): Pair<AppRelease?, Boolean> = offer(json.decodeFromString<Release>(body), allowPreview = false)
+
+    /** A release list: the newest offerable version, pre-releases included when [allowPreview]. */
+    fun parseList(body: String, allowPreview: Boolean): Pair<AppRelease?, Boolean> {
+        val offers = json.decodeFromString<List<Release>>(body).map { offer(it, allowPreview) }
+        val best = offers.mapNotNull { it.first }.maxWithOrNull { a, b -> Versions.compare(a.version, b.version) }
+        // "No APK" only when the newest candidate release lacks one; otherwise it is just "nothing newer".
+        return best to (best != null || offers.none { (r, hasApk) -> r == null && !hasApk })
+    }
+
+    private fun offer(r: Release, allowPreview: Boolean): Pair<AppRelease?, Boolean> {
+        if (r.draft || (r.prerelease && !allowPreview)) return null to true
         val apks = r.assets.filter { it.name.endsWith(".apk", ignoreCase = true) }
         // Prefer the release build; never offer a debug build if a proper one exists.
-        val apk = apks.firstOrNull { "release" in it.name.lowercase() } ?: apks.firstOrNull { "debug" !in it.name.lowercase() } ?: apks.firstOrNull()
+        val apk = apks.firstOrNull { "release" in it.name.lowercase() || "preview" in it.name.lowercase() }
+            ?: apks.firstOrNull { "debug" !in it.name.lowercase() } ?: apks.firstOrNull()
             ?: return null to false
-        return AppRelease(Versions.clean(r.tag), r.body.orEmpty().trim(), r.pageUrl, apk.url, apk.size) to true
+        return AppRelease(Versions.clean(r.tag), r.body.orEmpty().trim(), r.pageUrl, apk.url, apk.size, preview = r.prerelease) to true
     }
 }
 
@@ -136,14 +165,14 @@ class UpdateManager @Inject constructor(
     /** Set once the user dismissed the prompt; it is not shown again until the next app start. */
     var dismissed = false
 
-    suspend fun check(force: Boolean = false) {
+    suspend fun check(force: Boolean = false, preview: Boolean = false) {
         if (!enabled) return
         val busy = _state.value is UpdateState.Checking || _state.value is UpdateState.Downloading || _state.value is UpdateState.Ready
         if (busy || (!force && Duration.between(lastCheck, Instant.now()) < Duration.ofHours(1))) return
         _state.value = UpdateState.Checking
         _state.value = try {
             val request = Request.Builder()
-                .url("https://api.github.com/repos/$repo/releases/latest")
+                .url(if (preview) "https://api.github.com/repos/$repo/releases?per_page=30" else "https://api.github.com/repos/$repo/releases/latest")
                 .header("Accept", "application/vnd.github+json")
                 .header("X-GitHub-Api-Version", "2022-11-28")
                 .build()
@@ -152,6 +181,7 @@ class UpdateManager @Inject constructor(
                     when {
                         response.code == 404 -> null to true // no release published yet
                         !response.isSuccessful -> throw IOException("HTTP ${response.code}")
+                        preview -> ReleaseParser.parseList(response.body.string(), allowPreview = true)
                         else -> ReleaseParser.parse(response.body.string())
                     }
                 }

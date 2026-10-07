@@ -60,7 +60,7 @@ This app is **independent and unofficial**. It is not affiliated with STA, SASA,
 | **Map** | MapLibre (OpenGL ES) map with clustered stops, live vehicles (bearing arrows, dimmed when stale, hidden after 10 min) and optional parking / bike / car-sharing layers. Saved stops highlighted. MapLibre logo/info button removed; a compact OSM/OpenFreeMap credit remains (ODbL). Only a "my position" button floats over the map; which layers are shown and where that button sits (or whether it is hidden) are chosen in Settings. Stop sheet with the next departures; vehicle sheet with line, destination, next stop, delay and freshness |
 | **Alerts** | Current and planned alerts merged from GTFS-RT and EFA AddInfo, deduplicated. Filter by line or stop (text; tapping a line chip filters to it) and to my stops/lines. Multilingual (de/it/en/lld) with a language switcher. Validity periods. Stale marking offline |
 | **Saved** (in Settings) | Places, stops, lines, journeys and recents; add stops (search or map) and lines. Saved stops and lines drive the Alerts "My stops and lines" filter and alert notifications. Local only |
-| **Settings** (tab) | Grouped in cards; choices use Material filter chips. Saved items, start tab, map layers and "my position" button placement, language (system/en/de/it/Ladin), theme (system/light/dark), dynamic color, wheelchair default, opt-in alert notifications, offline timetable status/download/mobile-data/FTP-fallback |
+| **Settings** (tab) | Grouped in cards; choices use Material filter chips. Saved items, start tab, map layers and "my position" button placement, language (system/en/de/it/Ladin), theme (system/light/dark), dynamic color, wheelchair default, opt-in alert notifications, offline timetable status/download/mobile-data/FTP-fallback, app updates (Stable or Preview channel) |
 | **Navigation** | Bottom tabs Plan / Departures / Map / Alerts / Settings. The tab stays selected inside its sub-views; tapping the current tab returns to its root. Sub-views slide in horizontally (Material shared-axis style) so predictive back animates them; tab switches and reduced-motion use a fade |
 | **About / Tickets** | Unofficial disclaimer, data sources and licences, privacy. Explanation that tickets are sold by the official service, with a link |
 
@@ -260,41 +260,73 @@ Toolchain: AGP 9.4.1, Kotlin 2.4.20, Gradle 9.8.0, compileSdk 37.1, targetSdk 37
 ## In-app updates and publishing a release
 
 The app updates itself from **GitHub Releases** of
-[ta-samuelece/SouthTyrolTransit](https://github.com/ta-samuelece/SouthTyrolTransit):
+[ta-samuelece/SouthTyrolTransit](https://github.com/ta-samuelece/SouthTyrolTransit). There are two **update channels**,
+chosen in Settings → App updates:
 
-- On start (switchable in Settings → App updates) and on "Check for updates", it asks
-  `api.github.com/repos/<repo>/releases/latest`. Drafts and pre-releases are ignored.
-- If the release tag (e.g. `v0.2.0`) is newer than the installed `versionName`, it offers the update with the release notes:
-  **Update**, **Later** or **Skip this version**.
-- The APK asset (a name containing `release` is preferred; `debug` builds are never preferred) is downloaded with progress.
-  Before installing, the app checks that the APK is **this app**, has a **higher `versionCode`**, and is signed with the
-  **same certificate** as the installed app.
+| Channel | Offered | GitHub |
+|---|---|---|
+| **Stable** (default) | finished releases only | normal releases, tag `vX.Y.Z` (asks `releases/latest`, which never returns a pre-release) |
+| **Preview** | the newest of previews *and* stable releases | pre-releases, tag `vX.Y.Z-preview.N`, plus normal releases (asks the release list) |
+
+- The check runs on start (switchable) and on "Check for updates"; switching channel checks right away.
+- If the release's version is newer than the installed `versionName`, the app offers it with its notes:
+  **Update**, **Later** or **Skip this version**. Previews are labelled "Preview update available".
+- Versions compare numerically, and a preview ranks below the finished version: `0.2.0-preview.1` < `0.2.0-preview.2` <
+  `0.2.0`. So preview testers are moved onto `0.2.0` when it ships, and stable users never see a preview.
+- Going back from Preview to Stable never downgrades: the preview stays installed until a newer stable version exists.
+- The APK asset (a name containing `release` or `preview` is preferred; `debug` builds are never preferred) is downloaded
+  with progress. Before installing, the app checks that the APK is **this app**, has a **higher `versionCode`**, and is
+  signed with the **same certificate** as the installed app.
 - It then opens Android's package installer. The first time, Android asks to allow "install unknown apps" for this app,
   and every install needs the user's confirmation. Nothing installs silently.
 - The repository is set by `update.repo` in `local.properties` (or `TRANSIT_UPDATE_REPO`). Set it to `none` to build
   without updates (e.g. for an app-store build).
 
-### Publishing a release
+### Signing key (once)
 
-1. Bump **both** `versionCode` (+1) and `versionName` in `app/build.gradle.kts`.
-2. Build a signed release with the **same key every time**. Android refuses updates signed with another key, so losing the
-   keystore means users must uninstall and reinstall. Create a key once and keep it (and its passwords) safe and out of git:
+Every release, stable or preview, must be signed with the **same key**: Android refuses updates signed with another one,
+so losing the keystore means users must uninstall and reinstall. Create it once, keep it and its passwords safe and out of
+git:
+
+```bash
+keytool -genkeypair -v -keystore release.jks -alias southtyroltransit -keyalg RSA -keysize 4096 -validity 36500
+```
+```properties
+# local.properties
+release.storeFile=/absolute/path/to/release.jks
+release.storePassword=...
+release.keyAlias=southtyroltransit
+release.keyPassword=...
+```
+(or the environment variables `TRANSIT_RELEASE_STORE_FILE`, `TRANSIT_RELEASE_STORE_PASSWORD`, `TRANSIT_RELEASE_KEY_ALIAS`,
+`TRANSIT_RELEASE_KEY_PASSWORD`). `assembleRelease` then signs automatically.
+
+### Publishing a release (stable or preview)
+
+1. **Choose the version** in `app/build.gradle.kts`:
+   - `versionCode`: **always +1**, for every build you publish, preview or stable. The app refuses an update whose
+     `versionCode` is not higher than the installed one.
+   - `versionName`: stable `0.2.0`; preview `0.2.0-preview.1`, then `0.2.0-preview.2`, … and finally `0.2.0` for the
+     finished release.
+2. **Commit and push** the change (`git push`). The release is tagged on the pushed commit.
+3. **Build** the signed APK: `gradlew assembleRelease` (output `app/build/outputs/apk/release/app-release.apk`).
+4. **Write the notes** in a Markdown file (headings, bullets, **bold** and links are shown formatted in the app).
+5. **Publish** with the script (needs Python 3 and `JAVA_HOME` set, e.g. to Android Studio's `jbr`):
    ```bash
-   keytool -genkeypair -v -keystore release.jks -alias southtyroltransit -keyalg RSA -keysize 4096 -validity 36500
+   python tools/release.py --preview --notes notes.md --dry-run   # checks only
+   python tools/release.py --preview --notes notes.md             # publishes the preview
+   python tools/release.py --notes notes.md                       # a stable release
    ```
-   ```properties
-   # local.properties
-   release.storeFile=/absolute/path/to/release.jks
-   release.storePassword=...
-   release.keyAlias=southtyroltransit
-   release.keyPassword=...
-   ```
-   (or the environment variables `TRANSIT_RELEASE_STORE_FILE`, `TRANSIT_RELEASE_STORE_PASSWORD`, `TRANSIT_RELEASE_KEY_ALIAS`,
-   `TRANSIT_RELEASE_KEY_PASSWORD`). Then `./gradlew assembleRelease` produces a signed `app-release.apk`.
-3. On GitHub, create a release with tag `vX.Y.Z` (matching `versionName`), write the notes, and attach the APK, e.g.
-   `SouthTyrolTransit-X.Y.Z-release.apk`. Publish it (not as a draft or pre-release).
+   It checks that the version matches the channel, that the APK is signed and has exactly that version, that everything
+   is committed and pushed, and that the tag is new. Then it creates the tag and the GitHub release on that commit
+   (previews as **pre-release**, never marked "latest"), adds a "Preview build" note to previews and uploads the APK as
+   `SouthTyrolTransit-<version>-preview.apk` / `-release.apk`. It uses the GitHub login git already has.
 
-Installed apps will offer the update on their next start.
+   Without the script, the same on github.com: *Releases → Draft a new release*, tag `vX.Y.Z-preview.N` on the pushed
+   commit, attach the APK, tick **Set as a pre-release** (for a preview) and publish.
+
+Apps on the matching channel offer the update on their next start. To promote a preview, publish the finished version
+(`0.2.0`, higher `versionCode`) as a normal release; both channels then get it.
 
 ## License
 

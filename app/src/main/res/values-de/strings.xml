@@ -335,4 +335,10 @@
     <string name="trip_vehicle_approaching">Fahrzeug ist unterwegs zu dieser Haltestelle</string>
     <string name="trip_map_expand">Karte vergrößern</string>
     <string name="trip_map_collapse">Karte verkleinern</string>
+    <string name="update_channel">Update-Kanal</string>
+    <string name="update_channel_stable">Stabil</string>
+    <string name="update_channel_preview">Vorschau</string>
+    <string name="update_channel_stable_hint">Nur fertige Versionen.</string>
+    <string name="update_channel_preview_hint">Bietet auch Vorschau-Versionen mit neuen Funktionen vor der Veröffentlichung an. Sie können Fehler enthalten. Zurück mit „Stabil“: Die Vorschau bleibt installiert, bis eine neuere stabile Version erscheint.</string>
+    <string name="update_available_preview_title">Vorschau-Update verfügbar</string>
 </resources>

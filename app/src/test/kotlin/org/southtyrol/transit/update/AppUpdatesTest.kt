@@ -48,4 +48,36 @@ class AppUpdatesTest {
         assertNull(ReleaseParser.parse(release("v0.3.0", asset("a.apk"), draft = true)).first)
         assertNull(ReleaseParser.parse(release("v0.3.0", asset("a.apk"), prerelease = true)).first)
     }
+
+    @Test fun previewSuffixesCompareNumerically() {
+        assertTrue(Versions.isNewer("0.2.0-preview.10", "0.2.0-preview.9"))
+        assertTrue(Versions.isNewer("0.2.0", "0.2.0-preview.10"))
+        assertTrue(Versions.isNewer("0.2.0-preview.1", "0.1.3"))
+        assertFalse(Versions.isNewer("0.1.3", "0.2.0-preview.1"))
+    }
+
+    private fun list(vararg releases: String) = "[" + releases.joinToString(",") + "]"
+
+    @Test fun previewChannelTakesTheNewestOfAnyKind() {
+        val body = list(
+            release("v0.2.0-preview.2", asset("SouthTyrolTransit-0.2.0-preview.2.apk"), prerelease = true),
+            release("v0.1.4", asset("SouthTyrolTransit-0.1.4-release.apk")),
+            release("v0.3.0-preview.1", asset("x.apk"), draft = true, prerelease = true),
+        )
+        val (preview, _) = ReleaseParser.parseList(body, allowPreview = true)
+        assertEquals("0.2.0-preview.2", preview!!.version)
+        assertTrue(preview.preview)
+        assertTrue(preview.apkUrl.endsWith("0.2.0-preview.2.apk"))
+        val (stable, _) = ReleaseParser.parseList(body, allowPreview = false)
+        assertEquals("0.1.4", stable!!.version)
+        assertFalse(stable.preview)
+    }
+
+    @Test fun stableReleaseNewerThanPreviewWinsOnPreviewChannel() {
+        val body = list(
+            release("v0.2.0", asset("SouthTyrolTransit-0.2.0-release.apk")),
+            release("v0.2.0-preview.3", asset("SouthTyrolTransit-0.2.0-preview.3.apk"), prerelease = true),
+        )
+        assertEquals("0.2.0", ReleaseParser.parseList(body, allowPreview = true).first!!.version)
+    }
 }

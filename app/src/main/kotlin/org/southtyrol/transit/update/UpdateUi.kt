@@ -21,6 +21,11 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -69,14 +74,15 @@ class UpdateViewModel @Inject constructor(
 
     /** Called once per app start; respects the "check on start" setting. */
     fun checkOnStart() = viewModelScope.launch {
-        if (settings.current().autoUpdateCheck) updates.check()
+        val prefs = settings.current()
+        if (prefs.autoUpdateCheck) updates.check(preview = prefs.updateChannel == org.southtyrol.transit.data.UpdateChannel.PREVIEW)
     }
 
     fun checkNow() = viewModelScope.launch {
         updates.dismissed = false
         dismissed.value = false
         settings.setSkippedUpdate("")
-        updates.check(force = true)
+        updates.check(force = true, preview = settings.current().updateChannel == org.southtyrol.transit.data.UpdateChannel.PREVIEW)
     }
 
     fun update(release: AppRelease) = updates.startDownload(release)
@@ -84,6 +90,15 @@ class UpdateViewModel @Inject constructor(
     fun later() { updates.dismissed = true; dismissed.value = true }
     fun skip(release: AppRelease) = viewModelScope.launch { settings.setSkippedUpdate(release.version); later() }
     fun setAuto(value: Boolean) = viewModelScope.launch { settings.setAutoUpdateCheck(value) }
+
+    /** Switching channel checks right away, so the user immediately sees what that channel offers. */
+    fun setChannel(value: org.southtyrol.transit.data.UpdateChannel) = viewModelScope.launch {
+        settings.setUpdateChannel(value)
+        settings.setSkippedUpdate("")
+        updates.dismissed = false
+        dismissed.value = false
+        updates.check(force = true, preview = value == org.southtyrol.transit.data.UpdateChannel.PREVIEW)
+    }
 
     fun canInstall() = updates.canInstall()
     fun permissionIntent() = updates.permissionIntent()
@@ -128,7 +143,7 @@ fun UpdatePrompt(viewModel: UpdateViewModel = hiltViewModel()) {
         is UpdateState.Available -> AlertDialog(
             onDismissRequest = viewModel::later,
             icon = { Icon(Icons.Rounded.SystemUpdate, contentDescription = null) },
-            title = { Text(stringResource(R.string.update_available_title)) },
+            title = { Text(stringResource(if (s.release.preview) R.string.update_available_preview_title else R.string.update_available_title)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(stringResource(R.string.update_available_body, s.release.version, viewModel.currentVersion))
@@ -214,4 +229,21 @@ fun UpdateSettings(switchRow: @Composable (label: String, hint: String, checked:
         Text(stringResource(R.string.update_check_now))
     }
     switchRow(stringResource(R.string.settings_auto_update), stringResource(R.string.settings_auto_update_hint), prefs.autoUpdateCheck) { viewModel.setAuto(it) }
+    Text(stringResource(R.string.update_channel), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    androidx.compose.foundation.layout.Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.selectableGroup()) {
+        org.southtyrol.transit.data.UpdateChannel.entries.forEach { channel ->
+            val selected = prefs.updateChannel == channel
+            androidx.compose.material3.FilterChip(
+                selected = selected,
+                onClick = { if (!selected) viewModel.setChannel(channel) },
+                label = { Text(stringResource(if (channel == org.southtyrol.transit.data.UpdateChannel.STABLE) R.string.update_channel_stable else R.string.update_channel_preview)) },
+                leadingIcon = if (selected) ({ Icon(androidx.compose.material.icons.Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(androidx.compose.material3.FilterChipDefaults.IconSize)) }) else null,
+                modifier = Modifier.semantics { role = androidx.compose.ui.semantics.Role.RadioButton },
+            )
+        }
+    }
+    Text(
+        stringResource(if (prefs.updateChannel == org.southtyrol.transit.data.UpdateChannel.PREVIEW) R.string.update_channel_preview_hint else R.string.update_channel_stable_hint),
+        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
 }

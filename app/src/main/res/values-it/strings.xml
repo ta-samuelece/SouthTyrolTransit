@@ -339,4 +339,10 @@
     <string name="trip_vehicle_approaching">Il mezzo è in arrivo a questa fermata</string>
     <string name="trip_map_expand">Ingrandisci la mappa</string>
     <string name="trip_map_collapse">Riduci la mappa</string>
+    <string name="update_channel">Canale di aggiornamento</string>
+    <string name="update_channel_stable">Stabile</string>
+    <string name="update_channel_preview">Anteprima</string>
+    <string name="update_channel_stable_hint">Solo versioni definitive.</string>
+    <string name="update_channel_preview_hint">Offre anche versioni di anteprima con nuove funzioni prima del rilascio. Possono contenere errori. Per tornare indietro scegli «Stabile»: l\'anteprima resta installata finché non esce una versione stabile più recente.</string>
+    <string name="update_available_preview_title">Aggiornamento di anteprima disponibile</string>
 </resources>

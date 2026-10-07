@@ -242,3 +242,25 @@ class MobilityParseTest {
         assertEquals(Freshness.STALE, points.first { it.name == "P05" }.freshness)
     }
 }
+
+class LiveTripParserTest {
+    @Test fun parsesStopSequenceWithLiveDelays() {
+        // Railjet 87 München → Bologna, captured 7 Oct 2026 17:32 (live delays at the first stops).
+        val stops = EfaXml.stopSequence(fixture("efa_stopseq.xml"))
+        assertEquals(15, stops.size)
+        val munich = stops.first()
+        assertEquals(null, munich.scheduledArrival)
+        assertEquals(12, munich.departureDelayMinutes)
+        val bozen = stops.first { it.stationKey == "it:22021:468" }
+        assertEquals(java.time.Instant.parse("2026-10-07T15:27:00Z"), bozen.scheduledArrival)
+        assertEquals(java.time.Instant.parse("2026-10-07T15:31:00Z"), bozen.scheduledDeparture)
+        assertEquals(0, bozen.departureDelayMinutes)
+        assertEquals(null, stops.last().scheduledDeparture)
+    }
+
+    @Test fun departureBoardEntriesCarryATripReference() {
+        val departures = EfaXml.departures(fixture("efa_dm_live.xml"), java.time.Instant.parse("2026-10-07T15:32:00Z"))
+        val railjet = departures.first { it.line.contains("87") || it.liveRef.contains("05100") }
+        assertEquals("apb:05100:E:H:26a|66000468|34|20261007|1731", railjet.liveRef)
+    }
+}

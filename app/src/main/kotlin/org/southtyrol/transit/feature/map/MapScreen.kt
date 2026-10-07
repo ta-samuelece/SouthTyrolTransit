@@ -352,7 +352,7 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel()) {
                                 next.forEachIndexed { i, d ->
                                     org.southtyrol.transit.feature.common.DepartureRow(
                                         d, now, i, next.size,
-                                        onClick = if (d.tripLinked) ({ viewModel.clearSelection(); navigator.trip(d.tripId, d.serviceDate.toString()) }) else null,
+                                        onClick = if (d.tripLinked) ({ viewModel.clearSelection(); navigator.trip(d.tripId, d.serviceDate.toString(), d.liveRef) }) else null,
                                     )
                                 }
                             }

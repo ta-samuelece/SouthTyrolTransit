@@ -44,7 +44,7 @@
         <!-- Launcher entries, one per selectable app icon (Settings > Appearance); exactly one is enabled. -->
         <activity-alias
             android:name=".IconFlowingForest"
-            android:enabled="true"
+            android:enabled="false"
             android:exported="true"
             android:icon="@mipmap/ic_launcher_flowing_forest"
             android:roundIcon="@mipmap/ic_launcher_flowing_forest"
@@ -57,7 +57,7 @@
 
         <activity-alias
             android:name=".IconAbstractSilhouette"
-            android:enabled="false"
+            android:enabled="true"
             android:exported="true"
             android:icon="@mipmap/ic_launcher_abstract_silhouette"
             android:roundIcon="@mipmap/ic_launcher_abstract_silhouette"

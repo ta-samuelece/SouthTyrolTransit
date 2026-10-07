@@ -56,6 +56,11 @@ interface JourneyPlannerDataSource {
 }
 
 /** Network departure board, used when no static schedule is cached yet. */
+/** Live stop-by-stop times of one run, addressed by the reference a departure board returned. */
+interface TripLiveDataSource {
+    suspend fun liveTrip(ref: String): List<LiveStopTime>
+}
+
 interface DepartureBoardDataSource {
     suspend fun departures(stopGlobalId: String, at: Instant, arrivals: Boolean, language: String, limit: Int): List<Departure>
 }

@@ -27,6 +27,8 @@ import org.southtyrol.transit.model.SearchOptions
 import org.southtyrol.transit.model.ServiceAlert
 import org.southtyrol.transit.model.ServiceState
 import org.southtyrol.transit.model.TextNormalizer
+import org.southtyrol.transit.model.TripLiveDataSource
+import org.southtyrol.transit.model.LiveStopTime
 import org.southtyrol.transit.model.TransitZone
 import org.southtyrol.transit.model.TransportMode
 import org.southtyrol.transit.model.WalkingSpeed
@@ -62,7 +64,7 @@ object EfaCodes {
 class EfaClient(
     private val http: TransitHttp,
     private val base: String = "https://efa.sta.bz.it/apb/",
-) : JourneyPlannerDataSource, GeocodingLocationDataSource, DepartureBoardDataSource, AlertDataSource {
+) : JourneyPlannerDataSource, GeocodingLocationDataSource, DepartureBoardDataSource, AlertDataSource, TripLiveDataSource {
 
     private val common = mapOf("outputFormat" to "XML", "coordOutputFormat" to "WGS84[DD.DDDDD]", "locationServerActive" to "1")
 
@@ -125,6 +127,18 @@ class EfaClient(
             ),
         )
         withContext(Dispatchers.Default) { EfaXml.departures(bytes, Instant.now()) }
+    }
+
+    /** Live stop-by-stop times of one run: [ref] is a departure's [Departure.liveRef]. */
+    override suspend fun liveTrip(ref: String): List<LiveStopTime> = guarded {
+        val parts = ref.split('|')
+        if (parts.size != 5 || parts.any { it.isBlank() }) return@guarded emptyList()
+        val (line, stop, tripCode, date, time) = parts
+        val bytes = get(
+            "XML_STOPSEQCOORD_REQUEST",
+            mapOf("line" to line, "stop" to stop, "tripCode" to tripCode, "date" to date, "time" to time, "useRealtime" to "1", "tStOTType" to "all"),
+        )
+        withContext(Dispatchers.Default) { EfaXml.stopSequence(bytes) }
     }
 
     override suspend fun alerts(language: String): List<ServiceAlert> = guarded {
@@ -417,6 +431,11 @@ object EfaXml {
             val realtime = line?.a("realtime") == "1"
             val mode = TransportMode.fromEfa(line?.a("motType")?.toIntOrNull())
             val tripCode = d.child("itdServingTrip")?.a("tripCode").orEmpty()
+            val stateless = line?.a("stateless").orEmpty()
+            val stopNumber = d.a("stopID")
+            val planned = (dateTime(d.child("itdDateTimeBaseTimetable")) ?: scheduled).atZone(TransitZone)
+            val liveRef = if (stateless.isBlank() || stopNumber.isBlank() || tripCode.isBlank()) "" else
+                listOf(stateless, stopNumber, tripCode, planned.format(EFA_DATE), planned.format(DateTimeFormatter.ofPattern("HHmm"))).joinToString("|")
             Departure(
                 tripId = "efa:" + line?.a("stateless").orEmpty() + ":" + tripCode + ":" + scheduled.epochSecond,
                 stopId = d.a("gid").ifBlank { d.a("stopID") }, sequence = 0, routeId = line?.a("stateless").orEmpty(),
@@ -424,6 +443,30 @@ object EfaXml {
                 predicted = (rt ?: delay?.takeIf { it in 0..600 && realtime }?.let { scheduled.plusSeconds(it * 60L) }).takeIf { realtime && !cancelled }, state = if (cancelled) ServiceState.CANCELLED else ServiceState.NORMAL,
                 freshness = if (realtime) Freshness.LIVE else Freshness.SCHEDULED, platform = d.a("platformName"),
                 observedAt = if (realtime) now else null, operator = line?.child("itdOperator")?.text("name").orEmpty(), tripLinked = false,
+                liveRef = liveRef,
+            )
+        }
+    }
+
+    /** Calls of one run from XML_STOPSEQCOORD_REQUEST, with live arrival and departure delays. */
+    fun stopSequence(bytes: ByteArray): List<LiveStopTime> {
+        val root = root(bytes)
+        val seq = root.all("stopSeq").firstOrNull() ?: return emptyList()
+        return seq.children("itdPoint").mapNotNull { p ->
+            val key = p.a("gid").ifBlank { return@mapNotNull null }
+            val times = p.children("itdDateTime").map(::dateTime)
+            val arrValid = p.a("arrValid") != "0"
+            val depValid = p.a("depValid") != "0"
+            val (arrival, departure) = when (times.size) {
+                0 -> null to null
+                1 -> times[0] to times[0]
+                else -> times[0] to times[1]
+            }
+            fun delay(name: String) = p.a(name).toIntOrNull()?.takeIf { it in -60..600 }
+            LiveStopTime(
+                stationKey = key, name = p.a("name"),
+                scheduledArrival = arrival.takeIf { arrValid }, scheduledDeparture = departure.takeIf { depValid },
+                arrivalDelayMinutes = delay("arrDelay").takeIf { arrValid }, departureDelayMinutes = delay("depDelay").takeIf { depValid },
             )
         }
     }

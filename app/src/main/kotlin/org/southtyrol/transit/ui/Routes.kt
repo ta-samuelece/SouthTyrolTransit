@@ -12,7 +12,7 @@ import kotlinx.serialization.Serializable
 @Serializable data class ResultsRoute(val request: String)
 @Serializable data class JourneyRoute(val request: String, val journeyId: String)
 @Serializable data class StopRoute(val stationKey: String, val name: String = "")
-@Serializable data class TripRoute(val tripId: String, val serviceDate: String)
+@Serializable data class TripRoute(val tripId: String, val serviceDate: String, val liveRef: String = "")
 @Serializable object LinesRoute
 @Serializable data class LineRoute(val key: String)
 @Serializable object SettingsRoute

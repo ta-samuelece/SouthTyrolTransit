@@ -21,6 +21,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.runtime.remember
+import org.southtyrol.transit.design.icon
+import androidx.compose.foundation.layout.offset
+import androidx.compose.material.icons.rounded.CloseFullscreen
+import androidx.compose.material.icons.rounded.OpenInFull
 import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.ExpandLess
 import androidx.compose.material.icons.rounded.Warning
@@ -114,19 +119,24 @@ sealed class TripLoad {
 class TripViewModel @AssistedInject constructor(
     @Assisted("trip") private val tripId: String,
     @Assisted("date") private val date: String,
+    @Assisted("live") private val liveRef: String,
     private val trips: TripRepository,
     realtime: RealtimeRepository,
     private val language: LanguageProvider,
     private val alerts: org.southtyrol.transit.data.AlertRepository,
 ) : ViewModel() {
     @AssistedFactory
-    interface Factory { fun create(@Assisted("trip") tripId: String, @Assisted("date") date: String): TripViewModel }
+    interface Factory { fun create(@Assisted("trip") tripId: String, @Assisted("date") date: String, @Assisted("live") liveRef: String): TripViewModel }
 
     private val base = MutableStateFlow<TripLoad>(TripLoad.Loading)
+    private val liveTrip = MutableStateFlow<org.southtyrol.transit.data.LiveTrip?>(null)
 
-    /** Static trip merged with realtime; re-merged whenever new realtime arrives. */
-    val state: StateFlow<TripLoad> = combine(base, realtime.snapshot) { load, snapshot ->
-        if (load is TripLoad.Ready) TripLoad.Ready(trips.merge(load.detail, snapshot)) else load
+    /**
+     * Static trip merged with realtime (GTFS-RT, then the journey planner's live times for this run);
+     * re-merged whenever either arrives.
+     */
+    val state: StateFlow<TripLoad> = combine(base, realtime.snapshot, liveTrip) { load, snapshot, live ->
+        if (load is TripLoad.Ready) TripLoad.Ready(trips.merge(load.detail, snapshot, liveTrip = live)) else load
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), TripLoad.Loading)
 
     /** Active notices for this trip's line (or this specific run). */
@@ -159,12 +169,15 @@ class TripViewModel @AssistedInject constructor(
         }
     }
 
-    suspend fun poll() = trips.pollRealtime()
+    suspend fun poll() {
+        trips.pollRealtime()
+        trips.liveTrip(liveRef)?.let { liveTrip.value = it }
+    }
 }
 
 @Composable
-fun TripScreen(navigator: Navigator, tripId: String, serviceDate: String) {
-    val viewModel = hiltViewModel<TripViewModel, TripViewModel.Factory>(key = "$tripId|$serviceDate") { it.create(tripId, serviceDate) }
+fun TripScreen(navigator: Navigator, tripId: String, serviceDate: String, liveRef: String = "") {
+    val viewModel = hiltViewModel<TripViewModel, TripViewModel.Factory>(key = "$tripId|$serviceDate") { it.create(tripId, serviceDate, liveRef) }
     val state by viewModel.state.collectAsStateWithLifecycle()
     PollWhileVisible(20_000) { viewModel.poll() }
     Scaffold(
@@ -201,67 +214,130 @@ private fun TripContent(detail: TripDetail, navigator: Navigator, alerts: List<o
     val vehicleFreshness = vehicle?.let { FreshnessPolicy.vehicle(it.timestamp, now) }
     // The next stop is the first one whose (predicted) departure is still ahead.
     val nextIndex = detail.stops.indexOfFirst { (it.predictedDeparture ?: it.scheduledDeparture).isAfter(now) }
+    // Where the bus is: its GPS fix when the vehicle feed has one, otherwise estimated from the stop times.
+    val estimate = remember(detail, now.epochSecond / 10) { org.southtyrol.transit.model.RunPositions.estimate(detail.stops, detail.shape, now) }
+    val position = vehicle?.let { v -> org.southtyrol.transit.model.RunPosition(v.point, estimate?.nextIndex ?: nextIndex, atStop = false, estimated = false) } ?: estimate
+    var mapExpanded by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(false) }
+    val routeLine = detail.shape.takeIf { it.size >= 2 } ?: detail.stops.map { it.stop.point }.filter { it.isValid }
+    val hasMap = routeLine.size >= 2
     val listState = androidx.compose.foundation.lazy.rememberLazyListState()
-    // Bring the next stop into view once, below the header and map.
+    // Bring the next stop into view once, below the header (and the compact map).
     androidx.compose.runtime.LaunchedEffect(detail.trip.id) {
-        if (nextIndex > 3) listState.scrollToItem(nextIndex + (if (detail.shape.size >= 2) 2 else 1) - 1)
+        if (nextIndex > 3) listState.scrollToItem(nextIndex + (if (hasMap) 2 else 1) - 1)
     }
+    val mapContent = remember(detail, position, color) {
+        MapContent(
+            stops = detail.stops.map { MapMarker(it.stop.id, it.stop.point, MarkerKind.STOP, color = color) },
+            vehicles = listOfNotNull(
+                position?.let { p ->
+                    MapMarker(
+                        "v:" + detail.trip.id, p.point, MarkerKind.VEHICLE, detail.route.shortName, detail.route.mode, color, vehicle?.bearing,
+                        // Estimated positions are drawn dimmed, like stale GPS fixes.
+                        stale = p.estimated || vehicleFreshness == Freshness.STALE,
+                    )
+                },
+            ),
+            lines = listOf(MapPolyline("trip", routeLine, color)),
+            clusterStops = false,
+        )
+    }
+    val camera = remember(detail.trip.id, mapExpanded) { CameraRequest.Fit(routeLine, key = if (mapExpanded) 1 else 0) }
+
     // Notices for this run sit in one collapsed card above the timeline, which stays visible while the
     // list scrolls to the next stop; expanding it reveals every notice in full.
     androidx.compose.foundation.layout.BoxWithConstraints {
     val maxCardHeight = maxHeight * 0.75f
+    val expandedMapHeight = maxHeight * 0.6f
     Column {
     if (alerts.isNotEmpty()) TripNoticesCard(alerts, now, Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp).heightIn(max = maxCardHeight))
+    // Expanded: a large interactive map above the timeline (outside the list, so pans never scroll it).
+    if (hasMap && mapExpanded) {
+        TripMap(mapContent, camera, dark, interactive = true, expanded = true, onToggle = { mapExpanded = false },
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp).fillMaxWidth().height(expandedMapHeight))
+    }
     LazyColumn(state = listState, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(0.dp), modifier = Modifier.weight(1f)) {
         item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 12.dp)) {
                 Text(listOfNotNull(Format.mode(detail.route.mode), detail.route.operator?.name, Format.date(detail.serviceDate)).joinToString(" · "), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 FreshnessIndicator(detail.freshness, detail.observedAt, now)
                 if (detail.state == ServiceState.CANCELLED) Text(stringResource(org.southtyrol.transit.design.R.string.ds_cancelled), color = LocalStatusColors.current.cancelled, style = MaterialTheme.typography.titleMedium)
-                if (vehicle != null) Text(
-                    stringResource(R.string.trip_vehicle_seen, Format.age(vehicle.timestamp, now)) + if (vehicleFreshness == Freshness.STALE) " · " + stringResource(org.southtyrol.transit.design.R.string.ds_stale) else "",
-                    style = MaterialTheme.typography.labelLarge,
-                ) else Text(stringResource(R.string.trip_no_vehicle), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                val positionText = when {
+                    vehicle != null -> stringResource(R.string.trip_vehicle_seen, Format.age(vehicle.timestamp, now)) + if (vehicleFreshness == Freshness.STALE) " · " + stringResource(org.southtyrol.transit.design.R.string.ds_stale) else ""
+                    position != null && detail.freshness == Freshness.LIVE -> stringResource(R.string.trip_position_estimated_live)
+                    position != null -> stringResource(R.string.trip_position_estimated_schedule)
+                    else -> null
+                }
+                if (positionText != null) Text(positionText, style = MaterialTheme.typography.labelLarge)
+                else Text(stringResource(R.string.trip_no_vehicle), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
-        if (detail.shape.size >= 2) item {
-            Surface(shape = RoundedCornerShape(28.dp), modifier = Modifier.fillMaxWidth().height(220.dp).padding(bottom = 12.dp)) {
-                TransitMap(
-                    MapContent(
-                        stops = detail.stops.map { MapMarker(it.stop.id, it.stop.point, MarkerKind.STOP, color = color) },
-                        vehicles = listOfNotNull(vehicle?.let { MapMarker("v:" + it.id, it.point, MarkerKind.VEHICLE, detail.route.shortName, detail.route.mode, color, it.bearing, stale = vehicleFreshness == Freshness.STALE) }),
-                        lines = listOf(MapPolyline("trip", detail.shape, color)),
-                        clusterStops = false,
-                    ),
-                    Modifier.fillMaxSize(), camera = CameraRequest.Fit(detail.shape), darkTheme = dark,
-                )
-            }
+        // Compact: a static preview in the list; tap it (or the expand button) for the large, interactive map.
+        if (hasMap && !mapExpanded) item {
+            TripMap(mapContent, camera, dark, interactive = false, expanded = false, onToggle = { mapExpanded = true },
+                modifier = Modifier.fillMaxWidth().height(220.dp).padding(bottom = 12.dp))
         }
         itemsIndexed(detail.stops, key = { _, s -> s.sequence }) { index, stop ->
-            TripStopRow(stop, first = index == 0, last = index == detail.stops.lastIndex, passed = nextIndex >= 0 && index < nextIndex || nextIndex < 0, next = index == nextIndex, color = color, onClick = { navigator.stop(stop.stop.stationKey, stop.stop.name) })
+            val marker = when {
+                position == null -> VehicleMarker.NONE
+                position.atStop && index == position.nextIndex - 1 -> VehicleMarker.AT_STOP
+                !position.atStop && index == position.nextIndex -> VehicleMarker.BEFORE_STOP
+                else -> VehicleMarker.NONE
+            }
+            TripStopRow(
+                stop, first = index == 0, last = index == detail.stops.lastIndex,
+                passed = nextIndex >= 0 && index < nextIndex || nextIndex < 0, next = index == nextIndex, color = color,
+                vehicle = marker, mode = detail.route.mode, estimated = position?.estimated ?: true,
+                onClick = { navigator.stop(stop.stop.stationKey, stop.stop.name) },
+            )
         }
     }
     }
     }
 }
 
+/** Where the bus is drawn on the timeline: between the previous stop and this one, or at this stop. */
+private enum class VehicleMarker { NONE, BEFORE_STOP, AT_STOP }
+
+/** The run's map. Compact: static, tap to expand. Expanded: pan and zoom, with a button to shrink it again. */
 @Composable
-private fun TripStopRow(stop: TripStop, first: Boolean, last: Boolean, passed: Boolean, next: Boolean, color: Long, onClick: () -> Unit) {
+private fun TripMap(content: MapContent, camera: CameraRequest, dark: Boolean, interactive: Boolean, expanded: Boolean, onToggle: () -> Unit, modifier: Modifier = Modifier) {
+    val label = stringResource(if (expanded) R.string.trip_map_collapse else R.string.trip_map_expand)
+    Surface(shape = RoundedCornerShape(28.dp), modifier = modifier) {
+        Box {
+            TransitMap(content, Modifier.fillMaxSize(), camera = camera, darkTheme = dark, interactive = interactive)
+            // The compact map ignores gestures; a tap anywhere on it expands it.
+            if (!expanded) Box(Modifier.matchParentSize().clickable(onClickLabel = label, onClick = onToggle))
+            androidx.compose.material3.FilledTonalIconButton(
+                onClick = onToggle,
+                modifier = Modifier.align(Alignment.TopEnd).padding(8.dp),
+            ) {
+                Icon(if (expanded) Icons.Rounded.CloseFullscreen else Icons.Rounded.OpenInFull, contentDescription = label)
+            }
+        }
+    }
+}
+
+@Composable
+private fun TripStopRow(
+    stop: TripStop, first: Boolean, last: Boolean, passed: Boolean, next: Boolean, color: Long,
+    vehicle: VehicleMarker, mode: org.southtyrol.transit.model.TransportMode, estimated: Boolean, onClick: () -> Unit,
+) {
     val lineColor = androidx.compose.ui.graphics.Color(0xFF000000 or color)
     val skipped = stop.state == ServiceState.SKIPPED || stop.state == ServiceState.CANCELLED
     val scheduled = if (last) stop.scheduledArrival else stop.scheduledDeparture
     val predicted = if (last) stop.predictedArrival else stop.predictedDeparture
     val timeText = Format.time(predicted ?: scheduled)
     val delayText = org.southtyrol.transit.design.delayDescription(predicted?.let { Duration.between(scheduled, it).seconds }, stop.state)
+    val vehicleText = if (vehicle != VehicleMarker.NONE) stringResource(if (vehicle == VehicleMarker.AT_STOP) R.string.trip_vehicle_at_stop else R.string.trip_vehicle_approaching) else null
     Row(
         Modifier.fillMaxWidth().height(IntrinsicSize.Min).clickable(onClick = onClick).heightIn(min = 52.dp)
-            .semantics(mergeDescendants = true) { contentDescription = listOfNotNull(stop.stop.name, timeText, delayText).joinToString(", ") },
+            .semantics(mergeDescendants = true) { contentDescription = listOfNotNull(stop.stop.name, timeText, delayText, vehicleText).joinToString(", ") },
     ) {
         Column(Modifier.width(88.dp).padding(vertical = 8.dp)) {
             Text(timeText, style = TimeStyles.medium, maxLines = 1, softWrap = false, textDecoration = if (skipped) TextDecoration.LineThrough else null)
             if (predicted != null && predicted != scheduled) Text(org.southtyrol.transit.design.Format.time(scheduled), style = MaterialTheme.typography.labelSmall, textDecoration = TextDecoration.LineThrough)
         }
-        Box(Modifier.width(24.dp).fillMaxHeight(), contentAlignment = Alignment.Center) {
+        Box(Modifier.width(28.dp).fillMaxHeight(), contentAlignment = Alignment.Center) {
             Column(Modifier.fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
                 Box(Modifier.width(4.dp).weight(1f).background(if (first) androidx.compose.ui.graphics.Color.Transparent else lineColor.copy(alpha = if (passed) 0.35f else 1f)))
                 Box(
@@ -270,6 +346,21 @@ private fun TripStopRow(stop: TripStop, first: Boolean, last: Boolean, passed: B
                         .border(3.dp, lineColor.copy(alpha = if (passed) 0.35f else 1f), CircleShape),
                 )
                 Box(Modifier.width(4.dp).weight(1f).background(if (last) androidx.compose.ui.graphics.Color.Transparent else lineColor.copy(alpha = if (passed) 0.35f else 1f)))
+            }
+            // The bus itself: on the line just before this stop (on its way) or on this stop (dwelling).
+            if (vehicle != VehicleMarker.NONE) {
+                Surface(
+                    shape = CircleShape,
+                    color = lineColor.copy(alpha = if (estimated) 0.85f else 1f),
+                    contentColor = androidx.compose.ui.graphics.Color.White,
+                    shadowElevation = 2.dp,
+                    modifier = Modifier.align(if (vehicle == VehicleMarker.AT_STOP) Alignment.Center else Alignment.TopCenter)
+                        .then(if (vehicle == VehicleMarker.AT_STOP) Modifier else Modifier.offset(y = (-12).dp)).size(24.dp),
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(mode.icon(), contentDescription = null, modifier = Modifier.size(16.dp))
+                    }
+                }
             }
         }
         Spacer(Modifier.width(12.dp))

@@ -5,6 +5,13 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
+import androidx.compose.foundation.background
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.draw.clip
+import androidx.compose.animation.core.animateDp
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
@@ -94,7 +101,7 @@ class Navigator(private val nav: NavHostController, start: TopLevel) {
     fun results(request: String) = nav.navigate(ResultsRoute(request))
     fun journey(request: String, id: String) = nav.navigate(JourneyRoute(request, id))
     fun stop(stationKey: String, name: String = "") = nav.navigate(StopRoute(stationKey, name)) { launchSingleTop = true }
-    fun trip(tripId: String, serviceDate: String) = nav.navigate(TripRoute(tripId, serviceDate)) { launchSingleTop = true }
+    fun trip(tripId: String, serviceDate: String, liveRef: String = "") = nav.navigate(TripRoute(tripId, serviceDate, liveRef)) { launchSingleTop = true }
     fun lines() = nav.navigate(LinesRoute)
     fun line(key: String) = nav.navigate(LineRoute(key)) { launchSingleTop = true }
     fun saved() = nav.navigate(SavedRoute) { launchSingleTop = true }
@@ -140,8 +147,11 @@ fun TransitApp(startTab: StartTab = StartTab.PLAN, openStop: Pair<String, String
     }
     val reduced = LocalReducedMotion.current
 
-    // Material shared-axis style: sub-views slide in from the end and back out on (predictive)
-    // back; switching tabs is a quick fade-through.
+    // Sub-views slide in from the end; switching tabs (and reduced motion) is a quick fade.
+    // Back follows the system's predictive-back look (as in the stock Settings app): while the gesture
+    // is held, the current screen shrinks to a rounded card with the previous one visible behind it;
+    // on release it slides away. Navigation Compose seeks these pop transitions with the gesture, so
+    // the curves keep most of the gesture range in the "shrunk card" phase.
     val enter: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition = {
         if (reduced || isTabSwitch()) fadeIn(tween(180)) else slideInHorizontally(tween(300)) { it / 5 } + fadeIn(tween(300))
     }
@@ -149,10 +159,14 @@ fun TransitApp(startTab: StartTab = StartTab.PLAN, openStop: Pair<String, String
         if (reduced || isTabSwitch()) fadeOut(tween(120)) else slideOutHorizontally(tween(300)) { -it / 10 } + fadeOut(tween(200))
     }
     val popEnter: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition = {
-        if (reduced || isTabSwitch()) fadeIn(tween(180)) else slideInHorizontally(tween(300)) { -it / 10 } + fadeIn(tween(300))
+        if (reduced || isTabSwitch()) fadeIn(tween(180))
+        else slideInHorizontally(tween(BACK_MS, easing = BackParallax)) { -it / 10 } + fadeIn(tween(BACK_MS, easing = BackParallax), initialAlpha = 0.6f)
     }
     val popExit: AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition = {
-        if (reduced || isTabSwitch()) fadeOut(tween(120)) else slideOutHorizontally(tween(300)) { it / 5 } + fadeOut(tween(200))
+        if (reduced || isTabSwitch()) fadeOut(tween(120))
+        else scaleOut(tween(BACK_MS, easing = BackShrink), targetScale = 0.9f) +
+            slideOutHorizontally(tween(BACK_MS, easing = BackSlide)) { it } +
+            fadeOut(tween(BACK_MS, easing = BackSlide))
     }
 
     // Offers a newer GitHub release (if any) on start; also shows download progress for manual updates.
@@ -175,20 +189,61 @@ fun TransitApp(startTab: StartTab = StartTab.PLAN, openStop: Pair<String, String
             nav, startDestination = start.route,
             enterTransition = enter, exitTransition = exit, popEnterTransition = popEnter, popExitTransition = popExit,
         ) {
-            composable<PlanRoute> { PlannerScreen(navigator) }
-            composable<DeparturesRoute> { DeparturesScreen(navigator) }
-            composable<MapRoute> { MapScreen(navigator) }
-            composable<AlertsRoute> { AlertsScreen(navigator) }
-            composable<SettingsRoute> { SettingsScreen(navigator) }
-            composable<SavedRoute> { SavedScreen(navigator) }
-            composable<ResultsRoute> { ResultsScreen(navigator) }
-            composable<JourneyRoute> { JourneyDetailScreen(navigator) }
-            composable<StopRoute> { e -> e.toRoute<StopRoute>().let { StopScreen(navigator, it.stationKey, it.name) } }
-            composable<TripRoute> { e -> e.toRoute<TripRoute>().let { TripScreen(navigator, it.tripId, it.serviceDate) } }
-            composable<LinesRoute> { LinesScreen(navigator) }
-            composable<LineRoute> { e -> LineScreen(navigator, e.toRoute<LineRoute>().key) }
-            composable<AboutRoute> { AboutScreen(navigator) }
-            composable<TicketsRoute> { TicketsScreen(navigator) }
+            screen<PlanRoute> { PlannerScreen(navigator) }
+            screen<DeparturesRoute> { DeparturesScreen(navigator) }
+            screen<MapRoute> { MapScreen(navigator) }
+            screen<AlertsRoute> { AlertsScreen(navigator) }
+            screen<SettingsRoute> { SettingsScreen(navigator) }
+            screen<SavedRoute> { SavedScreen(navigator) }
+            screen<ResultsRoute> { ResultsScreen(navigator) }
+            screen<JourneyRoute> { JourneyDetailScreen(navigator) }
+            screen<StopRoute> { e -> e.toRoute<StopRoute>().let { StopScreen(navigator, it.stationKey, it.name) } }
+            screen<TripRoute> { e -> e.toRoute<TripRoute>().let { TripScreen(navigator, it.tripId, it.serviceDate, it.liveRef) } }
+            screen<LinesRoute> { LinesScreen(navigator) }
+            screen<LineRoute> { e -> LineScreen(navigator, e.toRoute<LineRoute>().key) }
+            screen<AboutRoute> { AboutScreen(navigator) }
+            screen<TicketsRoute> { TicketsScreen(navigator) }
         }
+    }
+}
+
+private const val BACK_MS = 400
+
+/** Scale reaches 90% in the first half of the back gesture, then holds while the card slides away. */
+private val BackShrink = androidx.compose.animation.core.Easing { f -> (f / 0.5f).coerceAtMost(1f).let { 1f - (1f - it) * (1f - it) } }
+
+/** Barely moves while the gesture is held (a small nudge), then slides off quickly on release. */
+private val BackSlide = androidx.compose.animation.core.Easing { f ->
+    if (f < 0.6f) 0.06f * (f / 0.6f) else 0.06f + 0.94f * ((f - 0.6f) / 0.4f).let { it * it }
+}
+
+/** The screen behind settles from a slight offset while the card shrinks. */
+private val BackParallax = androidx.compose.animation.core.Easing { f -> (f / 0.6f).coerceAtMost(1f).let { 1f - (1f - it) * (1f - it) } }
+
+/**
+ * A destination whose content gets rounded corners while it leaves (e.g. shrinking into a card on
+ * predictive back). Entering and resting screens stay square.
+ */
+private inline fun <reified T : Any> androidx.navigation.NavGraphBuilder.screen(
+    noinline content: @Composable androidx.compose.animation.AnimatedContentScope.(NavBackStackEntry) -> Unit,
+) = composable<T> { entry ->
+    // Same timing as the shrink, so during a predictive-back gesture the corners round as the card shrinks.
+    val radius by transition.animateDp(
+        transitionSpec = { tween(BACK_MS, easing = BackShrink) },
+        label = "backCorners",
+    ) { state -> if (state == androidx.compose.animation.EnterExitState.PostExit) 32.dp else 0.dp }
+    // The screen being revealed underneath starts dimmed and brightens as the card shrinks away, so the
+    // card's edge stays visible even where both screens share the same background (as in stock Settings).
+    val scrim by transition.animateFloat(
+        transitionSpec = { tween(BACK_MS, easing = BackParallax) },
+        label = "backScrim",
+    ) { state -> if (state == androidx.compose.animation.EnterExitState.PreEnter) 0.32f else 0f }
+    androidx.compose.foundation.layout.Box(
+        androidx.compose.ui.Modifier.fillMaxSize().clip(androidx.compose.foundation.shape.RoundedCornerShape(radius)),
+    ) {
+        content(entry)
+        if (scrim > 0f) androidx.compose.foundation.layout.Box(
+            androidx.compose.ui.Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Color.Black.copy(alpha = scrim)),
+        )
     }
 }

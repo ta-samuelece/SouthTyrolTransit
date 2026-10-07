@@ -333,4 +333,10 @@
     <string name="widget_loading">Caricamento…</string>
     <string name="widget_refresh">Aggiorna</string>
     <string name="widget_on_time">in orario</string>
+    <string name="trip_position_estimated_live">Posizione stimata dagli orari in tempo reale</string>
+    <string name="trip_position_estimated_schedule">Posizione stimata dall\'orario</string>
+    <string name="trip_vehicle_at_stop">Il mezzo è a questa fermata</string>
+    <string name="trip_vehicle_approaching">Il mezzo è in arrivo a questa fermata</string>
+    <string name="trip_map_expand">Ingrandisci la mappa</string>
+    <string name="trip_map_collapse">Riduci la mappa</string>
 </resources>

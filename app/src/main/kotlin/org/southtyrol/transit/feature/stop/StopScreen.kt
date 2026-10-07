@@ -196,7 +196,7 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
                 else -> itemsIndexed(list, key = { _, d -> d.key }) { index, d ->
                     DepartureRow(
                         d, now, index, list.size,
-                        onClick = if (d.tripLinked) ({ navigator.trip(d.tripId, d.serviceDate.toString()) }) else null,
+                        onClick = if (d.tripLinked) ({ navigator.trip(d.tripId, d.serviceDate.toString(), d.liveRef) }) else null,
                         modifier = Modifier.padding(horizontal = 16.dp).animateItem(),
                     )
                 }

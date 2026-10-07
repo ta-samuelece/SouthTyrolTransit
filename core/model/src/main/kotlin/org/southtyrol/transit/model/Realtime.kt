@@ -167,8 +167,8 @@ object LiveOverlay {
                 ?: pool.filter { it.mode == d.mode && gap(it) <= TOLERANCE_SECONDS && similar(it.destination, d.destination) }.minByOrNull(::gap)
                 ?: return@map d
             pool.remove(match)
-            if (match.state == ServiceState.CANCELLED) d.copy(state = ServiceState.CANCELLED, freshness = Freshness.LIVE, observedAt = observedAt)
-            else d.copy(predicted = d.scheduled.plus(java.time.Duration.between(match.scheduled, match.predicted)), freshness = Freshness.LIVE, observedAt = observedAt)
+            if (match.state == ServiceState.CANCELLED) d.copy(state = ServiceState.CANCELLED, freshness = Freshness.LIVE, observedAt = observedAt, liveRef = match.liveRef)
+            else d.copy(predicted = d.scheduled.plus(java.time.Duration.between(match.scheduled, match.predicted)), freshness = Freshness.LIVE, observedAt = observedAt, liveRef = match.liveRef)
         }
     }
 
@@ -178,5 +178,93 @@ object LiveOverlay {
     private fun similar(a: String, b: String): Boolean {
         val x = TextNormalizer.key(a); val y = TextNormalizer.key(b)
         return x.isNotEmpty() && y.isNotEmpty() && (x.contains(y) || y.contains(x) || x.split(' ').intersect(y.split(' ').toSet()).any { it.length > 3 })
+    }
+}
+
+/**
+ * Applies the journey planner's live stop times ([LiveStopTime]) to a timetable run where GTFS-RT has
+ * no prediction. Calls are matched by station and scheduled time (within two minutes), so loops that
+ * visit a station twice still match the right call.
+ */
+object LiveTripMerge {
+    private const val TOLERANCE_SECONDS = 120L
+
+    /** The merged stops, or null when no call could be matched (nothing live to show). */
+    fun apply(stops: List<TripStop>, live: List<LiveStopTime>): List<TripStop>? {
+        if (live.isEmpty()) return null
+        val pool = live.toMutableList()
+        var matched = false
+        val merged = stops.map { s ->
+            if (s.predictedArrival != null || s.predictedDeparture != null || s.state != ServiceState.NORMAL) return@map s
+            fun gap(l: LiveStopTime): Long {
+                val a = l.scheduledDeparture ?: l.scheduledArrival ?: return Long.MAX_VALUE
+                return kotlin.math.abs(java.time.Duration.between(a, s.scheduledDeparture).seconds)
+                    .coerceAtMost(l.scheduledArrival?.let { kotlin.math.abs(java.time.Duration.between(it, s.scheduledArrival).seconds) } ?: Long.MAX_VALUE)
+            }
+            val key = s.stop.stationKey.ifBlank { s.stop.id }
+            val match = pool.filter { it.stationKey == key && gap(it) <= TOLERANCE_SECONDS }.minByOrNull(::gap) ?: return@map s
+            pool.remove(match)
+            val dep = match.departureDelayMinutes ?: match.arrivalDelayMinutes
+            val arr = match.arrivalDelayMinutes ?: match.departureDelayMinutes
+            if (dep == null && arr == null) return@map s
+            matched = true
+            s.copy(
+                predictedArrival = arr?.let { s.scheduledArrival.plusSeconds(it * 60L) },
+                predictedDeparture = dep?.let { s.scheduledDeparture.plusSeconds(it * 60L) },
+            )
+        }
+        return if (matched) merged else null
+    }
+}
+
+/** Where a run is now: a live GPS fix, or a position estimated from the (live or scheduled) stop times. */
+data class RunPosition(
+    val point: Point,
+    /** Index of the next stop; the vehicle is between stop index-1 and index (or at index when [atStop]). */
+    val nextIndex: Int,
+    val atStop: Boolean,
+    val estimated: Boolean,
+)
+
+object RunPositions {
+    /**
+     * Estimates the vehicle's position at [now] by interpolating between the last departed and the next
+     * stop, along [shape] when available. Null before the first departure or after the final arrival.
+     */
+    fun estimate(stops: List<TripStop>, shape: List<Point>, now: Instant): RunPosition? {
+        if (stops.size < 2) return null
+        fun dep(s: TripStop) = s.predictedDeparture ?: s.scheduledDeparture
+        fun arr(s: TripStop) = s.predictedArrival ?: s.scheduledArrival
+        if (now.isBefore(dep(stops.first())) || !now.isBefore(arr(stops.last()))) return null
+        val next = stops.indexOfFirst { arr(it).isAfter(now) }.takeIf { it > 0 } ?: return null
+        val prev = next - 1
+        // Dwelling at the previous stop until its departure.
+        if (!now.isAfter(dep(stops[prev]))) return RunPosition(stops[prev].stop.point, next, atStop = true, estimated = true)
+        val total = java.time.Duration.between(dep(stops[prev]), arr(stops[next])).seconds.coerceAtLeast(1)
+        val fraction = (java.time.Duration.between(dep(stops[prev]), now).seconds.toDouble() / total).coerceIn(0.0, 1.0)
+        val from = stops[prev].stop.point
+        val to = stops[next].stop.point
+        return RunPosition(along(shape, from, to, fraction) ?: Point(from.latitude + (to.latitude - from.latitude) * fraction, from.longitude + (to.longitude - from.longitude) * fraction), next, atStop = false, estimated = true)
+    }
+
+    /** The point [fraction] of the way from [from] to [to] following [shape], or null without a usable shape. */
+    internal fun along(shape: List<Point>, from: Point, to: Point, fraction: Double): Point? {
+        if (shape.size < 2) return null
+        val a = shape.indices.minByOrNull { Geo.distance(shape[it], from) } ?: return null
+        val b = shape.indices.minByOrNull { Geo.distance(shape[it], to) } ?: return null
+        if (b <= a) return null
+        val section = shape.subList(a, b + 1)
+        val lengths = section.zipWithNext { p, q -> Geo.distance(p, q) }
+        val target = lengths.sum() * fraction
+        var walked = 0.0
+        for ((i, len) in lengths.withIndex()) {
+            if (walked + len >= target) {
+                val t = if (len == 0.0) 0.0 else (target - walked) / len
+                val p = section[i]; val q = section[i + 1]
+                return Point(p.latitude + (q.latitude - p.latitude) * t, p.longitude + (q.longitude - p.longitude) * t)
+            }
+            walked += len
+        }
+        return section.last()
     }
 }

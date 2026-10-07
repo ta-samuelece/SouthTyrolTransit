@@ -117,6 +117,16 @@ data class TripStop(
     val state: ServiceState = ServiceState.NORMAL,
 )
 
+/** One call of a run as reported live by the journey planner; delays in minutes. */
+data class LiveStopTime(
+    val stationKey: String,
+    val name: String,
+    val scheduledArrival: Instant?,
+    val scheduledDeparture: Instant?,
+    val arrivalDelayMinutes: Int?,
+    val departureDelayMinutes: Int?,
+)
+
 data class TripDetail(
     val trip: Trip,
     val route: Route,
@@ -150,6 +160,8 @@ data class Departure(
     val hasAlert: Boolean = false,
     /** True when the trip can be opened in the GTFS-backed trip view. */
     val tripLinked: Boolean = true,
+    /** Journey-planner reference to this run (see [TripLiveDataSource]); empty when unknown. */
+    val liveRef: String = "",
 ) {
     val best: Instant get() = predicted ?: scheduled
     val delaySeconds: Long? get() = predicted?.let { Duration.between(scheduled, it).seconds }

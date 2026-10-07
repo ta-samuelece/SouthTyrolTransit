@@ -1,4 +1,4 @@
-<p align="center"><img src="docs/icon-512.png" width="128" alt="App icon: forested mountains with a route between two stops"></p>
+<p align="center"><img src="docs/icon-512.png" width="128" alt="App icon: layered green mountains with a route between two stops"></p>
 
 # South Tyrol Transit
 
@@ -40,7 +40,7 @@ It is built only on legitimate open data:
 - Open Data Hub mobility data
 - OpenStreetMap-based maps
 
-"South Tyrol Transit" and the package id `org.southtyrol.transit` are **placeholders**; rename them in `app/build.gradle.kts` and `strings.xml`. The launcher icons come from the PNGs in `icons/` (default: Flowing Forest; users pick one in Settings → Appearance). Run `python tools/generate_icons.py` after adding or changing one: it fills the black corners, centres the art so the route stays inside the circular mask, and writes the adaptive-icon layers, previews and launcher aliases' icons. `res/drawable/ic_launcher_monochrome.xml` is the themed-icon silhouette.
+"South Tyrol Transit" and the package id `org.southtyrol.transit` are **placeholders**; rename them in `app/build.gradle.kts` and `strings.xml`. The launcher icons come from the PNGs in `icons/` (default: Abstract Silhouette; users pick one in Settings → Appearance). Run `python tools/generate_icons.py` after adding or changing one: it fills the black corners, centres the art so the route stays inside the circular mask, and writes the adaptive-icon layers, previews and launcher aliases' icons. `res/drawable/ic_launcher_monochrome.xml` is the themed-icon silhouette.
 
 ## 2. Unofficial status
 

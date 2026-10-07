@@ -403,24 +403,44 @@ class SavedRepository(private val user: UserDao, private val clock: () -> Instan
 
 data class LiveVehicle(val vehicle: Vehicle, val route: Route?, val freshness: Freshness)
 
-class TripRepository(private val schedule: TransitScheduleDataSource, private val realtime: RealtimeRepository, private val clock: () -> Instant = Instant::now) {
+/** Journey-planner live times of one run (see [TripLiveDataSource]). */
+data class LiveTrip(val stops: List<org.southtyrol.transit.model.LiveStopTime>, val fetchedAt: Instant)
+
+class TripRepository(
+    private val schedule: TransitScheduleDataSource,
+    private val realtime: RealtimeRepository,
+    private val live: org.southtyrol.transit.model.TripLiveDataSource? = null,
+    private val clock: () -> Instant = Instant::now,
+) {
     suspend fun trip(tripId: String, date: LocalDate, language: String): TripDetail? = schedule.trip(tripId, date, language)
 
-    fun merge(detail: TripDetail, snapshot: RealtimeSnapshot, now: Instant = clock()): TripDetail {
+    /** Best effort: null on any error or when there is no reference. */
+    suspend fun liveTrip(ref: String): LiveTrip? {
+        if (ref.isBlank() || live == null) return null
+        return try { LiveTrip(live.liveTrip(ref), clock()) } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (_: Exception) { null }
+    }
+
+    fun merge(detail: TripDetail, snapshot: RealtimeSnapshot, now: Instant = clock(), liveTrip: LiveTrip? = null): TripDetail {
         val feed = FreshnessPolicy.feed(snapshot.updatesFetchedAt, now)
         val update = if (feed == Freshness.LIVE) snapshot.update(detail.trip.id, detail.serviceDate) else null
-        val (stops, freshness) = RealtimeMerge.tripStops(detail.stops, update, detail.serviceDate, now)
+        val (gtfsStops, gtfsFreshness) = RealtimeMerge.tripStops(detail.stops, update, detail.serviceDate, now)
+        // GTFS-RT first; the journey planner's live times fill the calls it has no prediction for.
+        val planner = liveTrip?.takeIf { Duration.between(it.fetchedAt, now) < Duration.ofMinutes(3) }
+            ?.let { org.southtyrol.transit.model.LiveTripMerge.apply(gtfsStops, it.stops) }
+        val stops = planner ?: gtfsStops
+        val freshness = if (planner != null) Freshness.LIVE else gtfsFreshness
         val vehicle = snapshot.vehicle(detail.trip.id, detail.serviceDate)?.takeIf { FreshnessPolicy.vehicle(it.timestamp, now) != Freshness.UNAVAILABLE }
         return detail.copy(
             stops = stops,
-            freshness = when (feed) {
-                Freshness.LIVE -> freshness
-                Freshness.STALE -> Freshness.STALE
+            freshness = when {
+                planner != null -> Freshness.LIVE
+                feed == Freshness.LIVE -> freshness
+                feed == Freshness.STALE -> Freshness.STALE
                 else -> Freshness.SCHEDULED
             },
             state = if (update?.state == ServiceState.CANCELLED) ServiceState.CANCELLED else detail.state,
             vehicle = vehicle,
-            observedAt = update?.timestamp,
+            observedAt = if (planner != null) liveTrip.fetchedAt else update?.timestamp,
         )
     }
 

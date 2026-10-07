@@ -329,4 +329,10 @@
     <string name="widget_loading">Wird geladen…</string>
     <string name="widget_refresh">Aktualisieren</string>
     <string name="widget_on_time">pünktlich</string>
+    <string name="trip_position_estimated_live">Position aus Echtzeitdaten geschätzt</string>
+    <string name="trip_position_estimated_schedule">Position laut Fahrplan geschätzt</string>
+    <string name="trip_vehicle_at_stop">Fahrzeug an dieser Haltestelle</string>
+    <string name="trip_vehicle_approaching">Fahrzeug ist unterwegs zu dieser Haltestelle</string>
+    <string name="trip_map_expand">Karte vergrößern</string>
+    <string name="trip_map_collapse">Karte verkleinern</string>
 </resources>

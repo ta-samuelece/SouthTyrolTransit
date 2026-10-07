@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<itdRequest version="10.6.33.33" language="de" lengthUnit="METER" sessionID="0" client="curl/8.7.1" clientIP="" serverID="" virtDir="apb" calcTime="197.723" now="2026-10-07T17:32:11" nowWD="4" logRequestId="e2b94e9500935912">
+  <itdVersionInfo>
+    <ptKernel>
+      <appVersion>10.6.33.5 build 27.07.2026 01:49:49</appVersion>
+      <dataFormat>EFA10_06_01</dataFormat>
+      <dataBuild>2026-10-07T00:05:12</dataBuild>
+    </ptKernel>
+  </itdVersionInfo>
+  <itdStopSeqCoordRequest requestID="0">
+    <stopSeq>
+      <itdPoint stopID="66007086" area="16" platform="7086H" gid="de:09162:100" areaGid="de:09162:100:16" pointGid="de:09162:100:16:17" name="München, Bahnhof München Hbf" nameWO="Bahnhof München Hbf" place="München" platformName="" usage="" x="690258.00" y="164938.00" mapName="APBV" niveau="1" omc="9162000" placeID="1" arrValid="0" depValid="1" arrDelay="0" depDelay="12">
+        <genAttrList>
+          <genAttrElem>
+            <name>AREA_NIVEAU_DIVA</name>
+            <value>1</value>
+          </genAttrElem>
+          <genAttrElem>
+            <name>DestinationText</name>
+            <value>Bologna Centrale</value>
+          </genAttrElem>
+        </genAttrList>
+        <itdDateTime>
+          <itdDate year="0" month="0" day="-1" weekday="6"/>
+          <itdTime hour="0" minute="0" second="-1"/>
+        </itdDateTime>
+        <itdDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="13" minute="22" second="0"/>
+        </itdDateTime>
+      </itdPoint>
+      <itdPoint stopID="66007145" area="0" platform="71456" gid="de:09162:5" areaGid="de:09162:5" pointGid="de:09162:5:45:86" name="München, Bahnhof München Ost" nameWO="Bahnhof München Ost" place="München" platformName="" usage="" x="693861.00" y="166254.00" mapName="APBV" niveau="0" omc="9162000" placeID="1" arrValid="1" depValid="1" arrDelay="8" depDelay="10">
+        <genAttrList>
+          <genAttrElem>
+            <name>AREA_NIVEAU_DIVA</name>
+            <value>0</value>
+          </genAttrElem>
+          <genAttrElem>
+            <name>NoAlightingAtStop</name>
+            <value>true</value>
+          </genAttrElem>
+          <genAttrElem>
+            <name>DestinationText</name>
+            <value>Bologna Centrale</value>
+          </genAttrElem>
+        </genAttrList>
+        <itdDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="13" minute="33" second="0"/>
+        </itdDateTime>
+      </itdPoint>
+      <itdPoint stopID="66007144" area="0" platform="7144A" gid="de:09163:9" areaGid="de:09163:9" pointGid="de:09163:9:15:1" name="Rosenheim, Bahnhof Rosenheim" nameWO="Bahnhof Rosenheim" place="Rosenheim" platformName="" usage="" x="733345.00" y="195655.00" mapName="APBV" niveau="0" omc="9163000" placeID="1" arrValid="1" depValid="1" arrDelay="0" depDelay="1">
+        <genAttrList>
+          <genAttrElem>
+            <name>AREA_NIVEAU_DIVA</name>
+            <value>0</value>
+          </genAttrElem>
+          <genAttrElem>
+            <name>DestinationText</name>
+            <value>Bologna Centrale</value>
+          </genAttrElem>
+        </genAttrList>
+        <itdDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="14" minute="12" second="0"/>
+        </itdDateTime>
+        <itdDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="14" minute="13" second="0"/>
+        </itdDateTime>
+      </itdPoint>
+      <itdPoint stopID="66007146" area="3" platform="71461" gid="at:47:2184" areaGid="at:47:2184:3" pointGid="at:47:2184:0:21" name="Kufstein, Bahnhof Kufstein" nameWO="Bahnhof Kufstein" place="Kufstein" platformName="" usage="" x="738038.00" y="225176.00" mapName="APBV" niveau="0" omc="47005013" placeID="2" arrValid="1" depValid="1" arrDelay="0" depDelay="0">
+        <genAttrList>
+          <genAttrElem>
+            <name>AREA_NIVEAU_DIVA</name>
+            <value>0</value>
+          </genAttrElem>
+          <genAttrElem>
+            <name>DestinationText</name>
+            <value>Bologna Centrale</value>
+          </genAttrElem>
+        </genAttrList>
+        <itdDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="14" minute="34" second="0"/>
+        </itdDateTime>
+        <itdDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="14" minute="36" second="0"/>
+        </itdDateTime>
+      </itdPoint>
+      <itdPoint stopID="66007147" area="1" platform="71471" gid="at:47:1170" areaGid="at:47:1170:21" pointGid="at:47:1170:0:8" name="Wörgl, Bahnhof Wörgl Hbf" nameWO="Bahnhof Wörgl Hbf" place="Wörgl" platformName="" usage="" x="730547.00" y="235692.00" mapName="APBV" niveau="0" omc="47005031" placeID="1" arrValid="1" depValid="1" arrDelay="0" depDelay="0">
+        <genAttrList>
+          <genAttrElem>
+            <name>AREA_NIVEAU_DIVA</name>
+            <value>0</value>
+          </genAttrElem>
+          <genAttrElem>
+            <name>DestinationText</name>
+            <value>Bologna Centrale</value>
+          </genAttrElem>
+        </genAttrList>
+        <itdDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="14" minute="44" second="0"/>
+        </itdDateTime>
+        <itdDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="14" minute="46" second="0"/>
+        </itdDateTime>
+      </itdPoint>
+      <itdPoint stopID="66007148" area="2" platform="71481" gid="at:47:61321" areaGid="at:47:61321:21" pointGid="at:47:61321:0:1" name="Jenbach, Bahnhof Jenbach" nameWO="Bahnhof Jenbach" place="Jenbach (Tirol)" platformName="" usage="" x="709626.00" y="247943.00" mapName="APBV" niveau="0" omc="47009017" placeID="2" arrValid="1" depValid="1" arrDelay="0" depDelay="0">
+        <genAttrList>
+          <genAttrElem>
+            <name>AREA_NIVEAU_DIVA</name>
+            <value>0</value>
+          </genAttrElem>
+          <genAttrElem>
+            <name>DestinationText</name>
+            <value>Bologna Centrale</value>
+          </genAttrElem>
+        </genAttrList>
+        <itdDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="14" minute="58" second="0"/>
+        </itdDateTime>
+        <itdDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="15" minute="0" second="0"/>
+        </itdDateTime>
+      </itdPoint>
+      <itdPoint stopID="66007022" area="1" platform="30250" gid="at:47:1187" areaGid="at:47:1187:25" pointGid="at:47:1187:0:21" name="Innsbruck, Bahnhof Innsbruck Hbf" nameWO="Bahnhof Innsbruck Hbf" place="Innsbruck" platformName="" usage="" x="681615.00" y="262774.00" mapName="APBV" niveau="0" omc="47001001" placeID="9" arrValid="1" depValid="1" arrDelay="0" depDelay="0">
+        <genAttrList>
+          <genAttrElem>
+            <name>AREA_NIVEAU_DIVA</name>
+            <value>0</value>
+          </genAttrElem>
+          <genAttrElem>
+            <name>DestinationText</name>
+            <value>Bologna Centrale</value>
+          </genAttrElem>
+        </genAttrList>
+        <itdDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="15" minute="18" second="0"/>
+        </itdDateTime>
+        <itdDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="15" minute="30" second="0"/>
+        </itdDateTime>
+      </itdPoint>
+      <itdPoint stopID="66001389" area="50" platform="31090" gid="it:22021:1389" areaGid="it:22021:1389:50" pointGid="it:22021:1389:50:31090" name="Brenner, Bahnhof Brenner" nameWO="Bahnhof Brenner" place="Brenner" platformName="8" usage="" x="690474.00" y="291491.00" mapName="APBV" niveau="0" omc="22021010" placeID="1" arrValid="1" depValid="1" arrDelay="0" depDelay="2">
+        <genAttrList>
+          <genAttrElem>
+            <name>AREA_NIVEAU_DIVA</name>
+            <value>0</value>
+          </genAttrElem>
+          <genAttrElem>
+            <name>platformChange</name>
+            <value>changed</value>
+          </genAttrElem>
+          <genAttrElem>
+            <name>DestinationText</name>
+            <value>Bologna Centrale</value>
+          </genAttrElem>
+        </genAttrList>
+        <itdDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="16" minute="5" second="0"/>
+        </itdDateTime>
+        <itdDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="16" minute="14" second="0"/>
+        </itdDateTime>
+      </itdPoint>
+      <itdPoint stopID="66001170" area="50" platform="31078" gid="it:22021:1170" areaGid="it:22021:1170:50" pointGid="it:22021:1170:50:31078" name="Franzensfeste, Bahnhof Franzensfeste" nameWO="Bahnhof Franzensfeste" place="Franzensfeste" platformName="2" usage="" x="699209.00" y="314993.00" mapName="APBV" niveau="0" omc="22021032" placeID="1" arrValid="1" depValid="1" arrDelay="0" depDelay="0">
+        <genAttrList>
+          <genAttrElem>
+            <name>AREA_NIVEAU_DIVA</name>
+            <value>0</value>
+          </genAttrElem>
+          <genAttrElem>
+            <name>DestinationText</name>
+            <value>Bologna Centrale</value>
+          </genAttrElem>
+        </genAttrList>
+        <itdDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="16" minute="44" second="0"/>
+        </itdDateTime>
+        <itdDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="16" minute="46" second="0"/>
+        </itdDateTime>
+      </itdPoint>
+      <itdPoint stopID="66000998" area="50" platform="31074" gid="it:22021:998" areaGid="it:22021:998:50" pointGid="it:22021:998:50:31074" name="Brixen, Bahnhof Brixen" nameWO="Bahnhof Brixen" place="Brixen" platformName="2" usage="" x="702536.00" y="323660.00" mapName="APBV" niveau="0" omc="22021011" placeID="4" arrValid="1" depValid="1" arrDelay="0" depDelay="5">
+        <genAttrList>
+          <genAttrElem>
+            <name>AREA_NIVEAU_DIVA</name>
+            <value>0</value>
+          </genAttrElem>
+          <genAttrElem>
+            <name>DestinationText</name>
+            <value>Bologna Centrale</value>
+          </genAttrElem>
+        </genAttrList>
+        <itdDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="16" minute="55" second="0"/>
+        </itdDateTime>
+        <itdDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="16" minute="56" second="0"/>
+        </itdDateTime>
+      </itdPoint>
+      <itdPoint stopID="66000468" area="53" platform="31066" gid="it:22021:468" areaGid="it:22021:468:53" pointGid="it:22021:468:50:31066" name="Bozen, Bahnhof Bozen" nameWO="Bahnhof Bozen" place="Bozen" platformName="4" usage="" x="681000.00" y="348101.00" mapName="APBV" niveau="0" omc="22021008" placeID="1" arrValid="1" depValid="1" arrDelay="0" depDelay="0">
+        <genAttrList>
+          <genAttrElem>
+            <name>AREA_NIVEAU_DIVA</name>
+            <value>0</value>
+          </genAttrElem>
+          <genAttrElem>
+            <name>DestinationText</name>
+            <value>Bologna Centrale</value>
+          </genAttrElem>
+        </genAttrList>
+        <itdDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="17" minute="27" second="0"/>
+        </itdDateTime>
+        <itdDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="17" minute="31" second="0"/>
+        </itdDateTime>
+      </itdPoint>
+      <itdPoint stopID="66000662" area="50" platform="6624" gid="it:22022:95699" areaGid="it:22022:95699:50" pointGid="it:22022:95699:50:3" name="Trient, Bahnhof Trient" nameWO="Bahnhof Trient" place="Trient" platformName="" usage="" x="663871.00" y="395728.00" mapName="APBV" niveau="0" omc="22022205" placeID="1" arrValid="1" depValid="1" arrDelay="0" depDelay="0">
+        <genAttrList>
+          <genAttrElem>
+            <name>AREA_NIVEAU_DIVA</name>
+            <value>0</value>
+          </genAttrElem>
+          <genAttrElem>
+            <name>DestinationText</name>
+            <value>Bologna Centrale</value>
+          </genAttrElem>
+        </genAttrList>
+        <itdDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="18" minute="2" second="0"/>
+        </itdDateTime>
+        <itdDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="18" minute="4" second="0"/>
+        </itdDateTime>
+      </itdPoint>
+      <itdPoint stopID="66007002" area="50" platform="70022" gid="it:22022:7002" areaGid="it:22022:7002:50" pointGid="it:22022:7002:50:2" name="Rovereto, Bahnhof Rovereto" nameWO="Bahnhof Rovereto" place="Rovereto (Trentino)" platformName="" usage="" x="657779.00" y="416050.00" mapName="APBV" niveau="0" omc="22022161" placeID="1" arrValid="1" depValid="1" arrDelay="0" depDelay="0">
+        <genAttrList>
+          <genAttrElem>
+            <name>AREA_NIVEAU_DIVA</name>
+            <value>0</value>
+          </genAttrElem>
+          <genAttrElem>
+            <name>DestinationText</name>
+            <value>Bologna Centrale</value>
+          </genAttrElem>
+        </genAttrList>
+        <itdDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="18" minute="17" second="0"/>
+        </itdDateTime>
+        <itdDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="18" minute="19" second="0"/>
+        </itdDateTime>
+      </itdPoint>
+      <itdPoint stopID="66007010" area="51" platform="32073" gid="it:22101:105" areaGid="it:22101:7010:51" pointGid="it:22101:7010:51:32073" name="Verona, Bahnhof Verona Porta Nuova" nameWO="Bahnhof Verona Porta Nuova" place="Verona" platformName="" usage="" x="655067.00" y="467511.00" mapName="APBV" niveau="0" omc="22023091" placeID="1" arrValid="1" depValid="1" arrDelay="0" depDelay="0">
+        <genAttrList>
+          <genAttrElem>
+            <name>AREA_NIVEAU_DIVA</name>
+            <value>0</value>
+          </genAttrElem>
+          <genAttrElem>
+            <name>DestinationText</name>
+            <value>Bologna Centrale</value>
+          </genAttrElem>
+        </genAttrList>
+        <itdDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="19" minute="1" second="0"/>
+        </itdDateTime>
+        <itdDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="19" minute="15" second="0"/>
+        </itdDateTime>
+      </itdPoint>
+      <itdPoint stopID="66007011" area="50" platform="70151" gid="it:22015:116" areaGid="it:22037:116:51" pointGid="it:22037:116:51:51" name="Bologna, Bahnhof Bologna Centrale" nameWO="Bahnhof Bologna Centrale" place="Bologna" platformName="" usage="" x="686100.00" y="569212.00" mapName="APBV" niveau="0" omc="22037006" placeID="1" arrValid="1" depValid="0" arrDelay="0" depDelay="0">
+        <genAttrList>
+          <genAttrElem>
+            <name>AREA_NIVEAU_DIVA</name>
+            <value>0</value>
+          </genAttrElem>
+          <genAttrElem>
+            <name>DestinationText</name>
+            <value>Bologna Centrale</value>
+          </genAttrElem>
+        </genAttrList>
+        <itdDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="20" minute="16" second="0"/>
+        </itdDateTime>
+        <itdDateTime>
+          <itdDate year="0" month="0" day="-1" weekday="6"/>
+          <itdTime hour="0" minute="0" second="-1"/>
+        </itdDateTime>
+      </itdPoint>
+    </stopSeq>
+    <itdMeansOfTransport name="RJ 87 Railjet" shortname="87" symbol="EC" type="6" motType="0" productName="Eurocity" productId="12" trainType="RJ" trainName="Railjet" trainNum="87" timetablePeriod="Fahrplan 2025" destination="Bologna Centrale" network="apb" TTB="0" STT="0" ROP="0" destID="66007071" spTr="" stateless="apb:05100:E:H:25a" tC="34" vF="20251101" vT="20261212" specialFares="ICE_ROUTE" lineDisplay="train">
+      <motDivaParams line="05100" project="25a" direction="H" supplement="E" network="apb" gid="it:apb:Line:05100E.25a"/>
+      <itdOperator>
+        <code>056</code>
+        <name>TN/ÖBB</name>
+        <publicCode>TN/ÖBB</publicCode>
+      </itdOperator>
+    </itdMeansOfTransport>
+    <itdPathCoordinates>
+      <coordEllipsoid>UNKNOWN_ELLIPSOID</coordEllipsoid>
+      <coordType>UNKNOWN_COORDINATE_TYPE</coordType>
+      <itdCoordinateBaseElemList/>
+    </itdPathCoordinates>
+  </itdStopSeqCoordRequest>
+</itdRequest>

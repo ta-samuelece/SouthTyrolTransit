@@ -343,4 +343,10 @@
     <string name="widget_loading">Loading…</string>
     <string name="widget_refresh">Refresh</string>
     <string name="widget_on_time">on time</string>
+    <string name="trip_position_estimated_live">Position estimated from live times</string>
+    <string name="trip_position_estimated_schedule">Position estimated from the timetable</string>
+    <string name="trip_vehicle_at_stop">Vehicle is at this stop</string>
+    <string name="trip_vehicle_approaching">Vehicle is on its way to this stop</string>
+    <string name="trip_map_expand">Enlarge map</string>
+    <string name="trip_map_collapse">Shrink map</string>
 </resources>

@@ -90,7 +90,7 @@ object AppModule {
     fun places(efa: EfaClient, schedule: TransitScheduleDataSource): PlacesRepository = PlacesRepository(efa, schedule)
 
     @Provides @Singleton
-    fun trips(schedule: TransitScheduleDataSource, realtime: RealtimeRepository): TripRepository = TripRepository(schedule, realtime)
+    fun trips(schedule: TransitScheduleDataSource, realtime: RealtimeRepository, efa: EfaClient): TripRepository = TripRepository(schedule, realtime, efa)
 
     @Provides @Singleton
     fun lines(schedule: TransitScheduleDataSource): LineRepository = LineRepository(schedule)

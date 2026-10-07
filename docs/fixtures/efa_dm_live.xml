@@ -1,0 +1,648 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<itdRequest version="10.6.33.33" language="de" lengthUnit="METER" sessionID="0" client="curl/8.7.1" clientIP="" serverID="" virtDir="apb" calcTime="160.826" now="2026-10-07T17:31:57" nowWD="4" logRequestId="e2b94e95009357a1">
+  <itdVersionInfo>
+    <ptKernel>
+      <appVersion>10.6.33.5 build 27.07.2026 01:49:49</appVersion>
+      <dataFormat>EFA10_06_01</dataFormat>
+      <dataBuild>2026-10-07T00:05:12</dataBuild>
+    </ptKernel>
+  </itdVersionInfo>
+  <itdDepartureMonitorRequest requestID="0">
+    <itdOdv type="any" usage="dm" anyObjFilter="0">
+      <itdOdvPlace state="identified" method="itp">
+        <odvPlaceElem omc="22021008" placeID="1" value="22021008:1" mainPlace="1" stateless="placeID:22021008:1">Bozen</odvPlaceElem>
+        <odvPlaceInput></odvPlaceInput>
+      </itdOdvPlace>
+      <itdOdvName state="identified" method="itp">
+        <odvNameElem selected="1" matchQuality="100000" x="680971.99" y="348068.00" mapName="APBV" id="66000468" omc="22021008" placeID="1" anyType="stop" anyTypeSort="2" locality="Bozen" objectName="Bahnhof Bozen" buildingName="" buildingNumber="" postCode="" streetName="" nameKey="" mainLocality="" stateless="66000468" gid="it:22021:468">Bozen, Bahnhof Bozen</odvNameElem>
+        <odvNameInput>it:22021:468</odvNameInput>
+      </itdOdvName>
+      <itdOdvAssignedStops select="0">
+        <itdOdvAssignedStop stopID="66000468" x="680971.99" y="348068.00" mapName="APBV" value="66000468:Bahnhof Bozen" place="Bozen" nameWithPlace="Bozen, Bahnhof Bozen" distanceTime="0" isTransferStop="0" vm="100" gid="it:22021:468">Bahnhof Bozen</itdOdvAssignedStop>
+      </itdOdvAssignedStops>
+    </itdOdv>
+    <itdDateTime ttpFrom="20251101" ttpTo="20261212">
+      <itdDate weekday="4" year="2026" month="10" day="7"/>
+      <itdTime hour="17" minute="31"/>
+    </itdDateTime>
+    <itdDMDateTime deparr="dep"/>
+    <itdDateRange>
+      <itdDate day="07" month="10" year="2026" weekday="4"/>
+      <itdDate day="08" month="10" year="2026" weekday="5"/>
+      <itdDate day="09" month="10" year="2026" weekday="6"/>
+      <itdDate day="10" month="10" year="2026" weekday="7"/>
+      <itdDate day="11" month="10" year="2026" weekday="1"/>
+      <itdDate day="12" month="10" year="2026" weekday="2"/>
+      <itdDate day="13" month="10" year="2026" weekday="3"/>
+      <itdDate day="14" month="10" year="2026" weekday="4"/>
+      <itdDate day="15" month="10" year="2026" weekday="5"/>
+      <itdDate day="16" month="10" year="2026" weekday="6"/>
+      <itdDate day="17" month="10" year="2026" weekday="7"/>
+      <itdDate day="18" month="10" year="2026" weekday="1"/>
+      <itdDate day="19" month="10" year="2026" weekday="2"/>
+      <itdDate day="20" month="10" year="2026" weekday="3"/>
+      <itdDate day="21" month="10" year="2026" weekday="4"/>
+    </itdDateRange>
+    <itdTripOptions>
+      <itdPtOptions active="-1" maxChanges="9" maxTime="360" maxWait="120" routeType="LEASTTIME" changeSpeed="normal" lineRestriction="400" useProxFootSearch="0" useProxFootSearchOrigin="0" useProxFootSearchDestination="0" useProxFootSearchVia="0" bike="0" plane="0" noCrowded="0" noSolidStairs="0" noEscalators="0" noElevators="0" lowPlatformVhcl="0" wheelchair="0" needElevatedPlt="0" assistance="0" SOSAvail="0" noLonelyTransfer="0" illumTransfer="0" overgroundTransfer="0" noInsecurePlaces="0" accessProfile="0" strictMode="0" noRamps="0" needSolidPavement="0" needTactileGuidanceOnlyWhenAlighting="0" needTactileGuidanceOnlyWhenBoarding="0" needAccessibleStops="0" noTrainCrossing="0" noBoardingMidStreet="0" wheelchairSpaceStop="0" gapMaxWidth="-1" minWidth="-1" minLength="-1" minCapacity="-1" stepMaxHeight="-1" stepMaxNumber="-1" maxRampLength="-1" maxInclination="-1" stepVehicleMaxHeight="-1" stepVehicleMaxNumber="-1" maxInclinationToVeh="-1" usePlatformRamp="0" useVehRamp="0" usePlatformLift="0" useVehLift="0" wheelchairAreaVeh="0" privateTransport="0" streetConnStopsAccepted="0" activeImp="-1" activeCom="-1" activeSec="-1" twoSidedAlt="1" level="unknown">
+        <excludedMeans>
+          <meansElem value="0" selected="0">Zug</meansElem>
+          <meansElem value="1" selected="0">S-Bahn</meansElem>
+          <meansElem value="2" selected="0">U-Bahn</meansElem>
+          <meansElem value="3" selected="0">Stadtbahn</meansElem>
+          <meansElem value="4" selected="0">Straßen-/Trambahn</meansElem>
+          <meansElem value="5" selected="0">Stadtbus</meansElem>
+          <meansElem value="6" selected="0">Regionalbus</meansElem>
+          <meansElem value="7" selected="0">Schnellbus</meansElem>
+          <meansElem value="8" selected="0">Seil-/Zahnradbahn</meansElem>
+          <meansElem value="9" selected="0">Schiff</meansElem>
+          <meansElem value="10" selected="0">AST (flächengebunde</meansElem>
+          <meansElem value="11" selected="0">Sonstige</meansElem>
+          <meansElem value="12" selected="0">Flugzeug</meansElem>
+          <meansElem value="13" selected="0">Zug (Nahverkehr)</meansElem>
+          <meansElem value="14" selected="0">Zug (Fernverkehr)</meansElem>
+          <meansElem value="15" selected="0">Zug Fernv m Zuschlag</meansElem>
+          <meansElem value="16" selected="0">Zug Fernv m spez Fpr</meansElem>
+          <meansElem value="17" selected="0">SEV Schienenersatzv</meansElem>
+          <meansElem value="18" selected="0">Zug Shuttle</meansElem>
+          <meansElem value="19" selected="0">Bürgerbus</meansElem>
+          <meansElem value="20" selected="0">Rufbus (liniengeb.)</meansElem>
+          <meansElem value="21" selected="0">Fernbus</meansElem>
+        </excludedMeans>
+      </itdPtOptions>
+      <itdItOptions>
+        <itRouter logASCII="false" logSVG="false"/>
+        <itPedestrian computeMonomodalTrip="false" computationType="PT_AND_IT" itIncidentData="false" useElevation="false" speedFactor="100" costFactor="0" distanceFactor="50" traveltimeFactor="50" noTunnel="false" noBridge="false" noFerry="false" maxTime="360" minTime="0" maxLength="2147483647" minLength="0" ignoreRestrictions="false" computeAlternativeRoutes="false" level="connection" prefIllum="0" prefToilet="0" prefBench="0" useHdcAcc="0" useGeoRefs="0"/>
+        <itBicycle preferAsphaltTracks="false" preferGreenTracks="false" usePseudoRouting="true" useSignedRoute="false" cycleSpeed="20" prefHikePath="false" elevFac="50" useNetClasses="false" useDrawClasses="false" useEnv="false" inclEnvLeisureRoutes="false" inclEnvTrafficDensity="true" useSurfQuality="false" inclSurfQualGravel="false" inclSurfQualForrest="false" inclSurfQualSingleTrial="false" inclSurfQualCarry="false" useLayoutStructural="false" useLayoutDirections="false" prefPedestrianSeperated="false" useRecommRoute="false" computeMonomodalTrip="false" computationType="PT_AND_IT" itIncidentData="false" useElevation="false" speedFactor="100" costFactor="0" distanceFactor="50" traveltimeFactor="50" noTunnel="false" noBridge="false" noFerry="false" maxTime="120" minTime="0" maxLength="2147483647" minLength="0" ignoreRestrictions="false" computeAlternativeRoutes="false" level="unknown"/>
+        <mitCar computeMonomodalTrip="false" computationType="PT_AND_IT" itIncidentData="false" useElevation="false" speedFactor="100" costFactor="0" distanceFactor="50" traveltimeFactor="50" noTunnel="false" noBridge="false" noFerry="false" maxTime="120" minTime="0" maxLength="2147483647" minLength="0" ignoreRestrictions="false" computeAlternativeRoutes="false" level="unknown" mitProfileData="false" mitIncidentData="false" mitOnlineData="false" noHighway="false" noTollRoad="false" prefSerSt="false"/>
+        <mitTaxi computeMonomodalTrip="false" computationType="PT_AND_IT" itIncidentData="false" useElevation="false" speedFactor="100" costFactor="0" distanceFactor="50" traveltimeFactor="50" noTunnel="false" noBridge="false" noFerry="false" maxTime="120" minTime="0" maxLength="2147483647" minLength="0" ignoreRestrictions="false" computeAlternativeRoutes="false" level="unknown" mitProfileData="false" mitIncidentData="false" mitOnlineData="false" noHighway="false" noTollRoad="false" prefSerSt="false"/>
+        <departureTransport>
+          <individualTransport meansCode="100" value="10" speed="normal" selected="1"/>
+          <individualTransport meansCode="101" value="10" speed="normal" selected="0"/>
+          <individualTransport meansCode="102" value="10" speed="normal" selected="0"/>
+          <individualTransport meansCode="103" value="10" speed="normal" selected="0"/>
+          <individualTransport meansCode="104" value="10" speed="normal" selected="0"/>
+          <individualTransport meansCode="105" value="10" speed="normal" selected="0"/>
+          <individualTransport meansCode="106" value="120" speed="normal" selected="0"/>
+          <individualTransport meansCode="107" value="120" speed="normal" selected="0"/>
+        </departureTransport>
+      </itdItOptions>
+      <itdUsedOptions calcNumberOfTrips="4" dwellTime="00:00" prevDepsPerLeg="0" nextDepsPerLeg="0" calcCO2="0" realtime="1" realOnlyInfo="0" itemType="STOPLINK"/>
+    </itdTripOptions>
+    <itdServingLines trainInfo="show" selected="1">
+      <itdServingLine selected="1" code="3" number="1" symbol="1BZ" motType="5" productId="22" realtime="0" direction="Bozen, Grieser Platz" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66000464" stateless="apb:01B01: :H:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="5:0">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="01B01" project="26a" direction="H" supplement=" " network="apb" gid="it:apb:Line:01B01_.25a"/>
+        <itdOperator>
+          <code>004</code>
+          <name>SASA</name>
+          <publicCode>SASA</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="5" symbol="5BZ" motType="5" productId="22" realtime="0" direction="Bozen, Reschensportplätze" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66002158" stateless="apb:01B05: :H:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="5:1">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="01B05" project="26a" direction="H" supplement=" " network="apb" gid="it:apb:Line:01B05_.25a"/>
+        <itdOperator>
+          <code>004</code>
+          <name>SASA</name>
+          <publicCode>SASA</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="6" symbol="6BZ" motType="5" productId="22" realtime="0" direction="Bozen, Kreisverkehr Lanciastraße" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66002180" stateless="apb:01B06: :H:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="5:2">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="01B06" project="26a" direction="H" supplement=" " network="apb" gid="it:apb:Line:01B06_.25a"/>
+        <itdOperator>
+          <code>004</code>
+          <name>SASA</name>
+          <publicCode>SASA</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="6" symbol="6BZ" motType="5" productId="22" realtime="0" direction="Seilbahn Kohlern" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66002237" stateless="apb:01B06: :R:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="5:3">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="01B06" project="26a" direction="R" supplement=" " network="apb" gid="it:apb:Line:01B06_.25a"/>
+        <itdOperator>
+          <code>004</code>
+          <name>SASA</name>
+          <publicCode>SASA</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="8" symbol="8" motType="5" productId="22" realtime="0" direction="Bozen, Krankenhaus Gebäude W" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66002204" stateless="apb:01B08: :H:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="5:4">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="01B08" project="26a" direction="H" supplement=" " network="apb" gid="it:apb:Line:01B08_.25a"/>
+        <itdOperator>
+          <code>004</code>
+          <name>SASA</name>
+          <publicCode>SASA</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="8" symbol="8" motType="5" productId="22" realtime="0" direction="Kardaun, Brennerstraße" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66000853" stateless="apb:01B08: :R:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="5:5">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="01B08" project="26a" direction="R" supplement=" " network="apb" gid="it:apb:Line:01B08_.25a"/>
+        <itdOperator>
+          <code>004</code>
+          <name>SASA</name>
+          <publicCode>SASA</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="9" symbol="9" motType="5" productId="22" realtime="0" direction="Bozen, Bahnhof Sigmundskron" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66000811" stateless="apb:01B09: :H:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="5:6">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="01B09" project="26a" direction="H" supplement=" " network="apb" gid="it:apb:Line:01B09_.25a"/>
+        <itdOperator>
+          <code>004</code>
+          <name>SASA</name>
+          <publicCode>SASA</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="9" symbol="9" motType="5" productId="22" realtime="0" direction="Seilbahn Kohlern" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66002237" stateless="apb:01B09: :R:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="5:7">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="01B09" project="26a" direction="R" supplement=" " network="apb" gid="it:apb:Line:01B09_.25a"/>
+        <itdOperator>
+          <code>004</code>
+          <name>SASA</name>
+          <publicCode>SASA</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="15" symbol="15" motType="5" productId="22" realtime="0" direction="Bozen, Bahnhof Bozen" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66000468" stateless="apb:01B15: :H:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="5:8">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="01B15" project="26a" direction="H" supplement=" " network="apb" gid="it:apb:Line:01B15_.25a"/>
+        <itdOperator>
+          <code>004</code>
+          <name>SASA</name>
+          <publicCode>SASA</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="110" symbol="110" motType="5" productId="22" realtime="0" direction="Branzoll, Dorf" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66002119" stateless="apb:01110: :H:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="5:9">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="01110" project="26a" direction="H" supplement=" " network="apb" gid="it:apb:Line:01110_.25a"/>
+        <itdOperator>
+          <code>004</code>
+          <name>SASA</name>
+          <publicCode>SASA</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="111" symbol="111" motType="5" productId="22" realtime="0" direction="Leifers I.Z., Endhaltestelle" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66002706" stateless="apb:01111: :H:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="5:10">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="01111" project="26a" direction="H" supplement=" " network="apb" gid="it:apb:Line:01111_.25a"/>
+        <itdOperator>
+          <code>004</code>
+          <name>SASA</name>
+          <publicCode>SASA</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="201" symbol="201" motType="5" productId="22" realtime="0" direction="Bozen, Rittner Seilbahn" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66002083" stateless="apb:01201: :H:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="5:11">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="01201" project="26a" direction="H" supplement=" " network="apb" gid="it:apb:Line:01201_.25a"/>
+        <itdOperator>
+          <code>004</code>
+          <name>SASA</name>
+          <publicCode>SASA</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="201" symbol="201" motType="5" productId="22" realtime="0" direction="Meran, Bahnhof Meran" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66000210" stateless="apb:01201: :R:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="5:12">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="01201" project="26a" direction="R" supplement=" " network="apb" gid="it:apb:Line:01201_.25a"/>
+        <itdOperator>
+          <code>004</code>
+          <name>SASA</name>
+          <publicCode>SASA</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="202" symbol="202" motType="5" productId="22" realtime="0" direction="Nals, Feuerwehr" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66002427" stateless="apb:01202: :H:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="5:13">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="01202" project="26a" direction="H" supplement=" " network="apb" gid="it:apb:Line:01202_.25a"/>
+        <itdOperator>
+          <code>004</code>
+          <name>SASA</name>
+          <publicCode>SASA</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="7B" symbol="7B" motType="5" productId="22" realtime="0" direction="Bozen, Oberer Küepachweg" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66002867" stateless="apb:01B07:B:H:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="5:14">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="01B07" project="26a" direction="H" supplement="B" network="apb" gid="it:apb:Line:01B07B.25a"/>
+        <itdOperator>
+          <code>004</code>
+          <name>SASA</name>
+          <publicCode>SASA</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="N35" symbol="N35" motType="5" productId="22" realtime="0" direction="Bozen, Bahnhof Bozen" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66000468" stateless="apb:01B35:N:H:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="5:15">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="01B35" project="26a" direction="H" supplement="N" network="apb" gid="it:apb:Line:01B35N.25a"/>
+        <itdOperator>
+          <code>004</code>
+          <name>SASA</name>
+          <publicCode>SASA</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="120" symbol="120" motType="6" productId="20" realtime="0" direction="Salurn, Busbahnhof" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66000657" stateless="apb:80120: :R:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="6:0">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="80120" project="26a" direction="R" supplement=" " network="apb" gid="it:apb:Line:80120_.25a"/>
+        <itdOperator>
+          <code>004</code>
+          <name>SASA</name>
+          <publicCode>SASA</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="131" symbol="131" motType="6" productId="20" realtime="0" direction="Bozen, Rittner Seilbahn" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66002083" stateless="apb:80131: :H:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="6:1">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="80131" project="26a" direction="H" supplement=" " network="apb" gid="it:apb:Line:80131_.25a"/>
+        <itdOperator>
+          <code>004</code>
+          <name>SASA</name>
+          <publicCode>SASA</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="131" symbol="131" motType="6" productId="20" realtime="0" direction="St. Michael Eppan, Bahnhof" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66000773" stateless="apb:80131: :R:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="6:2">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="80131" project="26a" direction="R" supplement=" " network="apb" gid="it:apb:Line:80131_.25a"/>
+        <itdOperator>
+          <code>004</code>
+          <name>SASA</name>
+          <publicCode>SASA</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="132" symbol="132" motType="6" productId="20" realtime="0" direction="St. Anton, Mendelbahn" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66000767" stateless="apb:80132: :R:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="6:3">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="80132" project="26a" direction="R" supplement=" " network="apb" gid="it:apb:Line:80132_.25a"/>
+        <itdOperator>
+          <code>004</code>
+          <name>SASA</name>
+          <publicCode>SASA</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="136" symbol="136" motType="6" productId="20" realtime="0" direction="Tramin, Mindelheimer Platz" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66000702" stateless="apb:80136: :R:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="6:4">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="80136" project="26a" direction="R" supplement=" " network="apb" gid="it:apb:Line:80136_.25a"/>
+        <itdOperator>
+          <code>004</code>
+          <name>SASA</name>
+          <publicCode>SASA</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="150" symbol="150" motType="6" productId="20" realtime="0" direction="Bozen, Bahnhof Bozen Süd - Messe" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66002210" stateless="apb:80150: :H:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="6:5">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="80150" project="26a" direction="H" supplement=" " network="apb" gid="it:apb:Line:80150_.25a"/>
+        <itdOperator>
+          <code>004</code>
+          <name>SASA</name>
+          <publicCode>SASA</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="150" symbol="150" motType="6" productId="20" realtime="0" direction="Asten" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66002504" stateless="apb:80150: :R:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="6:6">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="80150" project="26a" direction="R" supplement=" " network="apb" gid="it:apb:Line:80150_.25a"/>
+        <itdOperator>
+          <code>004</code>
+          <name>SASA</name>
+          <publicCode>SASA</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="152" symbol="152" motType="6" productId="20" realtime="0" direction="Durnholz" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66000554" stateless="apb:80152: :R:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="6:7">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="80152" project="26a" direction="R" supplement=" " network="apb" gid="it:apb:Line:80152_.25a"/>
+        <itdOperator>
+          <code>004</code>
+          <name>SASA</name>
+          <publicCode>SASA</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="156" symbol="156" motType="6" productId="20" realtime="0" direction="Bozen, Meraner Kreuzung" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66000472" stateless="apb:80156: :H:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="6:8">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="80156" project="26a" direction="H" supplement=" " network="apb" gid="it:apb:Line:80156_.25a"/>
+        <itdOperator>
+          <code>004</code>
+          <name>SASA</name>
+          <publicCode>SASA</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="156" symbol="156" motType="6" productId="20" realtime="0" direction="Jenesien, Oberdorf" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66000438" stateless="apb:80156: :R:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="6:9">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="80156" project="26a" direction="R" supplement=" " network="apb" gid="it:apb:Line:80156_.25a"/>
+        <itdOperator>
+          <code>004</code>
+          <name>SASA</name>
+          <publicCode>SASA</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="157" symbol="157" motType="6" productId="20" realtime="0" direction="Afing, Dorf" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66000509" stateless="apb:80157: :H:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="6:10">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="80157" project="26a" direction="H" supplement=" " network="apb" gid="it:apb:Line:80157_.25a"/>
+        <itdOperator>
+          <code>004</code>
+          <name>SASA</name>
+          <publicCode>SASA</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="165" symbol="165" motType="6" productId="20" realtime="0" direction="Bozen, Florenzstraße" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66002101" stateless="apb:80165: :H:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="6:11">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="80165" project="26a" direction="H" supplement=" " network="apb" gid="it:apb:Line:80165_.25a"/>
+        <itdOperator>
+          <code>004</code>
+          <name>SASA</name>
+          <publicCode>SASA</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="165" symbol="165" motType="6" productId="20" realtime="0" direction="Klobenstein, Busbahnhof" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66000604" stateless="apb:80165: :R:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="6:12">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="80165" project="26a" direction="R" supplement=" " network="apb" gid="it:apb:Line:80165_.25a"/>
+        <itdOperator>
+          <code>004</code>
+          <name>SASA</name>
+          <publicCode>SASA</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="167" symbol="167" motType="6" productId="20" realtime="0" direction="Stieger" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66000626" stateless="apb:80167: :R:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="6:13">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="80167" project="26a" direction="R" supplement=" " network="apb" gid="it:apb:Line:80167_.25a"/>
+        <itdOperator>
+          <code>004</code>
+          <name>SASA</name>
+          <publicCode>SASA</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="170" symbol="170" motType="6" productId="20" realtime="0" direction="Bozen, Max-Valier-Schule" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66002169" stateless="apb:83170: :R:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="6:14">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="83170" project="26a" direction="R" supplement=" " network="apb" gid="it:apb:Line:83170_.25a"/>
+        <itdOperator>
+          <code>069</code>
+          <name>Simobil</name>
+          <publicCode>*010</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="180" symbol="180" motType="6" productId="20" realtime="0" direction="Bozen, Max-Valier-Schule" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66002169" stateless="apb:82180: :H:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="6:15">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="82180" project="26a" direction="H" supplement=" " network="apb" gid="it:apb:Line:82180_.25a"/>
+        <itdOperator>
+          <code>066</code>
+          <name>Consorzio Alto Adige Autonoleggiatori</name>
+          <publicCode>*010</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="181" symbol="181" motType="6" productId="20" realtime="0" direction="Bozen, Max-Valier-Schule" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66002169" stateless="apb:82181: :H:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="6:16">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="82181" project="26a" direction="H" supplement=" " network="apb" gid="it:apb:Line:82181_.25a"/>
+        <itdOperator>
+          <code>066</code>
+          <name>Consorzio Alto Adige Autonoleggiatori</name>
+          <publicCode>*010</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="181" symbol="181" motType="6" productId="20" realtime="0" direction="Petersberg, Sportzone" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66000593" stateless="apb:82181: :R:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="6:17">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="82181" project="26a" direction="R" supplement=" " network="apb" gid="it:apb:Line:82181_.25a"/>
+        <itdOperator>
+          <code>066</code>
+          <name>Consorzio Alto Adige Autonoleggiatori</name>
+          <publicCode>*010</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="182" symbol="182" motType="6" productId="20" realtime="0" direction="Bozen, Max-Valier-Schule" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66002169" stateless="apb:82182: :H:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="6:18">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="82182" project="26a" direction="H" supplement=" " network="apb" gid="it:apb:Line:82182_.25a"/>
+        <itdOperator>
+          <code>066</code>
+          <name>Consorzio Alto Adige Autonoleggiatori</name>
+          <publicCode>*010</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="185" symbol="185" motType="6" productId="20" realtime="0" direction="Bozen, Max-Valier-Schule" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66002169" stateless="apb:82185: :H:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="6:19">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="82185" project="26a" direction="H" supplement=" " network="apb" gid="it:apb:Line:82185_.25a"/>
+        <itdOperator>
+          <code>066</code>
+          <name>Consorzio Alto Adige Autonoleggiatori</name>
+          <publicCode>*010</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="204" symbol="204" motType="6" productId="20" realtime="0" direction="Hafling, Dorf" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66000406" stateless="apb:80204: :R:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="6:20">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="80204" project="26a" direction="R" supplement=" " network="apb" gid="it:apb:Line:80204_.25a"/>
+        <itdOperator>
+          <code>004</code>
+          <name>SASA</name>
+          <publicCode>SASA</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="350" symbol="350" motType="6" productId="20" realtime="0" direction="Bozen, Max-Valier-Schule" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66002169" stateless="apb:83350: :H:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="6:21">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="83350" project="26a" direction="H" supplement=" " network="apb" gid="it:apb:Line:83350_.25a"/>
+        <itdOperator>
+          <code>069</code>
+          <name>Simobil</name>
+          <publicCode>*010</publicCode>
+        </itdOperator>
+      </itdServingLine>
+      <itdServingLine selected="1" code="3" number="133S" symbol="133S" motType="6" productId="20" realtime="0" direction="St. Nikolaus" valid="Fahrplan 2026" compound="0" TTB="0" STT="0" ROP="0" type="unknown" spTr="" destID="66000784" stateless="apb:80133:S:R:26a" oK="468" vF="20251101" vT="20261212" lineDisplay="line" index="6:22">
+        <itdNoTrain name="Bus"/>
+        <motDivaParams line="80133" project="26a" direction="R" supplement="S" network="apb" gid="it:apb:Line:80133S.26a"/>
+        <itdOperator>
+          <code>004</code>
+          <name>SASA</name>
+          <publicCode>SASA</publicCode>
+        </itdOperator>
+      </itdServingLine>
+    </itdServingLines>
+    <itdDepartureList>
+      <itdDeparture stopID="66000468" x="680919" y="348105" mapName="APBV" area="1" platform="5352" gid="it:22021:468" pointGid="it:22021:468:1:5352" platformName="B" plannedPlatformName="B" stopName="Bozen, Bahnhof Bozen" nameWO="Bahnhof Bozen" countdown="4" realtimeTripStatus="MONITORED">
+        <itdDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="17" minute="18" second="0" ap=""/>
+        </itdDateTime>
+        <itdDateTimeBaseTimetable>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="17" minute="18" second="0"/>
+        </itdDateTimeBaseTimetable>
+        <itdRTDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="17" minute="35" second="48" ap=""/>
+        </itdRTDateTime>
+        <itdServingLine key="46" code="3" number="131" symbol="131" motType="6" mtSubcode="0" productId="20" realtime="1" direction="Bozen Rittner Seilbahn" directionFrom="Kaltern, Rottenburger Platz" destID="66002083" stateless="apb:80131: :H:26a" lineDisplay="line">
+          <itdNoTrain name="Bus" delay="17"/>
+          <motDivaParams line="80131" project="26a" direction="H" supplement=" " network="apb" gid="it:apb:Line:80131_.25a"/>
+          <itdOperator>
+            <code>004</code>
+            <name>SASA</name>
+            <publicCode>SASA</publicCode>
+          </itdOperator>
+        </itdServingLine>
+        <genAttrList/>
+        <itdServingTrip tripCode="46" AVMSTripID="071026_SASA_131_1525567133554312194_"/>
+      </itdDeparture>
+      <itdDeparture stopID="66000468" x="680972" y="348068" mapName="APBV" area="53" platform="4" gid="it:22021:468" pointGid="" platformName="4" plannedPlatformName="4" stopName="Bozen, Bahnhof Bozen" nameWO="Bahnhof Bozen" countdown="0" realtimeTripStatus="MONITORED">
+        <itdDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="17" minute="31" second="0" ap=""/>
+        </itdDateTime>
+        <itdDateTimeBaseTimetable>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="17" minute="31" second="0"/>
+        </itdDateTimeBaseTimetable>
+        <itdRTDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="17" minute="31" second="0" ap=""/>
+        </itdRTDateTime>
+        <itdServingLine key="34" code="6" number="RJ 87 Railjet" symbol="EC" motType="0" mtSubcode="0" productId="12" realtime="1" direction="Bologna Centrale" directionFrom="München, Bahnhof München Hbf" trainType="RJ" trainName="Railjet" trainNum="87" destID="66007011" stateless="apb:05100:E:H:26a" lineDisplay="train">
+          <itdNoTrain name="Eurocity" delay="0"/>
+          <motDivaParams line="05100" project="26a" direction="H" supplement="E" network="apb" gid="it:apb:Line:05100E.25a"/>
+          <itdOperator>
+            <code>056</code>
+            <name>TN/ÖBB</name>
+            <publicCode>TN/ÖBB</publicCode>
+          </itdOperator>
+        </itdServingLine>
+        <genAttrList>
+          <genAttrElem>
+            <name>lineType</name>
+            <value>HIGHSPEEDTRAIN</value>
+          </genAttrElem>
+          <genAttrElem>
+            <name>lineType</name>
+            <value>LONG_DISTANCE_TRAINS</value>
+          </genAttrElem>
+          <genAttrElem>
+            <name>lineType</name>
+            <value>SUPPLEMENT</value>
+          </genAttrElem>
+        </genAttrList>
+        <itdServingTrip tripCode="34" AVMSTripID="87"/>
+      </itdDeparture>
+      <itdDeparture stopID="66000468" x="680918" y="348073" mapName="APBV" area="1" platform="2805" gid="it:22021:468" pointGid="it:22021:468:1:2805" platformName="C" plannedPlatformName="C" stopName="Bozen, Bahnhof Bozen" nameWO="Bahnhof Bozen" countdown="0" realtimeTripStatus="MONITORED">
+        <itdDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="17" minute="31" second="0" ap=""/>
+        </itdDateTime>
+        <itdDateTimeBaseTimetable>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="17" minute="31" second="0"/>
+        </itdDateTimeBaseTimetable>
+        <itdRTDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="17" minute="31" second="30" ap=""/>
+        </itdRTDateTime>
+        <itdServingLine key="106" code="3" number="120" symbol="120" motType="6" mtSubcode="0" productId="20" realtime="1" direction="Salurn" directionFrom="Bozen, Busbahnhof" destID="66000657" stateless="apb:80120: :R:26a" lineDisplay="line">
+          <itdNoTrain name="Bus" delay="0"/>
+          <motDivaParams line="80120" project="26a" direction="R" supplement=" " network="apb" gid="it:apb:Line:80120_.25a"/>
+          <itdOperator>
+            <code>004</code>
+            <name>SASA</name>
+            <publicCode>SASA</publicCode>
+          </itdOperator>
+        </itdServingLine>
+        <itdInfoLinkList>
+          <itdLineInfoList>
+            <infoLink>
+              <paramList>
+                <param edit="0">
+                  <type>addInfoParam</type>
+                  <name>creationTime</name>
+                  <value>08/07/26 11:13</value>
+                </param>
+                <param edit="0">
+                  <type>addInfoParam</type>
+                  <name>lastModificationTime</name>
+                  <value>01/09/26 12:05</value>
+                </param>
+              </paramList>
+              <infoLinkText>Stadtlinien Bozen 7A und 7B / Linie 120</infoLinkText>
+              <infoLinkURL>http://10.240.145.20:80/ics/XSLT_CM_SHOWADDINFO_REQUEST?infoID=22082_SASA&amp;seqID=10</infoLinkURL>
+              <infoLinkImage/>
+              <infoText>
+                <content>&lt;p&gt;&lt;strong&gt;Vom 13. Juli 2026 bis voraussichtlich Ende Juli 2027&lt;/strong&gt; wird die Unterf&amp;uuml;hrung vom St.-Gertraud-Weg zur Trienter Stra&amp;szlig;e aufgrund von Bauarbeiten gesperrt.&lt;/p&gt;
+&lt;p&gt;Die oben genannten Linien werden &amp;uuml;ber die Romstra&amp;szlig;e und Trienter Stra&amp;szlig;e umgeleitet.&lt;/p&gt;
+&lt;p&gt;Es wird die Ersatzhaltestelle &amp;bdquo;Br&amp;uuml;der-Bronzetti-Stra&amp;szlig;e&amp;ldquo; bedient (Standort: &lt;a href="https://www.google.com/maps/place/46&amp;deg;29'07.9%22N+11&amp;deg;20'39.1%22E/@46.4855017,11.3438029,20.13z/data=!4m4!3m3!8m2!3d46.4855215!4d11.3441866?entry=ttu&amp;amp;g_ep=EgoyMDI2MDcwNS4wIKXMDSoASAFQAw=="&gt;Google Maps&lt;/a&gt;; &lt;a href="https://maps.apple.com/place?address=Via+Roma+104-106,+39100+Bolzano,+Italy&amp;amp;coordinate=46.485528,11.344194&amp;amp;name=Via+Roma+104&amp;ndash;106"&gt;Apple Maps&lt;/a&gt;).&lt;/p&gt;
+&lt;p&gt;Stand: 13.07.2026&lt;/p&gt;</content>
+                <subtitle>Stadtlinien Bozen 7A und 7B / Linie 120</subtitle>
+                <subject>Bozen: Umleitung wegen Sperrung Unterführung / Ersatzhaltestelle</subject>
+                <additionalText></additionalText>
+                <image></image>
+                <outputClientText>
+                  <htmlText></htmlText>
+                  <wmlText></wmlText>
+                  <smsText></smsText>
+                  <speechText></speechText>
+                </outputClientText>
+              </infoText>
+            </infoLink>
+          </itdLineInfoList>
+        </itdInfoLinkList>
+        <genAttrList/>
+        <itdServingTrip tripCode="106" AVMSTripID="071026_SASA_120_1525567133185213461_"/>
+      </itdDeparture>
+      <itdDeparture stopID="66000468" x="680918" y="348073" mapName="APBV" area="1" platform="2805" gid="it:22021:468" pointGid="it:22021:468:1:2805" platformName="C" plannedPlatformName="C" stopName="Bozen, Bahnhof Bozen" nameWO="Bahnhof Bozen" countdown="0" realtimeTripStatus="MONITORED">
+        <itdDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="17" minute="31" second="0" ap=""/>
+        </itdDateTime>
+        <itdDateTimeBaseTimetable>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="17" minute="31" second="0"/>
+        </itdDateTimeBaseTimetable>
+        <itdRTDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="17" minute="31" second="12" ap=""/>
+        </itdRTDateTime>
+        <itdServingLine key="144" code="3" number="111" symbol="111" motType="5" mtSubcode="0" productId="22" realtime="1" direction="Leifers Gewerbezone" directionFrom="Bozen, Bahnhof Bozen" destID="66002706" stateless="apb:01111: :H:26a" lineDisplay="line">
+          <itdNoTrain name="Bus" delay="0"/>
+          <motDivaParams line="01111" project="26a" direction="H" supplement=" " network="apb" gid="it:apb:Line:01111_.25a"/>
+          <itdOperator>
+            <code>004</code>
+            <name>SASA</name>
+            <publicCode>SASA</publicCode>
+          </itdOperator>
+        </itdServingLine>
+        <genAttrList/>
+        <itdServingTrip tripCode="144" AVMSTripID="071026_SASA_111_1525567133319431173_"/>
+      </itdDeparture>
+      <itdDeparture stopID="66000468" x="680972" y="348068" mapName="APBV" area="53" platform="3" gid="it:22021:468" pointGid="" platformName="3" plannedPlatformName="3" stopName="Bozen, Bahnhof Bozen" nameWO="Bahnhof Bozen" countdown="1" realtimeTripStatus="MONITORED">
+        <itdDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="17" minute="32" second="0" ap=""/>
+        </itdDateTime>
+        <itdDateTimeBaseTimetable>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="17" minute="32" second="0"/>
+        </itdDateTimeBaseTimetable>
+        <itdRTDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="17" minute="32" second="0" ap=""/>
+        </itdRTDateTime>
+        <itdServingLine key="70" code="6" number="RV 3844 Regionale Veloce" symbol="RV" motType="0" mtSubcode="0" productId="10" realtime="1" direction="Brenner" directionFrom="Bologna, Bahnhof Bologna Centrale" trainType="RV" trainName="Regionale Veloce" trainNum="3844" destID="66001389" stateless="apb:03100:V:R:26a" lineDisplay="train">
+          <itdNoTrain name="Treno regionale" delay="0"/>
+          <motDivaParams line="03100" project="26a" direction="R" supplement="V" network="apb" gid="it:apb:Line:03100V.25a"/>
+          <itdOperator>
+            <code>099</code>
+            <name>Trenitalia</name>
+            <publicCode>TI</publicCode>
+          </itdOperator>
+        </itdServingLine>
+        <genAttrList/>
+        <itdServingTrip tripCode="70" AVMSTripID="3844"/>
+      </itdDeparture>
+      <itdDeparture stopID="66000468" x="680919" y="348105" mapName="APBV" area="1" platform="5352" gid="it:22021:468" pointGid="it:22021:468:1:5352" platformName="B" plannedPlatformName="B" stopName="Bozen, Bahnhof Bozen" nameWO="Bahnhof Bozen" countdown="10" realtimeTripStatus="MONITORED">
+        <itdDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="17" minute="33" second="0" ap=""/>
+        </itdDateTime>
+        <itdDateTimeBaseTimetable>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="17" minute="33" second="0"/>
+        </itdDateTimeBaseTimetable>
+        <itdRTDateTime>
+          <itdDate year="2026" month="10" day="7" weekday="4"/>
+          <itdTime hour="17" minute="41" second="42" ap=""/>
+        </itdRTDateTime>
+        <itdServingLine key="27" code="3" number="201" symbol="201" motType="5" mtSubcode="0" productId="22" realtime="1" direction="Bozen Rittner Seilbahn" directionFrom="Meran, Bahnhof Meran" destID="66002083" stateless="apb:01201: :H:26a" lineDisplay="line">
+          <itdNoTrain name="Bus" delay="8"/>
+          <motDivaParams line="01201" project="26a" direction="H" supplement=" " network="apb" gid="it:apb:Line:01201_.25a"/>
+          <itdOperator>
+            <code>004</code>
+            <name>SASA</name>
+            <publicCode>SASA</publicCode>
+          </itdOperator>
+        </itdServingLine>
+        <genAttrList/>
+        <itdServingTrip tripCode="27" AVMSTripID="071026_SASA_201_1525567133034218512_"/>
+      </itdDeparture>
+    </itdDepartureList>
+  </itdDepartureMonitorRequest>
+</itdRequest>

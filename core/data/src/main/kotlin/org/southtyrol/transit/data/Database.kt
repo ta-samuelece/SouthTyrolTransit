@@ -39,6 +39,8 @@ data class StopRow(
     val locationType: Int,
 )
 
+data class NextStopRow(val platformId: String, val nextId: String, val nextName: String, val calls: Int)
+
 /** Full-text index over every stop name variant (all languages, accent-folded). */
 @Fts4(tokenizer = FtsOptions.TOKENIZER_UNICODE61, notIndexed = ["stationKey"])
 @Entity(tableName = "stop_search")
@@ -196,6 +198,21 @@ interface ScheduleDao {
         """,
     )
     suspend fun arrivalsDiffer(stopIds: Collection<String>): Boolean
+
+    /** For each platform, how often each stop follows it (the next call of every trip departing there). */
+    @Query(
+        """
+        SELECT s.id AS platformId, n.id AS nextId, n.name AS nextName, COUNT(*) AS calls
+        FROM stop_times st
+        JOIN stops s ON s.idx = st.stopIdx
+        JOIN stop_times nst ON nst.tripIdx = st.tripIdx
+            AND nst.sequence = (SELECT MIN(x.sequence) FROM stop_times x WHERE x.tripIdx = st.tripIdx AND x.sequence > st.sequence)
+        JOIN stops n ON n.idx = nst.stopIdx
+        WHERE s.id IN (:platformIds)
+        GROUP BY s.id, n.id
+        """,
+    )
+    suspend fun nextStops(platformIds: Collection<String>): List<NextStopRow>
 
     @Query("SELECT DISTINCT r.lineKey FROM stop_times st JOIN stops s ON s.idx = st.stopIdx JOIN trips t ON t.idx = st.tripIdx JOIN routes r ON r.id = t.routeId WHERE s.id IN (:stopIds)")
     suspend fun lineKeysAtStops(stopIds: Collection<String>): List<String>

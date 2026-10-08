@@ -345,4 +345,10 @@
     <string name="update_channel_stable_hint">Solo versioni definitive.</string>
     <string name="update_channel_preview_hint">Offre anche versioni di anteprima con nuove funzioni prima del rilascio. Possono contenere errori. Per tornare indietro scegli «Stabile»: l\'anteprima resta installata finché non esce una versione stabile più recente.</string>
     <string name="update_available_preview_title">Aggiornamento di anteprima disponibile</string>
+    <string name="stop_line_filter_hint">Tocca le linee per vedere solo le loro partenze. Tieni premuta una linea per aprirla.</string>
+    <string name="stop_all_directions">Tutte le direzioni</string>
+    <string name="stop_towards">→ %s</string>
+    <string name="stop_no_departures_filtered">Nessuna partenza per le linee o la direzione scelte.</string>
+    <string name="stop_clear_filters">Mostra tutte</string>
+    <string name="stop_open_line">Apri la linea</string>
 </resources>

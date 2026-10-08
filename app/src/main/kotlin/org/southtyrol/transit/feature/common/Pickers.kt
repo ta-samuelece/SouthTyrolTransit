@@ -62,6 +62,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -124,7 +125,9 @@ class StopSearchViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            _state.map { it.query.trim() }.debounce(250).collectLatest { query ->
+            // Only a changed query starts a search: the search's own updates (loading, results) must not
+            // re-trigger it, or the list keeps reloading in a loop.
+            _state.map { it.query.trim() }.distinctUntilChanged().debounce(250).collectLatest { query ->
                 if (query.length < 2) { _state.update { it.copy(results = emptyList(), loading = false, error = null) }; return@collectLatest }
                 _state.update { it.copy(loading = true) }
                 try {
@@ -194,8 +197,9 @@ class LineSearchViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            _state.debounce(200).collectLatest { s ->
-                val query = s.query.trim()
+            // Only a changed query starts a search: the search's own updates (loading, results) must not
+            // re-trigger it, or the list keeps reloading in a loop.
+            _state.map { it.query.trim() }.distinctUntilChanged().debounce(200).collectLatest { query ->
                 val available = runCatching { schedule.isAvailable() }.getOrDefault(false)
                 val results = if (available) runCatching { lines.search(query) }.getOrDefault(emptyList()) else emptyList()
                 _state.update { if (it.query.trim() == query) it.copy(loading = false, available = available, results = results) else it }
@@ -203,7 +207,7 @@ class LineSearchViewModel @Inject constructor(
         }
     }
 
-    fun query(value: String) { _state.update { it.copy(query = value, loading = true) } }
+    fun query(value: String) { _state.update { it.copy(query = value, loading = it.loading || value.trim() != it.query.trim()) } }
 }
 
 @Composable

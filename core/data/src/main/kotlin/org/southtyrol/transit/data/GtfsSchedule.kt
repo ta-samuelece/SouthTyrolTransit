@@ -23,6 +23,7 @@ import org.southtyrol.transit.model.Polyline
 import org.southtyrol.transit.model.Route
 import org.southtyrol.transit.model.ServiceCalendar
 import org.southtyrol.transit.model.Stop
+import org.southtyrol.transit.model.StopDirection
 import org.southtyrol.transit.model.TransitScheduleDataSource
 import org.southtyrol.transit.model.TransitZone
 import org.southtyrol.transit.model.TransportMode
@@ -169,6 +170,30 @@ class GtfsSchedule(private val store: ScheduleStore) : TransitScheduleDataSource
             day = day.plusDays(1)
         }
         result.sortedBy { it.scheduled }.distinctBy { it.key }.take(limit)
+    }
+
+    override suspend fun stationDirections(stationKey: String, language: String): List<StopDirection> = io {
+        val platforms = station(stationKey).map { it.id }
+        if (platforms.size < 2) return@io emptyList()
+        val rows = nextStops(platforms)
+        val names = translate(this, "stops", rows.map { it.nextId }.distinct(), language)
+        val town = (stop(stationKey) ?: station(stationKey).firstOrNull())?.name?.substringBefore(", ", "")
+        fun label(row: NextStopRow): String {
+            val name = names[row.nextId] ?: row.nextName
+            // "Bolzano, Via Sorrento" reads as "Via Sorrento" at a stop in Bolzano.
+            return if (town != null && town.isNotBlank() && name.startsWith("$town, ")) name.removePrefix("$town, ") else name
+        }
+        val byPlatform = rows.groupBy { it.platformId }.mapNotNull { (platform, next) ->
+            val total = next.sumOf { it.calls }
+            // The main next stops (at least a fifth of the departures), most frequent first, at most two.
+            val towards = next.groupBy(::label).mapValues { (_, r) -> r.sumOf { it.calls } }
+                .filterValues { it * 5 >= total }.entries.sortedByDescending { it.value }.take(2).map { it.key }
+            if (towards.isEmpty()) null else platform to towards
+        }
+        // Platforms heading to the same places form one direction.
+        val directions = byPlatform.groupBy({ it.second.toSet() }, { it.first })
+            .map { (_, ids) -> StopDirection(ids.toSet(), byPlatform.first { it.first == ids.first() }.second) }
+        if (directions.size in 2..6) directions else emptyList()
     }
 
     override suspend fun arrivalsDiffer(stopIds: Collection<String>): Boolean = io {

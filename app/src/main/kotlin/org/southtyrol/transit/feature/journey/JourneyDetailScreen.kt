@@ -131,7 +131,11 @@ fun JourneyDetailContent(journey: Journey, navigator: Navigator, modifier: Modif
             journey.legs.last().to.point?.let { MapMarker("to", it, MarkerKind.DESTINATION, "B") },
         )
     }
-    LazyColumn(modifier, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    val mapState = org.southtyrol.transit.feature.common.rememberExpandableMapState()
+    val mapContent = remember(lines, endpoints) { MapContent(pois = endpoints, lines = lines) }
+    val camera = remember(journey) { CameraRequest.Fit(lines.flatMap { it.points }) }
+    org.southtyrol.transit.feature.common.ExpandableMapPage(mapState, lines.isNotEmpty(), mapContent, camera, modifier) { listModifier ->
+    LazyColumn(listModifier, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Row(verticalAlignment = Alignment.Bottom) {
@@ -144,13 +148,8 @@ fun JourneyDetailContent(journey: Journey, navigator: Navigator, modifier: Modif
                 FreshnessIndicator(if (journey.hasRealtime) Freshness.LIVE else Freshness.SCHEDULED, null, now)
             }
         }
-        if (lines.isNotEmpty()) item {
-            Surface(shape = RoundedCornerShape(28.dp), modifier = Modifier.fillMaxWidth().height(220.dp)) {
-                TransitMap(
-                    MapContent(pois = endpoints, lines = lines), Modifier.fillMaxSize(),
-                    camera = CameraRequest.Fit(lines.flatMap { it.points }), darkTheme = dark,
-                )
-            }
+        if (lines.isNotEmpty() && !mapState.expanded) item {
+            org.southtyrol.transit.feature.common.CompactMapCard(mapState, mapContent, camera, Modifier.fillMaxWidth().height(220.dp))
         }
         itemsIndexed(journey.legs) { index, leg ->
             val previous = journey.legs.getOrNull(index - 1)
@@ -158,6 +157,7 @@ fun JourneyDetailContent(journey: Journey, navigator: Navigator, modifier: Modif
             if (leg.mode == TransportMode.WALK) WalkLeg(leg) else TransitLeg(leg, now, onStop = { gid -> navigator.stop(gid) })
         }
         item { FareSection(journey) }
+    }
     }
 }
 

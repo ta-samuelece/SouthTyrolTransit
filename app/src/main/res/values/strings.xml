@@ -355,4 +355,10 @@
     <string name="update_channel_stable_hint">Only finished releases.</string>
     <string name="update_channel_preview_hint">Also offers preview builds with new features before they are released. They may contain bugs. To go back, switch to Stable: you keep the preview until a newer stable version comes out.</string>
     <string name="update_available_preview_title">Preview update available</string>
+    <string name="stop_line_filter_hint">Tap lines to show only their departures. Hold a line to open it.</string>
+    <string name="stop_all_directions">All directions</string>
+    <string name="stop_towards">→ %s</string>
+    <string name="stop_no_departures_filtered">No departures for the selected lines or direction.</string>
+    <string name="stop_clear_filters">Show all</string>
+    <string name="stop_open_line">Open line</string>
 </resources>

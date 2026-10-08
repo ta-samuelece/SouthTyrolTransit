@@ -117,6 +117,21 @@ data class TripStop(
     val state: ServiceState = ServiceState.NORMAL,
 )
 
+/**
+ * One direction at a stop: the platform(s) whose buses head towards the same next stops. Two-way
+ * stops have one platform per side of the road, so a platform stands for a direction.
+ */
+data class StopDirection(val platformIds: Set<String>, val towards: List<String>)
+
+/** Narrows a departure board to some lines and/or one direction (empty / null = no restriction). */
+object BoardFilter {
+    fun apply(departures: List<Departure>, lines: Collection<Line>, direction: StopDirection?): List<Departure> =
+        departures.filter { d ->
+            (lines.isEmpty() || lines.any { l -> d.routeId in l.routeIds || d.line.equals(l.name, ignoreCase = true) }) &&
+                (direction == null || d.stopId in direction.platformIds)
+        }
+}
+
 /** One call of a run as reported live by the journey planner; delays in minutes. */
 data class LiveStopTime(
     val stationKey: String,

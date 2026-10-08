@@ -60,6 +60,12 @@ data class StopState(
     val liveTimes: org.southtyrol.transit.data.LiveTimes? = null,
     /** False when arrivals would equal departures, so the toggle is hidden. */
     val showArrivalsToggle: Boolean = false,
+    /** Directions to choose from (two-way stops); empty when there is no choice. */
+    val directions: List<org.southtyrol.transit.model.StopDirection> = emptyList(),
+    /** Selected direction, or null for all. */
+    val direction: org.southtyrol.transit.model.StopDirection? = null,
+    /** Keys of the lines the board is narrowed to; empty for all. */
+    val lineFilter: Set<String> = emptySet(),
 ) {
     val live: Boolean get() = start == null && end == null
 }
@@ -108,7 +114,8 @@ class StopViewModel @AssistedInject constructor(
             val platforms = runCatching { schedule.stationStops(stationKey, lang) }.getOrDefault(emptyList())
             val served = runCatching { lines.atStop(stationKey) }.getOrDefault(emptyList())
             val toggle = departures.arrivalsDiffer(stationKey)
-            _state.update { it.copy(stop = stop, name = stop?.name ?: it.name, platforms = platforms, lines = served, showArrivalsToggle = toggle) }
+            val directions = departures.directions(stationKey, lang)
+            _state.update { it.copy(stop = stop, name = stop?.name ?: it.name, platforms = platforms, lines = served, showArrivalsToggle = toggle, directions = directions) }
             if (stop != null && location.hasPermission()) {
                 (location.current() as? LocationResult.Found)?.let { found -> _state.update { it.copy(distanceMeters = Geo.distance(found.point, stop.point)) } }
             }
@@ -140,6 +147,17 @@ class StopViewModel @AssistedInject constructor(
             }
         }
     }
+
+    /** The board narrowed to the chosen lines and direction (directions only apply to timetable boards). */
+    val visible: StateFlow<List<Departure>> = combine(board, _state) { b, s ->
+        val departures = b?.departures.orEmpty()
+        val lines = s.lines.filter { it.key in s.lineFilter }
+        org.southtyrol.transit.model.BoardFilter.apply(departures, lines, s.direction.takeIf { b?.source == BoardSource.SCHEDULE })
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun toggleLine(key: String) = _state.update { it.copy(lineFilter = if (key in it.lineFilter) it.lineFilter - key else it.lineFilter + key) }
+    fun setDirection(direction: org.southtyrol.transit.model.StopDirection?) = _state.update { it.copy(direction = direction) }
+    fun clearFilters() = _state.update { it.copy(lineFilter = emptySet(), direction = null) }
 
     fun setArrivals(value: Boolean) {
         if (value == _state.value.arrivals) return

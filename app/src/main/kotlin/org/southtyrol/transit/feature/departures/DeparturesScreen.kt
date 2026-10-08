@@ -48,6 +48,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -118,7 +119,9 @@ class DeparturesViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            _search.map { it.query.trim() }.debounce(250).collectLatest { query ->
+            // Only a changed query starts a search: the search's own updates (loading, results) must not
+            // re-trigger it, or the list keeps reloading in a loop.
+            _search.map { it.query.trim() }.distinctUntilChanged().debounce(250).collectLatest { query ->
                 if (query.length < 2) { _search.update { it.copy(results = emptyList(), loading = false, error = null) }; return@collectLatest }
                 _search.update { it.copy(loading = true) }
                 val lang = language.current()

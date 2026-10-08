@@ -32,6 +32,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.border
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.rounded.ExpandMore
@@ -108,7 +116,9 @@ fun StopScreen(navigator: Navigator, stationKey: String, name: String) {
 fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifier = Modifier, showHeader: Boolean = false) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val board by viewModel.board.collectAsStateWithLifecycle()
+    val visible by viewModel.visible.collectAsStateWithLifecycle()
     val now = rememberNow()
+    val mapState = org.southtyrol.transit.feature.common.rememberExpandableMapState()
     val scope = rememberCoroutineScope()
     var refreshing by remember { mutableStateOf(false) }
     var showAllLines by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
@@ -129,7 +139,15 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
         onRefresh = { scope.launch { refreshing = true; viewModel.refresh(force = true); refreshing = false } },
         modifier = modifier,
     ) {
-        LazyColumn(contentPadding = PaddingValues(bottom = 24.dp), modifier = Modifier.fillMaxSize()) {
+        val points = state.platforms.map { it.point }.filter { it.isValid }
+        // The chosen direction's platforms are highlighted on the map.
+        val mapContent = MapContent(
+            stops = state.platforms.map { MapMarker(it.id, it.point, MarkerKind.STOP, it.platform, selected = state.direction?.platformIds?.contains(it.id) ?: true) },
+            clusterStops = false,
+        )
+        val camera = CameraRequest.Fit(points + points.take(1))
+        org.southtyrol.transit.feature.common.ExpandableMapPage(mapState, points.isNotEmpty(), mapContent, camera, Modifier.fillMaxSize()) { listModifier ->
+        LazyColumn(contentPadding = PaddingValues(bottom = 24.dp), modifier = listModifier) {
             if (showHeader) item {
                 Text(state.name, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(16.dp))
             }
@@ -137,13 +155,13 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
                 Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     if (state.lines.isNotEmpty()) FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         // Large stations serve dozens of lines; keep the live board in view.
+                        // Tap a line to show only its departures (several can be combined); long-press opens the line.
                         val shown = if (showAllLines) state.lines else state.lines.take(8)
                         shown.forEach { line ->
-                            Box(Modifier) {
-                                androidx.compose.material3.Surface(onClick = { navigator.line(line.key) }, shape = RoundedCornerShape(50), color = androidx.compose.ui.graphics.Color.Transparent) {
-                                    LineBadge(line.name, line.mode, color = line.color, textColor = line.textColor)
-                                }
-                            }
+                            LineFilterBadge(
+                                line, selected = line.key in state.lineFilter, anySelected = state.lineFilter.isNotEmpty(),
+                                onToggle = { viewModel.toggleLine(line.key) }, onOpen = { navigator.line(line.key) },
+                            )
                         }
                         if (state.lines.size > 8) {
                             androidx.compose.material3.AssistChip(
@@ -156,11 +174,31 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
                         state.distanceMeters?.let { Text(stringResource(R.string.stop_distance, Format.distance(it)), style = MaterialTheme.typography.labelLarge) }
                         if (state.stop?.wheelchair == Accessibility.ACCESSIBLE) WheelchairIcon()
                     }
+                    if (state.lines.size > 1) Text(
+                        stringResource(R.string.stop_line_filter_hint), style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                     // Hidden where arrivals would just repeat the departures (most intermediate stops).
                     if (state.showArrivalsToggle || state.arrivals) ConnectedToggleGroup(
                         options = listOf(false, true), selected = state.arrivals, onSelect = viewModel::setArrivals,
                         label = { stringResource(if (it) R.string.stop_arrivals else R.string.stop_departures) }, modifier = Modifier.fillMaxWidth(),
                     )
+                    // Two-way stops: pick a side of the road, named after where the buses go next.
+                    if (state.directions.size >= 2 && board?.source != BoardSource.NETWORK) {
+                        Row(Modifier.horizontalScroll(androidx.compose.foundation.rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            androidx.compose.material3.FilterChip(
+                                selected = state.direction == null, onClick = { viewModel.setDirection(null) },
+                                label = { Text(stringResource(R.string.stop_all_directions)) },
+                            )
+                            state.directions.forEach { direction ->
+                                androidx.compose.material3.FilterChip(
+                                    selected = state.direction == direction,
+                                    onClick = { viewModel.setDirection(if (state.direction == direction) null else direction) },
+                                    label = { Text(stringResource(R.string.stop_towards, direction.towards.joinToString(" · ")), maxLines = 1) },
+                                )
+                            }
+                        }
+                    }
                     board?.let { FreshnessIndicator(it.realtime, it.realtimeFetchedAt ?: state.loadedAt, now) }
                     if (board?.source == BoardSource.NETWORK) StatusBanner(stringResource(R.string.stop_network_board), kind = BannerKind.INFO)
                     else if (board?.realtime == Freshness.STALE || board?.realtime == Freshness.UNAVAILABLE) StatusBanner(stringResource(R.string.stop_realtime_unavailable), kind = BannerKind.WARNING)
@@ -179,7 +217,9 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
                     if (!state.live) androidx.compose.material3.TextButton(onClick = viewModel::now) { Text(stringResource(R.string.stop_back_to_now)) }
                 }
             }
-            val list = board?.departures.orEmpty()
+            val all = board?.departures.orEmpty()
+            val list = visible
+            val filtered = state.lineFilter.isNotEmpty() || (state.direction != null && board?.source == BoardSource.SCHEDULE)
             if (list.isNotEmpty()) item {
                 androidx.compose.material3.TextButton(
                     onClick = viewModel::earlier, enabled = !state.loadingMore,
@@ -192,6 +232,9 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
             when {
                 state.loading && list.isEmpty() -> item { TransitLoading() }
                 state.error != null && list.isEmpty() -> item { ErrorState(state.error!!, onRetry = { scope.launch { viewModel.refresh(force = true) } }) }
+                list.isEmpty() && filtered && all.isNotEmpty() -> item {
+                    MessageState(stringResource(R.string.stop_no_departures_filtered), action = stringResource(R.string.stop_clear_filters), onAction = viewModel::clearFilters)
+                }
                 list.isEmpty() -> item { MessageState(stringResource(R.string.stop_no_departures), stringResource(R.string.stop_no_departures_hint)) }
                 else -> itemsIndexed(list, key = { _, d -> d.key }) { index, d ->
                     DepartureRow(
@@ -202,7 +245,7 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
                 }
             }
             if (state.loadingMore) item { TransitLoading() }
-            if (list.isNotEmpty() || !state.live) item {
+            if (all.isNotEmpty() || !state.live) item {
                 androidx.compose.material3.TextButton(
                     onClick = viewModel::later, enabled = !state.loadingMore,
                     modifier = Modifier.padding(horizontal = 8.dp),
@@ -211,16 +254,10 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
                     Text(stringResource(if (state.arrivals) R.string.stop_later_arrivals else R.string.stop_later_departures), modifier = Modifier.padding(start = 8.dp))
                 }
             }
-            val points = state.platforms.map { it.point }.filter { it.isValid }
             if (points.isNotEmpty()) {
                 item { SectionHeader(stringResource(R.string.stop_location)) }
-                item {
-                    Surface(shape = RoundedCornerShape(28.dp), modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth().height(200.dp)) {
-                        TransitMap(
-                            MapContent(stops = state.platforms.map { MapMarker(it.id, it.point, MarkerKind.STOP, it.platform, selected = true) }, clusterStops = false),
-                            Modifier.fillMaxSize(), camera = CameraRequest.Fit(points + points.first()), darkTheme = dark, interactive = false,
-                        )
-                    }
+                if (!mapState.expanded) item {
+                    org.southtyrol.transit.feature.common.CompactMapCard(mapState, mapContent, camera, Modifier.padding(horizontal = 16.dp).fillMaxWidth().height(200.dp))
                 }
                 if (state.platforms.any { it.platform.isNotBlank() }) item {
                     Text(
@@ -230,5 +267,26 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
                 }
             }
         }
+        }
+    }
+}
+
+/**
+ * A served line as a filter: tap to show only its departures, long-press to open the line page.
+ * While some lines are selected, the others are dimmed and selected ones are outlined.
+ */
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+@Composable
+private fun LineFilterBadge(line: org.southtyrol.transit.model.Line, selected: Boolean, anySelected: Boolean, onToggle: () -> Unit, onOpen: () -> Unit) {
+    val openLabel = stringResource(R.string.stop_open_line)
+    Box(
+        Modifier
+            .clip(RoundedCornerShape(50))
+            .then(if (selected) Modifier.border(2.dp, MaterialTheme.colorScheme.onSurface, RoundedCornerShape(50)).padding(2.dp) else Modifier)
+            .alpha(if (anySelected && !selected) 0.4f else 1f)
+            .combinedClickable(onLongClickLabel = openLabel, onLongClick = onOpen, onClick = onToggle)
+            .semantics { this.selected = selected; role = androidx.compose.ui.semantics.Role.Checkbox },
+    ) {
+        LineBadge(line.name, line.mode, color = line.color, textColor = line.textColor)
     }
 }

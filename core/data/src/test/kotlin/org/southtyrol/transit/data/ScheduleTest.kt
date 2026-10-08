@@ -166,6 +166,20 @@ class ScheduleTest {
         assertEquals(LocalTime.of(1, 10), trip.stops.last().scheduledArrival.atZone(TransitZone).toLocalTime())
     }
 
+    @Test fun directionsArePlatformsLabelledByTheirNextStops() = runTest {
+        assertTrue(store.importFile(SyntheticGtfs.zip(context.cacheDir), mapOf("source" to "test")))
+        // Platform 1 only goes to Merano; platform 2 to Merano and Bressanone. The town prefix
+        // ("Bolzano, ") would be dropped for stops in the same town; these are in other towns.
+        val directions = schedule.stationDirections("it:1:100", "it")
+        assertEquals(2, directions.size)
+        val one = directions.single { "it:1:100:1:1" in it.platformIds }
+        assertEquals(listOf("Merano, Stazione"), one.towards)
+        val two = directions.single { "it:1:100:1:2" in it.platformIds }
+        assertEquals(setOf("Merano, Stazione", "Bressanone, Stazione"), two.towards.toSet())
+        // A stop with a single platform offers no choice.
+        assertTrue(schedule.stationDirections("it:1:200", "it").isEmpty())
+    }
+
     @Test fun reimportOfSameFeedIsSkippedAndNewFeedSwaps() = runTest {
         val zip = SyntheticGtfs.zip(context.cacheDir, "a")
         assertTrue(store.importFile(zip, emptyMap()))

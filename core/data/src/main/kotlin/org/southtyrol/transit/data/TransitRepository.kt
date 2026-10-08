@@ -253,6 +253,10 @@ class DepartureRepository(
         return LiveTimes(list, clock())
     }
 
+    /** Directions at a station (timetable only; empty without one or when there is no real choice). */
+    suspend fun directions(stationKey: String, language: String): List<org.southtyrol.transit.model.StopDirection> =
+        if (!schedule.isAvailable()) emptyList() else runCatching { schedule.stationDirections(stationKey, language) }.getOrDefault(emptyList())
+
     /** Whether the arrivals board would differ from the departures board (else the toggle is pointless). */
     suspend fun arrivalsDiffer(stationKey: String): Boolean = !schedule.isAvailable() || runCatching { schedule.arrivalsDiffer(listOf(stationKey)) }.getOrDefault(true)
 

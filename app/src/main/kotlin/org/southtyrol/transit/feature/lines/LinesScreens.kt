@@ -53,6 +53,8 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -116,8 +118,9 @@ class LinesViewModel @Inject constructor(private val repo: LineRepository, handl
 
     init {
         viewModelScope.launch {
-            _state.debounce(200).collectLatest { s ->
-                val query = s.query.trim()
+            // Only a changed query starts a search: the search's own updates (loading, results) must not
+            // re-trigger it, or the list keeps reloading in a loop.
+            _state.map { it.query.trim() }.distinctUntilChanged().debounce(200).collectLatest { query ->
                 try {
                     val lines = repo.search(query)
                     _state.update { if (it.query.trim() == query) it.copy(lines = lines, loading = false, error = null) else it }
@@ -128,7 +131,7 @@ class LinesViewModel @Inject constructor(private val repo: LineRepository, handl
         }
     }
 
-    fun query(value: String) { handle["q"] = value; _state.update { it.copy(query = value, loading = true) } }
+    fun query(value: String) { handle["q"] = value; _state.update { it.copy(query = value, loading = it.loading || value.trim() != it.query.trim()) } }
 }
 
 @Composable
@@ -280,7 +283,17 @@ fun LineScreen(navigator: Navigator, key: String) {
                     val variant = state.variants.getOrNull(state.selected)
                     val color = line.color ?: ModeColors.container(line.mode)
                     val (trips, vehicles, vehiclesAt) = live ?: Triple(org.southtyrol.transit.data.Board(emptyList(), BoardSource.SCHEDULE, Freshness.UNAVAILABLE, null), emptyList<org.southtyrol.transit.model.Vehicle>(), null as Instant?)
-                    LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
+                    val mapState = org.southtyrol.transit.feature.common.rememberExpandableMapState()
+                    val hasMap = variant != null && variant.shape.size >= 2
+                    val mapContent = MapContent(
+                        stops = variant?.stops.orEmpty().map { MapMarker(it.id, it.point, MarkerKind.STOP, color = color) },
+                        vehicles = vehicles.map { v -> MapMarker("v:" + v.id, v.point, MarkerKind.VEHICLE, line.name, line.mode, color, v.bearing, stale = FreshnessPolicy.vehicle(v.timestamp, now) == Freshness.STALE) },
+                        lines = listOfNotNull(variant?.let { MapPolyline("line", it.shape, color) }),
+                        clusterStops = false,
+                    )
+                    val camera = CameraRequest.Fit(variant?.shape.orEmpty(), key = state.selected)
+                    org.southtyrol.transit.feature.common.ExpandableMapPage(mapState, hasMap, mapContent, camera) { listModifier ->
+                    LazyColumn(listModifier, contentPadding = PaddingValues(bottom = 24.dp)) {
                         if (state.variants.size > 1) item {
                             Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 state.variants.forEachIndexed { index, v ->
@@ -288,18 +301,8 @@ fun LineScreen(navigator: Navigator, key: String) {
                                 }
                             }
                         }
-                        if (variant != null && variant.shape.size >= 2) item {
-                            Surface(shape = RoundedCornerShape(28.dp), modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth().height(240.dp)) {
-                                TransitMap(
-                                    MapContent(
-                                        stops = variant.stops.map { MapMarker(it.id, it.point, MarkerKind.STOP, color = color) },
-                                        vehicles = vehicles.map { v -> MapMarker("v:" + v.id, v.point, MarkerKind.VEHICLE, line.name, line.mode, color, v.bearing, stale = FreshnessPolicy.vehicle(v.timestamp, now) == Freshness.STALE) },
-                                        lines = listOf(MapPolyline("line", variant.shape, color)),
-                                        clusterStops = false,
-                                    ),
-                                    Modifier.fillMaxSize(), camera = CameraRequest.Fit(variant.shape, key = state.selected), darkTheme = dark,
-                                )
-                            }
+                        if (hasMap && !mapState.expanded) item {
+                            org.southtyrol.transit.feature.common.CompactMapCard(mapState, mapContent, camera, Modifier.padding(horizontal = 16.dp).fillMaxWidth().height(240.dp))
                         }
                         item {
                             Column(Modifier.padding(16.dp)) {
@@ -328,6 +331,7 @@ fun LineScreen(navigator: Navigator, key: String) {
                                 ) { Text(stop.name) }
                             }
                         }
+                    }
                     }
                 }
             }

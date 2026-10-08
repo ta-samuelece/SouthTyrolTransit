@@ -30,6 +30,9 @@ interface TransitScheduleDataSource {
      * arrival and departure time, no pickup/drop-off restriction, and no trip starts or ends here.
      */
     suspend fun arrivalsDiffer(stopIds: Collection<String>): Boolean = true
+
+    /** The directions served at a station (2 or more), or empty when there is no meaningful choice. */
+    suspend fun stationDirections(stationKey: String, language: String): List<StopDirection> = emptyList()
     suspend fun linesAtStops(stopIds: Collection<String>): List<Line>
     suspend fun searchLines(query: String): List<Line>
     suspend fun line(key: String): Line?

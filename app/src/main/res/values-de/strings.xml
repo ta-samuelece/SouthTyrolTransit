@@ -341,4 +341,10 @@
     <string name="update_channel_stable_hint">Nur fertige Versionen.</string>
     <string name="update_channel_preview_hint">Bietet auch Vorschau-Versionen mit neuen Funktionen vor der Veröffentlichung an. Sie können Fehler enthalten. Zurück mit „Stabil“: Die Vorschau bleibt installiert, bis eine neuere stabile Version erscheint.</string>
     <string name="update_available_preview_title">Vorschau-Update verfügbar</string>
+    <string name="stop_line_filter_hint">Linien antippen, um nur ihre Abfahrten zu zeigen. Linie gedrückt halten, um sie zu öffnen.</string>
+    <string name="stop_all_directions">Alle Richtungen</string>
+    <string name="stop_towards">→ %s</string>
+    <string name="stop_no_departures_filtered">Keine Abfahrten für die gewählten Linien oder die Richtung.</string>
+    <string name="stop_clear_filters">Alle anzeigen</string>
+    <string name="stop_open_line">Linie öffnen</string>
 </resources>

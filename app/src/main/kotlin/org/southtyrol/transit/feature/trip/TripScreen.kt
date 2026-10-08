@@ -217,7 +217,7 @@ private fun TripContent(detail: TripDetail, navigator: Navigator, alerts: List<o
     // Where the bus is: its GPS fix when the vehicle feed has one, otherwise estimated from the stop times.
     val estimate = remember(detail, now.epochSecond / 10) { org.southtyrol.transit.model.RunPositions.estimate(detail.stops, detail.shape, now) }
     val position = vehicle?.let { v -> org.southtyrol.transit.model.RunPosition(v.point, estimate?.nextIndex ?: nextIndex, atStop = false, estimated = false) } ?: estimate
-    var mapExpanded by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(false) }
+    val mapState = org.southtyrol.transit.feature.common.rememberExpandableMapState()
     val routeLine = detail.shape.takeIf { it.size >= 2 } ?: detail.stops.map { it.stop.point }.filter { it.isValid }
     val hasMap = routeLine.size >= 2
     val listState = androidx.compose.foundation.lazy.rememberLazyListState()
@@ -241,21 +241,17 @@ private fun TripContent(detail: TripDetail, navigator: Navigator, alerts: List<o
             clusterStops = false,
         )
     }
-    val camera = remember(detail.trip.id, mapExpanded) { CameraRequest.Fit(routeLine, key = if (mapExpanded) 1 else 0) }
+    val camera = remember(detail.trip.id) { CameraRequest.Fit(routeLine) }
 
     // Notices for this run sit in one collapsed card above the timeline, which stays visible while the
     // list scrolls to the next stop; expanding it reveals every notice in full.
-    androidx.compose.foundation.layout.BoxWithConstraints {
-    val maxCardHeight = maxHeight * 0.75f
-    val expandedMapHeight = maxHeight * 0.6f
-    Column {
-    if (alerts.isNotEmpty()) TripNoticesCard(alerts, now, Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp).heightIn(max = maxCardHeight))
-    // Expanded: a large interactive map above the timeline (outside the list, so pans never scroll it).
-    if (hasMap && mapExpanded) {
-        TripMap(mapContent, camera, dark, interactive = true, expanded = true, onToggle = { mapExpanded = false },
-            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp).fillMaxWidth().height(expandedMapHeight))
-    }
-    LazyColumn(state = listState, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(0.dp), modifier = Modifier.weight(1f)) {
+    org.southtyrol.transit.feature.common.ExpandableMapPage(
+        mapState, hasMap, mapContent, camera,
+        header = {
+            if (alerts.isNotEmpty()) TripNoticesCard(alerts, now, Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp).heightIn(max = 480.dp))
+        },
+    ) { listModifier ->
+    LazyColumn(state = listState, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(0.dp), modifier = listModifier) {
         item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 12.dp)) {
                 Text(listOfNotNull(Format.mode(detail.route.mode), detail.route.operator?.name, Format.date(detail.serviceDate)).joinToString(" · "), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -272,9 +268,8 @@ private fun TripContent(detail: TripDetail, navigator: Navigator, alerts: List<o
             }
         }
         // Compact: a static preview in the list; tap it (or the expand button) for the large, interactive map.
-        if (hasMap && !mapExpanded) item {
-            TripMap(mapContent, camera, dark, interactive = false, expanded = false, onToggle = { mapExpanded = true },
-                modifier = Modifier.fillMaxWidth().height(220.dp).padding(bottom = 12.dp))
+        if (hasMap && !mapState.expanded) item {
+            org.southtyrol.transit.feature.common.CompactMapCard(mapState, mapContent, camera, Modifier.fillMaxWidth().height(220.dp).padding(bottom = 12.dp))
         }
         itemsIndexed(detail.stops, key = { _, s -> s.sequence }) { index, stop ->
             val marker = when {
@@ -292,30 +287,10 @@ private fun TripContent(detail: TripDetail, navigator: Navigator, alerts: List<o
         }
     }
     }
-    }
 }
 
 /** Where the bus is drawn on the timeline: between the previous stop and this one, or at this stop. */
 private enum class VehicleMarker { NONE, BEFORE_STOP, AT_STOP }
-
-/** The run's map. Compact: static, tap to expand. Expanded: pan and zoom, with a button to shrink it again. */
-@Composable
-private fun TripMap(content: MapContent, camera: CameraRequest, dark: Boolean, interactive: Boolean, expanded: Boolean, onToggle: () -> Unit, modifier: Modifier = Modifier) {
-    val label = stringResource(if (expanded) R.string.trip_map_collapse else R.string.trip_map_expand)
-    Surface(shape = RoundedCornerShape(28.dp), modifier = modifier) {
-        Box {
-            TransitMap(content, Modifier.fillMaxSize(), camera = camera, darkTheme = dark, interactive = interactive)
-            // The compact map ignores gestures; a tap anywhere on it expands it.
-            if (!expanded) Box(Modifier.matchParentSize().clickable(onClickLabel = label, onClick = onToggle))
-            androidx.compose.material3.FilledTonalIconButton(
-                onClick = onToggle,
-                modifier = Modifier.align(Alignment.TopEnd).padding(8.dp),
-            ) {
-                Icon(if (expanded) Icons.Rounded.CloseFullscreen else Icons.Rounded.OpenInFull, contentDescription = label)
-            }
-        }
-    }
-}
 
 @Composable
 private fun TripStopRow(

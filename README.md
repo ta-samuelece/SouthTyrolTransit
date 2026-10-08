@@ -320,7 +320,7 @@ release.keyPassword=...
    It checks that the version matches the channel, that the APK is signed and has exactly that version, that everything
    is committed and pushed, and that the tag is new. Then it creates the tag and the GitHub release on that commit
    (previews as **pre-release**, never marked "latest"), adds a "Preview build" note to previews and uploads the APK as
-   `SouthTyrolTransit-<version>-preview.apk` / `-release.apk`. It uses the GitHub login git already has.
+   `SouthTyrolTransit-<version>.apk` (previews) or `SouthTyrolTransit-<version>-release.apk`. It uses the GitHub login git already has.
 
    Without the script, the same on github.com: *Releases → Draft a new release*, tag `vX.Y.Z-preview.N` on the pushed
    commit, attach the APK, tick **Set as a pre-release** (for a preview) and publish.

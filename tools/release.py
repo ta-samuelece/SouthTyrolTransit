@@ -163,7 +163,8 @@ def main():
     if args.preview:
         notes = ('> **Preview build.** Offered in the app only on the *Preview* update channel '
                  '(Settings → App updates). It may contain bugs.\n\n' + notes)
-    asset_name = f'SouthTyrolTransit-{name}-{"preview" if args.preview else "release"}.apk'
+    # The preview's version already says "preview"; stable builds get a "-release" suffix.
+    asset_name = f'SouthTyrolTransit-{name}.apk' if args.preview else f'SouthTyrolTransit-{name}-release.apk'
     print(f'  commit {head[:7]}, asset {asset_name}, {os.path.getsize(args.apk) // 1_048_576} MB')
     if args.dry_run:
         print('dry run: nothing published')

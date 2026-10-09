@@ -26,3 +26,8 @@ captures/
 
 # Private working notes
 goal.md
+
+# Claude Code personal/local files (see .claude/local/README.md)
+.claude/local/*
+!.claude/local/README.md
+.claude/settings.local.json

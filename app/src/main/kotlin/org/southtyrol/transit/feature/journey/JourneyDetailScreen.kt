@@ -27,8 +27,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.DirectionsWalk
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.ExpandLess
 import androidx.compose.material.icons.rounded.ExpandMore
+import androidx.compose.material.icons.rounded.NearMe
 import androidx.compose.material.icons.rounded.SyncAlt
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.ElevatedCard
@@ -64,6 +66,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.southtyrol.transit.LocalDarkTheme
 import org.southtyrol.transit.R
+import org.southtyrol.transit.feature.common.PollWhileVisible
 import org.southtyrol.transit.design.DelayLabel
 import org.southtyrol.transit.design.ErrorState
 import org.southtyrol.transit.design.Format
@@ -83,11 +86,15 @@ import org.southtyrol.transit.map.MapMarker
 import org.southtyrol.transit.map.MapPolyline
 import org.southtyrol.transit.map.MarkerKind
 import org.southtyrol.transit.map.TransitMap
+import org.southtyrol.transit.model.Approach
+import org.southtyrol.transit.model.Approaches
 import org.southtyrol.transit.model.Freshness
+import org.southtyrol.transit.model.FreshnessPolicy
 import org.southtyrol.transit.model.Journey
 import org.southtyrol.transit.model.Leg
 import org.southtyrol.transit.model.ServiceState
 import org.southtyrol.transit.model.TransportMode
+import org.southtyrol.transit.model.TripDetail
 import org.southtyrol.transit.ui.Navigator
 import java.time.Duration
 import java.time.Instant
@@ -117,8 +124,12 @@ fun JourneyDetailScreen(navigator: Navigator, viewModel: JourneyDetailViewModel 
 /** Rich itinerary: header, route map, leg timeline with transfers, then fare information. */
 @Composable
 fun JourneyDetailContent(journey: Journey, navigator: Navigator, modifier: Modifier = Modifier) {
-    val now = rememberNow()
+    val now = rememberNow(10_000)
     val dark = LocalDarkTheme.current
+    val live = hiltViewModel<JourneyLiveViewModel, JourneyLiveViewModel.Factory>(key = "live:" + journey.id) { it.create(journey) }
+    val legRuns by live.legRuns.collectAsStateWithLifecycle()
+    PollWhileVisible(20_000) { live.poll() }
+    val approaches = remember(journey, legRuns, now) { legApproaches(journey, legRuns, now) }
     val lines = remember(journey) {
         journey.legs.mapIndexedNotNull { i, leg ->
             val points = leg.geometry.ifEmpty { listOfNotNull(leg.from.point) + leg.intermediate.mapNotNull { it.place.point } + listOfNotNull(leg.to.point) }
@@ -132,7 +143,16 @@ fun JourneyDetailContent(journey: Journey, navigator: Navigator, modifier: Modif
         )
     }
     val mapState = org.southtyrol.transit.feature.common.rememberExpandableMapState()
-    val mapContent = remember(lines, endpoints) { MapContent(pois = endpoints, lines = lines) }
+    val mapContent = remember(lines, endpoints, approaches, now) {
+        // The approach is drawn under the legs; each vehicle carries its line badge.
+        val ahead = approaches.map { (i, a) -> MapPolyline("approach$i", a.approach.path, ModeColors.container(journey.legs[i].mode), 4f, dashed = true) }
+        val vehicles = approaches.map { (i, a) ->
+            val leg = journey.legs[i]
+            val stale = a.run.vehicle?.let { FreshnessPolicy.vehicle(it.timestamp, now) == Freshness.STALE } ?: false
+            MapMarker("v:leg$i", a.approach.position.point, MarkerKind.VEHICLE, leg.line, leg.mode, ModeColors.container(leg.mode), a.run.vehicle?.bearing, stale = a.approach.position.estimated || stale)
+        }
+        MapContent(pois = endpoints, vehicles = vehicles, lines = ahead + lines)
+    }
     val camera = remember(journey) { CameraRequest.Fit(lines.flatMap { it.points }) }
     org.southtyrol.transit.feature.common.ExpandableMapPage(mapState, lines.isNotEmpty(), mapContent, camera, modifier) { listModifier ->
     LazyColumn(listModifier, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -154,12 +174,28 @@ fun JourneyDetailContent(journey: Journey, navigator: Navigator, modifier: Modif
         itemsIndexed(journey.legs) { index, leg ->
             val previous = journey.legs.getOrNull(index - 1)
             if (previous != null && previous.mode.isTransit && leg.mode.isTransit) TransferRow(Duration.between(previous.bestArrival, leg.bestDeparture))
-            if (leg.mode == TransportMode.WALK) WalkLeg(leg) else TransitLeg(leg, now, onStop = { gid -> navigator.stop(gid) })
+            if (leg.mode == TransportMode.WALK) WalkLeg(leg) else TransitLeg(
+                leg, now, approaches[index], onStop = { gid -> navigator.stop(gid) },
+                onTrip = { run -> navigator.trip(run.trip.id, run.serviceDate.toString()) },
+            )
         }
         item { FareSection(journey) }
     }
     }
 }
+
+/** A transit leg's vehicle on its way to the boarding stop, with the run it was matched to. */
+private data class LegApproach(val run: TripDetail, val approach: Approach)
+
+/** Approaches by leg index for the legs whose vehicle can be placed right now. */
+private fun legApproaches(journey: Journey, runs: Map<Int, TripDetail>, now: Instant): Map<Int, LegApproach> =
+    runs.mapNotNull { (i, run) ->
+        val leg = journey.legs.getOrNull(i) ?: return@mapNotNull null
+        val boarding = Approaches.boardingIndex(run.stops, leg.from.stopGlobalId, leg.departure) ?: return@mapNotNull null
+        // Without GTFS-RT predictions, the planner's delay at the boarding stop moves the estimate.
+        val stops = Approaches.withBoardingDelay(run.stops, boarding, leg.departureDelaySeconds)
+        Approaches.of(stops, run.shape, boarding, run.vehicle?.point, now)?.let { i to LegApproach(run, it) }
+    }.toMap()
 
 @Composable
 private fun TransferRow(wait: Duration) {
@@ -191,7 +227,7 @@ private fun WalkLeg(leg: Leg) {
 }
 
 @Composable
-private fun TransitLeg(leg: Leg, now: Instant, onStop: (String) -> Unit) {
+private fun TransitLeg(leg: Leg, now: Instant, live: LegApproach?, onStop: (String) -> Unit, onTrip: (TripDetail) -> Unit) {
     var expanded by rememberSaveable(leg.departure.epochSecond, leg.line) { mutableStateOf(false) }
     val status = LocalStatusColors.current
     val (lineColor, _) = ModeColors.colors(leg.mode, null, null)
@@ -206,6 +242,7 @@ private fun TransitLeg(leg: Leg, now: Instant, onStop: (String) -> Unit) {
                 }
             }
             if (leg.cancelled) StatusPill(stringResource(org.southtyrol.transit.design.R.string.ds_cancelled), status.cancelled, Icons.Rounded.Warning)
+            if (live != null && !leg.cancelled) VehicleApproachRow(live, now, onClick = { onTrip(live.run) })
             Row(Modifier.height(IntrinsicSize.Min)) {
                 Box(Modifier.width(6.dp).fillMaxHeight().clip(RoundedCornerShape(3.dp)).background(lineColor))
                 Spacer(Modifier.width(12.dp))
@@ -240,6 +277,39 @@ private fun TransitLeg(leg: Leg, now: Instant, onStop: (String) -> Unit) {
                 }
             }
             if (leg.realtime) FreshnessIndicator(Freshness.LIVE, null, now)
+        }
+    }
+}
+
+/** Where the vehicle is now relative to the boarding stop, and how that is known; opens the trip. */
+@Composable
+private fun VehicleApproachRow(live: LegApproach, now: Instant, onClick: () -> Unit) {
+    val approach = live.approach
+    val vehicle = live.run.vehicle
+    val where = when {
+        approach.atBoarding -> stringResource(R.string.trip_vehicle_at_stop)
+        approach.stopsBefore == 0 -> stringResource(R.string.trip_vehicle_approaching)
+        else -> pluralStringResource(R.plurals.journey_vehicle_stops_away, approach.stopsBefore, approach.stopsBefore, approach.nextStop.name)
+    }
+    val source = when {
+        !approach.position.estimated && vehicle != null -> stringResource(R.string.trip_vehicle_seen, Format.age(vehicle.timestamp, now))
+        live.run.freshness == Freshness.LIVE -> stringResource(R.string.trip_position_estimated_live)
+        else -> stringResource(R.string.trip_position_estimated_schedule)
+    }
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp).heightIn(min = 32.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Rounded.NearMe, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.width(10.dp))
+            Column(Modifier.weight(1f)) {
+                Text(where, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                Text(source, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSecondaryContainer)
+            }
+            Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = stringResource(R.string.journey_vehicle_open_trip), tint = MaterialTheme.colorScheme.onSecondaryContainer)
         }
     }
 }

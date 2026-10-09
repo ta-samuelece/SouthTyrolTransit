@@ -96,6 +96,11 @@
     <string name="journey_missing_hint">Suche erneut, um aktuelle Verbindungen zu sehen.</string>
     <string name="journey_transfer">Umstieg · %s</string>
     <string name="journey_walk_to">%1$d Min. zu Fuß nach %2$s</string>
+    <plurals name="journey_vehicle_stops_away">
+        <item quantity="one">Noch %1$d Halt bis zu deinem · nächster: %2$s</item>
+        <item quantity="other">Noch %1$d Halte bis zu deinem · nächster: %2$s</item>
+    </plurals>
+    <string name="journey_vehicle_open_trip">Ganze Fahrt anzeigen</string>
 
     <string name="fare_title">Fahrpreis</string>
     <string name="fare_single">Einzelfahrschein</string>

@@ -1,14 +1,14 @@
 ---
 type: Reference
 title: GTFS time, service days and the Europe/Rome rule in code
-description: GtfsTime.instant is the only correct way from a GTFS time and service date to an Instant; Departure.serviceDate has a default that is wrong past midnight; boards look back exactly one service day; two different "exceptions" maps; one known device-zone fallback.
+description: GtfsTime.instant is the only correct way from a GTFS time and service date to an Instant; Departure.serviceDate has a default that is wrong past midnight; boards look back exactly one service day; two different "exceptions" maps.
 tags: [time, gtfs, dst, timezone, calendar]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-09T15:00:00Z"
+  at: "2026-10-09T23:00:00Z"
 verified:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-09T15:00:00Z"
+  at: "2026-10-09T23:00:00Z"
 status: stable
 ---
 
@@ -43,11 +43,10 @@ call site goes through `GtfsTime`.
   `date -> Boolean`. Passing a feed-wide map to the first silently adds or removes services.
 - **Material DatePicker millis are UTC by contract**: `Pickers.kt` and `PlannerScreen.kt` convert them
   with `ZoneOffset.UTC` and then combine with `TransitZone`. That is correct - do not "fix" it.
-- **Known exception to the rule (2026-10-09):** `TripViewModel.load` in `TripScreen.kt` falls back to
-  `LocalDate.now()` - the device zone - when the route's date does not parse. Everywhere else uses
-  `LocalDate.now(TransitZone)`.
+- "Today" is always `LocalDate.now(TransitZone)`. The last exception, `TripViewModel.load`'s fallback for
+  an unparsable route date, was fixed on 2026-10-09 (issue #8).
 
 # What was checked
 
-`GtfsTime.instant`, the `serviceDate` default and the `LocalDate.now()` call re-read on 2026-10-09; the
+`GtfsTime.instant`, the `serviceDate` default and the `LocalDate.now` calls re-read on 2026-10-09; the
 rest from a code read of `Time.kt`, `Transit.kt`, `GtfsSchedule.kt` and `TransitTest` the same day.

@@ -1,14 +1,14 @@
 ---
 type: Reference
 title: Test suite layout, and the network tests that are off by default
-description: Four kinds of tests across three modules; no screen or ViewModel is tested despite the README; the tests that download the real STA feed or hit the FTP server only run with -PliveTests=true or -PgtfsReal; TranslationsTest fails on any missing or stale en/de/it string.
+description: Four kinds of tests across three modules; no screen or ViewModel is tested; the tests that download the real STA feed or hit the FTP server only run with -PliveTests=true or -PgtfsReal; TranslationsTest fails on any missing or stale en/de/it string.
 tags: [testing, robolectric, translations, gtfs, build]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-09T12:00:00Z"
+  at: "2026-10-09T23:00:00Z"
 verified:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-09T12:00:00Z"
+  at: "2026-10-09T23:00:00Z"
 status: stable
 sources:
   - id: data-build
@@ -39,10 +39,10 @@ copies in `app/src/androidTest/assets/`.
 
 # What `app/src/test` really covers
 
-README section 11 says the app's Robolectric UI tests cover "journey search and result selection, stop
-departures, saving a stop". As of 2026-10-09 they are `UiComponentsTest` (stateless composables),
-`AppUpdatesTest`, `MarkdownTest` and `TranslationsTest`; "journey search" is a `RequestCodec` round trip,
-and **no screen, ViewModel or NavHost is tested** and no test saves a stop.
+`app/src/test` holds `UiComponentsTest` (stateless composables), `AppUpdatesTest`, `MarkdownTest`,
+`LicenseTextTest` and `TranslationsTest`; "journey search" is a `RequestCodec` round trip, and **no
+screen, ViewModel or NavHost is tested** and no test saves a stop. README section 11 says so since
+2026-10-09 (issue #14); before, it claimed screen-level tests.
 
 Conventions: `app/src/test/resources/robolectric.properties` sets `sdk=35` (not 37) and
 `application=android.app.Application`, which bypasses Hilt and `TransitApplication`. Tests render

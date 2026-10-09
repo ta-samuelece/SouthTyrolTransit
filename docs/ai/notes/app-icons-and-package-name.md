@@ -5,14 +5,15 @@ description: generate_icons.py (needs Pillow and numpy) only writes images; a ne
 tags: [icons, launcher, manifest, package-name, tools]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-09T15:00:00Z"
+  at: "2026-10-09T23:00:00Z"
 verified:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-09T15:00:00Z"
+  at: "2026-10-09T23:00:00Z"
 status: stable
 ---
 
-README section 1 says to run `tools/generate_icons.py` after adding an icon. That is only step two.
+Running `tools/generate_icons.py` is only one of five steps; README section 1 lists all five (since
+2026-10-09, issue #13).
 
 # Adding an icon, end to end
 
@@ -39,7 +40,7 @@ but the chosen one, and `AppIcons.current` treats the manifest default state as 
 
 # The package name is not only in two files
 
-README section 1 says to rename the placeholder in `app/build.gradle.kts` and `strings.xml`. It is also
+The package name is in `app/build.gradle.kts`, and it is also
 hard-coded in `AppIcons.component` (`"org.southtyrol.transit." + icon.alias`), in `MainActivity`'s
 `EXTRA_STOP_KEY`/`EXTRA_STOP_NAME`, and in `android:configure` of
 `app/src/main/res/xml/departures_widget_info.xml`. Renaming the namespace without these breaks the icon

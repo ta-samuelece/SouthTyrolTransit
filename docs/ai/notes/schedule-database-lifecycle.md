@@ -1,14 +1,14 @@
 ---
 type: Finding
 title: The schedule and user databases - versioning, swaps, migrations and the importer
-description: Importer changes never reach existing installs until STA publishes a feed with a new hash; neither Room database has migrations; the importer writes raw SQL with hard-coded column lists; caches must key on ScheduleStore.version; how stop search is built.
+description: Importer changes reach existing installs only when GtfsImporter.VERSION is bumped; neither Room database has migrations; the importer writes raw SQL with hard-coded column lists; caches must key on ScheduleStore.version; how stop search is built.
 tags: [room, database, gtfs, importer, search, migrations]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-09T15:00:00Z"
+  at: "2026-10-09T23:00:00Z"
 verified:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-09T15:00:00Z"
+  at: "2026-10-09T23:00:00Z"
 status: stable
 ---
 
@@ -21,13 +21,14 @@ README section 12 describes the import pipeline. This note records what you must
 | `ScheduleDatabase` | `filesDir/schedule/schedule-<uuid>.db`, pointer file `schedule/active`, journal mode TRUNCATE | the imported feed | replaced wholesale |
 | `UserDatabase` | `user.db` | saved items, recents, `cache` (alerts), `notified_alerts` | untouched |
 
-# Importer changes do not reach existing installs
+# Importer changes need a version bump to reach existing installs
 
-`ScheduleStore.importFile` returns early when `loadInfo()?.hash == hash`, and the meta table stores no
-importer or format version. So a change to import logic - search normalisation, shape tolerance,
-`stationKey`/`lineKey` derivation, a new meta key - has **no effect** on a phone until STA publishes a feed
-with a different SHA-256, possibly weeks later. A change that must apply at once needs an importer-version
-meta key compared next to the hash.
+`ScheduleStore.importFile` skips a feed whose SHA-256 matches the active one **and** whose database was
+built by the current `GtfsImporter.VERSION` (meta key `importerVersion`; databases from before the key
+read as 0). A change to import logic - search normalisation, shape tolerance, `stationKey`/`lineKey`
+derivation, a new meta key - therefore reaches phones only if you **bump `GtfsImporter.VERSION`** in the
+same change: the next sync then downloads unconditionally and re-imports the same feed. Without the bump
+it waits until STA publishes a new feed (issue #7, fixed 2026-10-09).
 
 # No migrations, in either database
 
@@ -68,13 +69,16 @@ station can be cut before ranking.
 
 # Other limits worth knowing
 
-- `scheduledDepartures` applies its SQL `LIMIT` (`limit * 4`) **before** filtering by active service, so a
-  busy station on a day with many inactive services can show fewer departures than asked for.
+- `scheduledDepartures` filters by active service in Kotlin, after the SQL query, because up to ~1,000
+  services can be active on one day - more than SQLite's 999 bound parameters on minSdk 26. It therefore
+  pages through the rows (`LIMIT`/`OFFSET`, ordered by time and trip) until it has `limit` active
+  departures, capped at 20,000 rows per service day (issue #10).
 - The 1 % broken-reference check covers `stop_times` only; trips with an unknown `route_id` or
   `service_id` silently vanish (the board query joins `routes`). Blank times copy the previous stop's
   departure - they are not interpolated, despite a comment saying so.
 
 # What was checked
 
-Hash skip, the two builders and the version declarations re-read on 2026-10-09; the rest from a code read
+Hash skip, the two builders and the version declarations re-read on 2026-10-09; the importer-version
+re-import is pinned by `ScheduleTest.sameFeedIsImportedAgainAfterAnImporterChange`; the rest from a code read
 of `ScheduleStore.kt`, `GtfsImporter.kt`, `GtfsSchedule.kt`, `Database.kt` and `ScheduleTest` the same day.

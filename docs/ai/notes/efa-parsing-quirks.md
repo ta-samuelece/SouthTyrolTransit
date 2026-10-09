@@ -1,11 +1,11 @@
 ---
 type: Finding
 title: EFA parsing - what the parsers accept, drop and map, and their error contract
-description: Which EFA fields count as realtime or cancelled, the different delay windows per parser, why trains are labelled "R", the empty-list-not-error contract, AddInfo filtering, and the limits of the DOCTYPE guard.
+description: Which EFA fields count as realtime or cancelled, the different delay windows per parser, why trains are labelled "R", the empty-list-not-error contract, AddInfo filtering, and how the DOCTYPE guard works.
 tags: [efa, parsing, xml, realtime, alerts, security]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-09T15:00:00Z"
+  at: "2026-10-09T23:00:00Z"
 status: stable
 ---
 
@@ -49,12 +49,13 @@ plus HTML-stripped `content` (`subject` is not stripped). `stopBlocking`/`lineBl
 `lineNames` come from `<line number>` (`7A`, `280`). The fixture carries all languages per item although a
 language is requested (inferred: the cache key need not be language-specific).
 
-# The DOCTYPE guard is partial
+# The DOCTYPE guard
 
-`EfaXml.root` rejects `<!DOCTYPE`/`<!ENTITY` by scanning only the **first 4096 bytes**, then parses with
-`isExpandEntityReferences = false` and secure processing in a `runCatching`. It does not set
-`disallow-doctype-decl`, so a DOCTYPE behind more than 4 KB of prolog passes the string check (inferred).
-Don't treat the `rejectsDoctype` test as proof of full XXE safety. The parser's 15 MB cap sits behind a
+`EfaXml.root` rejects a `<!DOCTYPE` anywhere in the **prolog** (`EfaXml.prolog`: everything before the
+root element - a DTD cannot appear later), then parses with `isExpandEntityReferences = false`, secure
+processing and `disallow-doctype-decl`, each in a `runCatching` because Android's parsers vary. Until
+2026-10-09 only the first 4096 bytes were scanned (issue #9); `rejectsDoctype` now also covers a DTD
+behind a 10 KB comment. The parser's 15 MB cap sits behind a
 30 MB download cap, so a 15-30 MB response downloads fully before failing as `DataError.Parse`.
 
 # What was checked

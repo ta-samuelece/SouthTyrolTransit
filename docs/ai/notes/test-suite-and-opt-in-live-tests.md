@@ -59,6 +59,7 @@ mean they ran.
 | --- | --- | --- |
 | `-PliveTests=true` | `live.tests` | `FtpLiveTest` (HEAD of the real file on the STA FTP server) and `LiveDownloadTest` in `RealFeedTest.kt` (full FTP download and import, up to 30 minutes) |
 | `-PgtfsReal=<path to zip>` | `gtfs.real` | `RealFeedTest`'s import of a locally downloaded ~150 MB STA feed |
+| both together | both | `LegMatchLiveTest`: real planner journeys matched against the real timetable (journey-view live vehicles) |
 
 Only `-PgtfsReal` is in the README. Never enable `liveTests` in an automated loop: it downloads the full
 feed from STA's server.

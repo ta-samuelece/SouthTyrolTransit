@@ -175,7 +175,7 @@ object LiveOverlay {
     /** "201", " 201 ", "Bus 201" and "201 " compare equal; case and spacing are ignored. */
     internal fun lineKey(line: String) = line.uppercase().replace(Regex("^(BUS|TRAM|ZUG|TRENO)\\s+"), "").replace(Regex("\\s+"), "")
 
-    private fun similar(a: String, b: String): Boolean {
+    internal fun similar(a: String, b: String): Boolean {
         val x = TextNormalizer.key(a); val y = TextNormalizer.key(b)
         return x.isNotEmpty() && y.isNotEmpty() && (x.contains(y) || y.contains(x) || x.split(' ').intersect(y.split(' ').toSet()).any { it.length > 3 })
     }

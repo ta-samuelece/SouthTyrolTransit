@@ -98,6 +98,13 @@
     <string name="journey_missing_hint">Cerca di nuovo per vedere i collegamenti attuali.</string>
     <string name="journey_transfer">Cambio · %s</string>
     <string name="journey_walk_to">%1$d min a piedi fino a %2$s</string>
+    <plurals name="journey_vehicle_stops_away">
+        <item quantity="one">%1$d fermata prima della tua · prossima: %2$s</item>
+        <item quantity="many">%1$d fermate prima della tua · prossima: %2$s</item>
+        <item quantity="other">%1$d fermate prima della tua · prossima: %2$s</item>
+    </plurals>
+    <string name="journey_vehicle_open_trip">Mostra tutta la corsa</string>
+    <string name="journey_vehicle_not_started">Il mezzo non è ancora in viaggio</string>
 
     <string name="fare_title">Tariffa</string>
     <string name="fare_single">Biglietto singolo</string>

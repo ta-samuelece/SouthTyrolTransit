@@ -42,8 +42,9 @@ data class MapMarker(
     val highlighted: Boolean = false,
 )
 
+/** A line on the map; [opacity] below 1 marks a part already travelled (see RouteProgress). */
 @Immutable
-data class MapPolyline(val id: String, val points: List<Point>, val color: Long, val widthDp: Float = 5f, val dashed: Boolean = false)
+data class MapPolyline(val id: String, val points: List<Point>, val color: Long, val widthDp: Float = 5f, val dashed: Boolean = false, val opacity: Float = 1f)
 
 @Immutable
 data class MapContent(

@@ -101,6 +101,12 @@
     <string name="journey_missing_hint">Search again to see current connections.</string>
     <string name="journey_transfer">Change · %s</string>
     <string name="journey_walk_to">Walk %1$d min to %2$s</string>
+    <plurals name="journey_vehicle_stops_away">
+        <item quantity="one">%1$d stop before yours · next: %2$s</item>
+        <item quantity="other">%1$d stops before yours · next: %2$s</item>
+    </plurals>
+    <string name="journey_vehicle_open_trip">Show the whole trip</string>
+    <string name="journey_vehicle_not_started">Vehicle not on its way yet</string>
 
     <!-- Fares and tickets -->
     <string name="fare_title">Fare</string>

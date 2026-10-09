@@ -1,7 +1,7 @@
 ---
 type: Reference
 title: Map and design-system conventions - MapContent, styles, attribution, colours, reduced motion
-description: Map content is one immutable value re-pushed in full and marker ids must be unique across stops, vehicles and POIs; the dark style falls back to the light override; attribution and font are hard-coded to OpenFreeMap; feed route colours are already used; reduced motion is read once.
+description: Map content is one immutable value re-pushed in full and marker ids must be unique across stops, vehicles and POIs; the one convention for showing progress along a run (Progress.PASSED_ALPHA, RouteProgress); the dark style falls back to the light override; attribution and font are hard-coded to OpenFreeMap; feed route colours are already used; reduced motion is read once.
 tags: [map, maplibre, design-system, colors, accessibility]
 generated:
   by: claude-code/claude-opus-5-5
@@ -26,6 +26,28 @@ status: stable
 - **Attribution** `© OpenStreetMap · OpenFreeMap` is hard-coded (the SDK's own attribution and logo are
   off), and all symbol layers use the font `Noto Sans Regular`. Switching tile provider means updating the
   credit (ODbL) and checking the new style serves that font, or labels may not render (inferred).
+
+- **Lines**: `MapPolyline` has `opacity` and `dashed`. Dashed lines live in their own layer
+  (`line-dasharray` cannot be data-driven on Android) - before 2026-10-09 `dashed` was written to the
+  feature but never rendered, so walking legs drew solid.
+
+# Progress along a run - one convention everywhere
+
+Every view that shows a run marks what is already behind: the travelled part of the line and passed stops
+are drawn at `Progress.PASSED_ALPHA` (0.35, in `core/designsystem/.../Tokens.kt`), the rest at full
+strength. A stop is passed once its (predicted) departure is not after now (`RouteProgress.nextIndex`).
+
+| View | Travelled part | Passed stops |
+| --- | --- | --- |
+| Trip timeline | rail segments and dots dimmed | name in `onSurfaceVariant` |
+| Trip map | route split at the vehicle (`RouteProgress.of`) | `MapMarker.stale = true` (stop layers read it) |
+| Journey map | each leg split at its vehicle or walker; finished legs dimmed whole | - |
+| Journey leg card | rail gradient up to `RouteProgress.legFraction`; walk dots dimmed | from/to and intermediate names greyed |
+
+Use `RouteProgress` (`core/model/.../Progress.kt`) and the token for any new view - don't pick a new alpha
+or a new "passed" rule. Planner legs get the same logic through `RouteProgress.legStops`, which needs no
+timetable. Not covered, because they show no single run: the line page (a pattern with several vehicles)
+and the map screen's vehicle sheet (no route drawn).
 
 # Colours
 

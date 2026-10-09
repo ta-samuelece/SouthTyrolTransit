@@ -1,11 +1,11 @@
 ---
 type: Reference
 title: Map and design-system conventions - MapContent, styles, attribution, colours, reduced motion
-description: Map content is one immutable value re-pushed in full and marker ids must be unique across stops, vehicles and POIs; the one convention for showing progress along a run (Progress.PASSED_ALPHA, RouteProgress); the dark style falls back to the light override; attribution and font are hard-coded to OpenFreeMap; feed route colours are already used; reduced motion is read once.
+description: Map content is one immutable value re-pushed in full and marker ids must be unique across stops, vehicles and POIs; without a timetable the map's stops come from the EFA coordinate search; maps inside pages use ExpandableMapPage and enlarge where their small card sits; the one convention for showing progress along a run; the dark style falls back to the light override; attribution and font are hard-coded to OpenFreeMap; feed route colours are already used; reduced motion is read once.
 tags: [map, maplibre, design-system, colors, accessibility]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-09T15:00:00Z"
+  at: "2026-10-09T20:30:00Z"
 status: stable
 ---
 
@@ -27,6 +27,16 @@ status: stable
   off), and all symbol layers use the font `Noto Sans Regular`. Switching tile provider means updating the
   credit (ODbL) and checking the new style serves that font, or labels may not render (inferred).
 
+- **Stops without a timetable**: `MapRepository.stops` reads `stopsIn` from the timetable when one is
+  installed, otherwise the EFA coordinate search (`EfaClient.nearbyStops`, `max = 400`) around the
+  viewport centre, radius = half the diagonal capped at 3 km, filtered to the box. Online stops use the
+  EFA global id as `id` and `stationKey`, the same key as timetable stations, so saved-stop highlighting
+  and the stop page work for both. The map screen and the map picker both go through it.
+- **Maps inside pages** (trip, journey, line, stop) use `ExpandableMapPage` + `CompactMapCard`
+  (`app/.../feature/common/ExpandableMap.kt`): a static card in the list, enlarged to 60% of the height
+  outside the list so its gestures never fight the list's scrolling; back shrinks it. `placement` puts
+  the enlarged map where the small card is - `BOTTOM` on the stop page, whose map is the last item, `TOP`
+  elsewhere. A new page with a map should use these rather than an interactive `TransitMap` in a list.
 - **Lines**: `MapPolyline` has `opacity` and `dashed`. Dashed lines live in their own layer
   (`line-dasharray` cannot be data-driven on Android) - before 2026-10-09 `dashed` was written to the
   feature but never rendered, so walking legs drew solid.
@@ -67,4 +77,7 @@ animated components must check `LocalReducedMotion` themselves.
 
 # What was checked
 
-Code read of `core/map`, `core/designsystem` and `MainActivity.kt` on 2026-10-09.
+Code read of `core/map`, `core/designsystem` and `MainActivity.kt` on 2026-10-09. The online stop
+fallback and the enlarged-map placement were checked on an emulator the same evening: stops appeared on
+the map of a fresh install while the timetable was still importing, and the stop page's map enlarged at
+the bottom.

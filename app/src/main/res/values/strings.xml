@@ -106,6 +106,7 @@
         <item quantity="other">%1$d stops before yours · next: %2$s</item>
     </plurals>
     <string name="journey_vehicle_open_trip">Show the whole trip</string>
+    <string name="journey_vehicle_not_started">Vehicle not on its way yet</string>
 
     <!-- Fares and tickets -->
     <string name="fare_title">Fare</string>

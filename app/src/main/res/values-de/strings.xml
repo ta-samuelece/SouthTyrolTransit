@@ -101,6 +101,7 @@
         <item quantity="other">Noch %1$d Halte bis zu deinem · nächster: %2$s</item>
     </plurals>
     <string name="journey_vehicle_open_trip">Ganze Fahrt anzeigen</string>
+    <string name="journey_vehicle_not_started">Fahrzeug noch nicht unterwegs</string>
 
     <string name="fare_title">Fahrpreis</string>
     <string name="fare_single">Einzelfahrschein</string>

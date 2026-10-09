@@ -64,6 +64,14 @@ data class StatusColors(
 }
 
 /** Identity colors per mode for line badges when GTFS provides no route color. */
+/**
+ * Progress along a run, the same in every view: the stretch already travelled and passed stops are drawn
+ * at [PASSED_ALPHA] (timelines, rails, map lines and stop markers).
+ */
+object Progress {
+    const val PASSED_ALPHA = 0.35f
+}
+
 object ModeColors {
     fun container(mode: TransportMode): Long = when (mode) {
         TransportMode.TRAIN -> 0x3949AB

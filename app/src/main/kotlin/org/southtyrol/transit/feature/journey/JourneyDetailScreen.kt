@@ -54,6 +54,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -75,6 +76,7 @@ import org.southtyrol.transit.design.LineBadge
 import org.southtyrol.transit.design.LocalStatusColors
 import org.southtyrol.transit.design.MessageState
 import org.southtyrol.transit.design.ModeColors
+import org.southtyrol.transit.design.Progress
 import org.southtyrol.transit.design.SectionHeader
 import org.southtyrol.transit.design.StatusPill
 import org.southtyrol.transit.design.TimeStyles
@@ -92,6 +94,9 @@ import org.southtyrol.transit.model.Freshness
 import org.southtyrol.transit.model.FreshnessPolicy
 import org.southtyrol.transit.model.Journey
 import org.southtyrol.transit.model.Leg
+import org.southtyrol.transit.model.RouteProgress
+import org.southtyrol.transit.model.RunPosition
+import org.southtyrol.transit.model.RunPositions
 import org.southtyrol.transit.model.ServiceState
 import org.southtyrol.transit.model.TransportMode
 import org.southtyrol.transit.model.TripDetail
@@ -130,12 +135,13 @@ fun JourneyDetailContent(journey: Journey, navigator: Navigator, modifier: Modif
     val legRuns by live.legRuns.collectAsStateWithLifecycle()
     PollWhileVisible(20_000) { live.poll() }
     val approaches = remember(journey, legRuns, now) { legApproaches(journey, legRuns, now) }
-    val lines = remember(journey) {
+    val legLines = remember(journey) {
         journey.legs.mapIndexedNotNull { i, leg ->
             val points = leg.geometry.ifEmpty { listOfNotNull(leg.from.point) + leg.intermediate.mapNotNull { it.place.point } + listOfNotNull(leg.to.point) }
-            if (points.size < 2) null else MapPolyline("leg$i", points, if (leg.mode == TransportMode.WALK) 0x78909C else ModeColors.container(leg.mode), if (leg.mode == TransportMode.WALK) 3f else 6f, dashed = leg.mode == TransportMode.WALK)
+            if (points.size < 2) null else i to MapPolyline("leg$i", points, if (leg.mode == TransportMode.WALK) 0x78909C else ModeColors.container(leg.mode), if (leg.mode == TransportMode.WALK) 3f else 6f, dashed = leg.mode == TransportMode.WALK)
         }
     }
+    val lines = remember(legLines) { legLines.map { it.second } }
     val endpoints = remember(journey) {
         listOfNotNull(
             journey.legs.first().from.point?.let { MapMarker("from", it, MarkerKind.ORIGIN, "A") },
@@ -143,7 +149,7 @@ fun JourneyDetailContent(journey: Journey, navigator: Navigator, modifier: Modif
         )
     }
     val mapState = org.southtyrol.transit.feature.common.rememberExpandableMapState()
-    val mapContent = remember(lines, endpoints, approaches, now) {
+    val mapContent = remember(legLines, endpoints, approaches, legRuns, now) {
         // The approach is drawn under the legs; each vehicle carries its line badge.
         val ahead = approaches.map { (i, a) -> MapPolyline("approach$i", a.approach.path, ModeColors.container(journey.legs[i].mode), 4f, dashed = true) }
         val vehicles = approaches.map { (i, a) ->
@@ -151,9 +157,20 @@ fun JourneyDetailContent(journey: Journey, navigator: Navigator, modifier: Modif
             val stale = a.run.vehicle?.let { FreshnessPolicy.vehicle(it.timestamp, now) == Freshness.STALE } ?: false
             MapMarker("v:leg$i", a.approach.position.point, MarkerKind.VEHICLE, leg.line, leg.mode, ModeColors.container(leg.mode), a.run.vehicle?.bearing, stale = a.approach.position.estimated || stale)
         }
-        MapContent(pois = endpoints, vehicles = vehicles, lines = ahead + lines)
+        // Each leg dimmed up to where its vehicle (or the walker) is now; the leg being ridden shows its vehicle.
+        val progress = legLines.map { (i, line) -> i to legProgress(journey.legs[i], line, legRuns[i], now) }
+        val riding = progress.mapNotNull { (i, p) ->
+            val leg = journey.legs[i]
+            val position = p.position?.takeIf { leg.mode.isTransit && i !in approaches } ?: return@mapNotNull null
+            MapMarker("ride:leg$i", position.point, MarkerKind.VEHICLE, leg.line, leg.mode, ModeColors.container(leg.mode), legRuns[i]?.vehicle?.bearing, stale = position.estimated)
+        }
+        MapContent(pois = endpoints, vehicles = vehicles + riding, lines = ahead + progress.flatMap { it.second.lines })
     }
-    val camera = remember(journey) { CameraRequest.Fit(lines.flatMap { it.points }) }
+    // An approaching vehicle is still before the boarding stop, so outside the journey's own bounds:
+    // re-fit once when a leg's vehicle first appears, to include it and the route it still travels.
+    val camera = remember(journey, approaches.keys) {
+        CameraRequest.Fit(lines.flatMap { it.points } + approaches.values.flatMap { it.approach.path })
+    }
     org.southtyrol.transit.feature.common.ExpandableMapPage(mapState, lines.isNotEmpty(), mapContent, camera, modifier) { listModifier ->
     LazyColumn(listModifier, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
@@ -174,8 +191,9 @@ fun JourneyDetailContent(journey: Journey, navigator: Navigator, modifier: Modif
         itemsIndexed(journey.legs) { index, leg ->
             val previous = journey.legs.getOrNull(index - 1)
             if (previous != null && previous.mode.isTransit && leg.mode.isTransit) TransferRow(Duration.between(previous.bestArrival, leg.bestDeparture))
-            if (leg.mode == TransportMode.WALK) WalkLeg(leg) else TransitLeg(
-                leg, now, approaches[index], onStop = { gid -> navigator.stop(gid) },
+            if (leg.mode == TransportMode.WALK) WalkLeg(leg, now) else TransitLeg(
+                leg, now, approaches[index], waiting = index in legRuns && index !in approaches && leg.bestDeparture.isAfter(now),
+                onStop = { gid -> navigator.stop(gid) },
                 onTrip = { run -> navigator.trip(run.trip.id, run.serviceDate.toString()) },
             )
         }
@@ -197,6 +215,28 @@ private fun legApproaches(journey: Journey, runs: Map<Int, TripDetail>, now: Ins
         Approaches.of(stops, run.shape, boarding, run.vehicle?.point, now)?.let { i to LegApproach(run, it) }
     }.toMap()
 
+/** A leg's map lines split at its progress, and where its vehicle (or walker) is while under way. */
+private class LegProgressLines(val lines: List<MapPolyline>, val position: RunPosition?)
+
+private fun legProgress(leg: Leg, line: MapPolyline, run: TripDetail?, now: Instant): LegProgressLines {
+    val fraction = RouteProgress.legFraction(leg, now)
+    if (fraction <= 0f) return LegProgressLines(listOf(line), null)
+    if (fraction >= 1f) return LegProgressLines(listOf(line.copy(opacity = Progress.PASSED_ALPHA)), null)
+    // Under way: the matched run's GPS fix when there is one, otherwise estimated from the leg's own times.
+    val stops = RouteProgress.legStops(leg)
+    val estimate = RunPositions.estimate(stops, line.points, now)
+    val gps = run?.vehicle?.point?.takeIf { leg.mode.isTransit }
+    val position = gps?.let { RunPosition(it, estimate?.nextIndex ?: RouteProgress.nextIndex(stops, now), atStop = false, estimated = false) } ?: estimate
+    val split = RouteProgress.of(line.points, stops, position, now) ?: return LegProgressLines(listOf(line), position)
+    return LegProgressLines(
+        listOfNotNull(
+            split.done.takeIf { it.size >= 2 }?.let { line.copy(id = line.id + "-done", points = it, opacity = Progress.PASSED_ALPHA) },
+            split.ahead.takeIf { it.size >= 2 }?.let { line.copy(points = it) },
+        ),
+        position,
+    )
+}
+
 @Composable
 private fun TransferRow(wait: Duration) {
     Row(Modifier.padding(start = 20.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -206,13 +246,17 @@ private fun TransferRow(wait: Duration) {
     }
 }
 
+private const val WALK_DOTS = 4
+
 /** Walking is visually lighter than transit: a dotted rail and one line of text. */
 @Composable
-private fun WalkLeg(leg: Leg) {
+private fun WalkLeg(leg: Leg, now: Instant) {
+    val walked = (RouteProgress.legFraction(leg, now) * WALK_DOTS).toInt()
     Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min).padding(start = 12.dp)) {
         Column(Modifier.width(24.dp).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
-            repeat(4) {
-                Box(Modifier.padding(vertical = 3.dp).size(4.dp).clip(CircleShape).background(MaterialTheme.colorScheme.outline))
+            repeat(WALK_DOTS) { dot ->
+                val color = MaterialTheme.colorScheme.outline
+                Box(Modifier.padding(vertical = 3.dp).size(4.dp).clip(CircleShape).background(if (dot < walked) color.copy(alpha = Progress.PASSED_ALPHA) else color))
             }
         }
         Spacer(Modifier.width(12.dp))
@@ -227,7 +271,7 @@ private fun WalkLeg(leg: Leg) {
 }
 
 @Composable
-private fun TransitLeg(leg: Leg, now: Instant, live: LegApproach?, onStop: (String) -> Unit, onTrip: (TripDetail) -> Unit) {
+private fun TransitLeg(leg: Leg, now: Instant, live: LegApproach?, waiting: Boolean, onStop: (String) -> Unit, onTrip: (TripDetail) -> Unit) {
     var expanded by rememberSaveable(leg.departure.epochSecond, leg.line) { mutableStateOf(false) }
     val status = LocalStatusColors.current
     val (lineColor, _) = ModeColors.colors(leg.mode, null, null)
@@ -243,11 +287,15 @@ private fun TransitLeg(leg: Leg, now: Instant, live: LegApproach?, onStop: (Stri
             }
             if (leg.cancelled) StatusPill(stringResource(org.southtyrol.transit.design.R.string.ds_cancelled), status.cancelled, Icons.Rounded.Warning)
             if (live != null && !leg.cancelled) VehicleApproachRow(live, now, onClick = { onTrip(live.run) })
+            // Matched to its run, but the vehicle is not yet on its way (and sends no GPS): say so.
+            else if (waiting && !leg.cancelled) Text(stringResource(R.string.journey_vehicle_not_started), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Row(Modifier.height(IntrinsicSize.Min)) {
-                Box(Modifier.width(6.dp).fillMaxHeight().clip(RoundedCornerShape(3.dp)).background(lineColor))
+                val travelled = RouteProgress.legFraction(leg, now)
+                val dimmed = lineColor.copy(alpha = Progress.PASSED_ALPHA)
+                Box(Modifier.width(6.dp).fillMaxHeight().clip(RoundedCornerShape(3.dp)).background(Brush.verticalGradient(0f to dimmed, travelled to dimmed, travelled to lineColor, 1f to lineColor)))
                 Spacer(Modifier.width(12.dp))
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    StopLine(leg.departure, leg.predictedDeparture, leg.from.name, leg.departurePlatform, leg.cancelled, onClick = leg.from.stopGlobalId.takeIf { it.isNotBlank() }?.let { { onStop(it) } })
+                    StopLine(leg.departure, leg.predictedDeparture, leg.from.name, leg.departurePlatform, leg.cancelled, passed = !leg.bestDeparture.isAfter(now), onClick = leg.from.stopGlobalId.takeIf { it.isNotBlank() }?.let { { onStop(it) } })
                     if (leg.intermediate.isNotEmpty()) {
                         TextButton(onClick = { expanded = !expanded }, modifier = Modifier.heightIn(min = 48.dp)) {
                             Icon(if (expanded) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore, contentDescription = null)
@@ -260,13 +308,14 @@ private fun TransitLeg(leg: Leg, now: Instant, live: LegApproach?, onStop: (Stri
                                     val time = stop.departure ?: stop.arrival
                                     Row {
                                         Text(time?.let { Format.time(stop.predictedDeparture ?: it) } ?: "", style = MaterialTheme.typography.bodySmall, modifier = Modifier.width(80.dp), maxLines = 1)
-                                        Text(stop.place.name, style = MaterialTheme.typography.bodySmall)
+                                        val passed = (stop.predictedDeparture ?: stop.departure ?: stop.arrival)?.isAfter(now) == false
+                                        Text(stop.place.name, style = MaterialTheme.typography.bodySmall, color = if (passed) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface)
                                     }
                                 }
                             }
                         }
                     }
-                    StopLine(leg.arrival, leg.predictedArrival, leg.to.name, leg.arrivalPlatform, leg.cancelled, onClick = leg.to.stopGlobalId.takeIf { it.isNotBlank() }?.let { { onStop(it) } })
+                    StopLine(leg.arrival, leg.predictedArrival, leg.to.name, leg.arrivalPlatform, leg.cancelled, passed = !leg.bestArrival.isAfter(now), onClick = leg.to.stopGlobalId.takeIf { it.isNotBlank() }?.let { { onStop(it) } })
                 }
             }
             leg.notices.forEach { notice ->
@@ -315,7 +364,7 @@ private fun VehicleApproachRow(live: LegApproach, now: Instant, onClick: () -> U
 }
 
 @Composable
-private fun StopLine(scheduled: Instant, predicted: Instant?, name: String, platform: String, cancelled: Boolean, onClick: (() -> Unit)?) {
+private fun StopLine(scheduled: Instant, predicted: Instant?, name: String, platform: String, cancelled: Boolean, passed: Boolean, onClick: (() -> Unit)?) {
     val changed = predicted != null && predicted != scheduled
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -326,7 +375,7 @@ private fun StopLine(scheduled: Instant, predicted: Instant?, name: String, plat
             if (changed) Text(Format.time(scheduled), style = MaterialTheme.typography.labelSmall, textDecoration = TextDecoration.LineThrough, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Column(Modifier.weight(1f)) {
-            Text(name, style = MaterialTheme.typography.bodyLarge)
+            Text(name, style = MaterialTheme.typography.bodyLarge, color = if (passed) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (platform.isNotBlank()) Text(stringResource(org.southtyrol.transit.design.R.string.ds_platform, platform), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 if (predicted != null) DelayLabel(Duration.between(scheduled, predicted).seconds, if (cancelled) ServiceState.CANCELLED else ServiceState.NORMAL, Freshness.LIVE)

@@ -104,6 +104,7 @@
         <item quantity="other">%1$d fermate prima della tua · prossima: %2$s</item>
     </plurals>
     <string name="journey_vehicle_open_trip">Mostra tutta la corsa</string>
+    <string name="journey_vehicle_not_started">Il mezzo non è ancora in viaggio</string>
 
     <string name="fare_title">Tariffa</string>
     <string name="fare_single">Biglietto singolo</string>

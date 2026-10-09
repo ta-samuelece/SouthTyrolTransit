@@ -197,18 +197,34 @@ object EfaXml {
     private fun root(bytes: ByteArray): Element {
         require(bytes.isNotEmpty()) { "Empty EFA response" }
         require(bytes.size <= 15_000_000) { "EFA response too large" }
-        // Reject any DTD before parsing: the interface never uses one and it is the XXE vector.
-        val head = String(bytes, 0, minOf(bytes.size, 4096), Charsets.ISO_8859_1)
-        require(!head.contains("<!DOCTYPE", ignoreCase = true) && !head.contains("<!ENTITY", ignoreCase = true)) { "DTD forbidden" }
+        // Reject any DTD before parsing: the interface never uses one and it is the XXE vector. A DTD
+        // can only appear in the prolog, so the whole prolog (everything before the root element) is
+        // checked - however long a comment or whitespace run in front of it is.
+        require(!prolog(bytes).contains("<!DOCTYPE", ignoreCase = true)) { "DTD forbidden" }
         val factory = DocumentBuilderFactory.newInstance().apply {
             isNamespaceAware = false
             isExpandEntityReferences = false
             isValidating = false
             runCatching { setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true) }
+            // Second line of defence where the platform parser supports it (Android parsers vary).
+            runCatching { setFeature("http://apache.org/xml/features/disallow-doctype-decl", true) }
         }
         val root = factory.newDocumentBuilder().parse(ByteArrayInputStream(bytes)).documentElement
         require(root.tagName == "itdRequest") { "Unexpected EFA root ${root.tagName}" }
         return root
+    }
+
+    /** The document text before its root element: XML declaration, comments, processing instructions, a DTD. */
+    internal fun prolog(bytes: ByteArray): String {
+        var i = 0
+        while (i < bytes.size - 1) {
+            if (bytes[i] == '<'.code.toByte()) {
+                val next = bytes[i + 1].toInt().toChar()
+                if (next != '?' && next != '!') break
+            }
+            i++
+        }
+        return String(bytes, 0, i, Charsets.ISO_8859_1)
     }
 
     internal fun Element.all(tag: String): List<Element> = getElementsByTagName(tag).let { nodes -> List(nodes.length) { nodes.item(it) as Element } }

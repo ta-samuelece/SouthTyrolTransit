@@ -59,6 +59,13 @@ object GtfsFiles {
  * schedule currently in use.
  */
 class GtfsImporter(private val shapeToleranceMeters: Double = 4.0) {
+    companion object {
+        /**
+         * Bump whenever a change to the importer changes what ends up in the database: installs then
+         * re-import their current feed on the next sync instead of waiting for STA to publish a new one.
+         */
+        const val VERSION = 1
+    }
 
     suspend fun import(zipFile: File, db: SupportSQLiteDatabase, meta: Map<String, String>, progress: (ImportProgress) -> Unit = {}): ImportSummary {
         ZipFile(zipFile).use { zip ->

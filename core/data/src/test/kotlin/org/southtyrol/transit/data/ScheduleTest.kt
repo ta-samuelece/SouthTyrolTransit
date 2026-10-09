@@ -191,6 +191,18 @@ class ScheduleTest {
         assertNull(schedule.trip("t4a", LocalDate.of(2026, 10, 2), "it"))
     }
 
+    @Test fun sameFeedIsImportedAgainAfterAnImporterChange() = runTest {
+        val zip = SyntheticGtfs.zip(context.cacheDir, "a")
+        assertTrue(store.importFile(zip, emptyMap()))
+        assertEquals(GtfsImporter.VERSION, store.loadInfo()!!.importerVersion)
+        // A database built by an older importer (or before versions were recorded) is rebuilt from the same feed.
+        store.database()!!.openHelper.writableDatabase.execSQL("DELETE FROM meta WHERE `key` = 'importerVersion'")
+        assertEquals(0, store.loadInfo()!!.importerVersion)
+        assertTrue(store.importFile(zip, emptyMap()))
+        assertEquals(GtfsImporter.VERSION, store.loadInfo()!!.importerVersion)
+        assertFalse(store.importFile(zip, emptyMap()))
+    }
+
     @Test fun brokenFeedKeepsWorkingSchedule() = runTest {
         assertTrue(store.importFile(SyntheticGtfs.zip(context.cacheDir, "a"), emptyMap()))
         val active = store.activeName()

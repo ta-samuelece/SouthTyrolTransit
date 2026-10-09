@@ -31,6 +31,8 @@ data class ScheduleInfo(
     val stops: Int,
     val trips: Int,
     val hasShapes: Boolean,
+    /** [GtfsImporter.VERSION] that built this database (0 before versions were recorded). */
+    val importerVersion: Int = 0,
 )
 
 sealed class ScheduleStatus {
@@ -69,6 +71,7 @@ class ScheduleStore(
     private val ftpEnabled: Boolean = true,
 ) {
     private val dir = File(context.filesDir, "schedule").apply { mkdirs() }
+    private val downloads = TransitHttp.forLargeDownloads(http)
     private val pointer = File(dir, "active")
     private val lock = Mutex()
     private val openLock = Any()
@@ -118,6 +121,7 @@ class ScheduleStore(
                 stops = dao.meta("stops")?.toIntOrNull() ?: 0,
                 trips = dao.meta("trips")?.toIntOrNull() ?: 0,
                 hasShapes = dao.meta("hasShapes") == "true",
+                importerVersion = dao.meta("importerVersion")?.toIntOrNull() ?: 0,
             )
         }.getOrNull()
         _info.value = info
@@ -154,7 +158,7 @@ class ScheduleStore(
                     if (firstError == null) firstError = e
                 }
             }
-            throw firstError ?: IOException("No schedule source available")
+            throw firstError ?: TransferFailedException("No schedule source available")
         } catch (e: CancellationException) {
             _status.value = ScheduleStatus.Idle
             throw e
@@ -170,14 +174,16 @@ class ScheduleStore(
     /** Imports a local GTFS archive (also used for tests and manual imports). */
     suspend fun importFile(zip: File, meta: Map<String, String>): Boolean = withContext(Dispatchers.IO) {
         val hash = GtfsFiles.sha256(zip)
-        if (loadInfo()?.hash == hash) { _status.value = ScheduleStatus.UpToDate; return@withContext false }
+        // The same feed is imported again only when the importer itself has changed since.
+        val previous = loadInfo()
+        if (previous?.hash == hash && previous.importerVersion >= GtfsImporter.VERSION) { _status.value = ScheduleStatus.UpToDate; return@withContext false }
         val name = "schedule-${UUID.randomUUID()}.db"
         val target = File(dir, name)
         try {
             val db = open(target)
             try {
                 val sql = db.openHelper.writableDatabase
-                importer.import(zip, sql, meta + mapOf("hash" to hash, "importedAt" to System.currentTimeMillis().toString())) {
+                importer.import(zip, sql, meta + mapOf("hash" to hash, "importedAt" to System.currentTimeMillis().toString(), "importerVersion" to GtfsImporter.VERSION.toString())) {
                     _status.value = ScheduleStatus.Importing(it.file, it.rows)
                 }
             } finally {
@@ -199,7 +205,7 @@ class ScheduleStore(
         tmp.writeText(name)
         if (!tmp.renameTo(pointer)) {
             pointer.delete()
-            if (!tmp.renameTo(pointer)) throw IOException("Could not activate schedule")
+            if (!tmp.renameTo(pointer)) throw TransferFailedException("Could not activate schedule")
         }
         synchronized(openLock) {
             activeCache = name
@@ -239,18 +245,20 @@ class ScheduleStore(
                     ftp.close()
                 }
                 if (size <= 0 || target.length() >= size) break
-                if (++attempts >= 5) throw IOException("Incomplete FTP download")
+                if (++attempts >= 5) throw TransferFailedException("Incomplete FTP download")
             }
             return mapOf("lastModified" to modified)
         }
         val dao = database()?.schedule()
         val headers = buildMap {
-            if (previous?.source == source.name) {
+            // A conditional request would answer "not modified" and keep a feed the current importer
+            // has never processed; ask unconditionally after an importer change.
+            if (previous?.source == source.name && previous.importerVersion >= GtfsImporter.VERSION) {
                 dao?.meta("etag")?.takeIf { it.isNotBlank() }?.let { put("If-None-Match", it) }
                 dao?.meta("lastModified")?.takeIf { it.isNotBlank() }?.let { put("If-Modified-Since", it) }
             }
         }
-        http.response(source.url, "application/zip, application/octet-stream", headers).use { response ->
+        downloads.response(source.url, "application/zip, application/octet-stream", headers).use { response ->
             if (response.code == 304) return null
             val body = response.body
             body.byteStream().use { input -> copy(input, target, body.contentLength(), maxBytes) }
@@ -259,7 +267,7 @@ class ScheduleStore(
     }
 
     private suspend fun copy(input: java.io.InputStream, target: File, total: Long, maxBytes: Long, append: Boolean = false) {
-        if (total > maxBytes) throw IOException("Download too large")
+        if (total > maxBytes) throw BadDataException("Download too large")
         var written = if (append) target.length() else 0L
         java.io.FileOutputStream(target, append).buffered(1 shl 16).use { out ->
             val buffer = ByteArray(1 shl 16)
@@ -268,7 +276,7 @@ class ScheduleStore(
                 val n = input.read(buffer)
                 if (n < 0) break
                 written += n
-                if (written > maxBytes) throw IOException("Download too large")
+                if (written > maxBytes) throw BadDataException("Download too large")
                 out.write(buffer, 0, n)
                 _status.value = ScheduleStatus.Downloading(written, total)
             }

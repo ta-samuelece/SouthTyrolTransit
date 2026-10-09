@@ -107,6 +107,20 @@ class NetworkTest {
         assertTrue(stops.none { it.name.contains("Bahnhof") })
     }
 
+    @Test fun onlyConnectivityFailuresCountAsOffline() {
+        assertEquals(DataError.Offline, java.net.UnknownHostException("x").toDataError())
+        assertEquals(DataError.Parse, BadDataException("Download too large").toDataError())
+        assertEquals(DataError.Parse, java.util.zip.ZipException("corrupt").toDataError())
+        assertEquals(DataError.Unknown, TransferFailedException("Incomplete FTP download").toDataError())
+        assertEquals(DataError.Parse, GtfsValidationException("Missing stops.txt").toDataError())
+    }
+
+    @Test fun largeDownloadClientHasNoCallTimeout() {
+        val big = TransitHttp.forLargeDownloads(http)
+        assertEquals(0, big.client.callTimeoutMillis)
+        assertEquals(client.readTimeoutMillis, big.client.readTimeoutMillis)
+    }
+
     @Test fun malformedEfaIsParseError() = runTest {
         server.enqueue(MockResponse.Builder().body("<html>maintenance</html>").build())
         try {

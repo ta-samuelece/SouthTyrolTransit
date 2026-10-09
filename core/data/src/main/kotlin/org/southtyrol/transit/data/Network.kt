@@ -29,15 +29,21 @@ import kotlin.coroutines.resumeWithException
 
 class HttpFailure(val status: Int, val retryAfterSeconds: Long? = null) : IOException("HTTP $status")
 
+/** Data that arrived but cannot be used (oversize, corrupt): not a connectivity problem. */
+class BadDataException(message: String) : IOException(message)
+
+/** A transfer that broke off or failed for a reason other than missing connectivity. */
+class TransferFailedException(message: String) : IOException(message)
+
 /**
  * Thin coroutine wrapper around OkHttp with bounded retries and exponential backoff for transient
  * failures. Honors Retry-After up to [maxRetryAfterSeconds]; longer back-offs surface as throttling.
  */
 class TransitHttp(
-    private val client: OkHttpClient,
-    private val maxAttempts: Int = 3,
-    private val baseBackoffMillis: Long = 800,
-    private val maxRetryAfterSeconds: Long = 20,
+    internal val client: OkHttpClient,
+    internal val maxAttempts: Int = 3,
+    internal val baseBackoffMillis: Long = 800,
+    internal val maxRetryAfterSeconds: Long = 20,
 ) {
     suspend fun response(url: String, accept: String, headers: Map<String, String> = emptyMap()): Response {
         val request = Request.Builder().url(url)
@@ -71,7 +77,7 @@ class TransitHttp(
             withContext(Dispatchers.IO) {
                 val body = response.body
                 val declared = body.contentLength()
-                if (declared > maxBytes) throw IOException("Response too large")
+                if (declared > maxBytes) throw BadDataException("Response too large")
                 // Bounded read (InputStream.readNBytes needs API 33).
                 val out = java.io.ByteArrayOutputStream(if (declared in 1..maxBytes) declared.toInt() else 64 * 1024)
                 body.byteStream().use { input ->
@@ -80,7 +86,7 @@ class TransitHttp(
                         val n = input.read(buffer)
                         if (n < 0) break
                         out.write(buffer, 0, n)
-                        if (out.size() > maxBytes) throw IOException("Response too large")
+                        if (out.size() > maxBytes) throw BadDataException("Response too large")
                     }
                 }
                 out.toByteArray()
@@ -109,6 +115,13 @@ class TransitHttp(
             return runCatching { Duration.between(now, ZonedDateTime.parse(value.trim(), DateTimeFormatter.RFC_1123_DATE_TIME).toInstant()).seconds.coerceAtLeast(0) }.getOrNull()
         }
 
+        /**
+         * A client for large downloads (the ~150 MB timetable): no overall call timeout, which would also
+         * cut off a slow but progressing body read. Stalls are still caught by the read timeout.
+         */
+        fun forLargeDownloads(http: TransitHttp): TransitHttp =
+            TransitHttp(http.client.newBuilder().callTimeout(0, TimeUnit.SECONDS).build(), http.maxAttempts, http.baseBackoffMillis, http.maxRetryAfterSeconds)
+
         fun client(cacheDir: File?): OkHttpClient = OkHttpClient.Builder()
             .apply { if (cacheDir != null) cache(Cache(cacheDir, 20L * 1024 * 1024)) }
             .connectTimeout(15, TimeUnit.SECONDS)
@@ -131,6 +144,9 @@ fun Throwable.toDataError(): DataError = when (this) {
     is UnknownHostException -> DataError.Offline
     is SocketTimeoutException, is InterruptedIOException -> DataError.Timeout
     is java.net.ConnectException, is java.net.NoRouteToHostException -> DataError.Offline
+    is BadDataException, is java.util.zip.ZipException -> DataError.Parse
+    is TransferFailedException -> DataError.Unknown
+    // Remaining I/O errors come from the network stack (resets, unexpected end of stream).
     is IOException -> DataError.Offline
     is IllegalArgumentException, is IllegalStateException, is org.xml.sax.SAXException, is com.google.protobuf.InvalidProtocolBufferException,
     is kotlinx.serialization.SerializationException -> DataError.Parse

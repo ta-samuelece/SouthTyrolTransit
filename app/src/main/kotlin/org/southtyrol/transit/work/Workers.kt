@@ -41,6 +41,7 @@ import org.southtyrol.transit.data.SavedRepository
 import org.southtyrol.transit.data.ScheduleStore
 import org.southtyrol.transit.data.SettingsRepository
 import org.southtyrol.transit.data.UserDao
+import org.southtyrol.transit.model.DataError
 import org.southtyrol.transit.model.DataException
 import org.southtyrol.transit.model.localized
 import java.time.Instant
@@ -76,8 +77,12 @@ object Notifications {
 class BackgroundWork @Inject constructor(@ApplicationContext private val context: Context) {
     private val workManager get() = WorkManager.getInstance(context)
 
-    /** Weekly timetable refresh; unmetered network by default because the feed is ~150 MB. */
-    fun scheduleTimetableRefresh(allowMetered: Boolean = false) {
+    /**
+     * Weekly timetable refresh; unmetered network by default because the feed is ~150 MB. With
+     * [initialSync], also a one-off download as soon as the network allows: only for installs that have
+     * no timetable yet, since the one-off work is re-enqueued on every call once a previous run finished.
+     */
+    fun scheduleTimetableRefresh(allowMetered: Boolean = false, initialSync: Boolean = false) {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(if (allowMetered) NetworkType.CONNECTED else NetworkType.UNMETERED)
             .setRequiresStorageNotLow(true)
@@ -87,8 +92,7 @@ class BackgroundWork @Inject constructor(@ApplicationContext private val context
             ScheduleSyncWorker.PERIODIC, ExistingPeriodicWorkPolicy.UPDATE,
             PeriodicWorkRequestBuilder<ScheduleSyncWorker>(7, TimeUnit.DAYS).setConstraints(constraints).build(),
         )
-        // Also try once soon after install so the offline timetable becomes available.
-        workManager.enqueueUniqueWork(
+        if (initialSync) workManager.enqueueUniqueWork(
             ScheduleSyncWorker.INITIAL, ExistingWorkPolicy.KEEP,
             OneTimeWorkRequestBuilder<ScheduleSyncWorker>().setConstraints(constraints).build(),
         )
@@ -153,7 +157,10 @@ class ScheduleSyncWorker @AssistedInject constructor(
         } catch (e: CancellationException) {
             throw e
         } catch (e: DataException) {
-            if (runAttemptCount < 3) Result.retry() else Result.failure(workDataOf("error" to e.error.toString()))
+            // A feed that downloaded but cannot be used would fail the same way again: don't fetch
+            // ~150 MB up to three more times. Network-type failures are worth retrying.
+            val permanent = e.error == DataError.Parse
+            if (!permanent && runAttemptCount < 3) Result.retry() else Result.failure(workDataOf("error" to e.error.toString()))
         }
     }
 

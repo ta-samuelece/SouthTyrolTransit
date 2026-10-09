@@ -161,9 +161,21 @@ class GtfsSchedule(private val store: ScheduleStore) : TransitScheduleDataSource
             val high = GtfsTime.secondsSinceOrigin(day, until)
             if (high >= 0 && low <= high && low < 7 * 86400) {
                 val active = activeServices(this, day)
-                val rows = (if (arrivals) arrivals(platforms, low.toInt(), high.toInt(), limit * 4) else departures(platforms, low.toInt(), high.toInt(), limit * 4))
-                    .filter { it.serviceId in active }
-                    .filter { if (arrivals) (it.flags shr 4) and 0xf != 1 && it.sequence != firstSequence(it) else it.flags and 0xf != 1 && it.sequence != it.lastSequence }
+                // The stop_times rows include every service day's trips; only active ones count. Page
+                // through the rows until enough active departures are found, so a busy station whose
+                // first rows are mostly other days' trips is not cut short by the SQL limit.
+                val rows = ArrayList<BoardRow>()
+                val page = (limit * 4).coerceAtLeast(100)
+                var offset = 0
+                while (rows.size < limit) {
+                    val batch = if (arrivals) arrivals(platforms, low.toInt(), high.toInt(), page, offset) else departures(platforms, low.toInt(), high.toInt(), page, offset)
+                    batch.filterTo(rows) { r ->
+                        r.serviceId in active &&
+                            if (arrivals) (r.flags shr 4) and 0xf != 1 && r.sequence != firstSequence(r) else r.flags and 0xf != 1 && r.sequence != r.lastSequence
+                    }
+                    if (batch.size < page || offset > MAX_BOARD_ROWS) break
+                    offset += page
+                }
                 val headsigns = headsigns(this, rows.associate { it.tripId to it.headsign }, language)
                 for (r in rows) result += r.toDeparture(day, arrivals, headsigns[r.tripId])
             }
@@ -317,3 +329,6 @@ class GtfsSchedule(private val store: ScheduleStore) : TransitScheduleDataSource
         val lineOrder: Comparator<Line> = compareBy<Line>({ it.mode != TransportMode.TRAIN }, { it.name.takeWhile(Char::isDigit).toIntOrNull() ?: Int.MAX_VALUE }, { it.name })
     }
 }
+
+/** Safety cap on stop_times rows scanned per service day for one board. */
+private const val MAX_BOARD_ROWS = 20_000

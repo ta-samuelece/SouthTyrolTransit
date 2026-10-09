@@ -25,7 +25,7 @@ class FtpDownload(private val url: String, private val timeoutMillis: Int = 20_0
 
     private fun reply(): Pair<Int, String> {
         var line = reader.readLine() ?: throw IOException("FTP connection closed")
-        val code = line.take(3).toIntOrNull() ?: throw IOException("Bad FTP reply: $line")
+        val code = line.take(3).toIntOrNull() ?: throw TransferFailedException("Bad FTP reply: $line")
         // Multi-line replies: "123-..." until "123 ..."
         if (line.length > 3 && line[3] == '-') {
             while (true) {
@@ -39,7 +39,7 @@ class FtpDownload(private val url: String, private val timeoutMillis: Int = 20_0
     private fun command(cmd: String, vararg expected: Int): String {
         writer.write("$cmd\r\n"); writer.flush()
         val (code, line) = reply()
-        if (expected.isNotEmpty() && code !in expected) throw IOException("FTP ${cmd.substringBefore(' ')} failed: $line")
+        if (expected.isNotEmpty() && code !in expected) throw TransferFailedException("FTP ${cmd.substringBefore(' ')} failed: $line")
         return line
     }
 
@@ -51,7 +51,7 @@ class FtpDownload(private val url: String, private val timeoutMillis: Int = 20_0
         reader = BufferedReader(InputStreamReader(control.getInputStream(), Charsets.ISO_8859_1))
         writer = OutputStreamWriter(control.getOutputStream(), Charsets.ISO_8859_1)
         val (welcome, line) = reply()
-        if (welcome != 220) throw IOException("FTP greeting: $line")
+        if (welcome != 220) throw TransferFailedException("FTP greeting: $line")
         val user = command("USER anonymous", 230, 331)
         if (user.startsWith("331")) command("PASS guest", 230)
         command("TYPE I", 200)
@@ -59,7 +59,7 @@ class FtpDownload(private val url: String, private val timeoutMillis: Int = 20_0
         lastModified = runCatching { command("MDTM ${uri.path}", 213).substring(4).trim() }.getOrDefault("")
         val pasv = command("PASV", 227)
         val numbers = Regex("(\\d+),(\\d+),(\\d+),(\\d+),(\\d+),(\\d+)").find(pasv)?.groupValues?.drop(1)?.map { it.toInt() }
-            ?: throw IOException("Bad PASV reply")
+            ?: throw TransferFailedException("Bad PASV reply")
         // Connect to the control host rather than the advertised address (NAT-safe, avoids redirection).
         val data = Socket().apply { connect(InetSocketAddress(control.inetAddress, numbers[4] * 256 + numbers[5]), timeoutMillis); soTimeout = 60_000 }
         if (offset > 0) command("REST $offset", 350)

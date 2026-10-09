@@ -162,7 +162,7 @@ class TripViewModel @AssistedInject constructor(
 
     fun load() = viewModelScope.launch {
         base.value = try {
-            val detail = trips.trip(tripId, runCatching { LocalDate.parse(date) }.getOrElse { LocalDate.now() }, language.current())
+            val detail = trips.trip(tripId, runCatching { LocalDate.parse(date) }.getOrElse { LocalDate.now(org.southtyrol.transit.model.TransitZone) }, language.current())
             if (detail == null) TripLoad.NotFound else TripLoad.Ready(detail)
         } catch (e: DataException) {
             TripLoad.Error(e.error)

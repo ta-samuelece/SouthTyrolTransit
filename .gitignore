@@ -7,6 +7,10 @@
 local.properties
 .tools/
 
+# Python bytecode (tools/*.py)
+__pycache__/
+*.pyc
+
 # IDEs and OS files
 .idea/
 *.iml

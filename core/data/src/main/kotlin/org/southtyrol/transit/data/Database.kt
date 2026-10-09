@@ -163,11 +163,11 @@ interface ScheduleDao {
         JOIN trips t ON t.idx = st.tripIdx
         JOIN routes r ON r.id = t.routeId
         WHERE s.id IN (:stopIds) AND st.departure BETWEEN :low AND :high
-        ORDER BY st.departure
-        LIMIT :limit
+        ORDER BY st.departure, st.tripIdx
+        LIMIT :limit OFFSET :offset
         """,
     )
-    suspend fun departures(stopIds: Collection<String>, low: Int, high: Int, limit: Int): List<BoardRow>
+    suspend fun departures(stopIds: Collection<String>, low: Int, high: Int, limit: Int, offset: Int = 0): List<BoardRow>
 
     @Query(
         """
@@ -179,11 +179,11 @@ interface ScheduleDao {
         JOIN trips t ON t.idx = st.tripIdx
         JOIN routes r ON r.id = t.routeId
         WHERE s.id IN (:stopIds) AND st.arrival BETWEEN :low AND :high
-        ORDER BY st.arrival
-        LIMIT :limit
+        ORDER BY st.arrival, st.tripIdx
+        LIMIT :limit OFFSET :offset
         """,
     )
-    suspend fun arrivals(stopIds: Collection<String>, low: Int, high: Int, limit: Int): List<BoardRow>
+    suspend fun arrivals(stopIds: Collection<String>, low: Int, high: Int, limit: Int, offset: Int = 0): List<BoardRow>
 
     @Query(
         """

@@ -40,7 +40,9 @@ It is built only on legitimate open data:
 - Open Data Hub mobility data
 - OpenStreetMap-based maps
 
-"South Tyrol Transit" and the package id `org.southtyrol.transit` are **placeholders**; rename them in `app/build.gradle.kts` and `strings.xml`. The launcher icons come from the PNGs in `icons/` (default: Abstract Silhouette; users pick one in Settings → Appearance). Run `python tools/generate_icons.py` after adding or changing one: it fills the black corners, centres the art so the route stays inside the circular mask, and writes the adaptive-icon layers, previews and launcher aliases' icons. `res/drawable/ic_launcher_monochrome.xml` is the themed-icon silhouette.
+"South Tyrol Transit" and the package id `org.southtyrol.transit` are **placeholders**. The name is in `app_name` in the three `strings.xml` files. The package id is in `app/build.gradle.kts` (`namespace`, `applicationId`) and is also hard-coded in `AppIcons.component` (`ui/AppIcons.kt`), in `MainActivity`'s stop-intent extras and in `android:configure` of `res/xml/departures_widget_info.xml`; change all of them together, or the icon switcher and the widget stop working.
+
+The launcher icons come from the PNGs in `icons/` (default: Abstract Silhouette; users pick one in Settings → Appearance). Adding one takes five steps: put the PNG in `icons/`; run `python tools/generate_icons.py` (needs `pip install pillow numpy`), which fills the black corners, centres the art so the route stays inside the circular mask and writes the adaptive-icon layers and previews; add an `activity-alias` for it to `AndroidManifest.xml`; add an entry to `AppIcon` in `ui/AppIcons.kt`; and add its `icon_<name>` string to `values`, `values-de` and `values-it`. Never rename an existing alias: a user who picked it would be left without a launcher entry. `res/drawable/ic_launcher_monochrome.xml` is the themed-icon silhouette.
 
 ## 2. Unofficial status
 
@@ -168,7 +170,8 @@ Steps:
   - MockWebServer: retries, 404, 429 with Retry-After, 5xx, timeouts, disconnects, malformed and empty payloads
   - importer joins, past-midnight trips, calendar exceptions, translations, terminating trips, atomic swap and rejection of broken feeds (Robolectric)
   - network-board fallback, realtime/alert merge and stale handling, offline place search, cached alerts going stale offline, saved items
-- **UI (Robolectric Compose, `app/src/test`)**: journey search and result selection, stop departures, saving a stop, alerts, offline state, location-permission-denied state.
+- **UI components (Robolectric Compose, `app/src/test`)**: individual components rather than whole screens - the journey search request surviving navigation, a journey result card, a departure row (countdown, delay, opening the trip, cancellation label), an alert card (expanding, switching language), the offline and location-denied states. No screen or ViewModel is tested end to end.
+- **Other app unit tests**: translations complete in en/de/it, the in-app updater's version and release parsing, release-notes Markdown, licence text formatting.
 - **Instrumented (`app/src/androidTest`)**: EFA parsers on the device's XML stack, plus a developer helper that imports a pushed GTFS zip:
   ```bash
   adb push google_transit_shp.zip /data/local/tmp/sta.zip
@@ -179,16 +182,16 @@ Fixtures live in `docs/fixtures`.
 
 ## 12. Static GTFS update strategy
 
-1. **Schedule.** `ScheduleSyncWorker` (WorkManager) runs once after install and weekly afterwards, on unmetered network, battery not low and storage not low by default. The user can "Download now" over any network.
-2. **Download.** Conditional (ETag / Last-Modified). If the HTTPS source fails and the setting allows it, the STA FTP mirror is used.
-3. **Skip unchanged feeds.** If the SHA-256 is unchanged, nothing is imported.
+1. **Schedule.** `ScheduleSyncWorker` (WorkManager) runs weekly, plus once as soon as possible on installs that have no timetable yet, with battery not low and storage not low, and on unmetered network unless "Download over mobile data" is on. The user can "Download now" over any network. A downloaded feed that fails validation is not retried; network failures are retried up to three times.
+2. **Download.** Over HTTPS the request is conditional (ETag / Last-Modified) when the previous feed came from the same source; the download has no overall time limit, only a read timeout, so slow connections can finish. If the HTTPS source fails and the setting allows it, the STA FTP mirror is used; FTP downloads are always complete (no conditional request) and resume after dropped connections.
+3. **Skip unchanged feeds.** If the SHA-256 is unchanged and the database was built by the current importer (`GtfsImporter.VERSION`), nothing is imported. Bumping that version makes every install re-import its current feed on the next sync.
 4. **Import.** The feed is streamed into a **new SQLite file**:
    - Integer surrogate keys and indexes for stop, trip, station and stop-time lookups, plus an FTS4 stop-name index (all languages, accent-folded).
    - Shapes are simplified (Douglas–Peucker, 4 m) and stored as encoded polylines.
    - Headsign translation gaps are filled with a text dictionary.
 5. **Validate.** The import checks required files, the timezone and referential integrity (more than 1 % broken stop_times is rejected).
 6. **Activate.** An atomic pointer rename switches to the new file and old files are deleted. An interrupted or failed import never touches the working schedule.
-7. **Real feed (4 Oct 2026):** 6,436 stops, 57,316 trips, 1.1 M stop_times. 15 s import on desktop (expect 1–3 min on a phone, shown as a foreground progress notification). 96 MB database. Departure board query about 60 ms.
+7. **Real feed (4 Oct 2026):** 6,436 stops, 57,316 trips, 1.1 M stop_times. 15 s import on desktop (expect 1–3 min on a phone; the sync shows an ongoing notification without a percentage, and Settings shows the download and import progress). 96 MB database. Departure board query about 60 ms.
 
 ## 13. Realtime update strategy
 

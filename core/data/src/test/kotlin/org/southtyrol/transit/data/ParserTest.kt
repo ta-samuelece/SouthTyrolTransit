@@ -181,6 +181,10 @@ class EfaXmlTest {
             EfaXml.places("""<?xml version="1.0"?><!DOCTYPE x [<!ENTITY e SYSTEM "file:///etc/passwd">]><itdRequest>&e;</itdRequest>""".toByteArray())
         }
         assertThrows(IllegalArgumentException::class.java) { EfaXml.places(ByteArray(0)) }
+        // A DTD hidden behind a long comment (well past the first 4 KB) is still found: the whole prolog is checked.
+        val padded = "<?xml version=\"1.0\"?><!--" + "x".repeat(10_000) + "--><!DOCTYPE x [<!ENTITY e \"boom\">]><itdRequest>&e;</itdRequest>"
+        assertThrows(IllegalArgumentException::class.java) { EfaXml.places(padded.toByteArray()) }
+        assertEquals("<?xml version=\"1.0\"?><!-- c -->", EfaXml.prolog("<?xml version=\"1.0\"?><!-- c --><itdRequest><!DOCTYPE></itdRequest>".toByteArray()))
     }
 
     @Test fun malformedXmlFails() {

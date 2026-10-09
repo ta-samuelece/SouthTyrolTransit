@@ -4,12 +4,16 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -18,13 +22,16 @@ import org.southtyrol.transit.data.AlertsState
 import org.southtyrol.transit.data.JourneyRepository
 import org.southtyrol.transit.data.JourneyRequest
 import org.southtyrol.transit.data.LanguageProvider
+import org.southtyrol.transit.data.RealtimeRepository
 import org.southtyrol.transit.data.SavedKind
 import org.southtyrol.transit.data.SavedRepository
+import org.southtyrol.transit.data.TripRepository
 import org.southtyrol.transit.feature.planner.RequestCodec
 import org.southtyrol.transit.model.DataError
 import org.southtyrol.transit.model.DataException
 import org.southtyrol.transit.model.Journey
 import org.southtyrol.transit.model.TicketingProvider
+import org.southtyrol.transit.model.TripDetail
 import org.southtyrol.transit.ui.JourneyRoute
 import org.southtyrol.transit.ui.ResultsRoute
 import java.time.Instant
@@ -145,4 +152,41 @@ class JourneyDetailViewModel @Inject constructor(
             }
         }
     }
+}
+
+/**
+ * Live vehicles for a journey's transit legs: each leg is matched to its timetable run (needs the
+ * downloaded timetable), then merged with realtime like the trip screen. Keyed by journey id - the
+ * two-pane results view hosts one per selected journey.
+ */
+@HiltViewModel(assistedFactory = JourneyLiveViewModel.Factory::class)
+class JourneyLiveViewModel @AssistedInject constructor(
+    @Assisted private val journey: Journey,
+    private val trips: TripRepository,
+    realtime: RealtimeRepository,
+    private val language: LanguageProvider,
+) : ViewModel() {
+    @AssistedFactory
+    interface Factory { fun create(journey: Journey): JourneyLiveViewModel }
+
+    /** Static runs by leg index; legs without a match are absent. */
+    private val runs = MutableStateFlow<Map<Int, TripDetail>>(emptyMap())
+
+    /** Runs merged with the latest realtime snapshot (GTFS-RT predictions and vehicle positions). */
+    val legRuns: StateFlow<Map<Int, TripDetail>> = combine(runs, realtime.snapshot) { byLeg, snapshot ->
+        byLeg.mapValues { (_, detail) -> trips.merge(detail, snapshot) }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+
+    init {
+        viewModelScope.launch {
+            val lang = language.current()
+            runs.value = journey.legs.withIndex()
+                .filter { it.value.mode.isTransit }
+                .mapNotNull { (i, leg) -> trips.forLeg(leg, lang)?.let { i to it } }
+                .toMap()
+        }
+    }
+
+    /** Refreshes trip updates and vehicle positions; throttled by the repository. */
+    suspend fun poll() { if (runs.value.isNotEmpty()) trips.pollRealtime() }
 }

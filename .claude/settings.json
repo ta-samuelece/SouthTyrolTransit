@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git ls-files:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(git branch:*)",
+      "Bash(python .claude/scripts/check_docs_sync.py:*)",
+      "Bash(python .claude/scripts/check_okf.py:*)",
+      "Bash(./gradlew assembleDebug:*)",
+      "Bash(./gradlew lintDebug:*)",
+      "Bash(./gradlew :core:model:test:*)",
+      "Bash(./gradlew :core:data:testDebugUnitTest:*)",
+      "Bash(./gradlew :app:testDebugUnitTest:*)",
+      "Bash(gh auth status:*)",
+      "Bash(gh auth login:*)",
+      "Bash(gh issue list:*)",
+      "Bash(gh issue view:*)",
+      "Bash(gh issue status:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr status:*)",
+      "Bash(gh pr diff:*)",
+      "Bash(gh pr checks:*)",
+      "Bash(gh release list:*)",
+      "Bash(gh release view:*)",
+      "Bash(gh search issues:*)"
+    ],
+    "ask": [
+      "Bash(git push:*)",
+      "Bash(git tag:*)",
+      "Bash(python tools/release.py:*)",
+      "Bash(gh issue create:*)",
+      "Bash(gh issue edit:*)",
+      "Bash(gh issue comment:*)",
+      "Bash(gh issue close:*)",
+      "Bash(gh issue reopen:*)",
+      "Bash(gh issue delete:*)",
+      "Bash(gh issue transfer:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr merge:*)",
+      "Bash(gh pr comment:*)",
+      "Bash(gh pr review:*)",
+      "Bash(gh pr close:*)",
+      "Bash(gh release create:*)",
+      "Bash(gh release edit:*)",
+      "Bash(gh release delete:*)",
+      "Bash(gh label:*)",
+      "Bash(gh api:*)",
+      "Read(./local.properties)",
+      "Read(./**/*.jks)",
+      "Read(./**/*.keystore)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .claude/scripts/check_docs_sync.py --hook",
+            "timeout": 20,
+            "statusMessage": "Checking documentation sync"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(git commit:*)",
+            "command": "out=$(python .claude/scripts/check_docs_sync.py 2>&1) || { echo \"Documentation is internally inconsistent - commit blocked (CLAUDE.md rule 6):\" >&2; echo \"$out\" >&2; exit 2; }",
+            "timeout": 30,
+            "statusMessage": "Checking documentation sync"
+          }
+        ]
+      }
+    ]
+  }
+}

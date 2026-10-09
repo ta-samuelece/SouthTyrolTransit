@@ -418,6 +418,23 @@ class TripRepository(
 ) {
     suspend fun trip(tripId: String, date: LocalDate, language: String): TripDetail? = schedule.trip(tripId, date, language)
 
+    /**
+     * The timetable run a journey-planner [leg] rides on, matched at its boarding station by line and
+     * scheduled minute ([org.southtyrol.transit.model.LegMatch]). Null without a downloaded timetable, for
+     * walking legs, or when nothing matches - best effort, never an error.
+     */
+    suspend fun forLeg(leg: org.southtyrol.transit.model.Leg, language: String): TripDetail? {
+        val station = leg.from.stopGlobalId
+        if (station.isBlank() || !leg.mode.isTransit) return null
+        return try {
+            if (!schedule.isAvailable()) return null
+            val window = Duration.ofMinutes(2)
+            val candidates = schedule.scheduledDepartures(listOf(station), leg.departure.minus(window), leg.departure.plus(window), false, language, 60)
+            val match = org.southtyrol.transit.model.LegMatch.departure(leg, candidates) ?: return null
+            schedule.trip(match.tripId, match.serviceDate, language)
+        } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (_: Exception) { null }
+    }
+
     /** Best effort: null on any error or when there is no reference. */
     suspend fun liveTrip(ref: String): LiveTrip? {
         if (ref.isBlank() || live == null) return null

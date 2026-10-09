@@ -59,6 +59,7 @@ private const val L_STOPS_PLAIN = "st-stops-plain-layer"
 private const val SRC_VEHICLES = "st-vehicles"
 private const val SRC_POIS = "st-pois"
 private const val L_LINES = "st-lines-layer"
+private const val L_LINES_DASHED = "st-lines-dashed-layer"
 private const val L_STOP_CLUSTER = "st-stop-cluster"
 private const val L_STOP_CLUSTER_COUNT = "st-stop-cluster-count"
 private const val L_STOPS = "st-stops-layer"
@@ -72,6 +73,10 @@ private const val IMG_ARROW = "st-arrow"
 /** Saved stops: amber fill, readable against both map styles. */
 private const val HIGHLIGHT = 0xFFF2B705.toInt()
 private const val FONT = "Noto Sans Regular"
+
+/** Base line opacity, and the dimming of a route part already travelled and of passed stops. */
+private const val LINE_OPACITY = 0.9f
+private const val PASSED_OPACITY = org.southtyrol.transit.design.Progress.PASSED_ALPHA
 
 private class MapHolder {
     var map: MapLibreMap? = null
@@ -239,6 +244,7 @@ private fun MapPolyline.toFeature(): Feature {
         addProperty("color", "#%06X".format(color))
         addProperty("width", widthDp)
         addProperty("dashed", dashed)
+        addProperty("opacity", LINE_OPACITY * opacity.coerceIn(0f, 1f))
     }
     return Feature.fromGeometry(LineString.fromLngLats(points.map { GeoPoint.fromLngLat(it.longitude, it.latitude) }), props)
 }
@@ -268,13 +274,24 @@ private fun installLayers(style: Style, density: Float) {
     style.addSource(GeoJsonSource(SRC_VEHICLES, GeoJsonOptions().withCluster(true).withClusterMaxZoom(10).withClusterRadius(36)))
     style.addSource(GeoJsonSource(SRC_POIS))
 
+    // Solid and dashed lines need separate layers: line-dasharray cannot be data-driven on Android.
     style.addLayer(
-        LineLayer(L_LINES, SRC_LINES).withProperties(
+        LineLayer(L_LINES, SRC_LINES).withFilter(Expression.neq(get("dashed"), literal(true))).withProperties(
             PropertyFactory.lineColor(Expression.toColor(get("color"))),
             PropertyFactory.lineWidth(toNumber(get("width"))),
             PropertyFactory.lineCap(Property.LINE_CAP_ROUND),
             PropertyFactory.lineJoin(Property.LINE_JOIN_ROUND),
-            PropertyFactory.lineOpacity(0.9f),
+            PropertyFactory.lineOpacity(toNumber(get("opacity"))),
+        ),
+    )
+    style.addLayer(
+        LineLayer(L_LINES_DASHED, SRC_LINES).withFilter(Expression.eq(get("dashed"), literal(true))).withProperties(
+            PropertyFactory.lineColor(Expression.toColor(get("color"))),
+            PropertyFactory.lineWidth(toNumber(get("width"))),
+            PropertyFactory.lineCap(Property.LINE_CAP_BUTT),
+            PropertyFactory.lineJoin(Property.LINE_JOIN_ROUND),
+            PropertyFactory.lineOpacity(toNumber(get("opacity"))),
+            PropertyFactory.lineDasharray(arrayOf(1.5f, 1.2f)),
         ),
     )
     // Stop clusters and stops.
@@ -302,6 +319,8 @@ private fun installLayers(style: Style, density: Float) {
             PropertyFactory.circleRadius(Expression.switchCase(Expression.eq(get("highlighted"), literal(true)), literal(9f), Expression.interpolate(Expression.linear(), Expression.zoom(), Expression.stop(12, 3.5f), Expression.stop(16, 7f)))),
             PropertyFactory.circleStrokeColor(Expression.toColor(get("color"))),
             PropertyFactory.circleStrokeWidth(Expression.switchCase(Expression.eq(get("selected"), literal(true)), literal(4f), literal(2.5f))),
+            PropertyFactory.circleOpacity(Expression.switchCase(Expression.eq(get("stale"), literal(true)), literal(PASSED_OPACITY), literal(1f))),
+            PropertyFactory.circleStrokeOpacity(Expression.switchCase(Expression.eq(get("stale"), literal(true)), literal(PASSED_OPACITY), literal(1f))),
         ),
     )
     style.addLayer(
@@ -310,6 +329,8 @@ private fun installLayers(style: Style, density: Float) {
             PropertyFactory.circleRadius(Expression.switchCase(Expression.eq(get("highlighted"), literal(true)), literal(9f), Expression.interpolate(Expression.linear(), Expression.zoom(), Expression.stop(8, 3f), Expression.stop(16, 7f)))),
             PropertyFactory.circleStrokeColor(Expression.toColor(get("color"))),
             PropertyFactory.circleStrokeWidth(2.5f),
+            PropertyFactory.circleOpacity(Expression.switchCase(Expression.eq(get("stale"), literal(true)), literal(PASSED_OPACITY), literal(1f))),
+            PropertyFactory.circleStrokeOpacity(Expression.switchCase(Expression.eq(get("stale"), literal(true)), literal(PASSED_OPACITY), literal(1f))),
         ),
     )
     // Optional mobility points and journey endpoints.

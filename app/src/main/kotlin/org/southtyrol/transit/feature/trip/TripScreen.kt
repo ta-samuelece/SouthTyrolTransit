@@ -225,9 +225,12 @@ private fun TripContent(detail: TripDetail, navigator: Navigator, alerts: List<o
     androidx.compose.runtime.LaunchedEffect(detail.trip.id) {
         if (nextIndex > 3) listState.scrollToItem(nextIndex + (if (hasMap) 2 else 1) - 1)
     }
-    val mapContent = remember(detail, position, color) {
+    val mapContent = remember(detail, position, color, nextIndex) {
+        // Same split as the timeline: passed calls and the stretch already travelled are dimmed.
+        val passedUpTo = if (nextIndex < 0) detail.stops.size else nextIndex
+        val progress = org.southtyrol.transit.model.RouteProgress.of(routeLine, detail.stops, position, now)
         MapContent(
-            stops = detail.stops.map { MapMarker(it.stop.id, it.stop.point, MarkerKind.STOP, color = color) },
+            stops = detail.stops.mapIndexed { i, it -> MapMarker(it.stop.id, it.stop.point, MarkerKind.STOP, color = color, stale = i < passedUpTo) },
             vehicles = listOfNotNull(
                 position?.let { p ->
                     MapMarker(
@@ -237,7 +240,12 @@ private fun TripContent(detail: TripDetail, navigator: Navigator, alerts: List<o
                     )
                 },
             ),
-            lines = listOf(MapPolyline("trip", routeLine, color)),
+            lines = progress?.let {
+                listOfNotNull(
+                    it.done.takeIf { d -> d.size >= 2 }?.let { d -> MapPolyline("trip-done", d, color, opacity = org.southtyrol.transit.design.Progress.PASSED_ALPHA) },
+                    it.ahead.takeIf { a -> a.size >= 2 }?.let { a -> MapPolyline("trip", a, color) },
+                )
+            } ?: listOf(MapPolyline("trip", routeLine, color)),
             clusterStops = false,
         )
     }
@@ -314,13 +322,13 @@ private fun TripStopRow(
         }
         Box(Modifier.width(28.dp).fillMaxHeight(), contentAlignment = Alignment.Center) {
             Column(Modifier.fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
-                Box(Modifier.width(4.dp).weight(1f).background(if (first) androidx.compose.ui.graphics.Color.Transparent else lineColor.copy(alpha = if (passed) 0.35f else 1f)))
+                Box(Modifier.width(4.dp).weight(1f).background(if (first) androidx.compose.ui.graphics.Color.Transparent else lineColor.copy(alpha = if (passed) org.southtyrol.transit.design.Progress.PASSED_ALPHA else 1f)))
                 Box(
                     Modifier.size(if (next) 18.dp else 12.dp).clip(CircleShape)
                         .background(if (next) lineColor else MaterialTheme.colorScheme.surface)
-                        .border(3.dp, lineColor.copy(alpha = if (passed) 0.35f else 1f), CircleShape),
+                        .border(3.dp, lineColor.copy(alpha = if (passed) org.southtyrol.transit.design.Progress.PASSED_ALPHA else 1f), CircleShape),
                 )
-                Box(Modifier.width(4.dp).weight(1f).background(if (last) androidx.compose.ui.graphics.Color.Transparent else lineColor.copy(alpha = if (passed) 0.35f else 1f)))
+                Box(Modifier.width(4.dp).weight(1f).background(if (last) androidx.compose.ui.graphics.Color.Transparent else lineColor.copy(alpha = if (passed) org.southtyrol.transit.design.Progress.PASSED_ALPHA else 1f)))
             }
             // The bus itself: on the line just before this stop (on its way) or on this stop (dwelling).
             if (vehicle != VehicleMarker.NONE) {

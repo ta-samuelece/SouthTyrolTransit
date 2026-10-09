@@ -45,12 +45,25 @@ two-pane results view gets one per selected journey) merges each run with the re
 - `Approaches.of` - GPS fix if the run has a fresh vehicle, else `RunPositions.estimate`; the path follows
   the shape from the vehicle to the boarding stop, or straight through the remaining stops without a shape.
 
-It returns null before the run starts without a GPS fix, and once the vehicle has left the boarding stop
+The map re-fits once when a leg's vehicle first appears - an approaching vehicle is by definition outside
+the journey's own bounds, so with the initial fit alone it was usually off-screen. A leg matched to a run
+whose vehicle is not yet on its way says so on its card ("Vehicle not on its way yet"); a leg with no such
+line and no vehicle row was not matched at all (no timetable, or no departure fitting line and minute).
+
+`Approaches.of` returns null before the run starts without a GPS fix, and once the vehicle has left the boarding stop
 (the user is then on board; the trip screen covers that). While the vehicle waits at the boarding stop it
 reports `atBoarding`.
+
+# While riding
+
+Once a leg is under way, the map splits its line at the vehicle (the run's GPS fix when matched, else
+estimated from the leg's own times via `RouteProgress.legStops`) and shows the vehicle there; see the
+progress convention in [map and design system](./map-and-design-system.md).
 
 # What was checked
 
 `ApproachTest` (12 cases: line and train matching, loops, GPS vs estimate, before the run, at and after
 the boarding stop, no shape, delay shift) and the full unit-test, lint and debug-build run on 2026-10-09.
-Not yet tried on a device against the live feeds.
+`LegMatchLiveTest` (core:data, opt-in: `-PliveTests=true -PgtfsReal=<zip>`) plans real journeys with the
+live planner and reports how many legs match a timetable run; it has not been run yet (2026-10-09: the
+machine it was written on cannot reach the STA hosts). Not yet confirmed on a device.

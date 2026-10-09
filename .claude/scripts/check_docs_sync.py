@@ -67,6 +67,8 @@ STRUCTURAL = [
     "core/map/build.gradle.kts",
     "core/model/src/main/kotlin/org/southtyrol/transit/model/Approach.kt",
     "core/model/src/main/kotlin/org/southtyrol/transit/model/Interfaces.kt",
+    "core/model/src/main/kotlin/org/southtyrol/transit/model/Progress.kt",
+    "core/designsystem/src/main/kotlin/org/southtyrol/transit/design/Tokens.kt",
     "core/model/src/main/kotlin/org/southtyrol/transit/model/Realtime.kt",
     "core/model/src/main/kotlin/org/southtyrol/transit/model/Text.kt",
     "core/model/src/main/kotlin/org/southtyrol/transit/model/Time.kt",

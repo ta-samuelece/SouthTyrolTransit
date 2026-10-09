@@ -50,8 +50,9 @@ DOC_PATHS = ["CLAUDE.md", "docs/ai", ".claude"]
 
 # Paths the documentation makes claims about. A change here means the docs may now be wrong.
 # Feature screens under app/src/main/kotlin/.../feature/ and resources are deliberately absent: they
-# churn with every release and the docs describe the *shape* (module split, data sources, realtime
-# merge, release flow), not each screen. Such changes still get reported, just not as failures.
+# churn with every release and the docs describe the *shape* (identifiers, time, the databases, parsers,
+# realtime merge, navigation, release flow), not each screen. Such changes are still reported as
+# "other commits"; nothing here is ever fatal.
 STRUCTURAL = [
     "settings.gradle.kts",
     "build.gradle.kts",
@@ -64,9 +65,26 @@ STRUCTURAL = [
     "core/map/build.gradle.kts",
     "core/model/src/main/kotlin/org/southtyrol/transit/model/Interfaces.kt",
     "core/model/src/main/kotlin/org/southtyrol/transit/model/Realtime.kt",
+    "core/model/src/main/kotlin/org/southtyrol/transit/model/Text.kt",
+    "core/model/src/main/kotlin/org/southtyrol/transit/model/Time.kt",
+    "core/model/src/main/kotlin/org/southtyrol/transit/model/Transit.kt",
     "core/data/src/main/kotlin/org/southtyrol/transit/data/TransitRepository.kt",
+    "core/data/src/main/kotlin/org/southtyrol/transit/data/Database.kt",
+    "core/data/src/main/kotlin/org/southtyrol/transit/data/Efa.kt",
+    "core/data/src/main/kotlin/org/southtyrol/transit/data/GtfsImporter.kt",
+    "core/data/src/main/kotlin/org/southtyrol/transit/data/Network.kt",
+    "core/data/src/main/kotlin/org/southtyrol/transit/data/Realtime.kt",
+    "core/data/src/main/kotlin/org/southtyrol/transit/data/ScheduleStore.kt",
+    "core/data/consumer-rules.pro",
+    "core/map/src/main/kotlin/org/southtyrol/transit/map",
+    "app/proguard-rules.pro",
+    "app/src/main/AndroidManifest.xml",
+    "app/src/main/kotlin/org/southtyrol/transit/TransitApplication.kt",
+    "app/src/main/kotlin/org/southtyrol/transit/di",
+    "app/src/main/kotlin/org/southtyrol/transit/ui",
     "app/src/main/kotlin/org/southtyrol/transit/update",
-    "app/src/test/kotlin/org/southtyrol/transit/TranslationsTest.kt",
+    "app/src/main/kotlin/org/southtyrol/transit/work",
+    "app/src/test",
     "tools",
     "README.md",
     "docs/API_DISCOVERY.md",
@@ -81,7 +99,7 @@ SPEC_DOC = "docs/ai/okf-conformance.md"
 SPEC_URL = "https://github.com/GoogleCloudPlatform/open-knowledge-format"
 
 # Documents whose length is the point. A handover that grows into an archive is how drift starts:
-# findings belong in notes/, history in git and log.md, tasks in GitHub issues.
+# findings belong in notes/, history in git and log.md, bugs in notes/known-defects.md.
 SIZE_BUDGET = {"docs/ai/status.md": 60}
 
 # Paths a document may name only as history. Anything else that looks like a repository path is
@@ -175,8 +193,8 @@ def check_rot():
         if budget:
             counted = len(text.splitlines())
             if counted > budget:
-                problems.append("%s: %d lines, budget %d - move findings into notes/, tasks into "
-                                "GitHub issues" % (rel, counted, budget))
+                problems.append("%s: %d lines, budget %d - move findings into notes/, bugs into "
+                                "notes/known-defects.md" % (rel, counted, budget))
 
         # markdown links to files inside the repository
         for target in re.findall(r"\]\(([^)#]+\.md)\)", text):

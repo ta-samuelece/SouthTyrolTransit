@@ -19,18 +19,15 @@ Run `git status --short` and `git diff --stat`. Sort the changes into two groups
 
 They are separate commits. Never mix them.
 
-**Link the issue.** Work is tracked in GitHub issues (CLAUDE.md rule 12). If the session started from an
-issue, or the branch name carries a number, use it; otherwise check with
-`gh issue list --state open --search "<keywords>"`. Then:
+**Bugs live in the docs, not in issues** (CLAUDE.md rule 12). A commit that fixes an entry in
+`docs/ai/notes/known-defects.md` deletes that entry **in the same commit** - so a bug-fix commit is the one
+case where the app change and its `docs/ai/` line travel together. Name the bug in the title in its own
+words ("Keep the mobile-data timetable setting across app restarts"). A bug found but not fixed is added
+to that note and goes in the AI-material commit.
 
-| The commit... | Message |
-| --- | --- |
-| is part of an issue's work | title ends with `(#<number>)` |
-| completes the issue | same, plus a `Fixes #<number>` line in the body - GitHub closes the issue when the commit reaches `main` |
-| has no issue | no number; do not create an issue just to have one |
-
-Never invent a number, and never write `Fixes` for an issue the commit only partly addresses. The AI
-material commit carries a number only when it is genuinely tied to the issue.
+Only if a GitHub issue already exists for the work (the session started from one, or the user names it):
+end the title with `(#<number>)`, and add `Fixes #<number>` to the body when the commit completes it.
+Never invent a number, and never create an issue to have one.
 
 ## 2. Run the checks - nothing else will
 

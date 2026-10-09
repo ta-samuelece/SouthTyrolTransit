@@ -10,8 +10,8 @@ status: stable
 ---
 
 Only what is in flight **and** recorded nowhere else. What changed is git history and [log.md](./log.md);
-what is durable belongs in [notes](./notes/index.md) and [decisions](./decisions/index.md); anything found
-that is worth doing becomes a GitHub issue, not a line in this file. Empty is the normal state, and the
+what is durable belongs in [notes](./notes/index.md) and [decisions](./decisions/index.md); a bug found
+along the way goes into [known defects](./notes/known-defects.md), not into this file. Empty is the normal state, and the
 file has a 60-line budget that `check_docs_sync.py` enforces.
 
 # Current branch

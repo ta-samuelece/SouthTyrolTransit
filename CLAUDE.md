@@ -24,10 +24,11 @@ the `publish-release` skill.
 **3. Split commits by subject.** App and build changes (`app/`, `core/`, `gradle/`, `*.gradle.kts`,
 `tools/`, `icons/`, `docs/` outside `docs/ai/`, `README.md`) go in one commit. Updates to AI-facing material
 (`CLAUDE.md`, `docs/ai/`, `.claude/`) go in a separate commit. Two commits means two questions in the same
-approval dialog - one per commit. Work is tracked in GitHub issues (rule 12): a commit for an issue
-names it in the title, `(#<number>)`, and a commit that completes it says `Fixes #<number>` in the body,
-which closes the issue when the commit reaches `main`. Work without an issue carries no number. If you
-don't know whether an issue exists, look (`gh issue list --search`) or ask - never invent a number.
+approval dialog - one per commit. Bugs are tracked in
+[known defects](docs/ai/notes/known-defects.md), not in GitHub issues (rule 12): a commit that fixes one
+deletes its entry in the same commit and names the bug in its own words. Only if a GitHub issue already
+exists for the work, end the title with `(#<number>)` and add `Fixes #<number>` to the body when the
+commit completes it - never invent a number.
 
 **4. Keep commit messages short and high-level.** The title says what changed for the user of the app,
 not which files moved: "Stop filters by direction and line, fix search reload loop". A version bump goes
@@ -73,8 +74,8 @@ still pointing at it fail the check.
 
 **`status.md` is a handover, and only for what is recorded nowhere else.** History is git and `log.md`;
 durable knowledge moves to [notes](docs/ai/notes/index.md) or [decisions](docs/ai/decisions/index.md) as
-soon as it is true beyond today; a task worth doing is a GitHub issue, not a line here - say so to the
-user rather than parking it. What is left is the state of the working branch, and **empty is the normal
+soon as it is true beyond today; a bug found along the way goes into
+[known defects](docs/ai/notes/known-defects.md), not here - say so to the user. What is left is the state of the working branch, and **empty is the normal
 state**.
 
 The check cannot read meaning: it catches structure, not a sentence that is simply wrong. So still update
@@ -132,17 +133,20 @@ turning a one-word change into a ten-line diff. Tables, fenced code and headings
 Older wrapped paragraphs in `README.md` are unwrapped when they are next edited, not in a sweep. The
 AI-facing material - `CLAUDE.md`, `docs/ai/` and `.claude/` - stays wrapped.
 
-**12. GitHub issues: read freely, change only after asking.** Issues for
-`ta-samuelece/SouthTyrolTransit` are read and written with the GitHub CLI (`gh`), logged in per machine
-with `gh auth login`. You may list, search and read issues, pull requests and releases without asking -
-read the issue before working on it, and check for an existing one before proposing a new one. Any change
-- creating, editing, labelling, commenting on, closing or reopening an issue, or opening or merging a pull
-request - needs the user's explicit approval each time, with the exact title and text shown first; it is
-public. Logging in is not a change: when `gh` reports it is not logged in, or the login has expired, you
+**12. GitHub: read freely, change only after asking - and record bugs in the docs, not as issues.** The
+repository `ta-samuelece/SouthTyrolTransit` is read with the GitHub CLI (`gh`), logged in per machine with
+`gh auth login`. You may list, search and read issues, pull requests and releases without asking - read an
+issue before working on it. Defects you find are **not** opened as GitHub issues, neither on the main
+repository nor on a contributor's fork (forks are temporary); they go into
+[known defects](docs/ai/notes/known-defects.md). Any change on GitHub - creating, editing, labelling,
+commenting on, closing or reopening an issue, or opening or merging a pull request - needs the user's
+explicit approval each time, with the exact title and text shown first; it is public. Logging in is not a change: when `gh` reports it is not logged in, or the login has expired, you
 may start `gh auth login --web --hostname github.com --git-protocol https` yourself (in the background -
 it prints a one-time code and waits for the user to confirm it in the browser), give the user the code,
-and carry on once it completes, instead of stopping the task. On Windows, `gh` may not be on `PATH` in a shell started before it was installed; its default
-location is `C:\Program Files\GitHub CLI\gh.exe`.
+and carry on once it completes, instead of stopping the task. On Windows, `gh` may not be on `PATH` in a
+shell started before it was installed; its default location is `C:\Program Files\GitHub CLI\gh.exe`.
+Contributors without write access push their branch to a personal fork (remote `fork`) and open the pull
+request from there into `main`.
 
 ## What this repository is
 
@@ -177,7 +181,19 @@ APK whose `versionCode` is not higher than the installed one. Previews rank belo
 (`0.2.0-preview.2` < `0.2.0`).
 
 **All clock times are Europe/Rome, regardless of device zone,** and GTFS times run past 24:00. Never use
-the system default zone for transit times; `core:model`'s time utilities and their tests cover DST.
+the system default zone for transit times. Turn a GTFS time into an `Instant` only with
+`GtfsTime.instant`, and always pass `serviceDate` when building a GTFS `Departure` - its default is wrong
+after midnight. Details: [GTFS time](docs/ai/notes/gtfs-time-and-service-days.md).
+
+**Database and importer changes need extra steps, or they break users' data.** Neither Room database has
+migrations: a `UserDatabase` change without one loses saved items. An importer change does not reach
+existing installs until STA publishes a feed with a new hash. Details:
+[schedule database](docs/ai/notes/schedule-database-lifecycle.md).
+
+**Saved stops and lines are keyed by derived keys** (station key `it:22021:468`, line key `BUS:201`), and
+EFA uses different stop ids from GTFS. Changing `GtfsFiles.stationKey`, `GtfsFiles.lineKey` or
+`TransportMode` names silently orphans saved items. Details:
+[identifiers](docs/ai/notes/identifiers-across-sources.md).
 
 ## Layout
 
@@ -188,8 +204,9 @@ the system default zone for transit times; `core:model`'s time utilities and the
 - `core/data/` - network, GTFS importer and Room schedule store, EFA client and parsers, GTFS-RT,
   repositories (`TransitRepository.kt`), DataStore settings. Room schemas in `core/data/schemas/`.
 - `core/designsystem/`, `core/map/` - theme and components; the provider-agnostic `TransitMap` API.
-- `tools/release.py` publishes a release; `tools/generate_icons.py` regenerates launcher icons from
-  `icons/`. Both are plain Python 3.
+- `tools/release.py` publishes a release (plain Python 3); `tools/generate_icons.py` regenerates launcher
+  icons from `icons/` (needs Pillow and numpy, and is only one of five steps - see
+  [app icons](docs/ai/notes/app-icons-and-package-name.md)).
 - `docs/` - human documentation, screenshots, and `docs/fixtures/` (captured real API payloads the tests
   use).
 - `docs/ai/` - the AI knowledge base, an OKF v0.2 bundle (see "AI workspace" below).

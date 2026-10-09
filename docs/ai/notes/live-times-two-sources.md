@@ -1,7 +1,7 @@
 ---
 type: Finding
 title: Stop boards take live times from two sources - GTFS-RT first, then the EFA departure monitor
-description: Where GTFS-RT has no prediction (often), boards, the map stop sheet and the widget overlay EFA delays matched by line and scheduled minute; trips do the same per stop. The README's realtime section mentions only GTFS-RT.
+description: Where GTFS-RT has no prediction (often), boards, the map stop sheet and the widget overlay EFA delays matched by line and scheduled minute; trips do the same per stop; GTFS-RT delays only propagate through updates with a stop_sequence. The README's realtime section mentions only GTFS-RT.
 tags: [realtime, gtfs-rt, efa, departures, freshness]
 generated:
   by: claude-code/claude-opus-5-5
@@ -37,8 +37,9 @@ layers, applied in `DepartureRepository.merge`:[^board-merge]
 
 - same line, compared by `lineKey` (case, spacing and a leading `Bus`/`Tram`/`Zug`/`Treno` ignored), and
   scheduled time within **60 s**; a similar destination breaks ties;
-- fallback for trains, which are named differently in the two sources (`REG` in GTFS, `R 16719` in EFA):
-  same mode, same minute, similar destination;
+- fallback for trains, which are labelled differently in the two sources: GTFS says `REG`, while the EFA
+  parser labels trains by `trainType` (`R`, `RV`, ...) - see [EFA parsing](./efa-parsing-quirks.md). The
+  fallback matches same mode, same minute, similar destination;
 - each EFA entry is used at most once; a cancelled EFA entry marks the departure cancelled.
 
 Callers: `StopViewModel`, the map's stop sheet (`MapScreen`) and `DeparturesWidget` - the latter two only
@@ -46,6 +47,21 @@ when the board comes from the downloaded timetable (`BoardSource.SCHEDULE`).[^co
 
 Trips use the sibling `LiveTripMerge`: the EFA stop sequence for the run, matched per call by station and
 scheduled time within **120 s**, so loops visiting a station twice still match the right call.
+
+# How GTFS-RT predictions propagate
+
+`RealtimeMerge.predict` matches a stop-time update by `stop_sequence` when the update has one, else by the
+platform-level `stop_id`. Downstream propagation uses only earlier updates **that carry a
+`stop_sequence`**, and only their *delay* fields - an upstream update with an absolute time but no delay
+stops propagation; the trip-level delay is used only when nothing else applies. So if stops further down
+show the schedule, check the feed's shape before "fixing" the UI. A trip update older than 300 s is
+ignored *before* the cancellation check, so a stale cancellation is not shown (pinned by
+`staleUpdateIsNotUsedForPredictions`). Cancelled departures stay on the board until 60 s after their
+scheduled time. GTFS-RT `ADDED` trips appear only if a static trip with the same `trip_id` exists - boards
+are built from the timetable or the EFA board only, so added trips are effectively unsupported.
+
+`FreshnessPolicy.feed` returns `STALE` (not `UNAVAILABLE`) once a feed is older than 3 minutes, despite its
+KDoc; `UNAVAILABLE` means never fetched.
 
 # Rules that follow from it
 
@@ -59,7 +75,7 @@ scheduled time within **120 s**, so loops visiting a station twice still match t
 # What was checked
 
 Read the code paths named above on 2026-10-09 (`Realtime.kt`, `TransitRepository.kt`, the three call
-sites). Not checked against a live feed.
+sites); the propagation section from a second code read the same day. Not checked against a live feed.
 
 [^board-merge]: DepartureRepository.liveOverlay and merge
 [^overlay-code]: LiveOverlay and LiveTripMerge

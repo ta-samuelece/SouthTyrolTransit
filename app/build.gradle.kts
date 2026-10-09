@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.aboutLibraries)
 }
 
 /** Optional overrides from local.properties or environment; nothing secret is required by default. */
@@ -104,6 +105,7 @@ dependencies {
     implementation(libs.material3.navigation.suite)
     implementation(libs.adaptive)
     implementation(libs.okhttp)
+    implementation(libs.aboutlibraries.core)
 
     implementation(libs.hilt)
     ksp(libs.hilt.compiler)
@@ -127,4 +129,17 @@ dependencies {
     androidTestImplementation(libs.compose.test)
     androidTestImplementation(libs.android.test)
     androidTestImplementation(libs.test.runner)
+}
+
+// Open-source licences screen: the plugin writes res/raw/aboutlibraries.json at build time with every
+// library of the release build and its licence text (Apache 2.0 and BSD ask for them to ship with the APK).
+// The keep rule in res/raw/keep_aboutlibraries.xml stops resource shrinking from dropping that file.
+aboutLibraries {
+    collect {
+        // Real licence files for the BSD libraries: SPDX's generic BSD text has a placeholder where the
+        // copyright line belongs, and BSD requires that notice to be reproduced.
+        configPath = file("licenses-config")
+        // Only what ships: debug-only tooling (Compose UI tooling, test manifests) stays out of the list.
+        filterVariants.addAll("release")
+    }
 }

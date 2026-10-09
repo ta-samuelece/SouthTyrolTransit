@@ -476,10 +476,32 @@ class LineRepository(private val schedule: TransitScheduleDataSource) {
     suspend fun atStop(stationKey: String): List<Line> = schedule.linesAtStops(listOf(stationKey))
 }
 
-class MapRepository(private val schedule: TransitScheduleDataSource, private val realtime: RealtimeRepository, private val clock: () -> Instant = Instant::now) {
+class MapRepository(
+    private val schedule: TransitScheduleDataSource,
+    private val realtime: RealtimeRepository,
+    private val efa: EfaClient? = null,
+    private val clock: () -> Instant = Instant::now,
+) {
     private var routes: Map<String, Route> = emptyMap()
 
-    suspend fun stops(box: BoundingBox, language: String): List<Stop> = if (schedule.isAvailable()) schedule.stopsIn(box, language, 1500) else emptyList()
+    /**
+     * Stops in the visible area: from the offline timetable, or - before it has been downloaded - from
+     * the journey planner's coordinate search around the centre of the view. Online stops use the
+     * station key (the EFA global id) as their id, like timetable stations, so saved stops still match.
+     */
+    suspend fun stops(box: BoundingBox, language: String): List<Stop> {
+        if (schedule.isAvailable()) return schedule.stopsIn(box, language, 1500)
+        val online = efa ?: return emptyList()
+        val center = box.center
+        val radius = Geo.distance(center, Point(box.north, box.east)).toInt().coerceIn(200, MAX_ONLINE_RADIUS_METERS)
+        return try {
+            onlineStops(online.nearbyStops(center, radius, language, max = 400), box)
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
 
     suspend fun vehicles(snapshot: RealtimeSnapshot, now: Instant = clock()): List<LiveVehicle> {
         val missing = snapshot.vehicles.mapNotNull { it.routeId }.filter { it !in routes }.toSet()
@@ -496,6 +518,15 @@ class MapRepository(private val schedule: TransitScheduleDataSource, private val
         snapshot.vehicles.filter { it.routeId in line.routeIds && FreshnessPolicy.vehicle(it.timestamp, now) != Freshness.UNAVAILABLE }
 
     companion object {
+        /** The map only asks for stops from zoom 13.5; at that zoom a phone screen spans a few kilometres. */
+        private const val MAX_ONLINE_RADIUS_METERS = 3000
+
+        /** Coordinate-search results as map stops: only stops with a global id and a position inside [box]. */
+        internal fun onlineStops(places: List<Place>, box: BoundingBox): List<Stop> = places
+            .filter { it.stopGlobalId.isNotBlank() && it.point != null && it.point!! in box }
+            .map { Stop(it.stopGlobalId, it.name, it.point!!, stationKey = it.stopGlobalId) }
+            .distinctBy { it.id }
+
         fun modeOf(v: LiveVehicle): TransportMode = v.route?.mode ?: TransportMode.BUS
         fun inRegion(p: Point) = p in Geo.SouthTyrol
     }

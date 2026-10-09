@@ -23,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.ConfirmationNumber
+import androidx.compose.material.icons.rounded.Gavel
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.Warning
@@ -262,6 +263,7 @@ fun SettingsScreen(navigator: Navigator, viewModel: SettingsViewModel = hiltView
             SettingsGroup(stringResource(R.string.settings_more)) {
                 LinkRow(stringResource(R.string.tickets_title), Icons.Rounded.ConfirmationNumber, navigator::tickets)
                 LinkRow(stringResource(R.string.about_title), Icons.Rounded.Info, navigator::about)
+                LinkRow(stringResource(R.string.licenses_title), Icons.Rounded.Gavel, navigator::licenses)
             }
         }
     }
@@ -405,6 +407,9 @@ fun AboutScreen(navigator: Navigator) {
         item { Text(stringResource(R.string.about_privacy_text), style = MaterialTheme.typography.bodyMedium) }
         item { SectionHeader(stringResource(R.string.about_realtime)) }
         item { Text(stringResource(R.string.about_realtime_text), style = MaterialTheme.typography.bodyMedium) }
+        item { SectionHeader(stringResource(R.string.licenses_title)) }
+        item { Text(stringResource(R.string.about_licenses_text), style = MaterialTheme.typography.bodyMedium) }
+        item { LinkRow(stringResource(R.string.licenses_show), Icons.Rounded.Gavel, navigator::licenses) }
         item { Text(stringResource(R.string.about_version, BuildConfig.VERSION_NAME), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 24.dp)) }
     }
 }

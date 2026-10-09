@@ -17,4 +17,5 @@ import kotlinx.serialization.Serializable
 @Serializable data class LineRoute(val key: String)
 @Serializable object SettingsRoute
 @Serializable object AboutRoute
+@Serializable object LicensesRoute
 @Serializable object TicketsRoute

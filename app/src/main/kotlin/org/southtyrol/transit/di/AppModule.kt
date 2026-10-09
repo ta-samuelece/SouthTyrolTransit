@@ -96,7 +96,7 @@ object AppModule {
     fun lines(schedule: TransitScheduleDataSource): LineRepository = LineRepository(schedule)
 
     @Provides @Singleton
-    fun map(schedule: TransitScheduleDataSource, realtime: RealtimeRepository): MapRepository = MapRepository(schedule, realtime)
+    fun map(schedule: TransitScheduleDataSource, realtime: RealtimeRepository, efa: EfaClient): MapRepository = MapRepository(schedule, realtime, efa)
 
     @Provides @Singleton
     fun mobility(http: TransitHttp): MobilityRepository = MobilityRepository(MobilityKind.entries.map { OdhMobilitySource(http, it) })

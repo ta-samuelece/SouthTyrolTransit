@@ -108,6 +108,7 @@ See **[docs/API_DISCOVERY.md](docs/API_DISCOVERY.md)** for endpoints, fields, re
 - ODH Mobility: open data published by Open Data Hub.
 - Map: OpenFreeMap tiles; data © OpenStreetMap contributors (**ODbL**). Attribution is shown in the map and on the About screen.
 - App code: public domain via **[The Unlicense](LICENSE)**. Use, copy, modify, sell, relicense: no conditions, no attribution required. (The data licences above still apply to the data.)
+- Libraries: every library in the release APK is under a permissive licence - Apache 2.0 (AndroidX, Kotlin, kotlinx, Dagger/Hilt, OkHttp, Okio, Gson, Guava, Timber, GTFS-realtime bindings, MapLibre parts) or BSD (MapLibre Android SDK, protobuf, parts of AndroidX). That is compatible with releasing the app's own code under the Unlicense. Apache 2.0 and BSD ask that licence texts and copyright notices ship with the APK: the app lists every library with its licence under Settings → Open-source licences (also linked from About). The list is generated at build time by the AboutLibraries Gradle plugin; the real BSD notices (with copyright lines) come from `app/licenses-config/`.
 
 ## 8. Setup
 
@@ -208,7 +209,7 @@ Available offline:
 - saved items and recents
 - the last alerts, marked **stale** with their age
 
-Place search falls back to timetable stops. Journey planning needs the EFA service and says so; no offline router is claimed. Realtime is never shown as live from cache. Without a downloaded timetable, boards use the online EFA departure monitor and say so.
+Place search falls back to timetable stops. Journey planning needs the EFA service and says so; no offline router is claimed. Realtime is never shown as live from cache. Without a downloaded timetable, boards use the online EFA departure monitor and say so, and the map shows stops from the EFA coordinate search around the visible area.
 
 ## 15. Localization
 

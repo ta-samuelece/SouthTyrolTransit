@@ -56,24 +56,27 @@ fun ExpandableMapPage(
     content: MapContent,
     camera: CameraRequest,
     modifier: Modifier = Modifier,
+    /** Where the enlarged map goes: where its small card is (near the top or the end of the page). */
+    placement: MapPlacement = MapPlacement.TOP,
     header: @Composable ColumnScope.() -> Unit = {},
     list: @Composable (Modifier) -> Unit,
 ) {
     BackHandler(enabled = hasMap && state.expanded) { state.expanded = false }
     BoxWithConstraints(modifier) {
         val expandedHeight = maxHeight * 0.6f
+        val expandedMap: @Composable (Modifier) -> Unit = { m ->
+            if (hasMap && state.expanded) MapCard(content, camera, expanded = true, onToggle = { state.expanded = false }, modifier = m.fillMaxWidth().height(expandedHeight))
+        }
         Column(Modifier.fillMaxSize()) {
             header()
-            if (hasMap && state.expanded) {
-                MapCard(
-                    content, camera, expanded = true, onToggle = { state.expanded = false },
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp).fillMaxWidth().height(expandedHeight),
-                )
-            }
+            if (placement == MapPlacement.TOP) expandedMap(Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp))
             list(Modifier.weight(1f))
+            if (placement == MapPlacement.BOTTOM) expandedMap(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp))
         }
     }
 }
+
+enum class MapPlacement { TOP, BOTTOM }
 
 /** The small, static map card for use inside the list; shows nothing while the map is enlarged. */
 @Composable

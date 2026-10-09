@@ -98,10 +98,10 @@ class EfaClient(
         withContext(Dispatchers.Default) { EfaXml.places(bytes).firstOrNull() }?.copy(point = point)
     }
 
-    suspend fun nearbyStops(point: Point, radiusMeters: Int, language: String): List<Place> = guarded {
+    suspend fun nearbyStops(point: Point, radiusMeters: Int, language: String, max: Int = 30): List<Place> = guarded {
         val bytes = get(
             "XML_COORD_REQUEST",
-            mapOf("language" to Languages.efa(language), "coord" to coordinate(point), "inclFilter" to "1", "type_1" to "STOP", "radius_1" to radiusMeters.toString(), "max" to "30"),
+            mapOf("language" to Languages.efa(language), "coord" to coordinate(point), "inclFilter" to "1", "type_1" to "STOP", "radius_1" to radiusMeters.toString(), "max" to max.toString()),
         )
         withContext(Dispatchers.Default) { EfaXml.coordStops(bytes) }
     }

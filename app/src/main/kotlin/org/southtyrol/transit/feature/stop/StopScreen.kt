@@ -32,6 +32,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
@@ -146,14 +149,21 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
             clusterStops = false,
         )
         val camera = CameraRequest.Fit(points + points.take(1))
-        org.southtyrol.transit.feature.common.ExpandableMapPage(mapState, points.isNotEmpty(), mapContent, camera, Modifier.fillMaxSize()) { listModifier ->
+        // The small map is the last thing on the page, so the enlarged one stays at the bottom too.
+        org.southtyrol.transit.feature.common.ExpandableMapPage(
+            mapState, points.isNotEmpty(), mapContent, camera, Modifier.fillMaxSize(),
+            placement = org.southtyrol.transit.feature.common.MapPlacement.BOTTOM,
+        ) { listModifier ->
         LazyColumn(contentPadding = PaddingValues(bottom = 24.dp), modifier = listModifier) {
             if (showHeader) item {
                 Text(state.name, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(16.dp))
             }
             item {
                 Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    if (state.lines.isNotEmpty()) FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    if (state.lines.isNotEmpty()) FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp),
+                        itemVerticalAlignment = Alignment.CenterVertically,
+                    ) {
                         // Large stations serve dozens of lines; keep the live board in view.
                         // Tap a line to show only its departures (several can be combined); long-press opens the line.
                         val shown = if (showAllLines) state.lines else state.lines.take(8)
@@ -164,10 +174,7 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
                             )
                         }
                         if (state.lines.size > 8) {
-                            androidx.compose.material3.AssistChip(
-                                onClick = { showAllLines = !showAllLines },
-                                label = { Text(if (showAllLines) stringResource(R.string.action_collapse) else "+${state.lines.size - 8}") },
-                            )
+                            MoreLinesPill(if (showAllLines) stringResource(R.string.action_collapse) else "+${state.lines.size - 8}") { showAllLines = !showAllLines }
                         }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -186,16 +193,12 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
                     // Two-way stops: pick a side of the road, named after where the buses go next.
                     if (state.directions.size >= 2 && board?.source != BoardSource.NETWORK) {
                         Row(Modifier.horizontalScroll(androidx.compose.foundation.rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            androidx.compose.material3.FilterChip(
-                                selected = state.direction == null, onClick = { viewModel.setDirection(null) },
-                                label = { Text(stringResource(R.string.stop_all_directions)) },
-                            )
+                            // Single choice, styled like the choice chips in Settings: a checkmark marks the selected one.
+                            DirectionChip(stringResource(R.string.stop_all_directions), state.direction == null) { viewModel.setDirection(null) }
                             state.directions.forEach { direction ->
-                                androidx.compose.material3.FilterChip(
-                                    selected = state.direction == direction,
-                                    onClick = { viewModel.setDirection(if (state.direction == direction) null else direction) },
-                                    label = { Text(stringResource(R.string.stop_towards, direction.towards.joinToString(" · ")), maxLines = 1) },
-                                )
+                                DirectionChip(direction.towards.joinToString(" · "), state.direction == direction) {
+                                    viewModel.setDirection(if (state.direction == direction) null else direction)
+                                }
                             }
                         }
                     }
@@ -282,11 +285,45 @@ private fun LineFilterBadge(line: org.southtyrol.transit.model.Line, selected: B
     Box(
         Modifier
             .clip(RoundedCornerShape(50))
-            .then(if (selected) Modifier.border(2.dp, MaterialTheme.colorScheme.onSurface, RoundedCornerShape(50)).padding(2.dp) else Modifier)
+            // The outline's space is always reserved, so selecting a line never shifts the row.
+            .border(2.dp, if (selected) MaterialTheme.colorScheme.onSurface else androidx.compose.ui.graphics.Color.Transparent, RoundedCornerShape(50))
+            .padding(2.dp)
             .alpha(if (anySelected && !selected) 0.4f else 1f)
             .combinedClickable(onLongClickLabel = openLabel, onLongClick = onOpen, onClick = onToggle)
             .semantics { this.selected = selected; role = androidx.compose.ui.semantics.Role.Checkbox },
     ) {
         LineBadge(line.name, line.mode, color = line.color, textColor = line.textColor)
     }
+}
+
+/** "+N" / "Show less" next to the line badges, sized and shaped like them (same height and outline slot). */
+@Composable
+private fun MoreLinesPill(label: String, onClick: () -> Unit) {
+    Box(Modifier.padding(2.dp).clip(RoundedCornerShape(50)).clickable(onClick = onClick)) {
+        Box(
+            Modifier
+                .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(50))
+                .heightIn(min = 26.dp)
+                .padding(horizontal = 10.dp, vertical = 3.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+        }
+    }
+}
+
+@Composable
+private fun DirectionChip(label: String, selected: Boolean, onClick: () -> Unit) {
+    androidx.compose.material3.FilterChip(
+        selected = selected,
+        onClick = onClick,
+        label = { Text(label, maxLines = 1) },
+        leadingIcon = if (selected) ({
+            androidx.compose.material3.Icon(
+                androidx.compose.material.icons.Icons.Rounded.Check, contentDescription = null,
+                modifier = Modifier.size(androidx.compose.material3.FilterChipDefaults.IconSize),
+            )
+        }) else null,
+        modifier = Modifier.semantics { role = androidx.compose.ui.semantics.Role.RadioButton },
+    )
 }

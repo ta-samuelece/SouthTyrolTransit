@@ -92,6 +92,21 @@ class NetworkTest {
         assertEquals("LEASTTIME", request.url.queryParameter("routeType"))
     }
 
+    @Test fun mapStopsWithoutTimetableComeFromTheCoordinateSearch() = runTest {
+        server.enqueue(MockResponse.Builder().body(Buffer().write(fixture("efa_coord.xml"))).build())
+        val center = org.southtyrol.transit.model.Point(46.4979, 11.3541)
+        val places = EfaClient(http, url("/apb/")).nearbyStops(center, 1500, "de", max = 400)
+        val request = server.takeRequest()
+        assertEquals("/apb/XML_COORD_REQUEST", request.url.encodedPath)
+        assertEquals("400", request.url.queryParameter("max"))
+        // A small box around Waltherplatz: stops outside it (e.g. the station) are dropped.
+        val box = org.southtyrol.transit.model.BoundingBox(46.4970, 11.3530, 46.4990, 11.3560)
+        val stops = MapRepository.onlineStops(places, box)
+        assertTrue(stops.isNotEmpty())
+        assertTrue(stops.all { it.point in box && it.id == it.stationKey && it.id.startsWith("it:") })
+        assertTrue(stops.none { it.name.contains("Bahnhof") })
+    }
+
     @Test fun malformedEfaIsParseError() = runTest {
         server.enqueue(MockResponse.Builder().body("<html>maintenance</html>").build())
         try {

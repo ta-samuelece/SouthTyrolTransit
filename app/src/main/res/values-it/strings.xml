@@ -354,8 +354,11 @@
     <string name="update_available_preview_title">Aggiornamento di anteprima disponibile</string>
     <string name="stop_line_filter_hint">Tocca le linee per vedere solo le loro partenze. Tieni premuta una linea per aprirla.</string>
     <string name="stop_all_directions">Tutte le direzioni</string>
-    <string name="stop_towards">→ %s</string>
     <string name="stop_no_departures_filtered">Nessuna partenza per le linee o la direzione scelte.</string>
     <string name="stop_clear_filters">Mostra tutte</string>
     <string name="stop_open_line">Apri la linea</string>
+    <string name="licenses_title">Licenze open source</string>
+    <string name="licenses_show">Mostra le librerie e le loro licenze</string>
+    <string name="licenses_intro">Questa app usa %d librerie open source. Toccane una per leggerne la licenza.</string>
+    <string name="about_licenses_text">Il codice dell\'app è di pubblico dominio (The Unlicense). Usa librerie open source con licenza Apache 2.0 e BSD.</string>
 </resources>

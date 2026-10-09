@@ -106,6 +106,7 @@ class Navigator(private val nav: NavHostController, start: TopLevel) {
     fun line(key: String) = nav.navigate(LineRoute(key)) { launchSingleTop = true }
     fun saved() = nav.navigate(SavedRoute) { launchSingleTop = true }
     fun about() = nav.navigate(AboutRoute) { launchSingleTop = true }
+    fun licenses() = nav.navigate(LicensesRoute) { launchSingleTop = true }
     fun tickets() = nav.navigate(TicketsRoute) { launchSingleTop = true }
     fun plan() = select(TopLevel.PLAN)
 
@@ -202,6 +203,7 @@ fun TransitApp(startTab: StartTab = StartTab.PLAN, openStop: Pair<String, String
             screen<LinesRoute> { LinesScreen(navigator) }
             screen<LineRoute> { e -> LineScreen(navigator, e.toRoute<LineRoute>().key) }
             screen<AboutRoute> { AboutScreen(navigator) }
+            screen<LicensesRoute> { org.southtyrol.transit.feature.settings.LicensesScreen(navigator) }
             screen<TicketsRoute> { TicketsScreen(navigator) }
         }
     }

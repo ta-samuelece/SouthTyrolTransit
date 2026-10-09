@@ -24,8 +24,10 @@ Scripts that are part of building or releasing the app itself belong in `tools/`
   `status.md` over its line budget. Read-only; exits non-zero on those, but never on structural drift
   alone - the docs commit follows the code commit, so failing there would deadlock it. Runs at session
   start *and* as a `PreToolUse` hook that blocks `git commit` - both configured in `settings.json`;
-  `--hook` emits the JSON the session-start hook consumes. Add a deleted top-level directory to
-  `REMOVED_ROOTS` so references to it start failing.
+  `--hook` emits the JSON the session-start hook consumes; on a fresh session (or after `/clear`) it also
+  lists the numbered entries of `docs/ai/notes/known-defects.md` and tells the agent to ask whether they
+  should move to GitHub issues (CLAUDE.md rule 12). Add a deleted top-level directory to `REMOVED_ROOTS`
+  so references to it start failing.
 - `check_okf.py` - validates `docs/ai/` against the Open Knowledge Format spec. Read-only; fails only on
   real conformance violations, and reports missing recommended fields, broken links and list-shaped
   `generated`/`verified` blocks as advice.

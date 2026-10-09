@@ -27,7 +27,9 @@ Usage (from the repo root):
     python .claude/scripts/check_docs_sync.py
     python .claude/scripts/check_docs_sync.py --files      # also list the paths touched
     python .claude/scripts/check_docs_sync.py --since REV  # compare against a revision
-    python .claude/scripts/check_docs_sync.py --hook       # JSON for the SessionStart hook
+    python .claude/scripts/check_docs_sync.py --hook       # JSON for the SessionStart hook; on a fresh
+                                                           # session it also lists the open defects and
+                                                           # asks the agent to raise them (rule 12)
 
 Exit code 1 when the documentation is internally inconsistent. Structural drift alone never fails: CLAUDE.md
 rule 3 puts the doc update in its own commit after the code commit, so failing on drift would deadlock that
@@ -109,6 +111,11 @@ HISTORY_ONLY = ("docs/ai/log.md", "docs/ai/decisions")
 # Top-level directories that were deleted. Add to this when you remove one: it is what makes the check
 # flag every document still pointing at it.
 REMOVED_ROOTS = ()
+
+# The defect register. At session start the hook lists its open entries and tells the agent to ask the
+# user whether they should move to GitHub issues (CLAUDE.md rule 12). Entries are numbered bold lines.
+DEFECTS_DOC = "docs/ai/notes/known-defects.md"
+DEFECT_ENTRY = re.compile(r"^\d+\.\s+\*\*(.+?)\*\*", re.M)
 
 # Indexed directories: every concept document in them must be listed in their index.md.
 INDEXED = ("docs/ai/notes", "docs/ai/decisions")
@@ -323,6 +330,45 @@ def report(args):
     return out, failed
 
 
+def open_defects():
+    """Titles of the numbered entries in the known-defects register."""
+    path = os.path.join(REPO, *DEFECTS_DOC.split("/"))
+    if not os.path.exists(path):
+        return []
+    with open(path, encoding="utf-8") as handle:
+        return DEFECT_ENTRY.findall(handle.read())
+
+
+def defects_prompt(source):
+    """The session-start instruction to ask about the open defects (CLAUDE.md rule 12).
+
+    Only on a fresh session or after /clear - not on resume or after compaction, where the question was
+    already asked earlier in the same conversation."""
+    if source not in ("startup", "clear"):
+        return []
+    titles = open_defects()
+    if not titles:
+        return []
+    out = ["", "Open defects in %s (%d):" % (DEFECTS_DOC, len(titles))]
+    out.extend("  %d. %s" % (i, t) for i, t in enumerate(titles, 1))
+    out.append("ACTION (CLAUDE.md rule 12): before starting the user's first task, ask them in one "
+               "AskUserQuestion whether these defects should move to GitHub issues on the main "
+               "repository or keep being tracked in %s. Offer: keep tracking in the file; move all "
+               "to issues; move selected ones to issues. Then answer their request." % DEFECTS_DOC)
+    return out
+
+
+def hook_source():
+    """The SessionStart `source` (startup, resume, clear, compact) from the hook's stdin JSON."""
+    try:
+        if sys.stdin is None or sys.stdin.isatty():
+            return "startup"
+        data = sys.stdin.read()
+        return json.loads(data).get("source", "startup") if data.strip() else "startup"
+    except Exception:
+        return "startup"
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--files", action="store_true", help="list the paths touched")
@@ -334,6 +380,7 @@ def main():
         # Never let a hook break a session: on any failure, say nothing.
         try:
             out, _failed = report(args)
+            out += defects_prompt(hook_source())
             payload = {
                 "hookSpecificOutput": {
                     "hookEventName": "SessionStart",

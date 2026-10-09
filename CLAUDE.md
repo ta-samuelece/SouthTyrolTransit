@@ -136,9 +136,14 @@ AI-facing material - `CLAUDE.md`, `docs/ai/` and `.claude/` - stays wrapped.
 **12. GitHub: read freely, change only after asking - and record bugs in the docs, not as issues.** The
 repository `ta-samuelece/SouthTyrolTransit` is read with the GitHub CLI (`gh`), logged in per machine with
 `gh auth login`. You may list, search and read issues, pull requests and releases without asking - read an
-issue before working on it. Defects you find are **not** opened as GitHub issues, neither on the main
-repository nor on a contributor's fork (forks are temporary); they go into
-[known defects](docs/ai/notes/known-defects.md). Any change on GitHub - creating, editing, labelling,
+issue before working on it. Defects you find go into [known defects](docs/ai/notes/known-defects.md) and
+are **not** opened as GitHub issues on your own initiative - never on a contributor's fork (forks are
+temporary). **At session start**, the `SessionStart` hook lists the open defects; when it does, ask the
+user in one `AskUserQuestion`, before their first task, whether to keep tracking them in the file, move
+all of them to GitHub issues, or move selected ones. If they choose issues: draft one issue per defect
+from its entry, show the exact titles and texts, and only after approval create them on the **main
+repository** (`ta-samuelece/SouthTyrolTransit`); then delete the moved entries from the file in an
+AI-material commit, since the issue is now the record. "Keep in the file" changes nothing. Any change on GitHub - creating, editing, labelling,
 commenting on, closing or reopening an issue, or opening or merging a pull request - needs the user's
 explicit approval each time, with the exact title and text shown first; it is public. Logging in is not a change: when `gh` reports it is not logged in, or the login has expired, you
 may start `gh auth login --web --hostname github.com --git-protocol https` yourself (in the background -

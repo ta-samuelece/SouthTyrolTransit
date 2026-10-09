@@ -5,7 +5,7 @@ entry repeats the note's `description`.
 
 # Open work
 
-* [Known defects](./known-defects.md) - the register of open bugs and documentation errors; GitHub issues are not used for these, so an entry is deleted in the same change that fixes it.
+* [Known defects](./known-defects.md) - the register of open bugs and documentation errors, raised with the user at every session start (keep here or move to GitHub issues); an entry is deleted in the same change that fixes or moves it.
 
 # Data and realtime
 

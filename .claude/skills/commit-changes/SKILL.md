@@ -19,7 +19,7 @@ Run `git status --short` and `git diff --stat`. Sort the changes into two groups
 
 They are separate commits. Never mix them.
 
-**Bugs live in the docs, not in issues** (CLAUDE.md rule 12). A commit that fixes an entry in
+**Bugs live in the docs unless the user moved them to issues** (CLAUDE.md rule 12). A commit that fixes an entry in
 `docs/ai/notes/known-defects.md` deletes that entry **in the same commit** - so a bug-fix commit is the one
 case where the app change and its `docs/ai/` line travel together. Name the bug in the title in its own
 words ("Keep the mobile-data timetable setting across app restarts"). A bug found but not fixed is added

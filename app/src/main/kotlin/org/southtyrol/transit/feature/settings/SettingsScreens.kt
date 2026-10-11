@@ -110,6 +110,8 @@ class SettingsViewModel @Inject constructor(
     fun theme(value: ThemeMode) = viewModelScope.launch { settings.setTheme(value) }
     fun dynamic(value: Boolean) = viewModelScope.launch { settings.setDynamicColor(value) }
     fun amoled(value: Boolean) = viewModelScope.launch { settings.setAmoledDark(value) }
+    /** Mirrors the launcher icon into the settings so the phone's backup carries it. */
+    fun appIcon(icon: org.southtyrol.transit.ui.AppIcon) = viewModelScope.launch { settings.setAppIcon(icon.name) }
     fun wheelchair(value: Boolean) = viewModelScope.launch { settings.setWheelchair(value) }
     fun ftp(value: Boolean) = viewModelScope.launch { settings.setFtpFallback(value) }
     fun metered(value: Boolean) = viewModelScope.launch { settings.setScheduleOnMetered(value); work.scheduleTimetableRefresh(value) }
@@ -154,6 +156,8 @@ fun SettingsScreen(navigator: Navigator, viewModel: SettingsViewModel = hiltView
         item {
             SettingsGroup(stringResource(R.string.settings_saved)) {
                 LinkRow(stringResource(R.string.settings_saved_manage), Icons.Rounded.Star, navigator::saved)
+                // Android 8 has no backup: it cannot require end-to-end encryption (see backup_rules.xml).
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) BackupInfo()
             }
         }
 
@@ -176,7 +180,7 @@ fun SettingsScreen(navigator: Navigator, viewModel: SettingsViewModel = hiltView
                 // Only meaningful when dark mode can apply.
                 if (prefs.theme != ThemeMode.LIGHT) SwitchRow(stringResource(R.string.settings_amoled_dark), stringResource(R.string.settings_amoled_dark_hint), prefs.amoledDark) { viewModel.amoled(it) }
                 ChipLabel(stringResource(R.string.settings_app_icon))
-                AppIconPicker()
+                AppIconPicker(onPicked = viewModel::appIcon)
                 Text(stringResource(R.string.settings_app_icon_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
@@ -445,9 +449,27 @@ fun TicketsScreen(navigator: Navigator, viewModel: TicketsViewModel = hiltViewMo
 @HiltViewModel
 class TicketsViewModel @Inject constructor(val ticketing: TicketingProvider) : ViewModel()
 
+/**
+ * Where saved items and settings are backed up, with a shortcut to the controls: Google's backup screen
+ * where it exists (not a public API, so it may vanish), else the phone's settings.
+ */
+@Composable
+private fun BackupInfo() {
+    val context = LocalContext.current
+    Text(stringResource(R.string.settings_backup_info), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    TextButton(onClick = {
+        val google = android.content.Intent("com.google.android.gms.backup.ACTION_BACKUP_SETTINGS")
+        try {
+            context.startActivity(google)
+        } catch (_: android.content.ActivityNotFoundException) {
+            runCatching { context.startActivity(android.content.Intent(android.provider.Settings.ACTION_SETTINGS)) }
+        }
+    }) { Text(stringResource(R.string.settings_backup_open)) }
+}
+
 /** The launcher icon variants as round previews; the selected one is outlined and checked. */
 @Composable
-private fun AppIconPicker() {
+private fun AppIconPicker(onPicked: (org.southtyrol.transit.ui.AppIcon) -> Unit) {
     val context = LocalContext.current
     var selected by remember { mutableStateOf(org.southtyrol.transit.ui.AppIcons.current(context)) }
     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.selectableGroup()) {
@@ -462,6 +484,7 @@ private fun AppIconPicker() {
                         if (!isSelected) {
                             org.southtyrol.transit.ui.AppIcons.set(context, icon)
                             selected = icon
+                            onPicked(icon)
                         }
                     },
             ) {

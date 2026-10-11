@@ -21,9 +21,11 @@
 
     <application
         android:name=".TransitApplication"
-        android:allowBackup="false"
+        android:allowBackup="@bool/backup_allowed"
+        android:backupAgent=".TransitBackupAgent"
+        android:fullBackupOnly="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
-        android:fullBackupContent="false"
+        android:fullBackupContent="@xml/backup_rules"
         android:enableOnBackInvokedCallback="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"

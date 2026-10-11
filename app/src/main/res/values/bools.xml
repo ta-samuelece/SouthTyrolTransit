@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Backup only where Android can require end-to-end encryption (9+, see values-v28). -->
+    <bool name="backup_allowed">false</bool>
+</resources>

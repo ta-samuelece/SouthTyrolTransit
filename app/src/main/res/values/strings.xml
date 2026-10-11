@@ -206,7 +206,7 @@
     <string name="saved_lines">Lines</string>
     <string name="saved_journeys">Journeys</string>
     <string name="saved_recent">Recent journeys</string>
-    <string name="saved_local_only">Saved items are stored only on this device. No account is needed.</string>
+    <string name="saved_local_only">Saved items are stored on this device and included in your phone\'s encrypted backup. No account is needed.</string>
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>
@@ -267,7 +267,7 @@
     <string name="source_map">Map – OpenFreeMap and OpenStreetMap</string>
     <string name="source_map_detail">Map tiles by OpenFreeMap, map data © OpenStreetMap contributors (ODbL). Rendered with MapLibre.</string>
     <string name="about_privacy">Privacy</string>
-    <string name="about_privacy_text">No account, no analytics, no advertising and no tracking. Saved items stay on this device. Your location is only requested when you use a location feature; coordinates are sent to the journey planner only when you plan from your location.</string>
+    <string name="about_privacy_text">No account, no analytics, no advertising and no tracking. Saved items and settings stay on this device and in your phone\'s backup, only when that backup is end-to-end encrypted. Your location is only requested when you use a location feature; coordinates are sent to the journey planner only when you plan from your location.</string>
     <string name="about_realtime">Live data</string>
     <string name="about_realtime_text">Live times are marked with a live symbol and their age. When live data is old or missing, the app shows the scheduled time and says so. Vehicles are dimmed after 2 minutes without an update and hidden after 10.</string>
     <string name="about_version">Version %s</string>
@@ -282,6 +282,8 @@
     <string name="alerts_filter_hint">Filter by line or stop</string>
     <string name="settings_saved">Saved</string>
     <string name="settings_saved_manage">Saved stops, lines and places</string>
+    <string name="settings_backup_info">Your saved stops, lines, places and settings are included in your phone\'s backup (Google backup on most phones) when it is turned on and the phone has a screen lock. They are restored when you reinstall the app or set up a new phone.</string>
+    <string name="settings_backup_open">Open backup settings</string>
     <string name="settings_start_tab">Open the app on</string>
     <string name="saved_add_stop">Add stop</string>
     <string name="settings_general">General</string>

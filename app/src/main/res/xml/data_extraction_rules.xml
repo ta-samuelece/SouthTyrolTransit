@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Saved items stay on the device: no cloud backup and no device-to-device transfer of app data. -->
+<!--
+    Android 12 and newer. Cloud backup carries the saved items (user database) and the settings file, and
+    only when the backup is end-to-end encrypted (a screen lock is set). No device-to-device transfer.
+    Android 9-11 use xml-v28/backup_rules.xml; Android 8 has no backup (values/bools.xml).
+    What a restore must not bring back is cleaned up by RestoreCleanup.
+-->
 <data-extraction-rules>
-    <cloud-backup>
-        <exclude domain="root" />
-        <exclude domain="file" />
-        <exclude domain="database" />
-        <exclude domain="sharedpref" />
-        <exclude domain="external" />
+    <cloud-backup disableIfNoEncryptionCapabilities="true">
+        <include domain="database" path="user.db" />
+        <include domain="database" path="user.db-wal" />
+        <include domain="file" path="datastore/settings.preferences_pb" />
     </cloud-backup>
     <device-transfer>
         <exclude domain="root" />

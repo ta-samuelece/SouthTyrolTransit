@@ -50,6 +50,11 @@ data class UserSettings(
     /** A release version the user chose to skip; not offered again automatically. */
     val skippedUpdate: String = "",
     val updateChannel: UpdateChannel = UpdateChannel.STABLE,
+    /**
+     * The launcher icon's name, mirrored from the activity-alias state (which Android does not back
+     * up) so a restore can re-apply it. Blank until first recorded.
+     */
+    val appIcon: String = "",
 )
 
 /** The app language currently in effect (per-app locale or system), as a BCP-47 tag. */
@@ -79,6 +84,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val autoUpdate = booleanPreferencesKey("autoUpdateCheck")
         val skipped = stringPreferencesKey("skippedUpdate")
         val channel = stringPreferencesKey("updateChannel")
+        val icon = stringPreferencesKey("appIcon")
     }
 
     val settings: Flow<UserSettings> = store.data
@@ -101,6 +107,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
                 autoUpdateCheck = p[Keys.autoUpdate] ?: true,
                 skippedUpdate = p[Keys.skipped] ?: "",
                 updateChannel = p[Keys.channel]?.let { runCatching { UpdateChannel.valueOf(it) }.getOrNull() } ?: UpdateChannel.STABLE,
+                appIcon = p[Keys.icon] ?: "",
             )
         }
 
@@ -122,4 +129,5 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
     suspend fun setAutoUpdateCheck(value: Boolean) { store.edit { it[Keys.autoUpdate] = value } }
     suspend fun setSkippedUpdate(value: String) { store.edit { it[Keys.skipped] = value } }
     suspend fun setUpdateChannel(value: UpdateChannel) { store.edit { it[Keys.channel] = value.name } }
+    suspend fun setAppIcon(value: String) { store.edit { it[Keys.icon] = value } }
 }

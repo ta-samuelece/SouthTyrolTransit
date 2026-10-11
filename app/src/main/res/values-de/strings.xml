@@ -195,7 +195,7 @@
     <string name="saved_lines">Linien</string>
     <string name="saved_journeys">Verbindungen</string>
     <string name="saved_recent">Letzte Suchen</string>
-    <string name="saved_local_only">Gespeicherte Einträge bleiben nur auf diesem Gerät. Ein Konto ist nicht nötig.</string>
+    <string name="saved_local_only">Gespeicherte Einträge liegen auf diesem Gerät und sind in der verschlüsselten Sicherung des Telefons enthalten. Ein Konto ist nicht nötig.</string>
 
     <string name="settings_title">Einstellungen</string>
     <string name="settings_language">Sprache</string>
@@ -253,7 +253,7 @@
     <string name="source_map">Karte – OpenFreeMap und OpenStreetMap</string>
     <string name="source_map_detail">Kartenkacheln von OpenFreeMap, Kartendaten © OpenStreetMap-Mitwirkende (ODbL). Darstellung mit MapLibre.</string>
     <string name="about_privacy">Datenschutz</string>
-    <string name="about_privacy_text">Kein Konto, keine Analyse, keine Werbung, kein Tracking. Gespeicherte Einträge bleiben auf diesem Gerät. Der Standort wird nur abgefragt, wenn du eine Standortfunktion nutzt; Koordinaten gehen nur an die Fahrplanauskunft, wenn du ab deinem Standort planst.</string>
+    <string name="about_privacy_text">Kein Konto, keine Analyse, keine Werbung, kein Tracking. Gespeicherte Einträge und Einstellungen bleiben auf diesem Gerät und in der Sicherung des Telefons, nur wenn diese Ende-zu-Ende-verschlüsselt ist. Der Standort wird nur abgefragt, wenn du eine Standortfunktion nutzt; Koordinaten gehen nur an die Fahrplanauskunft, wenn du ab deinem Standort planst.</string>
     <string name="about_realtime">Echtzeitdaten</string>
     <string name="about_realtime_text">Echtzeitwerte sind mit einem Live-Symbol und ihrem Alter gekennzeichnet. Sind Echtzeitdaten alt oder fehlen sie, zeigt die App die Fahrplanzeit und weist darauf hin. Fahrzeuge werden nach 2 Minuten ohne Aktualisierung abgeblendet und nach 10 Minuten ausgeblendet.</string>
     <string name="about_version">Version %s</string>
@@ -268,6 +268,8 @@
     <string name="alerts_filter_hint">Nach Linie oder Haltestelle filtern</string>
     <string name="settings_saved">Gespeichert</string>
     <string name="settings_saved_manage">Gespeicherte Haltestellen, Linien und Orte</string>
+    <string name="settings_backup_info">Gespeicherte Haltestellen, Linien, Orte und Einstellungen sind in der Sicherung des Telefons enthalten (auf den meisten Telefonen Google-Sicherung), wenn sie eingeschaltet ist und das Telefon eine Displaysperre hat. Sie werden bei einer Neuinstallation oder auf einem neuen Telefon wiederhergestellt.</string>
+    <string name="settings_backup_open">Sicherungseinstellungen öffnen</string>
     <string name="settings_start_tab">App öffnen mit</string>
     <string name="saved_add_stop">Haltestelle hinzufügen</string>
     <string name="settings_general">Allgemein</string>

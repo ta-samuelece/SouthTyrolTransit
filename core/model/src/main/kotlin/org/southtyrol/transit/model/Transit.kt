@@ -279,7 +279,11 @@ data class ServiceAlert(
     val severity: String = "",
     val urls: Map<String, String> = emptyMap(),
     val source: AlertSource = AlertSource.GTFS_RT,
+    /** Ids of the other source alerts merged into this one (see [AlertDeduplicator]). */
+    val aliases: Set<String> = emptySet(),
 ) {
+    /** This alert's id and every merged one: the merged id changes when a source drops its copy. */
+    val allIds: Set<String> get() = aliases + id
     fun active(at: Instant) = periods.isEmpty() || periods.any { (start, end) -> (start == null || !at.isBefore(start)) && (end == null || at.isBefore(end)) }
     fun upcoming(at: Instant) = !active(at) && periods.any { (start, _) -> start != null && start.isAfter(at) }
     fun expired(at: Instant) = !active(at) && !upcoming(at)

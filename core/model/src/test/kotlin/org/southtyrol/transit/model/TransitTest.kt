@@ -194,6 +194,9 @@ class TextTest {
         assertEquals("Umleitung", m.descriptions["de"])
         assertEquals(setOf("r1"), m.routes)
         assertEquals(setOf("201"), m.lineNames)
+        // The merged alert keeps the EFA id too: once GTFS-RT drops its copy, the id becomes "e1".
+        assertEquals(setOf("1", "e1"), m.allIds)
+        assertEquals(setOf("2"), merged.first { it.id == "2" }.allIds)
     }
 
     @Test fun alertActivity() {

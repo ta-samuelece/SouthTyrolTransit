@@ -338,6 +338,7 @@
     <string name="widget_updated">Aggiornato alle %s</string>
     <string name="widget_update_failed">Aggiornamento non riuscito · dati delle %s</string>
     <string name="widget_loading">Caricamento…</string>
+    <string name="widget_load_failed">Partenze non caricate · tocca ↻ per riprovare</string>
     <string name="widget_refresh">Aggiorna</string>
     <string name="widget_on_time">in orario</string>
     <string name="trip_position_estimated_live">Posizione stimata dagli orari in tempo reale</string>

@@ -347,6 +347,7 @@
     <string name="widget_updated">Updated %s</string>
     <string name="widget_update_failed">Could not update · data from %s</string>
     <string name="widget_loading">Loading…</string>
+    <string name="widget_load_failed">Could not load departures · tap ↻ to retry</string>
     <string name="widget_refresh">Refresh</string>
     <string name="widget_on_time">on time</string>
     <string name="trip_position_estimated_live">Position estimated from live times</string>

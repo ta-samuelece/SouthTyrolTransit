@@ -8,8 +8,6 @@ import org.southtyrol.transit.model.Accessibility
 import org.southtyrol.transit.model.BoundingBox
 import org.southtyrol.transit.model.CalendarRule
 import org.southtyrol.transit.model.ColorContrast
-import org.southtyrol.transit.model.DataError
-import org.southtyrol.transit.model.DataException
 import org.southtyrol.transit.model.Departure
 import org.southtyrol.transit.model.Freshness
 import org.southtyrol.transit.model.Geo
@@ -44,11 +42,9 @@ class GtfsSchedule(private val store: ScheduleStore) : TransitScheduleDataSource
     private val services = LinkedHashMap<LocalDate, Set<String>>()
     private var agencies: Map<String, Operator> = emptyMap()
 
-    private fun dao(): ScheduleDao = store.database()?.schedule() ?: throw DataException(DataError.NoSchedule)
-
     override suspend fun isAvailable(): Boolean = store.activeName() != null
 
-    private suspend fun <T> io(block: suspend ScheduleDao.() -> T): T = withContext(Dispatchers.IO) { guarded { dao().block() } }
+    private suspend fun <T> io(block: suspend ScheduleDao.() -> T): T = withContext(Dispatchers.IO) { guarded { store.withDatabase { it.schedule().block() } } }
 
     private suspend fun prepare(dao: ScheduleDao) = cacheLock.withLock {
         val version = store.version.value

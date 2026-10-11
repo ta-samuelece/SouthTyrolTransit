@@ -199,10 +199,13 @@ class AlertCheckWorker @AssistedInject constructor(
         if (stops.isEmpty() && savedLines.isEmpty()) return Result.success()
         val now = Instant.now()
         val already = user.notifiedAlerts().toSet()
-        val relevant = state.alerts.filter { a ->
-            a.active(now) && a.id !in already &&
-                (stops.any { AlertMatcher.affectsStop(a, it) } || savedLines.any { AlertMatcher.affectsLine(a, it) })
+        val affecting = state.alerts.filter { a ->
+            a.active(now) && (stops.any { AlertMatcher.affectsStop(a, it) } || savedLines.any { AlertMatcher.affectsLine(a, it) })
         }
+        // A merged alert counts as notified when any of its source ids was. Record the ids it gained
+        // since, so it is not notified again once the source whose id it carried drops its copy.
+        val (seen, relevant) = affecting.partition { a -> a.allIds.any { it in already } }
+        for (a in seen) for (id in a.allIds - already) user.markNotified(NotifiedAlertRow(id, now.toEpochMilli()))
         val manager = NotificationManagerCompat.from(applicationContext)
         for (alert in relevant.take(5)) {
             val notification = NotificationCompat.Builder(applicationContext, Notifications.CHANNEL_ALERTS)
@@ -218,7 +221,7 @@ class AlertCheckWorker @AssistedInject constructor(
             } catch (_: SecurityException) {
                 return Result.success()
             }
-            user.markNotified(NotifiedAlertRow(alert.id, now.toEpochMilli()))
+            for (id in alert.allIds) user.markNotified(NotifiedAlertRow(id, now.toEpochMilli()))
         }
         user.pruneNotified(now.minusSeconds(30L * 86_400).toEpochMilli())
         return Result.success()

@@ -75,8 +75,12 @@ class ScheduleStore(
     private val pointer = File(dir, "active")
     private val lock = Mutex()
     private val openLock = Any()
-    private var current: ScheduleDatabase? = null
-    private var currentName: String? = null
+
+    /** An open schedule database and how many callers are using it right now. */
+    private class OpenDatabase(val name: String, val db: ScheduleDatabase) { var users = 0 }
+    private var current: OpenDatabase? = null
+    /** Replaced databases still in use; closed and deleted when their last user finishes. */
+    private val retired = mutableListOf<OpenDatabase>()
 
     private val _status = MutableStateFlow<ScheduleStatus>(ScheduleStatus.Idle)
     val status: StateFlow<ScheduleStatus> = _status.asStateFlow()
@@ -99,30 +103,62 @@ class ScheduleStore(
         return activeCache
     }
 
-    /** Returns the active database or null when no schedule has been imported yet. */
-    fun database(): ScheduleDatabase? = synchronized(openLock) {
+    /**
+     * Runs [block] on the active database; throws [DataError.NoSchedule] when none has been imported.
+     * The database stays open until [block] returns, even when a new schedule is activated meanwhile:
+     * closing it under a running query would fail that query.
+     */
+    suspend fun <T> withDatabase(block: suspend (ScheduleDatabase) -> T): T {
+        val open = acquire() ?: throw DataException(DataError.NoSchedule)
+        try {
+            return block(open.db)
+        } finally {
+            release(open)
+        }
+    }
+
+    private fun acquire(): OpenDatabase? = synchronized(openLock) {
         val name = activeName() ?: return null
-        if (current != null && currentName == name) return current
-        current?.close()
-        current = open(File(dir, name))
-        currentName = name
-        current
+        val open = current?.takeIf { it.name == name } ?: OpenDatabase(name, open(File(dir, name))).also { fresh ->
+            current?.let(::retire)
+            current = fresh
+        }
+        open.users++
+        open
+    }
+
+    private fun release(open: OpenDatabase) = synchronized(openLock) {
+        open.users--
+        if (open.users == 0 && retired.remove(open)) dispose(open)
+    }
+
+    /** Called with [openLock] held. */
+    private fun retire(open: OpenDatabase) {
+        if (open.users == 0) dispose(open) else retired += open
+    }
+
+    private fun dispose(open: OpenDatabase) {
+        open.db.close()
+        if (open.name != activeCache) deleteDatabase(File(dir, open.name))
     }
 
     suspend fun loadInfo(): ScheduleInfo? = withContext(Dispatchers.IO) {
-        val dao = database()?.schedule() ?: return@withContext null
+        if (activeName() == null) return@withContext null
         val info = runCatching {
-            ScheduleInfo(
-                importedAt = Instant.ofEpochMilli(dao.meta("importedAt")?.toLongOrNull() ?: 0),
-                source = dao.meta("source").orEmpty(),
-                hash = dao.meta("hash").orEmpty(),
-                firstDate = dao.meta("firstDate")?.toIntOrNull() ?: 0,
-                lastDate = dao.meta("lastDate")?.toIntOrNull() ?: 0,
-                stops = dao.meta("stops")?.toIntOrNull() ?: 0,
-                trips = dao.meta("trips")?.toIntOrNull() ?: 0,
-                hasShapes = dao.meta("hasShapes") == "true",
-                importerVersion = dao.meta("importerVersion")?.toIntOrNull() ?: 0,
-            )
+            withDatabase { db ->
+                val dao = db.schedule()
+                ScheduleInfo(
+                    importedAt = Instant.ofEpochMilli(dao.meta("importedAt")?.toLongOrNull() ?: 0),
+                    source = dao.meta("source").orEmpty(),
+                    hash = dao.meta("hash").orEmpty(),
+                    firstDate = dao.meta("firstDate")?.toIntOrNull() ?: 0,
+                    lastDate = dao.meta("lastDate")?.toIntOrNull() ?: 0,
+                    stops = dao.meta("stops")?.toIntOrNull() ?: 0,
+                    trips = dao.meta("trips")?.toIntOrNull() ?: 0,
+                    hasShapes = dao.meta("hasShapes") == "true",
+                    importerVersion = dao.meta("importerVersion")?.toIntOrNull() ?: 0,
+                )
+            }
         }.getOrNull()
         _info.value = info
         info
@@ -207,14 +243,15 @@ class ScheduleStore(
             pointer.delete()
             if (!tmp.renameTo(pointer)) throw TransferFailedException("Could not activate schedule")
         }
-        synchronized(openLock) {
+        val keep = synchronized(openLock) {
             activeCache = name
             activeLoaded = true
-            current?.close()
+            current?.let(::retire)
             current = null
-            currentName = null
+            retired.map { it.name } + name
         }
-        dir.listFiles()?.filter { it.name.startsWith("schedule-") && !it.name.startsWith(name) }?.forEach { it.delete() }
+        // Databases still in use are deleted when their last user finishes (see [release]).
+        dir.listFiles()?.filter { f -> f.name.startsWith("schedule-") && keep.none { f.name.startsWith(it) } }?.forEach { it.delete() }
     }
 
     private fun deleteDatabase(file: File) {
@@ -249,13 +286,13 @@ class ScheduleStore(
             }
             return mapOf("lastModified" to modified)
         }
-        val dao = database()?.schedule()
         val headers = buildMap {
             // A conditional request would answer "not modified" and keep a feed the current importer
             // has never processed; ask unconditionally after an importer change.
             if (previous?.source == source.name && previous.importerVersion >= GtfsImporter.VERSION) {
-                dao?.meta("etag")?.takeIf { it.isNotBlank() }?.let { put("If-None-Match", it) }
-                dao?.meta("lastModified")?.takeIf { it.isNotBlank() }?.let { put("If-Modified-Since", it) }
+                val (etag, modified) = withDatabase { db -> db.schedule().let { it.meta("etag") to it.meta("lastModified") } }
+                etag?.takeIf { it.isNotBlank() }?.let { put("If-None-Match", it) }
+                modified?.takeIf { it.isNotBlank() }?.let { put("If-Modified-Since", it) }
             }
         }
         downloads.response(source.url, "application/zip, application/octet-stream", headers).use { response ->

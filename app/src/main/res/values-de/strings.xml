@@ -333,6 +333,7 @@
     <string name="widget_updated">Aktualisiert %s</string>
     <string name="widget_update_failed">Aktualisierung fehlgeschlagen · Stand %s</string>
     <string name="widget_loading">Wird geladen…</string>
+    <string name="widget_load_failed">Abfahrten nicht geladen · ↻ tippen zum Wiederholen</string>
     <string name="widget_refresh">Aktualisieren</string>
     <string name="widget_on_time">pünktlich</string>
     <string name="trip_position_estimated_live">Position aus Echtzeitdaten geschätzt</string>

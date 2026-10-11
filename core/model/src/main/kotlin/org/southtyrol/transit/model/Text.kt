@@ -113,6 +113,7 @@ object AlertDeduplicator {
                     lineNames = a.lineNames + b.lineNames,
                     periods = (a.periods + b.periods).distinct(),
                     urls = b.urls + a.urls,
+                    aliases = a.aliases + b.allIds - a.id,
                 )
             }
         }

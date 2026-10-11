@@ -113,7 +113,18 @@ internal object WidgetState {
 
     fun decode(prefs: Preferences): List<WidgetDeparture> =
         prefs[departures]?.let { runCatching { json.decodeFromString<List<WidgetDeparture>>(it) }.getOrNull() }.orEmpty()
+
+    /** What the status line says; a failure before any successful refresh is not "loading". */
+    fun status(stopKey: String?, updatedAt: Long?, failedAt: Long?): WidgetStatus = when {
+        stopKey == null -> WidgetStatus.NO_STOP
+        failedAt != null && updatedAt == null -> WidgetStatus.LOAD_FAILED
+        failedAt != null && updatedAt != null && failedAt > updatedAt -> WidgetStatus.UPDATE_FAILED
+        updatedAt != null -> WidgetStatus.UPDATED
+        else -> WidgetStatus.LOADING
+    }
 }
+
+internal enum class WidgetStatus { NO_STOP, LOADING, LOAD_FAILED, UPDATE_FAILED, UPDATED }
 
 /** Home-screen widget: the next departures at one chosen stop, refreshed in the background. */
 class DeparturesWidget : GlanceAppWidget() {
@@ -152,11 +163,12 @@ class DeparturesWidget : GlanceAppWidget() {
                         style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 15.sp, fontWeight = FontWeight.Medium),
                         maxLines = 1,
                     )
-                    val status = when {
-                        stopKey == null -> context.getString(R.string.widget_tap_to_choose)
-                        failed != null && (updated == null || failed > updated) && updated != null -> context.getString(R.string.widget_update_failed, clock(updated))
-                        updated != null -> context.getString(R.string.widget_updated, clock(updated))
-                        else -> context.getString(R.string.widget_loading)
+                    val status = when (WidgetState.status(stopKey, updated, failed)) {
+                        WidgetStatus.NO_STOP -> context.getString(R.string.widget_tap_to_choose)
+                        WidgetStatus.LOAD_FAILED -> context.getString(R.string.widget_load_failed)
+                        WidgetStatus.UPDATE_FAILED -> context.getString(R.string.widget_update_failed, clock(updated!!))
+                        WidgetStatus.UPDATED -> context.getString(R.string.widget_updated, clock(updated!!))
+                        WidgetStatus.LOADING -> context.getString(R.string.widget_loading)
                     }
                     Text(status, style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 11.sp), maxLines = 1)
                 }
@@ -339,6 +351,7 @@ class WidgetConfigActivity : ComponentActivity() {
                 p[WidgetState.stopName] = name
                 p.remove(WidgetState.departures)
                 p.remove(WidgetState.updatedAt)
+                p.remove(WidgetState.failedAt)
             }
             DeparturesWidget().update(this@WidgetConfigActivity, id)
             WidgetUpdates.schedule(this@WidgetConfigActivity)

@@ -191,12 +191,26 @@ class ScheduleTest {
         assertNull(schedule.trip("t4a", LocalDate.of(2026, 10, 2), "it"))
     }
 
+    @Test fun activatingANewScheduleKeepsTheOldOneOpenForRunningQueries() = runTest {
+        assertTrue(store.importFile(SyntheticGtfs.zip(context.cacheDir, "a"), emptyMap()))
+        val dir = File(context.filesDir, "schedule")
+        fun databases() = dir.listFiles()!!.filter { it.name.startsWith("schedule-") && it.name.endsWith(".db") }
+        store.withDatabase { old ->
+            // A query is running on the old schedule while the new one is activated.
+            assertTrue(store.importFile(SyntheticGtfs.zip(context.cacheDir, "b"), emptyMap()))
+            assertNotNull(old.schedule().trip("t4a"))
+            assertEquals(2, databases().size)
+        }
+        assertEquals(1, databases().size)
+        assertNotNull(schedule.trip("t4b", LocalDate.of(2026, 10, 2), "it"))
+    }
+
     @Test fun sameFeedIsImportedAgainAfterAnImporterChange() = runTest {
         val zip = SyntheticGtfs.zip(context.cacheDir, "a")
         assertTrue(store.importFile(zip, emptyMap()))
         assertEquals(GtfsImporter.VERSION, store.loadInfo()!!.importerVersion)
         // A database built by an older importer (or before versions were recorded) is rebuilt from the same feed.
-        store.database()!!.openHelper.writableDatabase.execSQL("DELETE FROM meta WHERE `key` = 'importerVersion'")
+        store.withDatabase { it.openHelper.writableDatabase.execSQL("DELETE FROM meta WHERE `key` = 'importerVersion'") }
         assertEquals(0, store.loadInfo()!!.importerVersion)
         assertTrue(store.importFile(zip, emptyMap()))
         assertEquals(GtfsImporter.VERSION, store.loadInfo()!!.importerVersion)

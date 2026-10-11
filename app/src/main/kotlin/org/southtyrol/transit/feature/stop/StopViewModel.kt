@@ -129,11 +129,14 @@ class StopViewModel @AssistedInject constructor(
         if (force || s.loadedAt == null || Duration.between(s.loadedAt, now) > Duration.ofMinutes(1)) {
             val from = s.start ?: now
             val until = s.end ?: from.plus(DEFAULT_WINDOW)
+            // Loads can overlap (quick taps on "later", a periodic refresh): one finishing after the
+            // window changed must not overwrite the newer window's board.
+            fun sameWindow(n: StopState) = n.start == s.start && n.end == s.end && n.arrivals == s.arrivals
             try {
                 val (list, source) = departures.load(stationKey, s.arrivals, from, language.current(), Duration.between(from, until).coerceAtLeast(STEP))
-                _state.update { it.copy(scheduled = list, source = source, loadedAt = now, loading = false, loadingMore = false, error = null) }
+                _state.update { if (sameWindow(it)) it.copy(scheduled = list, source = source, loadedAt = now, loading = false, loadingMore = false, error = null) else it }
             } catch (e: DataException) {
-                _state.update { it.copy(loading = false, loadingMore = false, error = e.error) }
+                _state.update { if (sameWindow(it)) it.copy(loading = false, loadingMore = false, error = e.error) else it }
             }
         }
         val current = _state.value

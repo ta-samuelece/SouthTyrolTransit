@@ -214,6 +214,8 @@
     <string name="theme_light">Chiaro</string>
     <string name="theme_dark">Scuro</string>
     <string name="settings_dynamic_color">Usa i colori dello sfondo</string>
+    <string name="settings_amoled_dark">Nero puro in modalità scura</string>
+    <string name="settings_amoled_dark_hint">Sfondi completamente neri in modalità scura; risparmia energia sugli schermi OLED.</string>
     <string name="settings_accessibility">Accessibilità</string>
     <string name="settings_wheelchair_default">Richiedi per impostazione predefinita percorsi accessibili in sedia a rotelle.</string>
     <string name="settings_notifications">Notifiche</string>

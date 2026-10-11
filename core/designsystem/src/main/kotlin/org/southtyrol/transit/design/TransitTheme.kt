@@ -63,6 +63,17 @@ private val DarkColors = darkColorScheme(
     surfaceContainerHigh = Color(0xFF252B2A), surfaceContainerHighest = Color(0xFF303634),
 )
 
+/**
+ * The dark scheme on a pure black base: the page and the lowest containers become black, and the raised
+ * containers keep their tones so cards and grouped fields still stand apart from the page.
+ */
+fun ColorScheme.trueBlack(): ColorScheme = copy(
+    background = Color.Black,
+    surface = Color.Black,
+    surfaceDim = Color.Black,
+    surfaceContainerLowest = Color.Black,
+)
+
 /** True when the user disabled animations system-wide; motion falls back to the standard scheme. */
 val LocalReducedMotion = staticCompositionLocalOf { false }
 
@@ -72,15 +83,18 @@ val LocalStatusColors = staticCompositionLocalOf { StatusColors.Light }
 @Composable
 fun TransitTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
+    /** In dark mode, pure black backgrounds instead of the scheme's dark grey. */
+    amoled: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
-    val colors: ColorScheme = when {
+    val base: ColorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         darkTheme -> DarkColors
         else -> LightColors
     }
+    val colors = if (darkTheme && amoled) base.trueBlack() else base
     val reducedMotion = remember(context) {
         runCatching { Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f }.getOrDefault(false)
     }

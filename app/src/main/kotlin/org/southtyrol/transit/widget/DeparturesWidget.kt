@@ -332,7 +332,7 @@ class WidgetConfigActivity : ComponentActivity() {
         setContent {
             val prefs = settings.settings.collectAsStateWithLifecycle(org.southtyrol.transit.data.UserSettings()).value
             val dark = when (prefs.theme) { ThemeMode.SYSTEM -> isSystemInDarkTheme(); ThemeMode.LIGHT -> false; ThemeMode.DARK -> true }
-            TransitTheme(darkTheme = dark, dynamicColor = prefs.dynamicColor) {
+            TransitTheme(darkTheme = dark, dynamicColor = prefs.dynamicColor, amoled = prefs.amoledDark) {
                 CompositionLocalProvider(org.southtyrol.transit.LocalDarkTheme provides dark) {
                     org.southtyrol.transit.feature.common.StopSearchSheet(
                         onPick = { stop -> choose(appWidgetId, stop.stationKey.ifBlank { stop.id }, stop.name) },

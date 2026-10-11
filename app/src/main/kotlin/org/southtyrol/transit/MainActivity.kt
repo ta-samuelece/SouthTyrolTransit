@@ -90,7 +90,7 @@ class MainActivity : AppCompatActivity() {
                 enableEdgeToEdge(statusBarStyle = style, navigationBarStyle = style)
                 onDispose {}
             }
-            TransitTheme(darkTheme = dark, dynamicColor = settings.dynamicColor) {
+            TransitTheme(darkTheme = dark, dynamicColor = settings.dynamicColor, amoled = settings.amoledDark) {
                 CompositionLocalProvider(LocalMapStyle provides defaultStyle, LocalDarkTheme provides dark) {
                     TransitApp(startTab = start.startTab, openStop = openStop.value, onStopOpened = { openStop.value = null })
                 }

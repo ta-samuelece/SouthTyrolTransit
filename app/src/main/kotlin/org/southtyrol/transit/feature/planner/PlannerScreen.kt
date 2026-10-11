@@ -329,38 +329,49 @@ private fun TimeAndOptions(state: PlannerState, viewModel: PlannerViewModel) {
             )
         }
         AnimatedVisibility(showOptions) {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(stringResource(R.string.planner_preference), style = MaterialTheme.typography.labelLarge)
-                ConnectedToggleGroup(
-                    options = RoutePreference.entries.toList(), selected = state.preference, onSelect = viewModel::setPreference,
-                    label = { stringResource(preferenceLabel(it)) }, modifier = Modifier.fillMaxWidth(),
-                )
-                Text(stringResource(R.string.planner_modes), style = MaterialTheme.typography.labelLarge)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf(TransportMode.TRAIN, TransportMode.BUS, TransportMode.CITY_BUS, TransportMode.CABLE_CAR, TransportMode.ON_DEMAND).forEach { mode ->
-                        val included = mode !in state.excludedModes
-                        FilterChip(
-                            selected = included,
-                            onClick = { viewModel.toggleMode(mode) },
-                            label = { Text(Format.mode(mode)) },
-                            leadingIcon = { Icon(mode.icon(), contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) },
-                        )
+            // A card of its own, so the extra options read as one block apart from the rest of the form.
+            androidx.compose.material3.Card(
+                shape = RoundedCornerShape(24.dp),
+                colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(stringResource(R.string.planner_preference), style = MaterialTheme.typography.labelLarge)
+                    ConnectedToggleGroup(
+                        options = RoutePreference.entries.toList(), selected = state.preference, onSelect = viewModel::setPreference,
+                        label = { stringResource(preferenceLabel(it)) }, modifier = Modifier.fillMaxWidth(),
+                        // The card is surfaceContainer, the toggles' default: lift them one tone.
+                        uncheckedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    )
+                    Text(stringResource(R.string.planner_modes), style = MaterialTheme.typography.labelLarge)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf(TransportMode.TRAIN, TransportMode.BUS, TransportMode.CITY_BUS, TransportMode.CABLE_CAR, TransportMode.ON_DEMAND).forEach { mode ->
+                            val included = mode !in state.excludedModes
+                            FilterChip(
+                                selected = included,
+                                onClick = { viewModel.toggleMode(mode) },
+                                label = { Text(Format.mode(mode)) },
+                                leadingIcon = { Icon(mode.icon(), contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) },
+                            )
+                        }
                     }
-                }
-                Text(stringResource(R.string.planner_walking_speed), style = MaterialTheme.typography.labelLarge)
-                ConnectedToggleGroup(
-                    options = WalkingSpeed.entries.toList(), selected = state.walkingSpeed, onSelect = viewModel::setWalkingSpeed,
-                    label = { stringResource(when (it) { WalkingSpeed.SLOW -> R.string.walking_slow; WalkingSpeed.NORMAL -> R.string.walking_normal; WalkingSpeed.FAST -> R.string.walking_fast }) },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                    Icon(Icons.Rounded.AccessibleForward, contentDescription = null)
-                    Spacer(Modifier.size(12.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(stringResource(R.string.planner_wheelchair), style = MaterialTheme.typography.bodyLarge)
-                        Text(stringResource(R.string.planner_wheelchair_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.planner_walking_speed), style = MaterialTheme.typography.labelLarge)
+                    ConnectedToggleGroup(
+                        options = WalkingSpeed.entries.toList(), selected = state.walkingSpeed, onSelect = viewModel::setWalkingSpeed,
+                        label = { stringResource(when (it) { WalkingSpeed.SLOW -> R.string.walking_slow; WalkingSpeed.NORMAL -> R.string.walking_normal; WalkingSpeed.FAST -> R.string.walking_fast }) },
+                        modifier = Modifier.fillMaxWidth(),
+                        // The card is surfaceContainer, the toggles' default: lift them one tone.
+                        uncheckedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    )
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                        Icon(Icons.Rounded.AccessibleForward, contentDescription = null)
+                        Spacer(Modifier.size(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(stringResource(R.string.planner_wheelchair), style = MaterialTheme.typography.bodyLarge)
+                            Text(stringResource(R.string.planner_wheelchair_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Switch(checked = state.wheelchair, onCheckedChange = viewModel::setWheelchair)
                     }
-                    Switch(checked = state.wheelchair, onCheckedChange = viewModel::setWheelchair)
                 }
             }
         }

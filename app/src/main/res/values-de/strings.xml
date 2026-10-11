@@ -210,6 +210,8 @@
     <string name="theme_light">Hell</string>
     <string name="theme_dark">Dunkel</string>
     <string name="settings_dynamic_color">Hintergrundfarben verwenden</string>
+    <string name="settings_amoled_dark">Reines Schwarz im dunklen Modus</string>
+    <string name="settings_amoled_dark_hint">Echt schwarze Hintergründe im dunklen Modus; spart Strom bei OLED-Bildschirmen.</string>
     <string name="settings_accessibility">Barrierefreiheit</string>
     <string name="settings_wheelchair_default">Standardmäßig rollstuhlgerechte Verbindungen anfragen.</string>
     <string name="settings_notifications">Benachrichtigungen</string>

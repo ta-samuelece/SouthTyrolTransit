@@ -49,6 +49,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -366,7 +367,11 @@ fun ErrorState(error: DataError, modifier: Modifier = Modifier, onRetry: (() -> 
     )
 }
 
-/** Connected toggle group (Material 3 Expressive) for a small set of exclusive options. */
+/**
+ * Connected toggle group (Material 3 Expressive) for a small set of exclusive options. Unselected
+ * buttons use [uncheckedContainerColor] (default surfaceContainer): pass a different tone when the group
+ * sits on a surface of that colour, or the unselected buttons disappear into it.
+ */
 @Composable
 fun <T> ConnectedToggleGroup(
     options: List<T>,
@@ -375,7 +380,9 @@ fun <T> ConnectedToggleGroup(
     label: @Composable (T) -> String,
     modifier: Modifier = Modifier,
     icon: ((T) -> ImageVector?)? = null,
+    uncheckedContainerColor: Color = Color.Unspecified,
 ) {
+    val colors = ToggleButtonDefaults.colors(containerColor = uncheckedContainerColor)
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)) {
         options.forEachIndexed { index, option ->
             ToggleButton(
@@ -387,6 +394,7 @@ fun <T> ConnectedToggleGroup(
                     options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
                     else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                 },
+                colors = colors,
                 contentPadding = PaddingValues(horizontal = 8.dp),
             ) {
                 icon?.invoke(option)?.let {

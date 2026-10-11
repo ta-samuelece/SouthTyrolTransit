@@ -109,6 +109,7 @@ class SettingsViewModel @Inject constructor(
 
     fun theme(value: ThemeMode) = viewModelScope.launch { settings.setTheme(value) }
     fun dynamic(value: Boolean) = viewModelScope.launch { settings.setDynamicColor(value) }
+    fun amoled(value: Boolean) = viewModelScope.launch { settings.setAmoledDark(value) }
     fun wheelchair(value: Boolean) = viewModelScope.launch { settings.setWheelchair(value) }
     fun ftp(value: Boolean) = viewModelScope.launch { settings.setFtpFallback(value) }
     fun metered(value: Boolean) = viewModelScope.launch { settings.setScheduleOnMetered(value); work.scheduleTimetableRefresh(value) }
@@ -172,6 +173,8 @@ fun SettingsScreen(navigator: Navigator, viewModel: SettingsViewModel = hiltView
                     stringResource(when (it) { ThemeMode.SYSTEM -> R.string.theme_system; ThemeMode.LIGHT -> R.string.theme_light; ThemeMode.DARK -> R.string.theme_dark })
                 }, { viewModel.theme(it) })
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) SwitchRow(stringResource(R.string.settings_dynamic_color), null, prefs.dynamicColor) { viewModel.dynamic(it) }
+                // Only meaningful when dark mode can apply.
+                if (prefs.theme != ThemeMode.LIGHT) SwitchRow(stringResource(R.string.settings_amoled_dark), stringResource(R.string.settings_amoled_dark_hint), prefs.amoledDark) { viewModel.amoled(it) }
                 ChipLabel(stringResource(R.string.settings_app_icon))
                 AppIconPicker()
                 Text(stringResource(R.string.settings_app_icon_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

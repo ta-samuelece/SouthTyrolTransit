@@ -222,6 +222,8 @@
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
     <string name="settings_dynamic_color">Use wallpaper colors</string>
+    <string name="settings_amoled_dark">Pure black dark mode</string>
+    <string name="settings_amoled_dark_hint">True black backgrounds in dark mode; saves power on OLED screens.</string>
     <string name="settings_accessibility">Accessibility</string>
     <string name="settings_wheelchair_default">Request wheelchair-accessible routes by default.</string>
     <string name="settings_notifications">Notifications</string>

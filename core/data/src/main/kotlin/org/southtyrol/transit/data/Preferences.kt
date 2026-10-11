@@ -29,7 +29,10 @@ enum class LocateButtonPosition { BOTTOM_END, BOTTOM_CENTER, BOTTOM_START, HIDDE
 
 data class UserSettings(
     val theme: ThemeMode = ThemeMode.SYSTEM,
-    val dynamicColor: Boolean = true,
+    /** Off by default: the app's own palette, unless the user picks the wallpaper colours. */
+    val dynamicColor: Boolean = false,
+    /** Pure black backgrounds in dark mode (saves power on OLED screens). */
+    val amoledDark: Boolean = false,
     val alertNotifications: Boolean = false,
     val mobilityLayers: Set<MobilityKind> = setOf(MobilityKind.PARKING),
     val walkingSpeed: WalkingSpeed = WalkingSpeed.NORMAL,
@@ -62,6 +65,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
     private object Keys {
         val theme = stringPreferencesKey("theme")
         val dynamic = booleanPreferencesKey("dynamic")
+        val amoled = booleanPreferencesKey("amoledDark")
         val alerts = booleanPreferencesKey("alertNotifications")
         val layers = stringPreferencesKey("mobilityLayers")
         val walking = stringPreferencesKey("walkingSpeed")
@@ -82,7 +86,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         .map { p ->
             UserSettings(
                 theme = p[Keys.theme]?.let { runCatching { ThemeMode.valueOf(it) }.getOrNull() } ?: ThemeMode.SYSTEM,
-                dynamicColor = p[Keys.dynamic] ?: true,
+                dynamicColor = p[Keys.dynamic] ?: false,
+                amoledDark = p[Keys.amoled] ?: false,
                 alertNotifications = p[Keys.alerts] ?: false,
                 mobilityLayers = p[Keys.layers]?.split(',')?.mapNotNull { runCatching { MobilityKind.valueOf(it) }.getOrNull() }?.toSet() ?: setOf(MobilityKind.PARKING),
                 walkingSpeed = p[Keys.walking]?.let { runCatching { WalkingSpeed.valueOf(it) }.getOrNull() } ?: WalkingSpeed.NORMAL,
@@ -103,6 +108,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
 
     suspend fun setTheme(value: ThemeMode) { store.edit { it[Keys.theme] = value.name } }
     suspend fun setDynamicColor(value: Boolean) { store.edit { it[Keys.dynamic] = value } }
+    suspend fun setAmoledDark(value: Boolean) { store.edit { it[Keys.amoled] = value } }
     suspend fun setAlertNotifications(value: Boolean) { store.edit { it[Keys.alerts] = value } }
     suspend fun setMobilityLayers(value: Set<MobilityKind>) { store.edit { it[Keys.layers] = value.joinToString(",") { k -> k.name } } }
     suspend fun setWalkingSpeed(value: WalkingSpeed) { store.edit { it[Keys.walking] = value.name } }

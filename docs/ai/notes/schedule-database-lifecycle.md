@@ -37,7 +37,9 @@ Both are `@Database(version = 1, exportSchema = true)`; neither builder (`Schedu
 `core/data/schemas/` - commit the new `N.json` with any schema change.
 
 - **User DB:** a schema change without a hand-written `Migration` crashes on first access and can lose
-  saved items. Always write the migration and bump the version.
+  saved items. Always write the migration and bump the version. The migration must also handle files
+  restored from the phone's backup, which can come from any older version
+  ([backup and restore](./backup-and-restore.md)).
 - **Schedule DB:** opening the old file fails Room's identity check; `GtfsSchedule.isAvailable()` only
   checks that the pointer exists, so every offline query fails (as `DataError.Parse`) until the next
   successful import. `loadInfo()` swallows the failure, so the hash check misses and a re-import does

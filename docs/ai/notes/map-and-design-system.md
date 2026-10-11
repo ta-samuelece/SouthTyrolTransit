@@ -1,11 +1,11 @@
 ---
 type: Reference
 title: Map and design-system conventions - MapContent, styles, attribution, colours, reduced motion
-description: Map content is one immutable value re-pushed in full and marker ids must be unique across stops, vehicles and POIs; without a timetable the map's stops come from the EFA coordinate search; maps inside pages use ExpandableMapPage and enlarge where their small card sits; the one convention for showing progress along a run; the dark style falls back to the light override; attribution and font are hard-coded to OpenFreeMap; feed route colours are already used; reduced motion is read once.
+description: Map content is one immutable value re-pushed in full and marker ids must be unique across stops, vehicles and POIs; without a timetable the map's stops come from the EFA coordinate search; maps inside pages use ExpandableMapPage and enlarge where their small card sits; the one convention for showing progress along a run; the dark style falls back to the light override; attribution and font are hard-coded to OpenFreeMap; feed route colours are already used; the colour scheme (own palette by default, optional wallpaper colours and pure black) and the toggle group on surfaceContainer cards; reduced motion is read once.
 tags: [map, maplibre, design-system, colors, accessibility]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-09T20:30:00Z"
+  at: "2026-10-11T12:30:00Z"
 status: stable
 ---
 
@@ -68,6 +68,19 @@ carry colours. Journey legs always use mode colours. A new `TransportMode` needs
 `ModeColors.container` and `ModeShapes.badge` - badges differ by shape too, so lines are never told apart
 by colour alone. Status colours are fixed hex values in `Tokens.kt`, chosen by dark/light only.
 
+# Colour scheme
+
+`TransitTheme` uses the app's own palette unless the user switches on wallpaper colours
+(`UserSettings.dynamicColor`, off by default since 2026-10-11; Android 12+ only). "Pure black dark mode"
+(`amoledDark`) applies `ColorScheme.trueBlack()` in dark mode: `background`, `surface`, `surfaceDim` and
+`surfaceContainerLowest` become black, the other containers keep their tones so cards stay raised. Both
+`MainActivity` and `WidgetConfigActivity` build the theme and must pass the same settings.
+
+Unselected `ConnectedToggleGroup` buttons default to `surfaceContainer`. On a card of that colour (the
+planner's routing-options card) they vanish: pass `uncheckedContainerColor` (the planner uses
+`surfaceContainerHighest`). The `ToggleButtonDefaults` colour factory is `colors(...)` in this alpha, not
+`toggleButtonColors`.
+
 # Reduced motion
 
 `TransitTheme` reads `ANIMATOR_DURATION_SCALE == 0` once (`remember(context)`) into `LocalReducedMotion`
@@ -80,4 +93,5 @@ animated components must check `LocalReducedMotion` themselves.
 Code read of `core/map`, `core/designsystem` and `MainActivity.kt` on 2026-10-09. The online stop
 fallback and the enlarged-map placement were checked on an emulator the same evening: stops appeared on
 the map of a fresh install while the timetable was still importing, and the stop page's map enlarged at
-the bottom.
+the bottom. The colour-scheme options and the options card were checked on an emulator in light, dark
+and pure black on 2026-10-11.

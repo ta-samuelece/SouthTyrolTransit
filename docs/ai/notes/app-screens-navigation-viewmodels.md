@@ -5,7 +5,7 @@ description: How a route is declared and registered (screen<T> helper, Navigator
 tags: [compose, navigation, viewmodel, hilt, search, workmanager]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-09T15:00:00Z"
+  at: "2026-10-11T12:00:00Z"
 status: stable
 ---
 
@@ -56,12 +56,15 @@ changed, so typing a space does not flash a spinner.
 
 - `PollWhileVisible(period, key)` restarts when `key` changes. `StopViewModel.refresh` reloads the
   timetable part only when it is older than a minute, so a 30 s poll refreshes realtime every tick and the
-  timetable every other.
+  timetable every other. Loads can overlap (a poll and a "later" tap); `refresh` applies a result only
+  if the board's window (`start`, `end`, `arrivals`) is still the one it loaded for (issue #19).
 - The manifest removes `WorkManagerInitializer`; WorkManager relies on `TransitApplication` being a
   `Configuration.Provider` with `HiltWorkerFactory`. Every new worker needs `@HiltWorker` and
   `@AssistedInject` with `@Assisted` context and params.
 - Widget state is JSON (`WidgetDeparture`) in Glance preferences, decoded with `runCatching`: renaming a
-  field silently empties placed widgets until their next refresh.
+  field silently empties placed widgets until their next refresh. The status line comes from
+  `WidgetState.status`: a failed refresh before any successful one shows `widget_load_failed`, not
+  "Loading..." (issue #16, pinned by `WidgetStatusTest`).
 
 # What was checked
 

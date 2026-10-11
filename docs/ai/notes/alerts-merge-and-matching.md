@@ -5,10 +5,10 @@ description: GTFS-RT and EFA alerts merge on one identical normalised header plu
 tags: [alerts, gtfs-rt, efa, dedupe, cache]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-09T15:00:00Z"
+  at: "2026-10-11T12:00:00Z"
 verified:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-09T15:00:00Z"
+  at: "2026-10-11T12:00:00Z"
 status: stable
 ---
 
@@ -24,7 +24,10 @@ Two alerts merge when their ids are equal, **or** when all of these hold:
   (`<line number>`) are never comparable.
 
 Each group is compared against its first member only. Input is sorted by `AlertSource.ordinal`
-(GTFS-RT before EFA), so GTFS-RT's id, headers and urls win; scopes are unioned. Consequence: two
+(GTFS-RT before EFA), so GTFS-RT's id, headers and urls win; scopes are unioned, and the other members'
+ids are kept in `aliases` (`allIds` = id + aliases). The merged id therefore changes when GTFS-RT drops
+its copy while EFA's stays: `AlertCheckWorker` checks and records every id in `allIds`, so that alert is
+not notified again (issue #17, fixed 2026-10-11). Use `allIds` for any other "seen" bookkeeping. Consequence: two
 unrelated disruptions from different sources with the same generic header ("Umleitung") and overlapping
 periods collapse into one alert carrying both scopes. Reordering `AlertSource` changes which source wins.
 

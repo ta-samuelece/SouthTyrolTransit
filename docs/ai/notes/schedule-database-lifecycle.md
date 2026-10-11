@@ -1,14 +1,14 @@
 ---
 type: Finding
 title: The schedule and user databases - versioning, swaps, migrations and the importer
-description: Importer changes reach existing installs only when GtfsImporter.VERSION is bumped; neither Room database has migrations; the importer writes raw SQL with hard-coded column lists; caches must key on ScheduleStore.version; how stop search is built.
+description: Importer changes reach existing installs only when GtfsImporter.VERSION is bumped; neither Room database has migrations; the importer writes raw SQL with hard-coded column lists; caches must key on ScheduleStore.version; queries go through ScheduleStore.withDatabase, which keeps a replaced database open until its users finish; how stop search is built.
 tags: [room, database, gtfs, importer, search, migrations]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-09T23:00:00Z"
+  at: "2026-10-11T12:00:00Z"
 verified:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-09T23:00:00Z"
+  at: "2026-10-11T12:00:00Z"
 status: stable
 ---
 
@@ -58,6 +58,13 @@ and 10-day service caches on it. Any new cache of schedule data must check `vers
 the previous feed after a swap. `ScheduleStore` must stay the only writer (a `@Singleton`): it caches the
 pointer file on first read.
 
+# Queries hold the database they run on
+
+Every schedule query goes through `ScheduleStore.withDatabase`, which counts the users of each open
+database. Activating a new feed retires the old one: it is closed and its file deleted only when the last
+running query on it returns (until 2026-10-11 it was closed at once, failing those queries - issue #18).
+Never keep a `ScheduleDatabase` or DAO beyond the `withDatabase` block that produced it.
+
 # Stop search
 
 `stop_search` (FTS4, `unicode61`) has one row per station key whose text is the distinct
@@ -80,5 +87,6 @@ station can be cut before ranking.
 # What was checked
 
 Hash skip, the two builders and the version declarations re-read on 2026-10-09; the importer-version
-re-import is pinned by `ScheduleTest.sameFeedIsImportedAgainAfterAnImporterChange`; the rest from a code read
+re-import is pinned by `ScheduleTest.sameFeedIsImportedAgainAfterAnImporterChange`, the deferred close
+by `activatingANewScheduleKeepsTheOldOneOpenForRunningQueries` (2026-10-11); the rest from a code read
 of `ScheduleStore.kt`, `GtfsImporter.kt`, `GtfsSchedule.kt`, `Database.kt` and `ScheduleTest` the same day.

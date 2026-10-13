@@ -24,12 +24,9 @@ import org.southtyrol.transit.data.LineRepository
 import org.southtyrol.transit.data.RealtimeRepository
 import org.southtyrol.transit.data.SavedKind
 import org.southtyrol.transit.data.SavedRepository
-import org.southtyrol.transit.location.LocationProvider
-import org.southtyrol.transit.location.LocationResult
 import org.southtyrol.transit.model.DataError
 import org.southtyrol.transit.model.DataException
 import org.southtyrol.transit.model.Departure
-import org.southtyrol.transit.model.Geo
 import org.southtyrol.transit.model.Line
 import org.southtyrol.transit.model.Point
 import org.southtyrol.transit.model.ServiceAlert
@@ -49,7 +46,6 @@ data class StopState(
     val source: BoardSource = BoardSource.SCHEDULE,
     val loadedAt: Instant? = null,
     val error: DataError? = null,
-    val distanceMeters: Double? = null,
     /** Start of the shown window; null = live ("now", moving with time). */
     val start: Instant? = null,
     /** End of the shown window; null = [DEFAULT_WINDOW] after the start. */
@@ -84,7 +80,6 @@ class StopViewModel @AssistedInject constructor(
     private val saved: SavedRepository,
     alerts: AlertRepository,
     private val language: LanguageProvider,
-    private val location: LocationProvider,
 ) : ViewModel() {
     @AssistedFactory
     interface Factory { fun create(@Assisted("key") stationKey: String, @Assisted("name") name: String): StopViewModel }
@@ -116,9 +111,6 @@ class StopViewModel @AssistedInject constructor(
             val toggle = departures.arrivalsDiffer(stationKey)
             val directions = departures.directions(stationKey, lang)
             _state.update { it.copy(stop = stop, name = stop?.name ?: it.name, platforms = platforms, lines = served, showArrivalsToggle = toggle, directions = directions) }
-            if (stop != null && location.hasPermission()) {
-                (location.current() as? LocationResult.Found)?.let { found -> _state.update { it.copy(distanceMeters = Geo.distance(found.point, stop.point)) } }
-            }
         }
     }
 

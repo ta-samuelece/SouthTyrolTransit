@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class, ExperimentalLayoutApi::class)
 
 package org.southtyrol.transit.feature.alerts
 
@@ -6,19 +6,21 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -43,7 +45,10 @@ import kotlinx.coroutines.flow.map
 import org.southtyrol.transit.model.localized
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.FilterList
+import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.StarBorder
+import androidx.compose.foundation.layout.size
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.southtyrol.transit.R
@@ -55,6 +60,7 @@ import org.southtyrol.transit.data.LineRepository
 import org.southtyrol.transit.data.SavedKind
 import org.southtyrol.transit.data.SavedRepository
 import org.southtyrol.transit.design.BannerKind
+import org.southtyrol.transit.design.ConnectedToggleGroup
 import org.southtyrol.transit.design.Format
 import org.southtyrol.transit.design.FreshnessIndicator
 import org.southtyrol.transit.design.MessageState
@@ -73,8 +79,11 @@ import javax.inject.Inject
 
 data class AlertsUi(val state: AlertsState, val savedStops: Set<String>, val savedLines: List<Line>, val loaded: Boolean)
 
-/** Human-readable scope of an alert: public line names and stop names. */
-data class AlertScope(val lines: Set<String>, val stops: List<String>)
+/**
+ * Human-readable scope of an alert: public line names and stop names, plus the GTFS route behind a line
+ * name where one is known, so the line can be drawn as its badge (mode and colour).
+ */
+data class AlertScope(val lines: Set<String>, val stops: List<String>, val routes: Map<String, org.southtyrol.transit.model.Route> = emptyMap())
 
 @HiltViewModel
 class AlertsViewModel @Inject constructor(
@@ -86,8 +95,10 @@ class AlertsViewModel @Inject constructor(
     private val handle: androidx.lifecycle.SavedStateHandle,
 ) : ViewModel() {
     private var resolvedLines: Map<String, Line?> = emptyMap()
-    private val routeNames = HashMap<String, String>()
+    private val routes = HashMap<String, org.southtyrol.transit.model.Route>()
     private val stopNames = HashMap<String, String?>()
+    /** Lines named only in planner notices (no GTFS route id), looked up by their public name. */
+    private val linesByName = HashMap<String, Line?>()
 
     private val _query = kotlinx.coroutines.flow.MutableStateFlow(handle.get<String>("q").orEmpty())
     val query: StateFlow<String> = _query
@@ -96,14 +107,24 @@ class AlertsViewModel @Inject constructor(
     /** GTFS route ids and stop ids resolved to names so alerts can be filtered by line or stop. */
     val scopes: StateFlow<Map<String, AlertScope>> = alerts.state.map { state ->
         val lang = language.current()
-        val missingRoutes = state.alerts.flatMap { it.routes }.filter { it !in routeNames }.toSet()
-        if (missingRoutes.isNotEmpty()) runCatching { schedule.routes(missingRoutes) }.getOrNull()?.forEach { (id, r) -> routeNames[id] = r.shortName.ifBlank { r.longName } }
+        val missingRoutes = state.alerts.flatMap { it.routes }.filter { it !in routes }.toSet()
+        if (missingRoutes.isNotEmpty()) runCatching { schedule.routes(missingRoutes) }.getOrNull()?.let { routes.putAll(it) }
         state.alerts.associate { alert ->
             val stations = alert.stops.filter { it.count { c -> c == ':' } == 2 }.toSet()
             for (key in stations) if (key !in stopNames) stopNames[key] = runCatching { schedule.stop(key, lang)?.name }.getOrNull()
+            val named = alert.routes.mapNotNull { id -> routes[id]?.let { r -> r.shortName.ifBlank { r.longName } to r } }.filter { it.first.isNotBlank() }.toMap()
+            // Planner notices name lines without a route id: find the line by name so its badge gets the
+            // right mode icon and colour (the first exact match; none when the timetable is missing).
+            val byName = alert.lineNames.filter { it !in named }.mapNotNull { name ->
+                val line = linesByName.getOrPut(name) {
+                    runCatching { lines.search(name) }.getOrNull()?.firstOrNull { it.name.equals(name, ignoreCase = true) }
+                }
+                line?.let { name to org.southtyrol.transit.model.Route(it.key, it.name, it.longName, it.mode, color = it.color, textColor = it.textColor) }
+            }
             alert.id to AlertScope(
-                alert.lineNames + alert.routes.mapNotNull { routeNames[it] }.filter { it.isNotBlank() },
+                alert.lineNames + named.keys,
                 stations.mapNotNull { stopNames[it] }.distinct().sorted(),
+                named + byName,
             )
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
@@ -143,7 +164,14 @@ fun AlertsScreen(navigator: Navigator, viewModel: AlertsViewModel = hiltViewMode
     val language = AppLanguage.textLanguages()
     PollWhileVisible(120_000) { viewModel.refresh() }
 
-    Scaffold(topBar = { TopLevelBar(stringResource(R.string.alerts_title)) }) { padding ->
+    Scaffold(
+        topBar = {
+            TopLevelBar(stringResource(R.string.alerts_title), onSettings = navigator::settings) {
+                // How current the notices are sits in the header.
+                ui?.let { FreshnessIndicator(it.state.freshness, it.state.fetchedAt, now, compact = true) }
+            }
+        },
+    ) { padding ->
         PullToRefreshBox(
             isRefreshing = refreshing,
             onRefresh = { scope.launch { refreshing = true; viewModel.refresh(force = true); refreshing = false } },
@@ -154,35 +182,57 @@ fun AlertsScreen(navigator: Navigator, viewModel: AlertsViewModel = hiltViewMode
             val all = current.state.alerts
             val filtered = all.filter { if (tab == 0) it.active(now) else it.upcoming(now) }.filter { !onlyMine || viewModel.mine(it, current) }
                 .filter { viewModel.matches(it, scopes[it.id], query, language) }
-            LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            // Alerts form one grouped list (2 dp apart); the controls above keep their own spacing.
+            LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 item {
-                    PrimaryTabRow(selectedTabIndex = tab) {
-                        Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.alerts_active)) })
-                        Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.alerts_planned)) })
-                    }
-                }
-                item {
-                    androidx.compose.material3.OutlinedTextField(
+                    // A filled search field in the expressive search-bar style.
+                    androidx.compose.material3.TextField(
                         value = query, onValueChange = viewModel::query, singleLine = true,
                         placeholder = { Text(stringResource(R.string.alerts_filter_hint)) },
-                        leadingIcon = { androidx.compose.material3.Icon(androidx.compose.material.icons.Icons.Rounded.FilterList, contentDescription = null) },
+                        leadingIcon = { androidx.compose.material3.Icon(androidx.compose.material.icons.Icons.Rounded.Search, contentDescription = null) },
                         trailingIcon = {
                             if (query.isNotEmpty()) androidx.compose.material3.IconButton(onClick = { viewModel.query("") }) {
                                 androidx.compose.material3.Icon(androidx.compose.material.icons.Icons.Rounded.Close, contentDescription = stringResource(R.string.action_clear))
                             }
                         },
                         shape = androidx.compose.foundation.shape.RoundedCornerShape(28.dp),
+                        colors = androidx.compose.material3.TextFieldDefaults.colors(
+                            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+                            unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+                        ),
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
                 item {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        FilterChip(selected = onlyMine, onClick = { onlyMine = !onlyMine }, label = { Text(stringResource(R.string.alerts_only_saved)) })
+                    // When on the left, the "my stops and lines" filter on the right; on a narrow screen the filter
+                    // wraps below.
+                    FlowRow(
+                        Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp),
+                        itemVerticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                    ) {
+                        ConnectedToggleGroup(
+                            options = listOf(0, 1), selected = tab, onSelect = { tab = it },
+                            label = { stringResource(if (it == 0) R.string.alerts_active else R.string.alerts_planned) },
+                            equalWidth = false,
+                        )
+                        Spacer(Modifier.weight(1f))
+                        FilterChip(
+                            selected = onlyMine, onClick = { onlyMine = !onlyMine },
+                            label = { Text(stringResource(R.string.alerts_only_saved)) },
+                            leadingIcon = {
+                                androidx.compose.material3.Icon(
+                                    if (onlyMine) androidx.compose.material.icons.Icons.Rounded.Star else androidx.compose.material.icons.Icons.Rounded.StarBorder,
+                                    contentDescription = null, modifier = Modifier.size(androidx.compose.material3.FilterChipDefaults.IconSize),
+                                )
+                            },
+                        )
                     }
                 }
-                item { FreshnessIndicator(current.state.freshness, current.state.fetchedAt, now) }
-                if (current.state.freshness == Freshness.STALE) item { StatusBanner(stringResource(R.string.alerts_stale), kind = BannerKind.WARNING) }
-                current.state.error?.let { item { StatusBanner(Format.error(it), kind = BannerKind.ERROR) } }
+                item { Spacer(Modifier.height(10.dp)) }
+                if (current.state.freshness == Freshness.STALE) item { StatusBanner(stringResource(R.string.alerts_stale), Modifier.padding(bottom = 8.dp), kind = BannerKind.WARNING) }
+                current.state.error?.let { item { StatusBanner(Format.error(it), Modifier.padding(bottom = 8.dp), kind = BannerKind.ERROR) } }
                 if (onlyMine && current.savedStops.isEmpty() && current.savedLines.isEmpty()) item {
                     androidx.compose.material3.Card(Modifier.fillMaxWidth()) {
                         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -196,17 +246,22 @@ fun AlertsScreen(navigator: Navigator, viewModel: AlertsViewModel = hiltViewMode
                         icon = Icons.Rounded.CheckCircle,
                     )
                 }
-                items(filtered, key = { it.id }) { alert ->
+                itemsIndexed(filtered, key = { _, it -> it.id }) { index, alert ->
                     val scope = scopes[alert.id]
                     AlertCard(
                         alert, language, now, Modifier.animateItem(),
                         onLine = { name -> viewModel.query(name) },
                         lineNames = scope?.lines ?: alert.lineNames,
                         stopNames = scope?.stops.orEmpty(),
+                        lineRoutes = scope?.routes.orEmpty(),
+                        shape = org.southtyrol.transit.feature.common.groupShape(index, filtered.size),
                     )
                 }
                 item {
-                    Text(stringResource(R.string.alerts_source), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        stringResource(R.string.alerts_source), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 14.dp),
+                    )
                 }
             }
         }

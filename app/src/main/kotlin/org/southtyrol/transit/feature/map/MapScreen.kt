@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class, FlowPreview::class)
+@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class, FlowPreview::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 
 package org.southtyrol.transit.feature.map
 
@@ -13,10 +13,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.DepartureBoard
+import androidx.compose.material.icons.rounded.Directions
 import androidx.compose.material.icons.rounded.DirectionsBus
 import androidx.compose.material.icons.rounded.ElectricCar
 import androidx.compose.material.icons.rounded.LocalParking
@@ -300,25 +303,25 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel()) {
 
             Column(Modifier.statusBarsPadding().padding(12.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 val (fetchedAt, error) = feed
-                if (prefs.showVehicles) {
-                    when {
-                        error != null && (fetchedAt == null || FreshnessPolicy.feed(fetchedAt, now) != Freshness.LIVE) -> StatusBanner(stringResource(R.string.map_vehicles_unavailable), kind = BannerKind.ERROR)
-                        fetchedAt != null && vehicles.isEmpty() -> StatusBanner(stringResource(R.string.map_no_vehicles), kind = BannerKind.INFO)
-                    }
+                if (prefs.showVehicles && error != null && (fetchedAt == null || FreshnessPolicy.feed(fetchedAt, now) != Freshness.LIVE)) {
+                    StatusBanner(stringResource(R.string.map_vehicles_unavailable), kind = BannerKind.ERROR)
                 }
                 if (failed.isNotEmpty()) StatusBanner(stringResource(R.string.map_layer_failed), kind = BannerKind.WARNING)
-                if (prefs.showVehicles && fetchedAt != null) {
-                    androidx.compose.material3.Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.92f)) {
-                        FreshnessIndicator(FreshnessPolicy.feed(fetchedAt, now), fetchedAt, now, Modifier.padding(horizontal = 12.dp, vertical = 6.dp))
-                    }
-                }
+                // An empty vehicle feed is not an error: it is said in the freshness pill, not in a banner.
+                if (prefs.showVehicles && fetchedAt != null) FreshnessIndicator(
+                    FreshnessPolicy.feed(fetchedAt, now), fetchedAt, now,
+                    extra = if (vehicles.isEmpty()) stringResource(R.string.map_no_vehicles_short) else null,
+                )
             }
 
             // Only the locate button floats over the map; what is shown is chosen in Settings.
             val locate = prefs.locateButton
             if (locate != LocateButtonPosition.HIDDEN) {
+                // A muted secondary tone: the map, not this button, is the content.
                 androidx.compose.material3.FloatingActionButton(
                     onClick = requestLocation,
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                     modifier = Modifier
                         .align(
                             when (locate) {
@@ -357,7 +360,18 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel()) {
                                 }
                             }
                         }
-                        Button(onClick = { viewModel.clearSelection(); navigator.stop(sel.stop.id, sel.stop.name) }) { Text(stringResource(R.string.map_open_departures)) }
+                        // The main action fills the row; directions is the secondary, tonal icon button beside it.
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(
+                                onClick = { viewModel.clearSelection(); navigator.stop(sel.stop.id, sel.stop.name) },
+                                modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                            ) {
+                                Icon(Icons.Rounded.DepartureBoard, contentDescription = null, modifier = Modifier.size(androidx.compose.material3.ButtonDefaults.IconSize))
+                                Spacer(Modifier.width(androidx.compose.material3.ButtonDefaults.IconSpacing))
+                                Text(stringResource(R.string.map_open_departures))
+                            }
+                            DirectionsButton(sel.stop.point, compact = true)
+                        }
                     }
                     is MapSelection.MobilitySel -> MobilitySheet(sel.point, now)
                 }
@@ -380,7 +394,9 @@ private fun VehicleSheet(sel: MapSelection.VehicleSel, now: Instant, onTrip: (St
     when {
         sel.loading -> TransitLoading()
         sel.trip != null -> {
-            val next = sel.trip.stops.firstOrNull { (it.predictedDeparture ?: it.scheduledDeparture).isAfter(now) }
+            // Placed by the bus's own position, like the trip timeline (the stop it stands at counts as next).
+            val position = org.southtyrol.transit.model.RunPositions.locate(sel.trip.stops, sel.trip.shape, v.vehicle.point, now)
+            val next = sel.trip.stops.getOrNull(position.nextIndex - (if (position.atStop) 1 else 0))
             if (next != null) {
                 Text(stringResource(R.string.map_next_stop, next.stop.name, Format.time(next.predictedDeparture ?: next.scheduledDeparture)), style = MaterialTheme.typography.bodyLarge)
                 DelayLabel(next.predictedDeparture?.let { java.time.Duration.between(next.scheduledDeparture, it).seconds }, next.state, sel.trip.freshness)
@@ -413,5 +429,28 @@ private fun MobilitySheet(p: MobilityPoint, now: Instant) {
         Text(stringResource(R.string.mobility_no_current), style = MaterialTheme.typography.bodyLarge)
     }
     FreshnessIndicator(p.freshness, p.updatedAt, now)
+    DirectionsButton(p.point)
     Text(stringResource(R.string.mobility_source), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+}
+
+/**
+ * Opens Google Maps (the app when installed, otherwise the website) with directions to [point]; [compact]
+ * is a tonal icon button for a row whose main action is something else.
+ */
+@Composable
+private fun DirectionsButton(point: Point, compact: Boolean = false) {
+    val uri = androidx.compose.ui.platform.LocalUriHandler.current
+    // No app can open the link (no browser either): nothing to do.
+    val open = { runCatching { uri.openUri("https://www.google.com/maps/dir/?api=1&destination=${point.latitude},${point.longitude}") }; Unit }
+    if (compact) {
+        androidx.compose.material3.FilledTonalIconButton(onClick = open, modifier = Modifier.size(width = 56.dp, height = 48.dp)) {
+            Icon(Icons.Rounded.Directions, contentDescription = stringResource(R.string.map_get_directions))
+        }
+        return
+    }
+    OutlinedButton(onClick = open) {
+        Icon(Icons.Rounded.Directions, contentDescription = null, modifier = Modifier.size(androidx.compose.material3.ButtonDefaults.IconSize))
+        Spacer(Modifier.width(androidx.compose.material3.ButtonDefaults.IconSpacing))
+        Text(stringResource(R.string.map_get_directions))
+    }
 }

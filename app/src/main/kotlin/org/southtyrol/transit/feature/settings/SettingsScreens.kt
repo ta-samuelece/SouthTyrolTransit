@@ -6,7 +6,10 @@ import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.semantics.heading
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -22,7 +25,11 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.rounded.BrightnessAuto
 import androidx.compose.material.icons.rounded.ConfirmationNumber
+import androidx.compose.material.icons.rounded.DarkMode
+import androidx.compose.material.icons.rounded.LightMode
 import androidx.compose.material.icons.rounded.Gavel
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Star
@@ -150,130 +157,179 @@ fun SettingsScreen(navigator: Navigator, viewModel: SettingsViewModel = hiltView
     val status by viewModel.status.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var language by remember { mutableStateOf(AppLanguage.selected()) }
+    val updates: org.southtyrol.transit.update.UpdateViewModel = hiltViewModel()
     val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted -> viewModel.alerts(granted) }
+    // Which choice dialog (or the app icon sheet) is open, if any.
+    var choice by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
+    val dismiss = { choice = null }
+    when (choice) {
+        CHOICE_START -> ChoiceDialog(
+            stringResource(R.string.settings_start_tab), StartTab.entries.filter { it != StartTab.SETTINGS }, prefs.startTab,
+            { stringResource(startTabLabel(it)) }, { viewModel.startTab(it); dismiss() }, dismiss,
+        )
+        CHOICE_LANGUAGE -> ChoiceDialog(
+            stringResource(R.string.settings_language), AppLanguage.Option.entries, language,
+            { stringResource(languageLabel(it)) }, { language = it; dismiss(); AppLanguage.select(it) }, dismiss,
+        )
+        CHOICE_LOCATE -> ChoiceDialog(
+            stringResource(R.string.settings_locate_button), LocateButtonPosition.entries, prefs.locateButton,
+            { stringResource(locateLabel(it)) }, { viewModel.locateButton(it); dismiss() }, dismiss,
+        )
+        CHOICE_ICON -> androidx.compose.material3.ModalBottomSheet(onDismissRequest = dismiss) {
+            Column(Modifier.padding(start = 24.dp, end = 24.dp, bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(stringResource(R.string.settings_app_icon), style = MaterialTheme.typography.titleLarge)
+                AppIconPicker(onPicked = viewModel::appIcon)
+                Text(stringResource(R.string.settings_app_icon_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+    }
 
-    SubScreen(stringResource(R.string.settings_title), navigator, showBack = false) {
+    SubScreen(stringResource(R.string.settings_title), navigator) {
         item {
             SettingsGroup(stringResource(R.string.settings_saved)) {
-                LinkRow(stringResource(R.string.settings_saved_manage), Icons.Rounded.Star, navigator::saved)
+                item { LinkRow(stringResource(R.string.settings_saved_manage), Icons.Rounded.Star, navigator::saved) }
                 // Android 8 has no backup: it cannot require end-to-end encryption (see backup_rules.xml).
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) BackupInfo()
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) item { BackupInfo() }
             }
         }
 
         item {
             SettingsGroup(stringResource(R.string.settings_general)) {
-                ChipLabel(stringResource(R.string.settings_start_tab))
-                SingleChoiceChips(StartTab.entries, prefs.startTab, { stringResource(startTabLabel(it)) }, { viewModel.startTab(it) })
-                ChipLabel(stringResource(R.string.settings_language))
-                SingleChoiceChips(AppLanguage.Option.entries, language, { stringResource(languageLabel(it)) }) { language = it; AppLanguage.select(it) }
-                Text(stringResource(R.string.settings_ladin_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                item {
+                    // Settings is not a tab any more: a stored "open on Settings" shows as Plan, where the app opens.
+                    val start = prefs.startTab.takeIf { it != StartTab.SETTINGS } ?: StartTab.PLAN
+                    ChoiceRow(stringResource(R.string.settings_start_tab), stringResource(startTabLabel(start))) { choice = CHOICE_START }
+                }
+                item {
+                    ChoiceRow(stringResource(R.string.settings_language), stringResource(languageLabel(language))) { choice = CHOICE_LANGUAGE }
+                    Text(stringResource(R.string.settings_ladin_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 8.dp))
+                }
             }
         }
 
         item {
             SettingsGroup(stringResource(R.string.settings_appearance)) {
-                SingleChoiceChips(ThemeMode.entries, prefs.theme, {
-                    stringResource(when (it) { ThemeMode.SYSTEM -> R.string.theme_system; ThemeMode.LIGHT -> R.string.theme_light; ThemeMode.DARK -> R.string.theme_dark })
-                }, { viewModel.theme(it) })
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) SwitchRow(stringResource(R.string.settings_dynamic_color), null, prefs.dynamicColor) { viewModel.dynamic(it) }
+                item {
+                    // Exclusive choice: a connected button group; unselected buttons take a stronger tone than the
+                    // item's surfaceContainer to stay visible.
+                    org.southtyrol.transit.design.ConnectedToggleGroup(
+                        options = ThemeMode.entries, selected = prefs.theme, onSelect = { viewModel.theme(it) },
+                        label = { stringResource(when (it) { ThemeMode.SYSTEM -> R.string.theme_system; ThemeMode.LIGHT -> R.string.theme_light; ThemeMode.DARK -> R.string.theme_dark }) },
+                        icon = { when (it) { ThemeMode.SYSTEM -> Icons.Rounded.BrightnessAuto; ThemeMode.LIGHT -> Icons.Rounded.LightMode; ThemeMode.DARK -> Icons.Rounded.DarkMode } },
+                        uncheckedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                    )
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) item { SwitchRow(stringResource(R.string.settings_dynamic_color), null, prefs.dynamicColor) { viewModel.dynamic(it) } }
                 // Only meaningful when dark mode can apply.
-                if (prefs.theme != ThemeMode.LIGHT) SwitchRow(stringResource(R.string.settings_amoled_dark), stringResource(R.string.settings_amoled_dark_hint), prefs.amoledDark) { viewModel.amoled(it) }
-                ChipLabel(stringResource(R.string.settings_app_icon))
-                AppIconPicker(onPicked = viewModel::appIcon)
-                Text(stringResource(R.string.settings_app_icon_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (prefs.theme != ThemeMode.LIGHT) item { SwitchRow(stringResource(R.string.settings_amoled_dark), stringResource(R.string.settings_amoled_dark_hint), prefs.amoledDark) { viewModel.amoled(it) } }
+                item { AppIconRow(prefs.appIcon) { choice = CHOICE_ICON } }
             }
         }
 
         item {
             SettingsGroup(stringResource(R.string.settings_map)) {
-                ChipLabel(stringResource(R.string.settings_map_layers))
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    ToggleChip(stringResource(R.string.map_layer_stops), prefs.showStops) { viewModel.showStops(it) }
-                    ToggleChip(stringResource(R.string.map_layer_vehicles), prefs.showVehicles) { viewModel.showVehicles(it) }
-                    ToggleChip(stringResource(R.string.map_layer_parking), MobilityKind.PARKING in prefs.mobilityLayers) { viewModel.layer(MobilityKind.PARKING, it) }
-                    ToggleChip(stringResource(R.string.map_layer_bikes), MobilityKind.BIKE_SHARING in prefs.mobilityLayers) { viewModel.layer(MobilityKind.BIKE_SHARING, it) }
-                    ToggleChip(stringResource(R.string.map_layer_cars), MobilityKind.CAR_SHARING in prefs.mobilityLayers) { viewModel.layer(MobilityKind.CAR_SHARING, it) }
+                item {
+                    ChipLabel(stringResource(R.string.settings_map_layers))
+                    FlowRow(Modifier.padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        ToggleChip(stringResource(R.string.map_layer_stops), prefs.showStops) { viewModel.showStops(it) }
+                        ToggleChip(stringResource(R.string.map_layer_vehicles), prefs.showVehicles) { viewModel.showVehicles(it) }
+                        ToggleChip(stringResource(R.string.map_layer_parking), MobilityKind.PARKING in prefs.mobilityLayers) { viewModel.layer(MobilityKind.PARKING, it) }
+                        ToggleChip(stringResource(R.string.map_layer_bikes), MobilityKind.BIKE_SHARING in prefs.mobilityLayers) { viewModel.layer(MobilityKind.BIKE_SHARING, it) }
+                        ToggleChip(stringResource(R.string.map_layer_cars), MobilityKind.CAR_SHARING in prefs.mobilityLayers) { viewModel.layer(MobilityKind.CAR_SHARING, it) }
+                    }
                 }
-                ChipLabel(stringResource(R.string.settings_locate_button))
-                SingleChoiceChips(LocateButtonPosition.entries, prefs.locateButton, {
-                    stringResource(
-                        when (it) {
-                            LocateButtonPosition.BOTTOM_END -> R.string.locate_bottom_end
-                            LocateButtonPosition.BOTTOM_CENTER -> R.string.locate_bottom_center
-                            LocateButtonPosition.BOTTOM_START -> R.string.locate_bottom_start
-                            LocateButtonPosition.HIDDEN -> R.string.locate_hidden
-                        },
-                    )
-                }, { viewModel.locateButton(it) })
+                item { ChoiceRow(stringResource(R.string.settings_locate_button), stringResource(locateLabel(prefs.locateButton))) { choice = CHOICE_LOCATE } }
             }
         }
 
         item {
             SettingsGroup(stringResource(R.string.settings_accessibility)) {
-                SwitchRow(stringResource(R.string.planner_wheelchair), stringResource(R.string.settings_wheelchair_default), prefs.wheelchair) { viewModel.wheelchair(it) }
+                item { SwitchRow(stringResource(R.string.planner_wheelchair), stringResource(R.string.settings_wheelchair_default), prefs.wheelchair) { viewModel.wheelchair(it) } }
             }
         }
 
         item {
             SettingsGroup(stringResource(R.string.settings_notifications)) {
-                SwitchRow(stringResource(R.string.settings_alert_notifications), stringResource(R.string.settings_alert_notifications_hint), prefs.alertNotifications) { enable ->
-                    if (enable && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !Notifications.canPost(context)) {
-                        notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
-                    } else viewModel.alerts(enable)
+                item {
+                    SwitchRow(stringResource(R.string.settings_alert_notifications), stringResource(R.string.settings_alert_notifications_hint), prefs.alertNotifications) { enable ->
+                        if (enable && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !Notifications.canPost(context)) {
+                            notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        } else viewModel.alerts(enable)
+                    }
                 }
             }
         }
 
         item {
             SettingsGroup(stringResource(R.string.settings_timetable)) {
-                val i = info
-                if (i == null) Text(stringResource(R.string.timetable_missing))
-                else {
-                    Text(stringResource(R.string.timetable_imported, Format.dateTime(i.importedAt)), style = MaterialTheme.typography.bodyLarge)
-                    if (i.firstDate > 0) Text(
-                        stringResource(R.string.timetable_valid, Format.date(GtfsTime.fromDateKey(i.firstDate)), Format.date(GtfsTime.fromDateKey(i.lastDate))),
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                    Text(stringResource(R.string.timetable_counts, i.stops, i.trips), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                when (val s = status) {
-                    is ScheduleStatus.Downloading -> {
-                        Text(stringResource(R.string.timetable_downloading))
-                        if (s.total > 0) LinearWavyProgressIndicator(progress = { s.bytes.toFloat() / s.total }, modifier = Modifier.fillMaxWidth())
-                        else LinearWavyProgressIndicator(modifier = Modifier.fillMaxWidth())
+                item {
+                    Column(Modifier.padding(vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        val i = info
+                        if (i == null) Text(stringResource(R.string.timetable_missing))
+                        else {
+                            Text(stringResource(R.string.timetable_imported, Format.dateTime(i.importedAt)), style = MaterialTheme.typography.bodyLarge)
+                            if (i.firstDate > 0) Text(
+                                stringResource(R.string.timetable_valid, Format.date(GtfsTime.fromDateKey(i.firstDate)), Format.date(GtfsTime.fromDateKey(i.lastDate))),
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                            Text(stringResource(R.string.timetable_counts, i.stops, i.trips), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        when (val s = status) {
+                            is ScheduleStatus.Downloading -> {
+                                Text(stringResource(R.string.timetable_downloading))
+                                if (s.total > 0) LinearWavyProgressIndicator(progress = { s.bytes.toFloat() / s.total }, modifier = Modifier.fillMaxWidth())
+                                else LinearWavyProgressIndicator(modifier = Modifier.fillMaxWidth())
+                            }
+                            is ScheduleStatus.Importing -> {
+                                Text(stringResource(R.string.timetable_importing, s.file))
+                                LinearWavyProgressIndicator(modifier = Modifier.fillMaxWidth())
+                            }
+                            is ScheduleStatus.Failed -> Text(Format.error(s.error), color = MaterialTheme.colorScheme.error)
+                            ScheduleStatus.UpToDate -> Text(stringResource(R.string.timetable_up_to_date))
+                            ScheduleStatus.Idle -> Unit
+                        }
+                        Button(onClick = viewModel::downloadNow, enabled = status !is ScheduleStatus.Downloading && status !is ScheduleStatus.Importing) {
+                            Text(stringResource(if (info == null) R.string.timetable_download else R.string.timetable_check_update))
+                        }
+                        Text(stringResource(R.string.timetable_size_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    is ScheduleStatus.Importing -> {
-                        Text(stringResource(R.string.timetable_importing, s.file))
-                        LinearWavyProgressIndicator(modifier = Modifier.fillMaxWidth())
-                    }
-                    is ScheduleStatus.Failed -> Text(Format.error(s.error), color = MaterialTheme.colorScheme.error)
-                    ScheduleStatus.UpToDate -> Text(stringResource(R.string.timetable_up_to_date))
-                    ScheduleStatus.Idle -> Unit
                 }
-                Button(onClick = viewModel::downloadNow, enabled = status !is ScheduleStatus.Downloading && status !is ScheduleStatus.Importing) {
-                    Text(stringResource(if (info == null) R.string.timetable_download else R.string.timetable_check_update))
-                }
-                Text(stringResource(R.string.timetable_size_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                SwitchRow(stringResource(R.string.settings_metered), stringResource(R.string.settings_metered_hint), prefs.scheduleOnMetered) { viewModel.metered(it) }
-                SwitchRow(stringResource(R.string.settings_ftp), stringResource(R.string.settings_ftp_hint), prefs.ftpFallback) { viewModel.ftp(it) }
+                item { SwitchRow(stringResource(R.string.settings_metered), stringResource(R.string.settings_metered_hint), prefs.scheduleOnMetered) { viewModel.metered(it) } }
+                item { SwitchRow(stringResource(R.string.settings_ftp), stringResource(R.string.settings_ftp_hint), prefs.ftpFallback) { viewModel.ftp(it) } }
             }
         }
 
         item {
             SettingsGroup(stringResource(R.string.settings_updates)) {
-                org.southtyrol.transit.update.UpdateSettings(switchRow = { label, hint, checked, onChange -> SwitchRow(label, hint, checked, onChange) })
+                item { org.southtyrol.transit.update.UpdateStatus(updates) }
+                if (updates.enabled) {
+                    item { org.southtyrol.transit.update.UpdateAutoCheck(updates) { label, hint, checked, onChange -> SwitchRow(label, hint, checked, onChange) } }
+                    item { org.southtyrol.transit.update.UpdateChannelChoice(updates) }
+                }
             }
         }
 
         item {
             SettingsGroup(stringResource(R.string.settings_more)) {
-                LinkRow(stringResource(R.string.tickets_title), Icons.Rounded.ConfirmationNumber, navigator::tickets)
-                LinkRow(stringResource(R.string.about_title), Icons.Rounded.Info, navigator::about)
-                LinkRow(stringResource(R.string.licenses_title), Icons.Rounded.Gavel, navigator::licenses)
+                item { LinkRow(stringResource(R.string.tickets_title), Icons.Rounded.ConfirmationNumber, navigator::tickets) }
+                item { LinkRow(stringResource(R.string.about_title), Icons.Rounded.Info, navigator::about) }
+                item { LinkRow(stringResource(R.string.licenses_title), Icons.Rounded.Gavel, navigator::licenses) }
             }
         }
     }
+}
+
+private const val CHOICE_START = "start"
+private const val CHOICE_LANGUAGE = "language"
+private const val CHOICE_LOCATE = "locate"
+private const val CHOICE_ICON = "icon"
+
+private fun locateLabel(position: LocateButtonPosition) = when (position) {
+    LocateButtonPosition.BOTTOM_END -> R.string.locate_bottom_end
+    LocateButtonPosition.BOTTOM_CENTER -> R.string.locate_bottom_center
+    LocateButtonPosition.BOTTOM_START -> R.string.locate_bottom_start
+    LocateButtonPosition.HIDDEN -> R.string.locate_hidden
 }
 
 private fun startTabLabel(tab: StartTab) = when (tab) {
@@ -284,17 +340,34 @@ private fun startTabLabel(tab: StartTab) = when (tab) {
     StartTab.SETTINGS -> R.string.nav_settings
 }
 
-/** One settings group: a titled card, so related options read as a unit. */
+/** The items of a [SettingsGroup], each one drawn on its own segment of the group. */
+private class SettingsItems {
+    val items = mutableListOf<@Composable ColumnScope.() -> Unit>()
+    fun item(content: @Composable ColumnScope.() -> Unit) { items += content }
+}
+
+/**
+ * One settings group: a primary heading above a grouped list - each item on its own container, 2 dp apart,
+ * rounded outside and nearly square between items (the expressive segmented list).
+ */
 @Composable
-private fun SettingsGroup(title: String, content: @Composable ColumnScope.() -> Unit) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        shape = MaterialTheme.shapes.large,
-        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
-    ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
-            content()
+private fun SettingsGroup(title: String, build: SettingsItems.() -> Unit) {
+    val items = SettingsItems().apply(build).items
+    Column(Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 4.dp)) {
+        Text(
+            title, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(start = 16.dp, bottom = 8.dp).semantics { heading() },
+        )
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            items.forEachIndexed { index, content ->
+                androidx.compose.material3.Surface(
+                    shape = org.southtyrol.transit.feature.common.groupShape(index, items.size),
+                    color = MaterialTheme.colorScheme.surfaceContainer,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Column(Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) { content() }
+                }
+            }
         }
     }
 }
@@ -304,20 +377,59 @@ private fun ChipLabel(text: String) {
     Text(text, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
 }
 
-/** Single selection with filter chips: exactly one chip of the group is selected. */
+/** A one-of-many setting as a row showing its current value; tapping opens the choices. */
 @Composable
-private fun <T> SingleChoiceChips(options: List<T>, selected: T, label: @Composable (T) -> String, onSelect: (T) -> Unit) {
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.selectableGroup()) {
-        options.forEach { option ->
-            val isSelected = option == selected
-            FilterChip(
-                selected = isSelected,
-                onClick = { onSelect(option) },
-                label = { Text(label(option)) },
-                leadingIcon = if (isSelected) ({ Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }) else null,
-                modifier = Modifier.semantics { role = Role.RadioButton },
-            )
+private fun ChoiceRow(label: String, value: String, onClick: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 56.dp).clickable(role = Role.Button, onClick = onClick).padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(label, style = MaterialTheme.typography.bodyLarge)
+            Text(value, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
+        Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+/** The choices of a [ChoiceRow]: radio buttons; picking one applies it and closes the dialog. */
+@Composable
+private fun <T> ChoiceDialog(title: String, options: List<T>, selected: T, label: @Composable (T) -> String, onSelect: (T) -> Unit, onDismiss: () -> Unit) {
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = {
+            Column(Modifier.selectableGroup()) {
+                options.forEach { option -> RadioRow(label(option), option == selected) { onSelect(option) } }
+            }
+        },
+        confirmButton = {},
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+    )
+}
+
+/**
+ * The app icon as a row with the current icon's preview; the variants open in a sheet. [chosen] is the
+ * stored choice: it changes when one is picked, which refreshes the preview.
+ */
+@Composable
+private fun AppIconRow(chosen: String, onClick: () -> Unit) {
+    val context = LocalContext.current
+    val current = remember(chosen) { org.southtyrol.transit.ui.AppIcons.current(context) }
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 56.dp).clickable(role = Role.Button, onClick = onClick).padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        androidx.compose.foundation.Image(
+            painter = androidx.compose.ui.res.painterResource(current.preview), contentDescription = null,
+            modifier = Modifier.size(40.dp),
+        )
+        Spacer(Modifier.width(16.dp))
+        Column(Modifier.weight(1f)) {
+            Text(stringResource(R.string.settings_app_icon), style = MaterialTheme.typography.bodyLarge)
+            Text(stringResource(current.label), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 

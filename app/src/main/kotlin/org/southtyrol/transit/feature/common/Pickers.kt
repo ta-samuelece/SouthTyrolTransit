@@ -166,7 +166,7 @@ fun StopSearchSheet(onPick: (Stop) -> Unit, onDismiss: () -> Unit, viewModel: St
         LazyColumn(Modifier.fillMaxHeight().imePadding(), contentPadding = PaddingValues(16.dp)) {
             item {
                 SegmentedListItem(
-                    onClick = { mapOpen = true }, shapes = ListItemDefaults.segmentedShapes(0, 1),
+                    onClick = { mapOpen = true }, shapes = ListItemDefaults.segmentedShapes(0, 1), colors = groupedItemColors(), modifier = Modifier.groupGap(0, 1),
                     leadingContent = { Icon(Icons.Rounded.Map, contentDescription = null) },
                 ) { Text(stringResource(R.string.pick_on_map)) }
             }
@@ -174,9 +174,9 @@ fun StopSearchSheet(onPick: (Stop) -> Unit, onDismiss: () -> Unit, viewModel: St
             state.error?.let { item { StatusBanner(Format.error(it), kind = BannerKind.ERROR) } }
             itemsIndexed(state.results, key = { _, s -> s.id }) { i, stop ->
                 SegmentedListItem(
-                    onClick = { onPick(stop) }, shapes = ListItemDefaults.segmentedShapes(i, state.results.size),
+                    onClick = { onPick(stop) }, shapes = ListItemDefaults.segmentedShapes(i, state.results.size), colors = groupedItemColors(),
                     leadingContent = { ModeGlyph(TransportMode.BUS) },
-                    modifier = Modifier.padding(top = if (i == 0) 12.dp else 0.dp),
+                    modifier = Modifier.padding(top = if (i == 0) 12.dp else 0.dp).groupGap(i, state.results.size),
                 ) { Text(stop.name) }
             }
         }
@@ -232,7 +232,7 @@ fun LineSearchSheet(onPick: (org.southtyrol.transit.model.Line) -> Unit, onDismi
             }
             itemsIndexed(state.results, key = { _, l -> l.key }) { i, line ->
                 SegmentedListItem(
-                    onClick = { onPick(line) }, shapes = ListItemDefaults.segmentedShapes(i, state.results.size),
+                    onClick = { onPick(line) }, shapes = ListItemDefaults.segmentedShapes(i, state.results.size), colors = groupedItemColors(), modifier = Modifier.groupGap(i, state.results.size),
                     leadingContent = { org.southtyrol.transit.design.LineBadge(line.name, line.mode, color = line.color, textColor = line.textColor) },
                 ) { Text(line.longName.ifBlank { line.name }) }
             }

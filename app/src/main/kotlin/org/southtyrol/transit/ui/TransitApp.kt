@@ -20,12 +20,10 @@ import androidx.compose.material.icons.outlined.DepartureBoard
 import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Route
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.rounded.DepartureBoard
 import androidx.compose.material.icons.rounded.Map
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Route
-import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteItem
@@ -73,7 +71,6 @@ enum class TopLevel(val route: Any, val routeClass: KClass<*>, val label: Int, v
     DEPARTURES(DeparturesRoute, DeparturesRoute::class, R.string.nav_departures, Icons.Outlined.DepartureBoard, Icons.Rounded.DepartureBoard),
     MAP(MapRoute, MapRoute::class, R.string.nav_map, Icons.Outlined.Map, Icons.Rounded.Map),
     ALERTS(AlertsRoute, AlertsRoute::class, R.string.nav_alerts, Icons.Outlined.Notifications, Icons.Rounded.Notifications),
-    SETTINGS(SettingsRoute, SettingsRoute::class, R.string.nav_settings, Icons.Outlined.Settings, Icons.Rounded.Settings),
     ;
 
     companion object {
@@ -82,7 +79,8 @@ enum class TopLevel(val route: Any, val routeClass: KClass<*>, val label: Int, v
             StartTab.DEPARTURES -> DEPARTURES
             StartTab.MAP -> MAP
             StartTab.ALERTS -> ALERTS
-            StartTab.SETTINGS -> SETTINGS
+            // Settings is no longer a tab (it opens from the top bar): a stored choice falls back to Plan.
+            StartTab.SETTINGS -> PLAN
         }
 
         fun of(destination: NavDestination?): TopLevel? = destination?.let { d -> entries.firstOrNull { d.hasRoute(it.routeClass) } }
@@ -105,6 +103,7 @@ class Navigator(private val nav: NavHostController, start: TopLevel) {
     fun lines() = nav.navigate(LinesRoute)
     fun line(key: String) = nav.navigate(LineRoute(key)) { launchSingleTop = true }
     fun saved() = nav.navigate(SavedRoute) { launchSingleTop = true }
+    fun settings() = nav.navigate(SettingsRoute) { launchSingleTop = true }
     fun about() = nav.navigate(AboutRoute) { launchSingleTop = true }
     fun licenses() = nav.navigate(LicensesRoute) { launchSingleTop = true }
     fun tickets() = nav.navigate(TicketsRoute) { launchSingleTop = true }

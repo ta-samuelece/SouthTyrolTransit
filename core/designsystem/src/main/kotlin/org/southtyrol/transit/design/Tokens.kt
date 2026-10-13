@@ -29,6 +29,8 @@ val TransitTypography = Typography(
 
 /** Large, confident time styles used for the hero data on cards and boards. */
 object TimeStyles {
+    /** The countdown of a board's next departure. */
+    val display = TextStyle(fontSize = 48.sp, lineHeight = 52.sp, fontWeight = FontWeight.SemiBold, fontFeatureSettings = "tnum", letterSpacing = (-1).sp)
     val hero = TextStyle(fontSize = 34.sp, lineHeight = 40.sp, fontWeight = FontWeight.SemiBold, fontFeatureSettings = "tnum", letterSpacing = (-0.5).sp)
     val large = TextStyle(fontSize = 26.sp, lineHeight = 32.sp, fontWeight = FontWeight.SemiBold, fontFeatureSettings = "tnum")
     val medium = TextStyle(fontSize = 18.sp, lineHeight = 24.sp, fontWeight = FontWeight.Medium, fontFeatureSettings = "tnum")

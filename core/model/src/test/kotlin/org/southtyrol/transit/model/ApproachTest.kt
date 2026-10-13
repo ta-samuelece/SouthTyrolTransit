@@ -68,10 +68,13 @@ class ApproachTest {
     }
 
     @Test fun gpsBeforeTheRunStartsIsPlacedByTheShape() {
-        // Waiting at the terminus before departure: no estimate, but the GPS fix still places it.
+        // Waiting at the terminus before departure: no estimate, but the GPS fix places it at the first
+        // call, like a dwelling estimate - b is the only call left before the boarding stop.
         val approach = Approaches.of(run, shape, boarding, gps = Point(46.0, 11.0), now = t0.minusSeconds(120))!!
-        assertEquals(0, approach.position.nextIndex)
-        assertEquals(2, approach.stopsBefore)
+        assertTrue(approach.position.atStop)
+        assertEquals(1, approach.position.nextIndex)
+        assertEquals(1, approach.stopsBefore)
+        assertEquals("it:b", approach.nextStop.stationKey)
     }
 
     @Test fun vehicleAtTheBoardingStopIsReportedAsArrived() {

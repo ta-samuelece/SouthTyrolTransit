@@ -33,18 +33,18 @@ import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.NearMe
 import androidx.compose.material.icons.rounded.SyncAlt
 import androidx.compose.material.icons.rounded.Warning
-import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.MediumFlexibleTopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,6 +54,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.pluralStringResource
@@ -107,11 +108,28 @@ import java.time.Instant
 @Composable
 fun JourneyDetailScreen(navigator: Navigator, viewModel: JourneyDetailViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val found = (state as? DetailState.Found)?.journey
+    val headerNow = rememberNow()
     Scaffold(
+        modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.journey_title)) },
+            // The journey's times are its name: they are the title, duration and changes the subtitle.
+            MediumFlexibleTopAppBar(
+                title = {
+                    Text(
+                        found?.let { "${Format.time(it.bestDeparture)} – ${Format.time(it.bestArrival)}" } ?: stringResource(R.string.journey_title),
+                        maxLines = 1,
+                    )
+                },
+                subtitle = found?.let { j ->
+                    { Text(listOf(Format.duration(j.duration), pluralStringResource(R.plurals.changes, j.changes, j.changes)).joinToString(" · ")) }
+                },
                 navigationIcon = { IconButton(onClick = navigator::back) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.action_back)) } },
+                actions = {
+                    found?.let { FreshnessIndicator(if (it.hasRealtime) Freshness.LIVE else Freshness.SCHEDULED, null, headerNow, Modifier.padding(end = 12.dp), compact = true) }
+                },
+                scrollBehavior = scroll,
             )
         },
     ) { padding ->
@@ -120,15 +138,18 @@ fun JourneyDetailScreen(navigator: Navigator, viewModel: JourneyDetailViewModel 
                 DetailState.Loading -> TransitLoading(contained = true)
                 DetailState.Missing -> MessageState(stringResource(R.string.journey_missing), stringResource(R.string.journey_missing_hint), action = stringResource(R.string.action_back), onAction = navigator::back)
                 is DetailState.Error -> ErrorState(s.error, onRetry = viewModel::load)
-                is DetailState.Found -> JourneyDetailContent(s.journey, navigator, Modifier.fillMaxSize())
+                is DetailState.Found -> JourneyDetailContent(s.journey, navigator, Modifier.fillMaxSize(), showHeader = false)
             }
         }
     }
 }
 
-/** Rich itinerary: header, route map, leg timeline with transfers, then fare information. */
+/**
+ * Rich itinerary: header, route map, leg timeline with transfers, then fare information. The times
+ * header is left out ([showHeader] false) where the top app bar already shows them.
+ */
 @Composable
-fun JourneyDetailContent(journey: Journey, navigator: Navigator, modifier: Modifier = Modifier) {
+fun JourneyDetailContent(journey: Journey, navigator: Navigator, modifier: Modifier = Modifier, showHeader: Boolean = true) {
     val now = rememberNow(10_000)
     val dark = LocalDarkTheme.current
     val live = hiltViewModel<JourneyLiveViewModel, JourneyLiveViewModel.Factory>(key = "live:" + journey.id) { it.create(journey) }
@@ -173,7 +194,7 @@ fun JourneyDetailContent(journey: Journey, navigator: Navigator, modifier: Modif
     }
     org.southtyrol.transit.feature.common.ExpandableMapPage(mapState, lines.isNotEmpty(), mapContent, camera, modifier) { listModifier ->
     LazyColumn(listModifier, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        item {
+        if (showHeader) item {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text("${Format.time(journey.bestDeparture)} – ${Format.time(journey.bestArrival)}", style = TimeStyles.hero, modifier = Modifier.semantics { heading() })
@@ -182,6 +203,7 @@ fun JourneyDetailContent(journey: Journey, navigator: Navigator, modifier: Modif
                     listOf(Format.duration(journey.duration), pluralStringResource(R.plurals.changes, journey.changes, journey.changes)).joinToString(" · "),
                     style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                // Only without a top bar of its own (the detail pane beside the results); the screen's bar shows all this.
                 FreshnessIndicator(if (journey.hasRealtime) Freshness.LIVE else Freshness.SCHEDULED, null, now)
             }
         }
@@ -191,11 +213,7 @@ fun JourneyDetailContent(journey: Journey, navigator: Navigator, modifier: Modif
         itemsIndexed(journey.legs) { index, leg ->
             val previous = journey.legs.getOrNull(index - 1)
             if (previous != null && previous.mode.isTransit && leg.mode.isTransit) TransferRow(Duration.between(previous.bestArrival, leg.bestDeparture))
-            if (leg.mode == TransportMode.WALK) WalkLeg(leg, now) else TransitLeg(
-                leg, now, approaches[index], waiting = index in legRuns && index !in approaches && leg.bestDeparture.isAfter(now),
-                onStop = { gid -> navigator.stop(gid) },
-                onTrip = { run -> navigator.trip(run.trip.id, run.serviceDate.toString()) },
-            )
+            if (leg.mode == TransportMode.WALK) WalkLeg(leg, now) else TransitLeg(leg, now, onStop = { gid -> navigator.stop(gid) })
         }
         item { FareSection(journey) }
     }
@@ -226,7 +244,7 @@ private fun legProgress(leg: Leg, line: MapPolyline, run: TripDetail?, now: Inst
     val stops = RouteProgress.legStops(leg)
     val estimate = RunPositions.estimate(stops, line.points, now)
     val gps = run?.vehicle?.point?.takeIf { leg.mode.isTransit }
-    val position = gps?.let { RunPosition(it, estimate?.nextIndex ?: RouteProgress.nextIndex(stops, now), atStop = false, estimated = false) } ?: estimate
+    val position = gps?.let { RunPositions.locate(stops, line.points, it, now) } ?: estimate
     val split = RouteProgress.of(line.points, stops, position, now) ?: return LegProgressLines(listOf(line), position)
     return LegProgressLines(
         listOfNotNull(
@@ -271,11 +289,15 @@ private fun WalkLeg(leg: Leg, now: Instant) {
 }
 
 @Composable
-private fun TransitLeg(leg: Leg, now: Instant, live: LegApproach?, waiting: Boolean, onStop: (String) -> Unit, onTrip: (TripDetail) -> Unit) {
+private fun TransitLeg(leg: Leg, now: Instant, onStop: (String) -> Unit) {
     var expanded by rememberSaveable(leg.departure.epochSecond, leg.line) { mutableStateOf(false) }
     val status = LocalStatusColors.current
     val (lineColor, _) = ModeColors.colors(leg.mode, null, null)
-    ElevatedCard(shape = RoundedCornerShape(24.dp), modifier = Modifier.fillMaxWidth()) {
+    Card(
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 LineBadge(leg.line, leg.mode, large = true)
@@ -286,9 +308,6 @@ private fun TransitLeg(leg: Leg, now: Instant, live: LegApproach?, waiting: Bool
                 }
             }
             if (leg.cancelled) StatusPill(stringResource(org.southtyrol.transit.design.R.string.ds_cancelled), status.cancelled, Icons.Rounded.Warning)
-            if (live != null && !leg.cancelled) VehicleApproachRow(live, now, onClick = { onTrip(live.run) })
-            // Matched to its run, but the vehicle is not yet on its way (and sends no GPS): say so.
-            else if (waiting && !leg.cancelled) Text(stringResource(R.string.journey_vehicle_not_started), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Row(Modifier.height(IntrinsicSize.Min)) {
                 val travelled = RouteProgress.legFraction(leg, now)
                 val dimmed = lineColor.copy(alpha = Progress.PASSED_ALPHA)
@@ -297,9 +316,14 @@ private fun TransitLeg(leg: Leg, now: Instant, live: LegApproach?, waiting: Bool
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     StopLine(leg.departure, leg.predictedDeparture, leg.from.name, leg.departurePlatform, leg.cancelled, passed = !leg.bestDeparture.isAfter(now), onClick = leg.from.stopGlobalId.takeIf { it.isNotBlank() }?.let { { onStop(it) } })
                     if (leg.intermediate.isNotEmpty()) {
-                        TextButton(onClick = { expanded = !expanded }, modifier = Modifier.heightIn(min = 48.dp)) {
-                            Icon(if (expanded) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore, contentDescription = null)
-                            Spacer(Modifier.width(4.dp))
+                        // A tonal pill on the rail (40 dp, inside a 48 dp touch target).
+                        androidx.compose.material3.FilledTonalButton(
+                            onClick = { expanded = !expanded },
+                            contentPadding = PaddingValues(start = 12.dp, end = 16.dp),
+                            modifier = Modifier.heightIn(min = 40.dp),
+                        ) {
+                            Icon(if (expanded) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore, contentDescription = null, modifier = Modifier.size(20.dp))
+                            Spacer(Modifier.width(6.dp))
                             Text(pluralStringResource(R.plurals.intermediate_stops, leg.intermediate.size, leg.intermediate.size) + " · " + Format.duration(Duration.between(leg.departure, leg.arrival)))
                         }
                         AnimatedVisibility(expanded) {
@@ -325,43 +349,10 @@ private fun TransitLeg(leg: Leg, now: Instant, live: LegApproach?, waiting: Bool
                     Text(notice, style = MaterialTheme.typography.bodySmall)
                 }
             }
-            if (leg.realtime) FreshnessIndicator(Freshness.LIVE, null, now)
         }
     }
 }
 
-/** Where the vehicle is now relative to the boarding stop, and how that is known; opens the trip. */
-@Composable
-private fun VehicleApproachRow(live: LegApproach, now: Instant, onClick: () -> Unit) {
-    val approach = live.approach
-    val vehicle = live.run.vehicle
-    val where = when {
-        approach.atBoarding -> stringResource(R.string.trip_vehicle_at_stop)
-        approach.stopsBefore == 0 -> stringResource(R.string.trip_vehicle_approaching)
-        else -> pluralStringResource(R.plurals.journey_vehicle_stops_away, approach.stopsBefore, approach.stopsBefore, approach.nextStop.name)
-    }
-    val source = when {
-        !approach.position.estimated && vehicle != null -> stringResource(R.string.trip_vehicle_seen, Format.age(vehicle.timestamp, now))
-        live.run.freshness == Freshness.LIVE -> stringResource(R.string.trip_position_estimated_live)
-        else -> stringResource(R.string.trip_position_estimated_schedule)
-    }
-    Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp).heightIn(min = 32.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Rounded.NearMe, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.size(20.dp))
-            Spacer(Modifier.width(10.dp))
-            Column(Modifier.weight(1f)) {
-                Text(where, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSecondaryContainer)
-                Text(source, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSecondaryContainer)
-            }
-            Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = stringResource(R.string.journey_vehicle_open_trip), tint = MaterialTheme.colorScheme.onSecondaryContainer)
-        }
-    }
-}
 
 @Composable
 private fun StopLine(scheduled: Instant, predicted: Instant?, name: String, platform: String, cancelled: Boolean, passed: Boolean, onClick: (() -> Unit)?) {
@@ -384,20 +375,16 @@ private fun StopLine(scheduled: Instant, predicted: Instant?, name: String, plat
     }
 }
 
-/** Fares exactly as returned by the planner; otherwise an explicit "unavailable" with guidance. */
+/** Fares exactly as returned by the planner; nothing at all when it reports none. */
 @Composable
 private fun FareSection(journey: Journey) {
-    SectionHeader(stringResource(R.string.fare_title))
-    OutlinedCard(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            val fare = journey.fare
-            if (fare != null && (fare.single != null || fare.valueCard != null)) {
-                fare.single?.let { FareRow(stringResource(R.string.fare_single), "${it.currency} ${it.price}") }
-                fare.valueCard?.let { FareRow(stringResource(R.string.fare_value_card), "${it.currency} ${it.price}") }
-                Text(stringResource(R.string.fare_reported_by_planner), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            } else {
-                Text(stringResource(R.string.fare_unavailable), style = MaterialTheme.typography.bodyMedium)
-            }
+    val fare = journey.fare
+    if (fare != null && (fare.single != null || fare.valueCard != null)) {
+        SectionHeader(stringResource(R.string.fare_title))
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            fare.single?.let { FareRow(stringResource(R.string.fare_single), "${it.currency} ${it.price}") }
+            fare.valueCard?.let { FareRow(stringResource(R.string.fare_value_card), "${it.currency} ${it.price}") }
+            Text(stringResource(R.string.fare_reported_by_planner), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

@@ -27,6 +27,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.automirrored.rounded.DirectionsWalk
+import androidx.compose.material.icons.rounded.ArrowDownward
+import androidx.compose.material.icons.rounded.ArrowUpward
 import androidx.compose.material.icons.rounded.Bookmark
 import androidx.compose.material.icons.rounded.BookmarkBorder
 import androidx.compose.material.icons.rounded.ChevronRight
@@ -37,11 +39,9 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -50,6 +50,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.background
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -126,13 +129,16 @@ fun ResultsScreen(navigator: Navigator, viewModel: ResultsViewModel = hiltViewMo
 
 @Composable
 private fun ResultsList(state: ResultsState, viewModel: ResultsViewModel, modifier: Modifier, onOpen: (Journey) -> Unit) {
+    val now = rememberNow()
     LazyColumn(modifier, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
-            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                ResultSort.entries.forEach { sort ->
-                    FilterChip(selected = state.sort == sort, onClick = { viewModel.sort(sort) }, label = { Text(stringResource(sortLabel(sort))) })
-                }
-            }
+            // One order at a time: a connected button group, scrolling sideways where the labels do not fit.
+            org.southtyrol.transit.design.ConnectedToggleGroup(
+                options = ResultSort.entries, selected = state.sort, onSelect = viewModel::sort,
+                label = { stringResource(sortLabel(it)) },
+                equalWidth = false,
+                modifier = Modifier.horizontalScroll(rememberScrollState()),
+            )
         }
         when {
             state.loading && state.journeys.isEmpty() -> item { TransitLoading(contained = true) }
@@ -145,14 +151,19 @@ private fun ResultsList(state: ResultsState, viewModel: ResultsViewModel, modifi
             }
             else -> {
                 if (state.journeys.isNotEmpty()) item {
-                    OutlinedButton(onClick = viewModel::earlier, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.results_earlier)) }
+                    org.southtyrol.transit.feature.common.PageButton(stringResource(R.string.results_earlier), Icons.Rounded.ArrowUpward, viewModel::earlier)
                 }
+                // The soonest connection that can still be caught is the hero of the list.
+                val next = state.sorted.filter { Format.minutesUntil(it.bestDeparture, now) >= 0 && !it.cancelled }.minByOrNull { it.bestDeparture }
                 items(state.sorted, key = { it.id }) { journey ->
-                    JourneyCard(journey, selected = journey.id == state.selectedId, onClick = { onOpen(journey) }, modifier = Modifier.animateItem())
+                    JourneyCard(
+                        journey, selected = journey.id == state.selectedId, onClick = { onOpen(journey) }, modifier = Modifier.animateItem(),
+                        emphasized = journey.id == next?.id,
+                    )
                 }
                 if (state.loading) item { TransitLoading() }
                 if (state.journeys.isNotEmpty()) item {
-                    OutlinedButton(onClick = viewModel::later, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.results_later)) }
+                    org.southtyrol.transit.feature.common.PageButton(stringResource(R.string.results_later), Icons.Rounded.ArrowDownward, viewModel::later)
                 }
                 item {
                     Text(stringResource(R.string.results_source), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -171,12 +182,16 @@ private fun sortLabel(sort: ResultSort) = when (sort) {
 
 /**
  * Journey summary. Departure and arrival times are the visual anchors; lines form a compact chain;
- * delay/cancellation/notice state is shown with icon + text.
+ * delay/cancellation/notice state is shown with icon + text. The [emphasized] card (the soonest one that
+ * can still be caught) sits in the secondary container with its countdown as a pill; connections that have
+ * already left are dimmed and labelled.
  */
 @Composable
-fun JourneyCard(journey: Journey, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun JourneyCard(journey: Journey, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier, emphasized: Boolean = false) {
     val status = LocalStatusColors.current
     val now = rememberNow()
+    val minutesAway = Format.minutesUntil(journey.bestDeparture, now)
+    val departed = minutesAway < 0
     val changes = pluralStringResource(R.plurals.changes, journey.changes, journey.changes)
     val walk = journey.walkingDuration.toMinutes()
     val description = stringResource(
@@ -184,12 +199,39 @@ fun JourneyCard(journey: Journey, selected: Boolean, onClick: () -> Unit, modifi
     )
     Card(
         onClick = onClick,
-        modifier = modifier.fillMaxWidth().animateContentSize().semantics { contentDescription = description },
-        shape = RoundedCornerShape(if (selected) 32.dp else 24.dp),
-        colors = CardDefaults.cardColors(containerColor = if (selected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerLow),
-        border = if (journey.cancelled) BorderStroke(2.dp, status.cancelled) else null,
+        modifier = modifier.fillMaxWidth().animateContentSize().semantics { contentDescription = description }
+            .then(if (departed && !selected) Modifier.alpha(0.7f) else Modifier),
+        shape = RoundedCornerShape(if (selected || emphasized) 28.dp else 20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = when {
+                // The emphasised card takes the muted hero tone; the open one in the two-pane layout
+                // (selected) a neutral tone plus an outline, so the two never look alike.
+                selected -> MaterialTheme.colorScheme.surfaceContainerHighest
+                emphasized -> MaterialTheme.colorScheme.secondaryContainer
+                departed -> MaterialTheme.colorScheme.surfaceContainerLow
+                else -> MaterialTheme.colorScheme.surfaceContainer
+            },
+        ),
+        border = when {
+            journey.cancelled -> BorderStroke(2.dp, status.cancelled)
+            selected -> BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+            else -> null
+        },
     ) {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            if (departed) StatusPill(stringResource(R.string.results_departed), MaterialTheme.colorScheme.onSurfaceVariant, null)
+            else if (emphasized && minutesAway in 0..59) {
+                Row(
+                    Modifier.clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.tertiaryContainer).padding(horizontal = 10.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Icon(Icons.AutoMirrored.Rounded.DirectionsWalk, contentDescription = null, tint = MaterialTheme.colorScheme.onTertiaryContainer, modifier = Modifier.size(16.dp))
+                    Text(
+                        stringResource(R.string.journey_leaves_in, Format.countdown(journey.bestDeparture, now)),
+                        style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onTertiaryContainer,
+                    )
+                }
+            }
             Row(verticalAlignment = Alignment.Bottom) {
                 TimeColumn(journey.departure, journey.bestDeparture, journey.cancelled)
                 Text("  –  ", style = TimeStyles.large, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -218,8 +260,7 @@ fun JourneyCard(journey: Journey, selected: Boolean, onClick: () -> Unit, modifi
                     Text(stringResource(R.string.journey_walk_minutes, walk.toInt()), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Spacer(Modifier.weight(1f))
-                val minutesAway = Format.minutesUntil(journey.bestDeparture, now)
-                if (minutesAway in 0..59) Text(stringResource(R.string.journey_leaves_in, Format.countdown(journey.bestDeparture, now)), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                if (!emphasized && minutesAway in 0..59) Text(stringResource(R.string.journey_leaves_in, Format.countdown(journey.bestDeparture, now)), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                 journey.fare?.single?.let { Text("€ ${it.price}", style = MaterialTheme.typography.labelLarge) }
             }
             val delay = journey.maxDelaySeconds

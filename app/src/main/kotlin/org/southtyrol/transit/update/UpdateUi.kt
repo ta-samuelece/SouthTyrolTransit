@@ -21,6 +21,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.semantics.role
@@ -207,43 +208,59 @@ private fun errorText(error: UpdateError) = when (error) {
     UpdateError.SIGNATURE -> R.string.update_failed_signature
 }
 
-/** Settings section: installed version, manual check and the "check on start" switch. */
+/*
+ * The settings section, in three parts so each sits on its own segment of the settings list: the
+ * installed version with the manual check, the "check on start" switch, and the update channel.
+ * The switch and the channel only exist where updates are enabled ([UpdateViewModel.enabled]).
+ */
+
+/** Installed version, update state and the manual check (or the update button when one is available). */
 @Composable
-fun UpdateSettings(switchRow: @Composable (label: String, hint: String, checked: Boolean, onChange: (Boolean) -> Unit) -> Unit, viewModel: UpdateViewModel = hiltViewModel()) {
+fun UpdateStatus(viewModel: UpdateViewModel) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val prefs by viewModel.prefs.collectAsStateWithLifecycle()
-    Text(stringResource(R.string.settings_version, viewModel.currentVersion), style = MaterialTheme.typography.bodyLarge)
-    if (!viewModel.enabled) {
-        Text(stringResource(R.string.update_disabled), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        return
-    }
-    when (val s = state) {
-        UpdateState.Checking -> Text(stringResource(R.string.update_checking), style = MaterialTheme.typography.bodyMedium)
-        is UpdateState.UpToDate -> Text(stringResource(R.string.update_up_to_date), style = MaterialTheme.typography.bodyMedium)
-        is UpdateState.Failed -> if (s.release == null) Text(stringResource(errorText(s.error)), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
-        else -> Unit
-    }
-    val available = (state as? UpdateState.Available)?.release
-    if (available != null) Button(onClick = { viewModel.update(available) }) { Text(stringResource(R.string.update_to, available.version)) }
-    else OutlinedButton(onClick = viewModel::checkNow, enabled = state !is UpdateState.Checking && state !is UpdateState.Downloading) {
-        Text(stringResource(R.string.update_check_now))
-    }
-    switchRow(stringResource(R.string.settings_auto_update), stringResource(R.string.settings_auto_update_hint), prefs.autoUpdateCheck) { viewModel.setAuto(it) }
-    Text(stringResource(R.string.update_channel), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-    androidx.compose.foundation.layout.Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.selectableGroup()) {
-        org.southtyrol.transit.data.UpdateChannel.entries.forEach { channel ->
-            val selected = prefs.updateChannel == channel
-            androidx.compose.material3.FilterChip(
-                selected = selected,
-                onClick = { if (!selected) viewModel.setChannel(channel) },
-                label = { Text(stringResource(if (channel == org.southtyrol.transit.data.UpdateChannel.STABLE) R.string.update_channel_stable else R.string.update_channel_preview)) },
-                leadingIcon = if (selected) ({ Icon(androidx.compose.material.icons.Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(androidx.compose.material3.FilterChipDefaults.IconSize)) }) else null,
-                modifier = Modifier.semantics { role = androidx.compose.ui.semantics.Role.RadioButton },
-            )
+    Column(Modifier.padding(vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(stringResource(R.string.settings_version, viewModel.currentVersion), style = MaterialTheme.typography.bodyLarge)
+        if (!viewModel.enabled) {
+            Text(stringResource(R.string.update_disabled), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            return@Column
+        }
+        when (val s = state) {
+            UpdateState.Checking -> Text(stringResource(R.string.update_checking), style = MaterialTheme.typography.bodyMedium)
+            is UpdateState.UpToDate -> Text(stringResource(R.string.update_up_to_date), style = MaterialTheme.typography.bodyMedium)
+            is UpdateState.Failed -> if (s.release == null) Text(stringResource(errorText(s.error)), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
+            else -> Unit
+        }
+        val available = (state as? UpdateState.Available)?.release
+        if (available != null) Button(onClick = { viewModel.update(available) }) { Text(stringResource(R.string.update_to, available.version)) }
+        else OutlinedButton(onClick = viewModel::checkNow, enabled = state !is UpdateState.Checking && state !is UpdateState.Downloading) {
+            Text(stringResource(R.string.update_check_now))
         }
     }
-    Text(
-        stringResource(if (prefs.updateChannel == org.southtyrol.transit.data.UpdateChannel.PREVIEW) R.string.update_channel_preview_hint else R.string.update_channel_stable_hint),
-        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
+}
+
+/** The "check for updates on start" switch, drawn by the caller's [switchRow]. */
+@Composable
+fun UpdateAutoCheck(viewModel: UpdateViewModel, switchRow: @Composable (label: String, hint: String, checked: Boolean, onChange: (Boolean) -> Unit) -> Unit) {
+    val prefs by viewModel.prefs.collectAsStateWithLifecycle()
+    switchRow(stringResource(R.string.settings_auto_update), stringResource(R.string.settings_auto_update_hint), prefs.autoUpdateCheck) { viewModel.setAuto(it) }
+}
+
+/** Stable or Preview: one of two, so a connected button group, with what the chosen channel means. */
+@Composable
+fun UpdateChannelChoice(viewModel: UpdateViewModel) {
+    val prefs by viewModel.prefs.collectAsStateWithLifecycle()
+    Column(Modifier.padding(vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(stringResource(R.string.update_channel), style = MaterialTheme.typography.bodyLarge)
+        org.southtyrol.transit.design.ConnectedToggleGroup(
+            options = org.southtyrol.transit.data.UpdateChannel.entries, selected = prefs.updateChannel,
+            onSelect = { if (it != prefs.updateChannel) viewModel.setChannel(it) },
+            label = { stringResource(if (it == org.southtyrol.transit.data.UpdateChannel.STABLE) R.string.update_channel_stable else R.string.update_channel_preview) },
+            uncheckedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Text(
+            stringResource(if (prefs.updateChannel == org.southtyrol.transit.data.UpdateChannel.PREVIEW) R.string.update_channel_preview_hint else R.string.update_channel_stable_hint),
+            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
 }

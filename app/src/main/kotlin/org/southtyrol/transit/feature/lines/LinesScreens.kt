@@ -66,6 +66,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.southtyrol.transit.LocalDarkTheme
 import org.southtyrol.transit.R
+import org.southtyrol.transit.feature.common.groupGap
+import org.southtyrol.transit.feature.common.groupedItemColors
 import org.southtyrol.transit.data.AlertMatcher
 import org.southtyrol.transit.data.AlertRepository
 import org.southtyrol.transit.data.AlertsState
@@ -162,7 +164,7 @@ fun LinesScreen(navigator: Navigator, viewModel: LinesViewModel = hiltViewModel(
                 else -> itemsIndexed(state.lines, key = { _, l -> l.key }) { index, line ->
                     SegmentedListItem(
                         onClick = { navigator.line(line.key) },
-                        shapes = ListItemDefaults.segmentedShapes(index, state.lines.size),
+                        shapes = ListItemDefaults.segmentedShapes(index, state.lines.size), colors = groupedItemColors(), modifier = Modifier.groupGap(index, state.lines.size),
                         leadingContent = { LineBadge(line.name, line.mode, color = line.color, textColor = line.textColor) },
                         supportingContent = { Text(Format.mode(line.mode)) },
                     ) { Text(line.longName.ifBlank { line.name }, maxLines = 2, overflow = TextOverflow.Ellipsis) }
@@ -325,8 +327,8 @@ fun LineScreen(navigator: Navigator, key: String) {
                             itemsIndexed(variant.stops, key = { i, s -> "s:$i:" + s.id }) { index, stop ->
                                 SegmentedListItem(
                                     onClick = { navigator.stop(stop.stationKey, stop.name) },
-                                    shapes = ListItemDefaults.segmentedShapes(index, variant.stops.size),
-                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                    shapes = ListItemDefaults.segmentedShapes(index, variant.stops.size), colors = groupedItemColors(),
+                                    modifier = Modifier.padding(horizontal = 16.dp).groupGap(index, variant.stops.size),
                                     leadingContent = { Text("${index + 1}", style = MaterialTheme.typography.labelLarge) },
                                 ) { Text(stop.name) }
                             }

@@ -99,6 +99,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.southtyrol.transit.R
+import org.southtyrol.transit.feature.common.groupGap
+import org.southtyrol.transit.feature.common.groupedItemColors
 import org.southtyrol.transit.data.SavedRepository
 import org.southtyrol.transit.data.ScheduleStatus
 import org.southtyrol.transit.design.BannerKind
@@ -151,7 +153,7 @@ fun PlannerScreen(navigator: Navigator, viewModel: PlannerViewModel = hiltViewMo
     val scroll = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Scaffold(
         modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
-        topBar = { TopLevelBar(stringResource(R.string.app_name), scroll) },
+        topBar = { TopLevelBar(stringResource(R.string.app_name), scroll, onSettings = navigator::settings) },
         snackbarHost = { SnackbarHost(snackbar) },
     ) { padding ->
         LazyColumn(
@@ -188,7 +190,7 @@ fun PlannerScreen(navigator: Navigator, viewModel: PlannerViewModel = hiltViewMo
                     text = stringResource(if (downloading) R.string.timetable_downloading else R.string.timetable_missing),
                     kind = BannerKind.INFO,
                     action = if (downloading) null else stringResource(R.string.timetable_open_settings),
-                    onAction = { navigator.select(org.southtyrol.transit.ui.TopLevel.SETTINGS) },
+                    onAction = navigator::settings,
                 )
             }
             val home = savedPlaces.firstOrNull { it.id == SavedRepository.HOME }?.place
@@ -419,7 +421,7 @@ private fun QuickChip(label: String, icon: ImageVector, onClick: () -> Unit) {
 private fun RouteItem(label: String, icon: ImageVector, index: Int, count: Int, onClick: () -> Unit) {
     SegmentedListItem(
         onClick = onClick,
-        shapes = ListItemDefaults.segmentedShapes(index, count),
+        shapes = ListItemDefaults.segmentedShapes(index, count), colors = groupedItemColors(), modifier = Modifier.groupGap(index, count),
         leadingContent = { Icon(icon, contentDescription = null) },
     ) { Text(label, maxLines = 2, overflow = TextOverflow.Ellipsis) }
 }
@@ -501,7 +503,7 @@ private fun PlaceSearchSheet(
                             onClick = { onChoose(place) },
                             onLongClick = { menu = true },
                             onLongClickLabel = stringResource(R.string.place_save_as),
-                            shapes = ListItemDefaults.segmentedShapes(index, state.results.size),
+                            shapes = ListItemDefaults.segmentedShapes(index, state.results.size), colors = groupedItemColors(), modifier = Modifier.groupGap(index, state.results.size),
                             leadingContent = { Icon(placeIcon(place.type), contentDescription = placeTypeLabel(place.type)) },
                             supportingContent = place.locality.takeIf { it.isNotBlank() && !place.name.contains(it) }?.let { { Text(it) } },
                         ) { Text(place.name) }
@@ -520,7 +522,7 @@ private fun PlaceSearchSheet(
 private fun SheetItem(title: String, subtitle: String?, icon: ImageVector, index: Int, count: Int, onClick: () -> Unit) {
     SegmentedListItem(
         onClick = onClick,
-        shapes = ListItemDefaults.segmentedShapes(index, count),
+        shapes = ListItemDefaults.segmentedShapes(index, count), colors = groupedItemColors(), modifier = Modifier.groupGap(index, count),
         leadingContent = { Icon(icon, contentDescription = null) },
         supportingContent = subtitle?.let { { Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis) } },
     ) { Text(title) }

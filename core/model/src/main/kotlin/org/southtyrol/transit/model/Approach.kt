@@ -68,11 +68,7 @@ object Approaches {
      */
     fun of(stops: List<TripStop>, shape: List<Point>, boardingIndex: Int, gps: Point?, now: Instant): Approach? {
         if (boardingIndex !in stops.indices) return null
-        val estimate = RunPositions.estimate(stops, shape, now)
-        val position = when {
-            gps != null -> RunPosition(gps, estimate?.nextIndex ?: nextIndexAlong(stops, shape, gps), atStop = false, estimated = false)
-            else -> estimate ?: return null
-        }
+        val position = gps?.let { RunPositions.locate(stops, shape, it, now) } ?: RunPositions.estimate(stops, shape, now) ?: return null
         val target = stops[boardingIndex].stop.point
         // Dwelling at the boarding stop: the estimate already points at the following call.
         if (position.atStop && position.nextIndex - 1 == boardingIndex) {
@@ -87,13 +83,6 @@ object Approaches {
             nextStop = stops[position.nextIndex].stop,
             boardingIndex = boardingIndex,
         )
-    }
-
-    /** Next call for a GPS fix without usable stop times: the first stop at or beyond its shape position. */
-    internal fun nextIndexAlong(stops: List<TripStop>, shape: List<Point>, point: Point): Int {
-        if (shape.size < 2) return stops.indices.minByOrNull { Geo.distance(stops[it].stop.point, point) } ?: 0
-        val at = shape.indices.minByOrNull { Geo.distance(shape[it], point) } ?: 0
-        return stops.indices.firstOrNull { i -> (shape.indices.minByOrNull { Geo.distance(shape[it], stops[i].stop.point) } ?: 0) >= at } ?: stops.lastIndex
     }
 
     /**

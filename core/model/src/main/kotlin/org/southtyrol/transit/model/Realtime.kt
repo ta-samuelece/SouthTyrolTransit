@@ -247,6 +247,52 @@ object RunPositions {
         return RunPosition(along(shape, from, to, fraction) ?: Point(from.latitude + (to.latitude - from.latitude) * fraction, from.longitude + (to.longitude - from.longitude) * fraction), next, atStop = false, estimated = true)
     }
 
+    /** A fix this close to a call counts as standing there. */
+    private const val AT_STOP_METERS = 40.0
+
+    /** Stretches this much farther from the fix than the nearest one still count as candidates (loops, parallel streets). */
+    private const val CANDIDATE_SLACK_METERS = 50.0
+
+    /**
+     * Places a GPS fix on the run by geometry: between which calls it is, or at which it stands. The stop
+     * times only break ties where the route passes the same place twice, so a late run without
+     * predictions (or one running past its scheduled end) is still placed where the bus really is.
+     */
+    fun locate(stops: List<TripStop>, shape: List<Point>, gps: Point, now: Instant): RunPosition {
+        if (stops.isEmpty()) return RunPosition(gps, 0, atStop = false, estimated = false)
+        val line = shape.takeIf { it.size >= 2 } ?: stops.map { it.stop.point }
+        if (line.size < 2) {
+            val near = Geo.distance(stops[0].stop.point, gps) <= AT_STOP_METERS
+            return RunPosition(gps, if (near) 1 else 0, atStop = near, estimated = false)
+        }
+        val cumulative = DoubleArray(line.size)
+        for (i in 1 until line.size) cumulative[i] = cumulative[i - 1] + Geo.distance(line[i - 1], line[i])
+        // Each call's distance along the line, in order, so a loop's second pass maps past its first.
+        var from = 0
+        val stopOffsets = stops.map { s ->
+            val i = (from until line.size).minByOrNull { Geo.distance(line[it], s.stop.point) } ?: from
+            from = i
+            cumulative[i]
+        }
+        val segments = (0 until line.lastIndex).map { i ->
+            val p = RouteProgress.project(line[i], line[i + 1], gps)
+            Triple(Geo.distance(p, gps), cumulative[i] + Geo.distance(line[i], p), i)
+        }
+        val best = segments.minOf { it.first }
+        // Where the times expect it: midway along the stretch towards the expected next call.
+        val hint = (estimate(stops, shape, now)?.nextIndex ?: RouteProgress.nextIndex(stops, now)).coerceIn(0, stops.lastIndex)
+        val expected = if (hint == 0) stopOffsets[0] else (stopOffsets[hint - 1] + stopOffsets[hint]) / 2
+        val offset = segments.filter { it.first <= best + CANDIDATE_SLACK_METERS }.minBy { kotlin.math.abs(it.second - expected) }.second
+        val standing = stops.indices
+            .filter { Geo.distance(stops[it].stop.point, gps) <= AT_STOP_METERS }
+            .minByOrNull { kotlin.math.abs(stopOffsets[it] - offset) }
+        if (standing != null) return RunPosition(gps, standing + 1, atStop = true, estimated = false)
+        // Not standing at a call it projects onto (e.g. still before the first one): that call is next.
+        val next = stopOffsets.indexOfFirst { it >= offset }
+        // Beyond the last call: at the terminus.
+        return if (next < 0) RunPosition(gps, stops.size, atStop = true, estimated = false) else RunPosition(gps, next, atStop = false, estimated = false)
+    }
+
     /** The point [fraction] of the way from [from] to [to] following [shape], or null without a usable shape. */
     internal fun along(shape: List<Point>, from: Point, to: Point, fraction: Double): Point? {
         if (shape.size < 2) return null

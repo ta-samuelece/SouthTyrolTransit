@@ -68,6 +68,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.selectableGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -166,6 +167,7 @@ fun Countdown(
     freshness: Freshness,
     now: Instant,
     modifier: Modifier = Modifier,
+    style: androidx.compose.ui.text.TextStyle = TimeStyles.large,
 ) {
     val status = LocalStatusColors.current
     val target = predicted ?: scheduled
@@ -180,7 +182,7 @@ fun Countdown(
                 if (live && !cancelled) Icon(Icons.Rounded.Podcasts, contentDescription = stringResource(R.string.ds_live), tint = status.live, modifier = Modifier.size(16.dp))
                 Text(
                     value,
-                    style = TimeStyles.large,
+                    style = style,
                     color = when {
                         cancelled -> status.cancelled
                         past -> MaterialTheme.colorScheme.onSurfaceVariant
@@ -250,24 +252,46 @@ fun StatusPill(text: String, color: Color, icon: ImageVector?, modifier: Modifie
     }
 }
 
-/** Data freshness indicator ("Live · updated 20 s ago", "Scheduled", "Not current"). */
+/**
+ * Data freshness pill ("Live · updated 20 s ago", "Scheduled", "Not current"): live data sits in the live
+ * container so it reads at a glance; every other state is a neutral pill with a status-coloured icon.
+ * [extra] adds a short qualifier after the age (e.g. "no vehicles reported"). [compact] ("Live · 16 s")
+ * fits a top app bar next to its actions; TalkBack still reads the full sentence.
+ */
 @Composable
-fun FreshnessIndicator(freshness: Freshness, fetchedAt: Instant?, now: Instant, modifier: Modifier = Modifier) {
+fun FreshnessIndicator(
+    freshness: Freshness,
+    fetchedAt: Instant?,
+    now: Instant,
+    modifier: Modifier = Modifier,
+    extra: String? = null,
+    compact: Boolean = false,
+) {
     val status = LocalStatusColors.current
     val (label, color, icon) = when (freshness) {
-        Freshness.LIVE -> Triple(stringResource(R.string.ds_live), status.live, Icons.Rounded.Podcasts)
+        Freshness.LIVE -> Triple(stringResource(R.string.ds_live), status.onLiveContainer, Icons.Rounded.Podcasts)
         Freshness.SCHEDULED -> Triple(stringResource(R.string.ds_scheduled), MaterialTheme.colorScheme.onSurfaceVariant, Icons.Rounded.Schedule)
         Freshness.STALE -> Triple(stringResource(R.string.ds_stale), status.stale, Icons.Rounded.History)
         Freshness.UNAVAILABLE -> Triple(stringResource(R.string.ds_realtime_unavailable), status.stale, Icons.Rounded.CloudOff)
     }
+    val container = if (freshness == Freshness.LIVE) status.liveContainer else MaterialTheme.colorScheme.surfaceContainerHighest
+    // Grey status colours are too light for small text on the neutral pill: they tint only the icon.
+    val textColor = if (freshness == Freshness.LIVE) status.onLiveContainer else MaterialTheme.colorScheme.onSurfaceVariant
     val age = fetchedAt?.let { stringResource(R.string.ds_updated_ago, Format.age(it, now)) }
+    val full = listOfNotNull(label, age, extra).joinToString(" · ")
+    val shown = if (compact) listOfNotNull(label, fetchedAt?.let { Format.age(it, now) }).joinToString(" · ") else full
     Row(
-        modifier.semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite },
+        modifier
+            .clip(RoundedCornerShape(50))
+            .background(container)
+            .heightIn(min = 28.dp)
+            .padding(start = 8.dp, end = 12.dp)
+            .clearAndSetSemantics { contentDescription = full; liveRegion = LiveRegionMode.Polite },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(16.dp))
-        Text(listOfNotNull(label, age).joinToString(" · "), style = MaterialTheme.typography.labelMedium, color = color)
+        Text(shown, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = textColor, maxLines = 1)
     }
 }
 
@@ -371,6 +395,7 @@ fun ErrorState(error: DataError, modifier: Modifier = Modifier, onRetry: (() -> 
  * Connected toggle group (Material 3 Expressive) for a small set of exclusive options. Unselected
  * buttons use [uncheckedContainerColor] (default surfaceContainer): pass a different tone when the group
  * sits on a surface of that colour, or the unselected buttons disappear into it.
+ * With [equalWidth] false each button takes its label's width (for a group that may scroll sideways).
  */
 @Composable
 fun <T> ConnectedToggleGroup(
@@ -381,14 +406,15 @@ fun <T> ConnectedToggleGroup(
     modifier: Modifier = Modifier,
     icon: ((T) -> ImageVector?)? = null,
     uncheckedContainerColor: Color = Color.Unspecified,
+    equalWidth: Boolean = true,
 ) {
     val colors = ToggleButtonDefaults.colors(containerColor = uncheckedContainerColor)
-    Row(modifier, horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)) {
+    Row(modifier.semantics { selectableGroup() }, horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)) {
         options.forEachIndexed { index, option ->
             ToggleButton(
                 checked = option == selected,
                 onCheckedChange = { onSelect(option) },
-                modifier = Modifier.weight(1f),
+                modifier = if (equalWidth) Modifier.weight(1f) else Modifier,
                 shapes = when (index) {
                     0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
                     options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()

@@ -73,6 +73,7 @@
 
     <string name="results_earlier">Collegamenti precedenti</string>
     <string name="results_later">Collegamenti successivi</string>
+    <string name="results_departed">Partito</string>
     <string name="results_none">Nessun collegamento trovato</string>
     <string name="results_none_hint">Prova un altro orario, meno restrizioni o fermate vicine.</string>
     <string name="results_source">Collegamenti calcolati dal servizio orari STA (EFA).</string>
@@ -98,19 +99,11 @@
     <string name="journey_missing_hint">Cerca di nuovo per vedere i collegamenti attuali.</string>
     <string name="journey_transfer">Cambio · %s</string>
     <string name="journey_walk_to">%1$d min a piedi fino a %2$s</string>
-    <plurals name="journey_vehicle_stops_away">
-        <item quantity="one">%1$d fermata prima della tua · prossima: %2$s</item>
-        <item quantity="many">%1$d fermate prima della tua · prossima: %2$s</item>
-        <item quantity="other">%1$d fermate prima della tua · prossima: %2$s</item>
-    </plurals>
-    <string name="journey_vehicle_open_trip">Mostra tutta la corsa</string>
-    <string name="journey_vehicle_not_started">Il mezzo non è ancora in viaggio</string>
 
     <string name="fare_title">Tariffa</string>
     <string name="fare_single">Biglietto singolo</string>
     <string name="fare_value_card">Con carta valore (es. Alto Adige Pass)</string>
     <string name="fare_reported_by_planner">Prezzi per adulti come indicati dal servizio orari pubblico. Non sono calcolati da questa app; vale la tariffa ufficiale.</string>
-    <string name="fare_unavailable">Per questo collegamento l\'interfaccia pubblica non fornisce informazioni sulla tariffa.</string>
     <string name="tickets_title">Biglietti</string>
     <string name="tickets_headline">I biglietti si acquistano dal servizio ufficiale</string>
     <string name="tickets_explanation">Questa app indipendente non può vendere né convalidare biglietti: non esiste un\'interfaccia pubblica per farlo. Usa i canali ufficiali di altoadigemobilità, le biglietterie automatiche o i punti vendita.</string>
@@ -132,7 +125,6 @@
     <string name="departures_pick_stop">Scegli una fermata per vederne le partenze</string>
     <string name="stop_title">Fermata</string>
     <string name="stop_code">Codice fermata %s</string>
-    <string name="stop_distance">a %s</string>
     <string name="stop_departures">Partenze</string>
     <string name="stop_arrivals">Arrivi</string>
     <string name="stop_location">Posizione</string>
@@ -165,10 +157,11 @@
     <string name="map_layer_cars">Car sharing</string>
     <string name="map_center_me">Mostra la mia posizione</string>
     <string name="map_vehicles_unavailable">Le posizioni live dei veicoli non sono al momento disponibili.</string>
-    <string name="map_no_vehicles">Il feed live al momento non segnala veicoli.</string>
+    <string name="map_no_vehicles_short">nessun veicolo segnalato</string>
     <string name="map_layer_failed">Non è stato possibile caricare un livello opzionale della mappa.</string>
     <string name="map_open_departures">Mostra partenze</string>
     <string name="map_open_trip">Mostra corsa</string>
+    <string name="map_get_directions">Indicazioni stradali</string>
     <string name="map_next_stop">Prossima fermata: %1$s alle %2$s</string>
     <string name="map_trip_unknown">Non è stato possibile associare questo veicolo a una corsa dell\'orario.</string>
     <string name="mobility_available">%d disponibili</string>
@@ -210,7 +203,7 @@
     <string name="language_ladin">Ladin</string>
     <string name="settings_ladin_note">Ladino: gli avvisi di servizio sono mostrati in ladino quando l\'operatore li fornisce; gli altri testi sono in tedesco.</string>
     <string name="settings_appearance">Aspetto</string>
-    <string name="theme_system">Come il sistema</string>
+    <string name="theme_system">Sistema</string>
     <string name="theme_light">Chiaro</string>
     <string name="theme_dark">Scuro</string>
     <string name="settings_dynamic_color">Usa i colori dello sfondo</string>
@@ -322,6 +315,7 @@
     <string name="update_failed_not_newer">La build scaricata non è più recente di quella installata.</string>
     <string name="update_failed_signature">Questo aggiornamento è firmato con una chiave diversa da quella dell\'app installata, quindi Android lo rifiuterebbe. Installalo manualmente dalla pagina della release (prima va disinstallata la versione attuale).</string>
     <string name="stop_time_now">Adesso</string>
+    <string name="stop_next_departure">Prossima partenza</string>
     <string name="stop_back_to_now">Torna ad adesso</string>
     <string name="stop_earlier_departures">Partenze precedenti</string>
     <string name="stop_later_departures">Partenze successive</string>
@@ -357,7 +351,6 @@
     <string name="update_channel_stable_hint">Solo versioni definitive.</string>
     <string name="update_channel_preview_hint">Offre anche versioni di anteprima con nuove funzioni prima del rilascio. Possono contenere errori. Per tornare indietro scegli «Stabile»: l\'anteprima resta installata finché non esce una versione stabile più recente.</string>
     <string name="update_available_preview_title">Aggiornamento di anteprima disponibile</string>
-    <string name="stop_line_filter_hint">Tocca le linee per vedere solo le loro partenze. Tieni premuta una linea per aprirla.</string>
     <string name="stop_all_directions">Tutte le direzioni</string>
     <string name="stop_no_departures_filtered">Nessuna partenza per le linee o la direzione scelte.</string>
     <string name="stop_clear_filters">Mostra tutte</string>

@@ -73,6 +73,7 @@
 
     <string name="results_earlier">Frühere Verbindungen</string>
     <string name="results_later">Spätere Verbindungen</string>
+    <string name="results_departed">Abgefahren</string>
     <string name="results_none">Keine Verbindungen gefunden</string>
     <string name="results_none_hint">Versuche eine andere Uhrzeit, weniger Einschränkungen oder Haltestellen in der Nähe.</string>
     <string name="results_source">Verbindungen berechnet von der STA-Fahrplanauskunft (EFA).</string>
@@ -96,18 +97,11 @@
     <string name="journey_missing_hint">Suche erneut, um aktuelle Verbindungen zu sehen.</string>
     <string name="journey_transfer">Umstieg · %s</string>
     <string name="journey_walk_to">%1$d Min. zu Fuß nach %2$s</string>
-    <plurals name="journey_vehicle_stops_away">
-        <item quantity="one">Noch %1$d Halt bis zu deinem · nächster: %2$s</item>
-        <item quantity="other">Noch %1$d Halte bis zu deinem · nächster: %2$s</item>
-    </plurals>
-    <string name="journey_vehicle_open_trip">Ganze Fahrt anzeigen</string>
-    <string name="journey_vehicle_not_started">Fahrzeug noch nicht unterwegs</string>
 
     <string name="fare_title">Fahrpreis</string>
     <string name="fare_single">Einzelfahrschein</string>
     <string name="fare_value_card">Mit Wertkarte (z. B. Südtirol Pass)</string>
     <string name="fare_reported_by_planner">Preise für Erwachsene, wie von der öffentlichen Fahrplanauskunft gemeldet. Sie werden nicht von dieser App berechnet; es gilt der offizielle Tarif.</string>
-    <string name="fare_unavailable">Für diese Verbindung liefert die öffentliche Schnittstelle keine Preisinformation.</string>
     <string name="tickets_title">Tickets</string>
     <string name="tickets_headline">Tickets gibt es beim offiziellen Dienst</string>
     <string name="tickets_explanation">Diese unabhängige App kann keine Tickets verkaufen oder entwerten: Dafür gibt es keine öffentliche Schnittstelle. Bitte nutze die offiziellen Kanäle von südtirolmobil, Fahrkartenautomaten oder Verkaufsstellen.</string>
@@ -129,7 +123,6 @@
     <string name="departures_pick_stop">Wähle eine Haltestelle, um ihre Abfahrten zu sehen</string>
     <string name="stop_title">Haltestelle</string>
     <string name="stop_code">Haltestellennummer %s</string>
-    <string name="stop_distance">%s entfernt</string>
     <string name="stop_departures">Abfahrten</string>
     <string name="stop_arrivals">Ankünfte</string>
     <string name="stop_location">Lage</string>
@@ -161,10 +154,11 @@
     <string name="map_layer_cars">Carsharing</string>
     <string name="map_center_me">Meinen Standort zeigen</string>
     <string name="map_vehicles_unavailable">Live-Fahrzeugpositionen sind gerade nicht verfügbar.</string>
-    <string name="map_no_vehicles">Der Live-Feed meldet derzeit keine Fahrzeuge.</string>
+    <string name="map_no_vehicles_short">keine Fahrzeuge gemeldet</string>
     <string name="map_layer_failed">Eine optionale Kartenebene konnte nicht geladen werden.</string>
     <string name="map_open_departures">Abfahrten anzeigen</string>
     <string name="map_open_trip">Fahrt anzeigen</string>
+    <string name="map_get_directions">Route planen</string>
     <string name="map_next_stop">Nächster Halt: %1$s um %2$s</string>
     <string name="map_trip_unknown">Dieses Fahrzeug konnte keiner Fahrplanfahrt zugeordnet werden.</string>
     <string name="mobility_available">%d frei</string>
@@ -206,7 +200,7 @@
     <string name="language_ladin">Ladin</string>
     <string name="settings_ladin_note">Ladinisch: Betriebsmeldungen erscheinen auf Ladinisch, wenn der Betreiber sie bereitstellt; andere Texte werden auf Deutsch angezeigt.</string>
     <string name="settings_appearance">Darstellung</string>
-    <string name="theme_system">Wie System</string>
+    <string name="theme_system">System</string>
     <string name="theme_light">Hell</string>
     <string name="theme_dark">Dunkel</string>
     <string name="settings_dynamic_color">Hintergrundfarben verwenden</string>
@@ -317,6 +311,7 @@
     <string name="update_failed_not_newer">Der heruntergeladene Build ist nicht neuer als der installierte.</string>
     <string name="update_failed_signature">Dieses Update ist mit einem anderen Schlüssel signiert als die installierte App, daher würde Android es ablehnen. Installiere es manuell über die Release-Seite (dazu muss die aktuelle Version zuerst deinstalliert werden).</string>
     <string name="stop_time_now">Jetzt</string>
+    <string name="stop_next_departure">Nächste Abfahrt</string>
     <string name="stop_back_to_now">Zurück zu jetzt</string>
     <string name="stop_earlier_departures">Frühere Abfahrten</string>
     <string name="stop_later_departures">Spätere Abfahrten</string>
@@ -352,7 +347,6 @@
     <string name="update_channel_stable_hint">Nur fertige Versionen.</string>
     <string name="update_channel_preview_hint">Bietet auch Vorschau-Versionen mit neuen Funktionen vor der Veröffentlichung an. Sie können Fehler enthalten. Zurück mit „Stabil“: Die Vorschau bleibt installiert, bis eine neuere stabile Version erscheint.</string>
     <string name="update_available_preview_title">Vorschau-Update verfügbar</string>
-    <string name="stop_line_filter_hint">Linien antippen, um nur ihre Abfahrten zu zeigen. Linie gedrückt halten, um sie zu öffnen.</string>
     <string name="stop_all_directions">Alle Richtungen</string>
     <string name="stop_no_departures_filtered">Keine Abfahrten für die gewählten Linien oder die Richtung.</string>
     <string name="stop_clear_filters">Alle anzeigen</string>

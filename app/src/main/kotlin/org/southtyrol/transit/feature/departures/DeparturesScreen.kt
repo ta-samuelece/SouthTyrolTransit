@@ -59,6 +59,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.southtyrol.transit.R
+import org.southtyrol.transit.feature.common.groupGap
+import org.southtyrol.transit.feature.common.groupedItemColors
 import org.southtyrol.transit.data.EfaClient
 import org.southtyrol.transit.data.LanguageProvider
 import org.southtyrol.transit.data.SavedItem
@@ -174,7 +176,7 @@ class DeparturesViewModel @Inject constructor(
 @Composable
 fun DeparturesScreen(navigator: Navigator, viewModel: DeparturesViewModel = hiltViewModel()) {
     val selected by viewModel.selected.collectAsStateWithLifecycle()
-    Scaffold(topBar = { TopLevelBar(stringResource(R.string.nav_departures)) }) { padding ->
+    Scaffold(topBar = { TopLevelBar(stringResource(R.string.nav_departures), onSettings = navigator::settings) }) { padding ->
         BoxWithConstraints(Modifier.padding(padding).fillMaxSize()) {
             val twoPane = maxWidth >= 840.dp
             if (twoPane) {
@@ -243,7 +245,7 @@ private fun StopList(viewModel: DeparturesViewModel, navigator: Navigator, modif
                 itemsIndexed(saved, key = { _, s -> "s:" + s.id }) { i, item ->
                     SegmentedListItem(
                         onClick = { onStop(Stop(item.id, item.label, item.place?.point ?: Point(0.0, 0.0), stationKey = item.id)) },
-                        shapes = ListItemDefaults.segmentedShapes(i, saved.size),
+                        shapes = ListItemDefaults.segmentedShapes(i, saved.size), colors = groupedItemColors(), modifier = Modifier.groupGap(i, saved.size),
                         leadingContent = { Icon(Icons.Rounded.Star, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
                     ) { Text(item.label) }
                 }
@@ -273,7 +275,7 @@ private fun StopList(viewModel: DeparturesViewModel, navigator: Navigator, modif
 private fun StopItem(stop: Stop, index: Int, count: Int, onStop: (Stop) -> Unit) {
     SegmentedListItem(
         onClick = { onStop(stop) },
-        shapes = ListItemDefaults.segmentedShapes(index, count),
+        shapes = ListItemDefaults.segmentedShapes(index, count), colors = groupedItemColors(), modifier = Modifier.groupGap(index, count),
         leadingContent = { ModeGlyph(TransportMode.BUS) },
         supportingContent = stop.distanceMeters?.let { { Text(Format.distance(it)) } },
     ) { Text(stop.name) }

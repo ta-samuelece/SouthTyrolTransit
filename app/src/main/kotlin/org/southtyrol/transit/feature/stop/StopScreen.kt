@@ -32,9 +32,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
@@ -45,9 +42,11 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.rounded.ExpandMore
-import androidx.compose.material.icons.rounded.ExpandLess
+import androidx.compose.material.icons.rounded.ArrowDownward
+import androidx.compose.material.icons.rounded.ArrowUpward
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Schedule
+import androidx.compose.foundation.clickable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -78,6 +77,7 @@ import org.southtyrol.transit.design.WheelchairIcon
 import org.southtyrol.transit.design.rememberNow
 import org.southtyrol.transit.di.AppLanguage
 import org.southtyrol.transit.feature.common.DepartureRow
+import org.southtyrol.transit.feature.common.PageButton
 import org.southtyrol.transit.feature.common.PollWhileVisible
 import org.southtyrol.transit.map.CameraRequest
 import org.southtyrol.transit.map.MapContent
@@ -93,6 +93,8 @@ fun StopScreen(navigator: Navigator, stationKey: String, name: String) {
     val viewModel = hiltViewModel<StopViewModel, StopViewModel.Factory>(key = stationKey) { it.create(stationKey, name) }
     val state by viewModel.state.collectAsStateWithLifecycle()
     val saved by viewModel.isSaved.collectAsStateWithLifecycle()
+    val board by viewModel.board.collectAsStateWithLifecycle()
+    val now = rememberNow()
     val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
         modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
@@ -102,6 +104,8 @@ fun StopScreen(navigator: Navigator, stationKey: String, name: String) {
                 subtitle = state.stop?.code?.takeIf { it.isNotBlank() }?.let { { Text(stringResource(R.string.stop_code, it)) } },
                 navigationIcon = { IconButton(onClick = navigator::back) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.action_back)) } },
                 actions = {
+                    // How current the board is sits in the header, next to the favourite.
+                    board?.let { FreshnessIndicator(it.realtime, it.realtimeFetchedAt ?: state.loadedAt, now, compact = true) }
                     IconButton(onClick = { viewModel.toggleSaved() }) {
                         Icon(if (saved) Icons.Rounded.Star else Icons.Rounded.StarBorder, contentDescription = stringResource(if (saved) R.string.action_unsave_stop else R.string.action_save_stop))
                     }
@@ -124,13 +128,6 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
     val mapState = org.southtyrol.transit.feature.common.rememberExpandableMapState()
     val scope = rememberCoroutineScope()
     var refreshing by remember { mutableStateOf(false) }
-    var showAllLines by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
-    var pickTime by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
-    if (pickTime) org.southtyrol.transit.feature.common.DateTimePickerDialogs(
-        initial = state.start,
-        onPicked = { pickTime = false; viewModel.setTime(it) },
-        onDismiss = { pickTime = false },
-    )
     val dark = LocalDarkTheme.current
     val language = AppLanguage.current()
 
@@ -160,76 +157,54 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
             }
             item {
                 Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    if (state.lines.isNotEmpty()) FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp),
-                        itemVerticalAlignment = Alignment.CenterVertically,
+                    // Large stations serve dozens of lines: one row that scrolls sideways keeps the live board in view.
+                    // Tap a line to show only its departures (several can be combined); long-press opens the line.
+                    if (state.lines.isNotEmpty()) Row(
+                        Modifier.horizontalScroll(androidx.compose.foundation.rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        // Large stations serve dozens of lines; keep the live board in view.
-                        // Tap a line to show only its departures (several can be combined); long-press opens the line.
-                        val shown = if (showAllLines) state.lines else state.lines.take(8)
-                        shown.forEach { line ->
+                        state.lines.forEach { line ->
                             LineFilterBadge(
                                 line, selected = line.key in state.lineFilter, anySelected = state.lineFilter.isNotEmpty(),
                                 onToggle = { viewModel.toggleLine(line.key) }, onOpen = { navigator.line(line.key) },
                             )
                         }
-                        if (state.lines.size > 8) {
-                            MoreLinesPill(if (showAllLines) stringResource(R.string.action_collapse) else "+${state.lines.size - 8}") { showAllLines = !showAllLines }
-                        }
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        state.distanceMeters?.let { Text(stringResource(R.string.stop_distance, Format.distance(it)), style = MaterialTheme.typography.labelLarge) }
+                    // When the board starts, with departures/arrivals beside it where arrivals differ from the
+                    // departures (hidden at most intermediate stops) and the wheelchair mark at the end.
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        StopTimeChip(viewModel)
+                        androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
+                        if (state.showArrivalsToggle || state.arrivals) ConnectedToggleGroup(
+                            options = listOf(false, true), selected = state.arrivals, onSelect = viewModel::setArrivals,
+                            label = { stringResource(if (it) R.string.stop_arrivals else R.string.stop_departures) },
+                            equalWidth = false,
+                        )
                         if (state.stop?.wheelchair == Accessibility.ACCESSIBLE) WheelchairIcon()
                     }
-                    if (state.lines.size > 1) Text(
-                        stringResource(R.string.stop_line_filter_hint), style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    // Two-way stops pick a side of the road, named after where the buses go next: a group across
+                    // the full width.
+                    val directions = state.directions.takeIf { it.size >= 2 && board?.source != BoardSource.NETWORK }
+                    if (directions != null) ConnectedToggleGroup(
+                        options = listOf(null) + directions, selected = state.direction, onSelect = viewModel::setDirection,
+                        label = { it?.towards?.joinToString(" · ") ?: stringResource(R.string.stop_all_directions) },
+                        modifier = Modifier.fillMaxWidth(),
                     )
-                    // Hidden where arrivals would just repeat the departures (most intermediate stops).
-                    if (state.showArrivalsToggle || state.arrivals) ConnectedToggleGroup(
-                        options = listOf(false, true), selected = state.arrivals, onSelect = viewModel::setArrivals,
-                        label = { stringResource(if (it) R.string.stop_arrivals else R.string.stop_departures) }, modifier = Modifier.fillMaxWidth(),
-                    )
-                    // Two-way stops: pick a side of the road, named after where the buses go next.
-                    if (state.directions.size >= 2 && board?.source != BoardSource.NETWORK) {
-                        Row(Modifier.horizontalScroll(androidx.compose.foundation.rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            // Single choice, styled like the choice chips in Settings: a checkmark marks the selected one.
-                            DirectionChip(stringResource(R.string.stop_all_directions), state.direction == null) { viewModel.setDirection(null) }
-                            state.directions.forEach { direction ->
-                                DirectionChip(direction.towards.joinToString(" · "), state.direction == direction) {
-                                    viewModel.setDirection(if (state.direction == direction) null else direction)
-                                }
-                            }
-                        }
-                    }
-                    board?.let { FreshnessIndicator(it.realtime, it.realtimeFetchedAt ?: state.loadedAt, now) }
+                    if (showHeader) board?.let { FreshnessIndicator(it.realtime, it.realtimeFetchedAt ?: state.loadedAt, now) }
                     if (board?.source == BoardSource.NETWORK) StatusBanner(stringResource(R.string.stop_network_board), kind = BannerKind.INFO)
                     else if (board?.realtime == Freshness.STALE || board?.realtime == Freshness.UNAVAILABLE) StatusBanner(stringResource(R.string.stop_realtime_unavailable), kind = BannerKind.WARNING)
-                }
-            }
-            item { SectionHeader(stringResource(if (state.arrivals) R.string.stop_arrivals else R.string.stop_departures)) }
-            item {
-                // When: live ("Now") or a chosen date and time, plus a way back to live.
-                Row(Modifier.padding(horizontal = 16.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    androidx.compose.material3.FilterChip(
-                        selected = !state.live,
-                        onClick = { pickTime = true },
-                        leadingIcon = { androidx.compose.material3.Icon(androidx.compose.material.icons.Icons.Rounded.Schedule, contentDescription = null, modifier = Modifier.size(18.dp)) },
-                        label = { Text(state.start?.let { Format.dateTime(it) } ?: stringResource(R.string.stop_time_now)) },
-                    )
-                    if (!state.live) androidx.compose.material3.TextButton(onClick = viewModel::now) { Text(stringResource(R.string.stop_back_to_now)) }
                 }
             }
             val all = board?.departures.orEmpty()
             val list = visible
             val filtered = state.lineFilter.isNotEmpty() || (state.direction != null && board?.source == BoardSource.SCHEDULE)
-            if (list.isNotEmpty()) item {
-                androidx.compose.material3.TextButton(
-                    onClick = viewModel::earlier, enabled = !state.loadingMore,
-                    modifier = Modifier.padding(horizontal = 8.dp),
-                ) {
-                    androidx.compose.material3.Icon(androidx.compose.material.icons.Icons.Rounded.ExpandLess, contentDescription = null)
-                    Text(stringResource(if (state.arrivals) R.string.stop_earlier_arrivals else R.string.stop_earlier_departures), modifier = Modifier.padding(start = 8.dp))
+            val earlier: androidx.compose.foundation.lazy.LazyListScope.() -> Unit = {
+                item(key = "earlier") {
+                    PageButton(
+                        stringResource(if (state.arrivals) R.string.stop_earlier_arrivals else R.string.stop_earlier_departures),
+                        androidx.compose.material.icons.Icons.Rounded.ArrowUpward, viewModel::earlier,
+                        Modifier.padding(vertical = 8.dp), enabled = !state.loadingMore,
+                    )
                 }
             }
             when {
@@ -239,23 +214,38 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
                     MessageState(stringResource(R.string.stop_no_departures_filtered), action = stringResource(R.string.stop_clear_filters), onAction = viewModel::clearFilters)
                 }
                 list.isEmpty() -> item { MessageState(stringResource(R.string.stop_no_departures), stringResource(R.string.stop_no_departures_hint)) }
-                else -> itemsIndexed(list, key = { _, d -> d.key }) { index, d ->
-                    DepartureRow(
-                        d, now, index, list.size,
-                        onClick = if (d.tripLinked) ({ navigator.trip(d.tripId, d.serviceDate.toString(), d.liveRef) }) else null,
-                        modifier = Modifier.padding(horizontal = 16.dp).animateItem(),
-                    )
+                else -> {
+                    // On the live departure board the next departure is the hero, below the "earlier" button;
+                    // once earlier ones are loaded they come first and the board is a plain list.
+                    val hero = list.first().takeIf { state.live && !state.arrivals && Format.minutesUntil(it.best, now) >= -1 }
+                    val rest = if (hero != null) list.drop(1) else list
+                    earlier()
+                    // The hero heads the list: its bottom corners join the first row, which continues the group.
+                    val offset = if (hero != null) 1 else 0
+                    if (hero != null) item(key = "hero:" + hero.key) {
+                        org.southtyrol.transit.feature.common.NextDepartureCard(
+                            hero, now,
+                            onClick = if (hero.tripLinked) ({ navigator.trip(hero.tripId, hero.serviceDate.toString(), hero.liveRef) }) else null,
+                            joined = rest.isNotEmpty(),
+                            modifier = Modifier.padding(horizontal = 16.dp).animateItem(),
+                        )
+                    }
+                    itemsIndexed(rest, key = { _, d -> d.key }) { index, d ->
+                        DepartureRow(
+                            d, now, index + offset, rest.size + offset,
+                            onClick = if (d.tripLinked) ({ navigator.trip(d.tripId, d.serviceDate.toString(), d.liveRef) }) else null,
+                            modifier = Modifier.padding(horizontal = 16.dp).animateItem(),
+                        )
+                    }
                 }
             }
             if (state.loadingMore) item { TransitLoading() }
             if (all.isNotEmpty() || !state.live) item {
-                androidx.compose.material3.TextButton(
-                    onClick = viewModel::later, enabled = !state.loadingMore,
-                    modifier = Modifier.padding(horizontal = 8.dp),
-                ) {
-                    androidx.compose.material3.Icon(androidx.compose.material.icons.Icons.Rounded.ExpandMore, contentDescription = null)
-                    Text(stringResource(if (state.arrivals) R.string.stop_later_arrivals else R.string.stop_later_departures), modifier = Modifier.padding(start = 8.dp))
-                }
+                PageButton(
+                    stringResource(if (state.arrivals) R.string.stop_later_arrivals else R.string.stop_later_departures),
+                    androidx.compose.material.icons.Icons.Rounded.ArrowDownward, viewModel::later,
+                    Modifier.padding(vertical = 8.dp), enabled = !state.loadingMore,
+                )
             }
             if (points.isNotEmpty()) {
                 item { SectionHeader(stringResource(R.string.stop_location)) }
@@ -296,34 +286,31 @@ private fun LineFilterBadge(line: org.southtyrol.transit.model.Line, selected: B
     }
 }
 
-/** "+N" / "Show less" next to the line badges, sized and shaped like them (same height and outline slot). */
+/**
+ * When the board starts: "Now" (live) or a chosen date and time, with its picker. Sits in the stop's
+ * header; a chosen time also offers the way back to now.
+ */
 @Composable
-private fun MoreLinesPill(label: String, onClick: () -> Unit) {
-    Box(Modifier.padding(2.dp).clip(RoundedCornerShape(50)).clickable(onClick = onClick)) {
-        Box(
-            Modifier
-                .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(50))
-                .heightIn(min = 26.dp)
-                .padding(horizontal = 10.dp, vertical = 3.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
-        }
-    }
-}
-
-@Composable
-private fun DirectionChip(label: String, selected: Boolean, onClick: () -> Unit) {
+private fun StopTimeChip(viewModel: StopViewModel, modifier: Modifier = Modifier) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    var pickTime by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    if (pickTime) org.southtyrol.transit.feature.common.DateTimePickerDialogs(
+        initial = state.start,
+        onPicked = { pickTime = false; viewModel.setTime(it) },
+        onDismiss = { pickTime = false },
+    )
     androidx.compose.material3.FilterChip(
-        selected = selected,
-        onClick = onClick,
-        label = { Text(label, maxLines = 1) },
-        leadingIcon = if (selected) ({
-            androidx.compose.material3.Icon(
-                androidx.compose.material.icons.Icons.Rounded.Check, contentDescription = null,
-                modifier = Modifier.size(androidx.compose.material3.FilterChipDefaults.IconSize),
+        selected = !state.live,
+        onClick = { pickTime = true },
+        leadingIcon = { Icon(androidx.compose.material.icons.Icons.Rounded.Schedule, contentDescription = null, modifier = Modifier.size(18.dp)) },
+        label = { Text(state.start?.let { Format.dateTime(it) } ?: stringResource(R.string.stop_time_now), maxLines = 1) },
+        // A chosen time: the chip's close icon returns to the live board.
+        trailingIcon = if (!state.live) ({
+            Icon(
+                androidx.compose.material.icons.Icons.Rounded.Close, contentDescription = stringResource(R.string.stop_back_to_now),
+                modifier = Modifier.size(18.dp).clickable(role = androidx.compose.ui.semantics.Role.Button, onClick = viewModel::now),
             )
         }) else null,
-        modifier = Modifier.semantics { role = androidx.compose.ui.semantics.Role.RadioButton },
+        modifier = modifier,
     )
 }

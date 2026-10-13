@@ -46,6 +46,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.southtyrol.transit.R
+import org.southtyrol.transit.feature.common.groupGap
+import org.southtyrol.transit.feature.common.groupedItemColors
 import org.southtyrol.transit.data.RecentItem
 import org.southtyrol.transit.data.SavedItem
 import org.southtyrol.transit.data.SavedKind
@@ -119,7 +121,7 @@ fun SavedScreen(navigator: Navigator, viewModel: SavedViewModel = hiltViewModel(
                 val mode = runCatching { TransportMode.valueOf(item.subtitle.substringBefore('|')) }.getOrDefault(TransportMode.BUS)
                 SegmentedListItem(
                     onClick = { navigator.line(item.id) },
-                    shapes = ListItemDefaults.segmentedShapes(index, lines.size),
+                    shapes = ListItemDefaults.segmentedShapes(index, lines.size), colors = groupedItemColors(), modifier = Modifier.groupGap(index, lines.size),
                     leadingContent = { LineBadge(item.label, mode) },
                     trailingContent = { IconButton(onClick = { viewModel.remove(item) }) { Icon(Icons.Rounded.Delete, contentDescription = stringResource(R.string.action_remove)) } },
                 ) { Text(item.subtitle.substringAfter('|').ifBlank { item.label }) }
@@ -136,7 +138,7 @@ fun SavedScreen(navigator: Navigator, viewModel: SavedViewModel = hiltViewModel(
                 itemsIndexed(recent, key = { _, r -> "r:" + r.id }) { index, r ->
                     SegmentedListItem(
                         onClick = { r.route?.let { (from, to) -> navigator.results(leaveNow(from, to)) } },
-                        shapes = ListItemDefaults.segmentedShapes(index, recent.size),
+                        shapes = ListItemDefaults.segmentedShapes(index, recent.size), colors = groupedItemColors(), modifier = Modifier.groupGap(index, recent.size),
                         leadingContent = { Icon(Icons.Rounded.History, contentDescription = null) },
                     ) { Text(r.label) }
                 }
@@ -159,7 +161,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.section(title: Int, i
 private fun SavedRow(item: SavedItem, index: Int, count: Int, icon: androidx.compose.ui.graphics.vector.ImageVector, onRemove: () -> Unit, onClick: () -> Unit) {
     SegmentedListItem(
         onClick = onClick,
-        shapes = ListItemDefaults.segmentedShapes(index, count),
+        shapes = ListItemDefaults.segmentedShapes(index, count), colors = groupedItemColors(), modifier = Modifier.groupGap(index, count),
         leadingContent = { Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
         supportingContent = item.subtitle.takeIf { it.isNotBlank() && item.kind == SavedKind.PLACE }?.let { { Text(it) } },
         trailingContent = { IconButton(onClick = onRemove) { Icon(Icons.Rounded.Delete, contentDescription = stringResource(R.string.action_remove)) } },

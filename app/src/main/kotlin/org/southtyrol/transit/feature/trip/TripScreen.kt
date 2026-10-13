@@ -179,6 +179,7 @@ class TripViewModel @AssistedInject constructor(
 fun TripScreen(navigator: Navigator, tripId: String, serviceDate: String, liveRef: String = "") {
     val viewModel = hiltViewModel<TripViewModel, TripViewModel.Factory>(key = "$tripId|$serviceDate") { it.create(tripId, serviceDate, liveRef) }
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val headerNow = rememberNow()
     PollWhileVisible(20_000) { viewModel.poll() }
     Scaffold(
         topBar = {
@@ -191,6 +192,10 @@ fun TripScreen(navigator: Navigator, tripId: String, serviceDate: String, liveRe
                     } else Text(stringResource(R.string.trip_title))
                 },
                 navigationIcon = { IconButton(onClick = navigator::back) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.action_back)) } },
+                // How current the run's data is sits in the header.
+                actions = {
+                    (state as? TripLoad.Ready)?.detail?.let { FreshnessIndicator(it.freshness, it.observedAt, headerNow, Modifier.padding(end = 12.dp), compact = true) }
+                },
             )
         },
     ) { padding ->
@@ -212,11 +217,16 @@ private fun TripContent(detail: TripDetail, navigator: Navigator, alerts: List<o
     val color = detail.route.color ?: ModeColors.container(detail.route.mode)
     val vehicle = detail.vehicle
     val vehicleFreshness = vehicle?.let { FreshnessPolicy.vehicle(it.timestamp, now) }
-    // The next stop is the first one whose (predicted) departure is still ahead.
-    val nextIndex = detail.stops.indexOfFirst { (it.predictedDeparture ?: it.scheduledDeparture).isAfter(now) }
-    // Where the bus is: its GPS fix when the vehicle feed has one, otherwise estimated from the stop times.
-    val estimate = remember(detail, now.epochSecond / 10) { org.southtyrol.transit.model.RunPositions.estimate(detail.stops, detail.shape, now) }
-    val position = vehicle?.let { v -> org.southtyrol.transit.model.RunPosition(v.point, estimate?.nextIndex ?: nextIndex, atStop = false, estimated = false) } ?: estimate
+    // Where the bus is: its GPS fix placed on the run when the vehicle feed has one, otherwise estimated
+    // from the stop times.
+    val position = remember(detail, now.epochSecond / 10) {
+        vehicle?.let { org.southtyrol.transit.model.RunPositions.locate(detail.stops, detail.shape, it.point, now) }
+            ?: org.southtyrol.transit.model.RunPositions.estimate(detail.stops, detail.shape, now)
+    }
+    // The next stop: where the GPS fix puts the bus (the stop it stands at counts), otherwise the first
+    // one whose (predicted) departure is still ahead.
+    val nextIndex = if (position != null && !position.estimated) position.nextIndex - (if (position.atStop) 1 else 0)
+    else detail.stops.indexOfFirst { (it.predictedDeparture ?: it.scheduledDeparture).isAfter(now) }
     val mapState = org.southtyrol.transit.feature.common.rememberExpandableMapState()
     val routeLine = detail.shape.takeIf { it.size >= 2 } ?: detail.stops.map { it.stop.point }.filter { it.isValid }
     val hasMap = routeLine.size >= 2
@@ -263,7 +273,6 @@ private fun TripContent(detail: TripDetail, navigator: Navigator, alerts: List<o
         item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 12.dp)) {
                 Text(listOfNotNull(Format.mode(detail.route.mode), detail.route.operator?.name, Format.date(detail.serviceDate)).joinToString(" · "), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                FreshnessIndicator(detail.freshness, detail.observedAt, now)
                 if (detail.state == ServiceState.CANCELLED) Text(stringResource(org.southtyrol.transit.design.R.string.ds_cancelled), color = LocalStatusColors.current.cancelled, style = MaterialTheme.typography.titleMedium)
                 val positionText = when {
                     vehicle != null -> stringResource(R.string.trip_vehicle_seen, Format.age(vehicle.timestamp, now)) + if (vehicleFreshness == Freshness.STALE) " · " + stringResource(org.southtyrol.transit.design.R.string.ds_stale) else ""

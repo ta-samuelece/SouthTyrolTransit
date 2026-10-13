@@ -74,6 +74,16 @@ fun ColorScheme.trueBlack(): ColorScheme = copy(
     surfaceContainerLowest = Color.Black,
 )
 
+/**
+ * The primary container is replaced by the muted secondary container everywhere (the user's choice of
+ * 2026-10-13: the bright tone shouted). Done on the scheme, so Material components that default to it
+ * (FABs, the contained loading indicator, time pickers, switches) follow too; the pair keeps its contrast.
+ */
+fun ColorScheme.mutedContainers(): ColorScheme = copy(
+    primaryContainer = secondaryContainer,
+    onPrimaryContainer = onSecondaryContainer,
+)
+
 /** True when the user disabled animations system-wide; motion falls back to the standard scheme. */
 val LocalReducedMotion = staticCompositionLocalOf { false }
 
@@ -94,7 +104,7 @@ fun TransitTheme(
         darkTheme -> DarkColors
         else -> LightColors
     }
-    val colors = if (darkTheme && amoled) base.trueBlack() else base
+    val colors = (if (darkTheme && amoled) base.trueBlack() else base).mutedContainers()
     val reducedMotion = remember(context) {
         runCatching { Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f }.getOrDefault(false)
     }

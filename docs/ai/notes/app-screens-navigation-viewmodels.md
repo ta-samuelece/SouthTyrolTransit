@@ -5,7 +5,7 @@ description: How a route is declared and registered (screen<T> helper, Navigator
 tags: [compose, navigation, viewmodel, hilt, search, workmanager]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-11T12:00:00Z"
+  at: "2026-10-13T21:00:00Z"
 status: stable
 ---
 
@@ -23,7 +23,10 @@ status: stable
   destinations). `Navigator.select` pops to the user's chosen start tab, not always Plan.
 
 A new **tab** additionally needs a `TopLevel` entry, a `StartTab` value in core:data (exhaustive `when` in
-`TopLevel.of`), `startTabLabel` in `SettingsScreens.kt`, and nav strings in all three languages.
+`TopLevel.of`), `startTabLabel` in `SettingsScreens.kt`, and nav strings in all three languages. There are
+four tabs (Plan, Departures, Map, Alerts). Settings stopped being a tab on 2026-10-13: it is an ordinary
+sub-route (`Navigator.settings()`, the gear button of `TopLevelBar`). `StartTab.SETTINGS` stays in the enum
+only so a stored choice still parses; `TopLevel.of` maps it to Plan and the start-tab dialog hides it.
 
 # ViewModel arguments - and the key
 

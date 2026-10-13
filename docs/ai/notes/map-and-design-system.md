@@ -1,11 +1,11 @@
 ---
 type: Reference
 title: Map and design-system conventions - MapContent, styles, attribution, colours, reduced motion
-description: Map content is one immutable value re-pushed in full and marker ids must be unique across stops, vehicles and POIs; without a timetable the map's stops come from the EFA coordinate search; maps inside pages use ExpandableMapPage and enlarge where their small card sits; the one convention for showing progress along a run; the dark style falls back to the light override; attribution and font are hard-coded to OpenFreeMap; feed route colours are already used; the colour scheme (own palette by default, optional wallpaper colours and pure black) and the toggle group on surfaceContainer cards; reduced motion is read once.
+description: Map content is one immutable value re-pushed in full and marker ids must be unique across stops, vehicles and POIs; without a timetable the map's stops come from the EFA coordinate search; maps inside pages use ExpandableMapPage and enlarge where their small card sits; the one convention for showing progress along a run; the dark style falls back to the light override; attribution and font are hard-coded to OpenFreeMap; feed route colours are already used; the colour scheme (own palette by default, optional wallpaper colours and pure black); which Material 3 Expressive component to use for a choice, a hero, a grouped list and data freshness; reduced motion is read once.
 tags: [map, maplibre, design-system, colors, accessibility]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-11T12:30:00Z"
+  at: "2026-10-13T21:00:00Z"
 status: stable
 ---
 
@@ -45,7 +45,12 @@ status: stable
 
 Every view that shows a run marks what is already behind: the travelled part of the line and passed stops
 are drawn at `Progress.PASSED_ALPHA` (0.35, in `core/designsystem/.../Tokens.kt`), the rest at full
-strength. A stop is passed once its (predicted) departure is not after now (`RouteProgress.nextIndex`).
+strength. A stop is passed once its (predicted) departure is not after now (`RouteProgress.nextIndex`) -
+except where the run has a GPS fix: `RunPositions.locate` (`core/model/.../Realtime.kt`) places the fix on
+the route by geometry (the stop it stands within 40 m of, or the stretch it is on; the times only pick the
+pass on a loop), and that position decides passed and next on the trip timeline and map, the map's
+vehicle sheet ("Next stop") and the journey view. Time-based placement put a late run without
+predictions at the wrong stop, or nowhere once its scheduled end had passed.
 
 | View | Travelled part | Passed stops |
 | --- | --- | --- |
@@ -76,10 +81,54 @@ by colour alone. Status colours are fixed hex values in `Tokens.kt`, chosen by d
 `surfaceContainerLowest` become black, the other containers keep their tones so cards stay raised. Both
 `MainActivity` and `WidgetConfigActivity` build the theme and must pass the same settings.
 
-Unselected `ConnectedToggleGroup` buttons default to `surfaceContainer`. On a card of that colour (the
-planner's routing-options card) they vanish: pass `uncheckedContainerColor` (the planner uses
-`surfaceContainerHighest`). The `ToggleButtonDefaults` colour factory is `colors(...)` in this alpha, not
-`toggleButtonColors`.
+**There is no bright primary container.** `TransitTheme` applies `ColorScheme.mutedContainers()` to every
+scheme (own, wallpaper, pure black): `primaryContainer`/`onPrimaryContainer` become the secondary pair, so
+components that default to it (FABs, the contained loading indicator, time pickers) are muted too. Use
+`secondaryContainer` in new code for emphasis; asking for `primaryContainer` gives the same colour.
+
+# Component conventions (Material 3 Expressive)
+
+Settled on 2026-10-13 after a review of every screen against the Expressive guidelines:
+
+- **One of several options** is a `ConnectedToggleGroup` (stop departures/arrivals, results sort,
+  alerts current/planned, theme), never filter chips. `equalWidth = false` lets each button take its
+  label's width; wrap the group in `horizontalScroll` where the labels may not fit (results sort, four
+  options). A choice with many options or long labels (start tab, language, "my position" button) is a
+  `ChoiceRow` that opens a radio `ChoiceDialog` (`SettingsScreens.kt`). **Filter chips are for
+  multi-select filters only** (map layers, "My stops and lines").
+- Unselected `ConnectedToggleGroup` buttons default to `surfaceContainer`. On a card of that colour (the
+  planner's routing-options card) they vanish: pass `uncheckedContainerColor` (the planner and the
+  Settings theme group use `surfaceContainerHighest`). The `ToggleButtonDefaults` colour factory is
+  `colors(...)` in this alpha, not `toggleButtonColors`.
+- **One hero per screen** in `secondaryContainer` with 28 dp corners: the stop board's next departure
+  (`NextDepartureCard` in `feature/common/Common.kt`, live departure boards only, and only while the first
+  row is not an earlier departure; "earlier" sits above it; with `joined` its bottom corners are the inner
+  4 dp and the rows below continue its group, `DepartureRow` indices offset by one) and the soonest catchable connection (`JourneyCard(emphasized = true)`). The open connection of the
+  two-pane layout is `surfaceContainerHighest` with a primary outline, so it never looks like the hero.
+  Departed connections are dimmed (alpha 0.7) and labelled.
+- **Grouped lists**: `SegmentedListItem` where a list item fits, otherwise `groupShape(index, count)`
+  (20 dp outside, 4 dp between, 2 dp apart) - the alerts list uses it for `AlertCard`, and Settings for every
+  item of a `SettingsGroup` (one `item { }` per setting, on `surfaceContainer`).
+- **Data freshness** is a pill: `FreshnessIndicator` draws its own container (the live container when
+  live, `surfaceContainerHighest` otherwise, so it also works over the map) and takes an `extra` qualifier
+  ("no vehicles reported" replaces the old map banner). Grey status colours tint only its icon - as text
+  on the pill they fail 4.5:1. **It goes in the top bar** (`compact = true`, "Live · 16 s", the full
+  sentence for TalkBack) wherever the screen has one: stop, trip, journey, alerts. Inline only where there
+  is no bar - the map, the stop and journey detail panes of the two-pane layouts, and the vehicle count on
+  the line page. One indicator per screen: the journey's leg cards have none of their own.
+- **Paging in time** (earlier/later departures, earlier/later connections) is `PageButton` in
+  `feature/common/Common.kt`, a centred tonal button with an arrow.
+- **The stop board, kept quiet at the user's request** (2026-10-13): lines row; then the time chip
+  (`StopTimeChip`) with departures/arrivals and the wheelchair mark on the same row; then the direction
+  choice, a full-width `ConnectedToggleGroup` with "All directions" as `null`. No distance (the board no
+  longer asks for the location) and no "tap lines to filter" hint. Only the live pill is in the top bar.
+- **Every `SegmentedListItem`** passes `colors = groupedItemColors()` (surfaceContainer) and
+  `Modifier.groupGap(index, count)` (`feature/common/Common.kt`): the library's default segmented colours
+  are indistinguishable from the page in dark mode, and without the gap the separators disappear.
+- **Settings is not a tab.** `TopLevelBar(onSettings = navigator::settings)` puts a gear button in the top
+  bars of Plan, Departures and Alerts; see [adding screens](app-screens-navigation-viewmodels.md).
+- Alert line chips are `LineBadge`s: `AlertScope.routes` keeps the GTFS `Route` behind each line name for
+  mode and colour; names from planner notices have no route and get a neutral `OTHER` badge without icon.
 
 # Reduced motion
 
@@ -94,4 +143,6 @@ Code read of `core/map`, `core/designsystem` and `MainActivity.kt` on 2026-10-09
 fallback and the enlarged-map placement were checked on an emulator the same evening: stops appeared on
 the map of a fresh install while the timetable was still importing, and the stop page's map enlarged at
 the bottom. The colour-scheme options and the options card were checked on an emulator in light, dark
-and pure black on 2026-10-11.
+and pure black on 2026-10-11. The component conventions of 2026-10-13 were compiled, unit-tested and
+linted; the user checked the stop board on a phone the same evening and asked for the header pill, the
+single control row, `PageButton` and the row containers, which followed.

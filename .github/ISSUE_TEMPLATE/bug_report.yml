@@ -1,0 +1,143 @@
+name: Bug report
+description: Report something in South Tyrol Transit that is broken or behaves wrongly
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a problem. South Tyrol Transit is an unofficial app built only on open data, so wrong or missing times, stops or alerts are sometimes in the source data rather than in the app - see [Known API limitations](https://github.com/ta-samuelece/SouthTyrolTransit/blob/main/README.md#16-known-api-limitations) in the README. Report it anyway if you are unsure: the details below help tell the two apart.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area of the app
+      description: Where did the problem happen?
+      options:
+        - Plan / journey results
+        - Journey detail
+        - Departures / stop board
+        - Trip
+        - Lines
+        - Map
+        - Alerts and notifications
+        - Saved items
+        - Settings
+        - Widget
+        - App updates
+        - Other / several areas
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: Describe the problem. Name the stop, line or journey involved, if any.
+      placeholder: On the board for Bozen Bahnhof, line 201 showed ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+      description: What should the app have done or shown instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: How can someone else see the same problem?
+      placeholder: |
+        1. Open Departures
+        2. Search for ...
+        3. Tap ...
+    validations:
+      required: true
+
+  - type: input
+    id: when
+    attributes:
+      label: Date and time
+      description: When did it happen? Live times and alerts change quickly, so this helps check the data afterwards.
+      placeholder: 2026-10-14, around 08:15
+
+  - type: dropdown
+    id: frequency
+    attributes:
+      label: How often
+      options:
+        - Every time
+        - Sometimes
+        - Only once so far
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      description: Shown in Settings under app updates.
+      placeholder: 0.1.5-preview.3
+    validations:
+      required: true
+
+  - type: dropdown
+    id: channel
+    attributes:
+      label: Update channel
+      options:
+        - Stable
+        - Preview
+        - Not sure
+    validations:
+      required: true
+
+  - type: input
+    id: device
+    attributes:
+      label: Device and Android version
+      placeholder: Pixel 8, Android 16
+    validations:
+      required: true
+
+  - type: dropdown
+    id: language
+    attributes:
+      label: App language
+      options:
+        - System default
+        - English
+        - German
+        - Italian
+        - Ladin
+
+  - type: dropdown
+    id: connection
+    attributes:
+      label: Connection
+      description: Were you online when it happened?
+      options:
+        - Online (Wi-Fi)
+        - Online (mobile data)
+        - Offline or poor connection
+        - Not sure
+
+  - type: textarea
+    id: attachments
+    attributes:
+      label: Screenshots or logs
+      description: Drag screenshots or a screen recording here. If the app crashed, paste the error or crash log if you have one.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched the existing issues and this has not been reported yet.
+          required: true
+        - label: I am using the latest version on my update channel.
+          required: false

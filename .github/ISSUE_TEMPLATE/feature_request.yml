@@ -1,0 +1,76 @@
+name: Feature request
+description: Suggest a new feature or an improvement to South Tyrol Transit
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to suggest something. South Tyrol Transit is an unofficial app built only on open data (STA GTFS and GTFS-Realtime, the public EFA journey planner, Open Data Hub, OpenStreetMap). Some ideas depend on data that is not published - see [Known API limitations](https://github.com/ta-samuelece/SouthTyrolTransit/blob/main/README.md#16-known-api-limitations) and [Future improvements](https://github.com/ta-samuelece/SouthTyrolTransit/blob/main/README.md#20-future-improvements) in the README before opening a request.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area of the app
+      description: Which part of the app does this concern?
+      options:
+        - Plan / journey results
+        - Journey detail
+        - Departures / stop board
+        - Trip
+        - Lines
+        - Map
+        - Alerts and notifications
+        - Saved items
+        - Settings
+        - Widget
+        - App updates
+        - Other / several areas
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or need
+      description: What are you trying to do, and what gets in the way today? Describe the situation rather than the solution.
+      placeholder: When I wait at a stop, I can't tell whether ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: How would you like the app to behave? Sketches or screenshots are welcome.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Other ways to solve this, workarounds you use today, or how other transit apps handle it.
+
+  - type: textarea
+    id: data
+    attributes:
+      label: Data needed
+      description: If you know which open data source would provide the information (GTFS, GTFS-RT, EFA, Open Data Hub, OSM), mention it here.
+
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      description: Shown in Settings under app updates.
+      placeholder: 0.1.5-preview.3
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched the existing issues and this has not been requested yet.
+          required: true
+        - label: I understand the app cannot sell or show tickets, as there is no public ticketing API.
+          required: false

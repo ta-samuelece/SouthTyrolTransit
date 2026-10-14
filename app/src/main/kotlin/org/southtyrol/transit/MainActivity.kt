@@ -21,6 +21,8 @@ import org.southtyrol.transit.data.SettingsRepository
 import org.southtyrol.transit.data.ThemeMode
 import org.southtyrol.transit.data.UserSettings
 import org.southtyrol.transit.design.TransitTheme
+import org.southtyrol.transit.feature.onboarding.OnboardingGate
+import org.southtyrol.transit.feature.onboarding.OnboardingScreen
 import org.southtyrol.transit.map.LocalMapStyle
 import org.southtyrol.transit.map.MapStyle
 import org.southtyrol.transit.ui.TransitApp
@@ -74,7 +76,7 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch { initial = settingsRepository.current() }
         setContent {
             val first = remember { mutableStateOf<UserSettings?>(null) }
-            LaunchedEffect(Unit) { first.value = settingsRepository.current() }
+            LaunchedEffect(Unit) { first.value = OnboardingGate.resolve(settingsRepository, this@MainActivity) }
             val start = first.value ?: return@setContent
             val settings by settingsRepository.settings.collectAsStateWithLifecycle(initialValue = start)
             val dark = when (settings.theme) {
@@ -92,7 +94,10 @@ class MainActivity : AppCompatActivity() {
             }
             TransitTheme(darkTheme = dark, dynamicColor = settings.dynamicColor, amoled = settings.amoledDark) {
                 CompositionLocalProvider(LocalMapStyle provides defaultStyle, LocalDarkTheme provides dark) {
-                    TransitApp(startTab = start.startTab, openStop = openStop.value, onStopOpened = { openStop.value = null })
+                    // The start tab is read once, when the app first shows: after the first-run screens that is
+                    // the tab just chosen there.
+                    if (settings.onboardingDone) TransitApp(startTab = settings.startTab, openStop = openStop.value, onStopOpened = { openStop.value = null })
+                    else OnboardingScreen()
                 }
             }
         }

@@ -19,6 +19,8 @@ import org.southtyrol.transit.design.TransitTheme
 import org.southtyrol.transit.feature.common.AlertCard
 import org.southtyrol.transit.feature.common.DepartureRow
 import org.southtyrol.transit.feature.journey.JourneyCard
+import org.southtyrol.transit.feature.onboarding.OnboardingContent
+import org.southtyrol.transit.feature.onboarding.OnboardingStep
 import org.southtyrol.transit.feature.planner.RequestCodec
 import org.southtyrol.transit.model.DataError
 import org.southtyrol.transit.model.Departure
@@ -134,5 +136,31 @@ class UiComponentsTest {
         }
         compose.onNodeWithText("Location permission was not granted.").assertIsDisplayed()
         compose.onNodeWithText("search for stops by name", substring = true).assertIsDisplayed()
+    }
+
+    @Test fun onboardingFrameOffersBackAndSkip() {
+        var skipped = false
+        var back = false
+        compose.setContent {
+            TransitTheme(dynamicColor = false) {
+                OnboardingContent(OnboardingStep.LOCATION, onBack = { back = true }, onSkip = { skipped = true }) {
+                    androidx.compose.material3.Text("Step body")
+                }
+            }
+        }
+        compose.onNodeWithText("Step body").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Back").performClick()
+        compose.onNodeWithText("Skip").performClick()
+        assertTrue(back && skipped)
+    }
+
+    @Test fun onboardingSummaryHasNoProgressOrSkip() {
+        compose.setContent {
+            TransitTheme(dynamicColor = false) {
+                OnboardingContent(OnboardingStep.DONE, onBack = {}, onSkip = {}) { androidx.compose.material3.Text("Summary") }
+            }
+        }
+        compose.onNodeWithText("Summary").assertIsDisplayed()
+        compose.onNodeWithText("Skip").assertDoesNotExist()
     }
 }

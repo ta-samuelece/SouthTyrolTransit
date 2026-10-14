@@ -55,6 +55,8 @@ data class UserSettings(
      * up) so a restore can re-apply it. Blank until first recorded.
      */
     val appIcon: String = "",
+    /** The first-run screens were finished or skipped (existing installs count as done, see the onboarding gate). */
+    val onboardingDone: Boolean = false,
 )
 
 /** The app language currently in effect (per-app locale or system), as a BCP-47 tag. */
@@ -85,6 +87,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val skipped = stringPreferencesKey("skippedUpdate")
         val channel = stringPreferencesKey("updateChannel")
         val icon = stringPreferencesKey("appIcon")
+        val onboarding = booleanPreferencesKey("onboardingDone")
     }
 
     val settings: Flow<UserSettings> = store.data
@@ -108,6 +111,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
                 skippedUpdate = p[Keys.skipped] ?: "",
                 updateChannel = p[Keys.channel]?.let { runCatching { UpdateChannel.valueOf(it) }.getOrNull() } ?: UpdateChannel.STABLE,
                 appIcon = p[Keys.icon] ?: "",
+                onboardingDone = p[Keys.onboarding] ?: false,
             )
         }
 
@@ -130,4 +134,5 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
     suspend fun setSkippedUpdate(value: String) { store.edit { it[Keys.skipped] = value } }
     suspend fun setUpdateChannel(value: UpdateChannel) { store.edit { it[Keys.channel] = value.name } }
     suspend fun setAppIcon(value: String) { store.edit { it[Keys.icon] = value } }
+    suspend fun setOnboardingDone(value: Boolean) { store.edit { it[Keys.onboarding] = value } }
 }

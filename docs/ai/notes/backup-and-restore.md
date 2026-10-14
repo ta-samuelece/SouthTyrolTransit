@@ -39,6 +39,10 @@ permission is not restored; clears the skipped update), re-applies the launcher 
 
 Recents briefly exist between the restore and that first start; nothing reads them before it in practice.
 
+`onboardingDone` comes back with the settings, so a restored phone skips the first-run screens. The
+notification permission does not come back, and `RestoreCleanup` switches alert notifications off, so on a
+restored phone they have to be turned on again in Settings.
+
 # Consequences for future changes
 
 - **`user.db` and the settings keys are a restore contract.** A backup from an older version is restored

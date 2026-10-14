@@ -1,11 +1,11 @@
 ---
 type: Reference
 title: Adding screens - routes, the Navigator, ViewModel keys and the search pattern
-description: How a route is declared and registered (screen<T> helper, Navigator method), how a tab is added, why parameterised ViewModels need an argument-derived key, the distinctUntilChanged search pattern from 8fcb0b7, and Hilt worker wiring.
-tags: [compose, navigation, viewmodel, hilt, search, workmanager]
+description: How the first-run screens are gated before the app, how a route is declared and registered (screen<T> helper, Navigator method), how a tab is added, why parameterised ViewModels need an argument-derived key, the distinctUntilChanged search pattern from 8fcb0b7, and Hilt worker wiring.
+tags: [compose, navigation, viewmodel, hilt, search, workmanager, onboarding]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-13T21:00:00Z"
+  at: "2026-10-14T21:30:00Z"
 status: stable
 ---
 
@@ -23,10 +23,27 @@ status: stable
   destinations). `Navigator.select` pops to the user's chosen start tab, not always Plan.
 
 A new **tab** additionally needs a `TopLevel` entry, a `StartTab` value in core:data (exhaustive `when` in
-`TopLevel.of`), `startTabLabel` in `SettingsScreens.kt`, and nav strings in all three languages. There are
+`TopLevel.of`), `startTabLabel` in `SettingsScreens.kt` and in the onboarding screen (with its `startTabs`
+list), and nav strings in all three languages. There are
 four tabs (Plan, Departures, Map, Alerts). Settings stopped being a tab on 2026-10-13: it is an ordinary
 sub-route (`Navigator.settings()`, the gear button of `TopLevelBar`). `StartTab.SETTINGS` stays in the enum
 only so a stored choice still parses; `TopLevel.of` maps it to Plan and the start-tab dialog hides it.
+
+# First-run screens
+
+`feature/onboarding/OnboardingScreen.kt` is not a route: `MainActivity` shows `OnboardingScreen()` in
+place of `TransitApp` while `UserSettings.onboardingDone` is false, and `TransitApp` once it turns true, so
+the start tab passed in is the one just chosen there. `OnboardingGate.resolve` decides it at start: a
+fresh install (`firstInstallTime == lastUpdateTime`) gets the screens; an updated install predates them and
+is marked done on the spot instead. Skip jumps to the summary and Start sets the flag.
+
+- Each choice is written to the settings as it is made, through the same calls as Settings (alert checks,
+  `scheduleTimetableRefresh` with `initialSync` while there is no timetable), so a user who leaves halfway
+  keeps what they picked.
+- Picking a language calls `AppLanguage.select`, which recreates the activity: the current step is kept
+  in `rememberSaveable` for that reason, and picking the phone's own language goes back to SYSTEM.
+- `onboardingDone` is a settings key, so it is backed up: a restored phone skips the screens (see
+  [backup and restore](./backup-and-restore.md)).
 
 # ViewModel arguments - and the key
 

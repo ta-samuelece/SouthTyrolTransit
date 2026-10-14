@@ -53,7 +53,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearWavyProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
@@ -240,7 +240,7 @@ fun OnboardingContent(step: OnboardingStep, onBack: () -> Unit, onSkip: () -> Un
                     } else Spacer(Modifier.size(48.dp))
                     val stepText = stringResource(R.string.onboarding_step, step.ordinal + 1, counted)
                     val progress by animateFloatAsState((step.ordinal + 1f) / counted, label = "onboardingProgress")
-                    LinearWavyProgressIndicator(
+                    LinearProgressIndicator(
                         progress = { progress },
                         modifier = Modifier.weight(1f).semantics { stateDescription = stepText },
                     )
@@ -618,9 +618,9 @@ private fun ColumnScope.DoneStep(
                     // The timetable row shows the download as it runs.
                     if (label == R.string.onboarding_summary_timetable) when (status) {
                         is ScheduleStatus.Downloading ->
-                            if (status.total > 0) LinearWavyProgressIndicator(progress = { status.bytes.toFloat() / status.total }, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp))
-                            else LinearWavyProgressIndicator(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp))
-                        is ScheduleStatus.Importing -> LinearWavyProgressIndicator(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp))
+                            if (status.total > 0) LinearProgressIndicator(progress = { status.bytes.toFloat() / status.total }, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp))
+                            else LinearProgressIndicator(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp))
+                        is ScheduleStatus.Importing -> LinearProgressIndicator(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp))
                         else -> Unit
                     }
                 }

@@ -8,7 +8,7 @@ generated:
   at: "2026-10-09T12:00:00Z"
 verified:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-09T12:00:00Z"
+  at: "2026-10-14T12:00:00Z"
 status: stable
 sources:
   - id: history
@@ -18,9 +18,10 @@ sources:
 
 # The state today
 
-The repository has no `.github/` directory. Nothing runs on a push or a pull request: not the unit tests,
-not Android Lint, not a build. The only automated gate anywhere is `tools/release.py`, which checks the
-version, signature, clean tree and tag - not whether the code works.
+`.github/` holds only the issue templates (`.github/ISSUE_TEMPLATE/`) - no workflows. Nothing runs on a
+push or a pull request: not the unit tests, not Android Lint, not a build. The only
+automated gate anywhere is `tools/release.py`, which checks the version, signature, clean tree and tag -
+not whether the code works.
 
 Consequences for agents (CLAUDE.md rules 2 and 9):
 
@@ -30,8 +31,8 @@ Consequences for agents (CLAUDE.md rules 2 and 9):
 
 # The workflow that was removed
 
-On 2026-10-05 an "Android CI/CD" workflow was added (first at `workflows/android.yml` by mistake, then at
-`.github/workflows/android.yml`) and both copies were deleted the same evening.[^history] No reason is
+On 2026-10-05 an "Android CI/CD" workflow was added (first at workflows/android.yml by mistake, then at
+.github/workflows/android.yml) and both copies were deleted the same evening.[^history] No reason is
 recorded. If CI is ever reintroduced, do not restore that file - it would conflict with how the app is
 released now:
 

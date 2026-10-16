@@ -1,9 +1,6 @@
 package org.southtyrol.transit.map
 
 import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.Path
 import android.os.Bundle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -64,12 +61,16 @@ private const val L_STOP_CLUSTER = "st-stop-cluster"
 private const val L_STOP_CLUSTER_COUNT = "st-stop-cluster-count"
 private const val L_STOPS = "st-stops-layer"
 private const val L_POIS = "st-pois-layer"
+private const val L_POI_POINTS = "st-pois-points"
 private const val L_POI_LABEL = "st-pois-label"
 private const val L_VEHICLE_CLUSTER = "st-vehicle-cluster"
 private const val L_VEHICLE_ARROW = "st-vehicle-arrow"
 private const val L_VEHICLES = "st-vehicles-layer"
-private const val L_VEHICLE_LABEL = "st-vehicles-label"
-private const val IMG_ARROW = "st-arrow"
+private const val L_VEHICLE_DOT = "st-vehicles-dot"
+/** From this zoom vehicles show icon and line number, and mobility points appear. */
+private const val FULL_DETAIL_ZOOM = 13f
+/** From this zoom mobility points carry their availability pill. */
+private const val COUNT_ZOOM = 16f
 /** Saved stops: amber fill, readable against both map styles. */
 private const val HIGHLIGHT = 0xFFF2B705.toInt()
 private const val FONT = "Noto Sans Regular"
@@ -83,6 +84,9 @@ private class MapHolder {
     var style: Style? = null
     var appliedCamera: CameraRequest? = null
     var markers: Map<String, MapMarker> = emptyMap()
+    var images: MarkerImages? = null
+    /** Marker images the current style already holds; a new style starts empty. */
+    val added = HashSet<String>()
 }
 
 @Composable
@@ -144,7 +148,9 @@ internal fun MapLibreTransitMap(
                 map.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(Geo.Bolzano.latitude, Geo.Bolzano.longitude), 9.0))
             }
             map.setStyle(Style.Builder().fromUri(styleUrl)) { loaded ->
-                installLayers(loaded, density)
+                installLayers(loaded)
+                holder.images = MarkerImages(density, darkTheme)
+                holder.added.clear()
                 holder.style = loaded
                 styleVersion++
             }
@@ -168,7 +174,7 @@ internal fun MapLibreTransitMap(
                     if (geometry != null) map.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(geometry.latitude(), geometry.longitude()), map.cameraPosition.zoom + 2))
                     return@addOnMapClickListener true
                 }
-                val hit = map.queryRenderedFeatures(box, L_VEHICLES, L_POIS, L_STOPS, L_STOPS_PLAIN).firstNotNullOfOrNull { f -> f.getStringProperty("id")?.let { holder.markers[it] } }
+                val hit = map.queryRenderedFeatures(box, L_VEHICLES, L_VEHICLE_DOT, L_POIS, L_POI_POINTS, L_STOPS, L_STOPS_PLAIN).firstNotNullOfOrNull { f -> f.getStringProperty("id")?.let { holder.markers[it] } }
                 if (hit != null) clickHandler(hit)
                 hit != null
             }
@@ -184,8 +190,9 @@ internal fun MapLibreTransitMap(
         val stopFeatures = content.stops.map { it.toFeature() }
         loaded.getSourceAs<GeoJsonSource>(SRC_STOPS)?.setGeoJson(FeatureCollection.fromFeatures(if (content.clusterStops) stopFeatures else emptyList()))
         loaded.getSourceAs<GeoJsonSource>(SRC_STOPS_PLAIN)?.setGeoJson(FeatureCollection.fromFeatures(if (content.clusterStops) emptyList() else stopFeatures))
-        loaded.getSourceAs<GeoJsonSource>(SRC_VEHICLES)?.setGeoJson(FeatureCollection.fromFeatures(content.vehicles.map { it.toFeature() }))
-        loaded.getSourceAs<GeoJsonSource>(SRC_POIS)?.setGeoJson(FeatureCollection.fromFeatures(content.pois.map { it.toFeature() }))
+        val images = holder.images ?: return@LaunchedEffect
+        loaded.getSourceAs<GeoJsonSource>(SRC_VEHICLES)?.setGeoJson(FeatureCollection.fromFeatures(content.vehicles.map { it.toVehicleFeature(loaded, images, holder.added) }))
+        loaded.getSourceAs<GeoJsonSource>(SRC_POIS)?.setGeoJson(FeatureCollection.fromFeatures(content.pois.map { if (it.isMobility()) it.toMobilityFeature(loaded, images, holder.added) else it.toFeature() }))
     }
 
     LaunchedEffect(camera, styleVersion) {
@@ -226,10 +233,38 @@ private fun MapMarker.toFeature(): Feature {
     return Feature.fromGeometry(GeoPoint.fromLngLat(point.longitude, point.latitude), props)
 }
 
+private fun Style.ensureImage(added: MutableSet<String>, key: String, draw: () -> Bitmap) {
+    if (added.add(key)) addImage(key, draw())
+}
+
+private fun MapMarker.toVehicleFeature(style: Style, images: MarkerImages, added: MutableSet<String>): Feature {
+    val feature = toFeature()
+    val key = images.vehicleKey(this)
+    style.ensureImage(added, key) { images.vehicle(this) }
+    feature.addStringProperty("icon", key)
+    feature.addStringProperty("color", "#%06X".format(images.vehicleColor(this)))
+    // A position that is not current gets no heading, so it never looks live.
+    if (bearing != null && !stale) {
+        val arrow = images.arrowKey(this)
+        style.ensureImage(added, arrow) { images.arrow(this) }
+        feature.addStringProperty("arrow", arrow)
+    }
+    return feature
+}
+
+private fun MapMarker.toMobilityFeature(style: Style, images: MarkerImages, added: MutableSet<String>): Feature {
+    val feature = toFeature()
+    val plain = images.mobilityKey(this, withCount = false)
+    style.ensureImage(added, plain) { images.mobility(this, withCount = false) }
+    feature.addStringProperty("icon", plain)
+    val counted = if (label.isBlank()) plain else images.mobilityKey(this, withCount = true)
+    style.ensureImage(added, counted) { images.mobility(this, withCount = true) }
+    feature.addStringProperty("iconCount", counted)
+    return feature
+}
+
 private fun MapMarker.defaultColor(): Long = when (kind) {
-    MarkerKind.PARKING -> 0x1565C0
-    MarkerKind.BIKE_SHARING -> 0x2E7D32
-    MarkerKind.CAR_SHARING -> 0x6A1B9A
+    MarkerKind.PARKING, MarkerKind.BIKE_SHARING, MarkerKind.CAR_SHARING -> mobilityColor(kind)
     MarkerKind.ORIGIN -> 0x2E7D32
     MarkerKind.DESTINATION -> 0xC62828
     MarkerKind.USER -> 0x1A73E8
@@ -249,25 +284,7 @@ private fun MapPolyline.toFeature(): Feature {
     return Feature.fromGeometry(LineString.fromLngLats(points.map { GeoPoint.fromLngLat(it.longitude, it.latitude) }), props)
 }
 
-private fun arrowBitmap(density: Float): Bitmap {
-    val size = (28 * density).toInt()
-    val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
-    val canvas = Canvas(bitmap)
-    val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = android.graphics.Color.WHITE; style = Paint.Style.FILL }
-    val stroke = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFF263238.toInt(); style = Paint.Style.STROKE; strokeWidth = 1.5f * density }
-    val path = Path().apply {
-        moveTo(size / 2f, 0f)
-        lineTo(size * 0.72f, size * 0.32f)
-        lineTo(size * 0.28f, size * 0.32f)
-        close()
-    }
-    canvas.drawPath(path, paint)
-    canvas.drawPath(path, stroke)
-    return bitmap
-}
-
-private fun installLayers(style: Style, density: Float) {
-    style.addImage(IMG_ARROW, arrowBitmap(density))
+private fun installLayers(style: Style) {
     style.addSource(GeoJsonSource(SRC_LINES))
     style.addSource(GeoJsonSource(SRC_STOPS, GeoJsonOptions().withCluster(true).withClusterMaxZoom(13).withClusterRadius(42)))
     style.addSource(GeoJsonSource(SRC_STOPS_PLAIN))
@@ -333,9 +350,9 @@ private fun installLayers(style: Style, density: Float) {
             PropertyFactory.circleStrokeOpacity(Expression.switchCase(Expression.eq(get("stale"), literal(true)), literal(PASSED_OPACITY), literal(1f))),
         ),
     )
-    // Optional mobility points and journey endpoints.
+    // Mobility points (marker images, shown from the town zoom) and journey endpoints (plain circles).
     style.addLayer(
-        CircleLayer(L_POIS, SRC_POIS).withProperties(
+        CircleLayer(L_POI_POINTS, SRC_POIS).withFilter(not(has("icon"))).withProperties(
             PropertyFactory.circleColor(Expression.toColor(get("color"))),
             PropertyFactory.circleRadius(10f),
             PropertyFactory.circleOpacity(Expression.switchCase(Expression.eq(get("stale"), literal(true)), literal(0.45f), literal(1f))),
@@ -344,13 +361,21 @@ private fun installLayers(style: Style, density: Float) {
         ),
     )
     style.addLayer(
-        SymbolLayer(L_POI_LABEL, SRC_POIS).withProperties(
+        SymbolLayer(L_POI_LABEL, SRC_POIS).withFilter(not(has("icon"))).withProperties(
             PropertyFactory.textField(get("label")),
             PropertyFactory.textSize(10f),
             PropertyFactory.textColor("#FFFFFF"),
             PropertyFactory.textFont(arrayOf(FONT)),
             PropertyFactory.textAllowOverlap(true),
         ),
+    )
+    style.addLayer(
+        SymbolLayer(L_POIS, SRC_POIS).withFilter(has("icon")).withProperties(
+            PropertyFactory.iconImage(Expression.step(Expression.zoom(), get("icon"), Expression.stop(COUNT_ZOOM, get("iconCount")))),
+            PropertyFactory.iconAllowOverlap(true),
+            PropertyFactory.iconIgnorePlacement(true),
+            PropertyFactory.symbolSortKey(Expression.switchCase(Expression.eq(get("selected"), literal(true)), literal(1f), literal(0f))),
+        ).apply { minZoom = FULL_DETAIL_ZOOM },
     )
     // Vehicles: cluster bubble, heading arrow, body and line label. Stale vehicles are translucent.
     style.addLayer(
@@ -370,33 +395,31 @@ private fun installLayers(style: Style, density: Float) {
             PropertyFactory.textAllowOverlap(true),
         ),
     )
+    // Region zoom: a dot in the vehicle's colour.
     style.addLayer(
-        SymbolLayer(L_VEHICLE_ARROW, SRC_VEHICLES).withFilter(Expression.all(not(has("point_count")), has("bearing"))).withProperties(
-            PropertyFactory.iconImage(IMG_ARROW),
+        CircleLayer(L_VEHICLE_DOT, SRC_VEHICLES).withFilter(not(has("point_count"))).withProperties(
+            PropertyFactory.circleColor(Expression.toColor(get("color"))),
+            PropertyFactory.circleRadius(5f),
+            PropertyFactory.circleStrokeColor("#FFFFFF"),
+            PropertyFactory.circleStrokeWidth(2f),
+        ).apply { maxZoom = FULL_DETAIL_ZOOM },
+    )
+    // Town zoom and closer: mode icon with the line number, heading arrow on top.
+    style.addLayer(
+        SymbolLayer(L_VEHICLES, SRC_VEHICLES).withFilter(not(has("point_count"))).withProperties(
+            PropertyFactory.iconImage(get("icon")),
+            PropertyFactory.iconAllowOverlap(true),
+            PropertyFactory.iconIgnorePlacement(true),
+            PropertyFactory.symbolSortKey(Expression.switchCase(Expression.eq(get("selected"), literal(true)), literal(1f), literal(0f))),
+        ).apply { minZoom = FULL_DETAIL_ZOOM },
+    )
+    style.addLayer(
+        SymbolLayer(L_VEHICLE_ARROW, SRC_VEHICLES).withFilter(Expression.all(not(has("point_count")), has("arrow"))).withProperties(
+            PropertyFactory.iconImage(get("arrow")),
             PropertyFactory.iconRotate(toNumber(get("bearing"))),
             PropertyFactory.iconRotationAlignment(Property.ICON_ROTATION_ALIGNMENT_MAP),
             PropertyFactory.iconAllowOverlap(true),
             PropertyFactory.iconIgnorePlacement(true),
-            PropertyFactory.iconOpacity(Expression.switchCase(Expression.eq(get("stale"), literal(true)), literal(0.4f), literal(1f))),
-        ),
-    )
-    style.addLayer(
-        CircleLayer(L_VEHICLES, SRC_VEHICLES).withFilter(not(has("point_count"))).withProperties(
-            PropertyFactory.circleColor(Expression.toColor(get("color"))),
-            PropertyFactory.circleRadius(Expression.switchCase(Expression.eq(get("selected"), literal(true)), literal(15f), literal(12f))),
-            PropertyFactory.circleOpacity(Expression.switchCase(Expression.eq(get("stale"), literal(true)), literal(0.4f), literal(1f))),
-            PropertyFactory.circleStrokeColor("#FFFFFF"),
-            PropertyFactory.circleStrokeWidth(2f),
-        ),
-    )
-    style.addLayer(
-        SymbolLayer(L_VEHICLE_LABEL, SRC_VEHICLES).withFilter(not(has("point_count"))).withProperties(
-            PropertyFactory.textField(get("label")),
-            PropertyFactory.textSize(10f),
-            PropertyFactory.textColor("#FFFFFF"),
-            PropertyFactory.textFont(arrayOf(FONT)),
-            PropertyFactory.textAllowOverlap(true),
-            PropertyFactory.textIgnorePlacement(true),
-        ),
+        ).apply { minZoom = FULL_DETAIL_ZOOM },
     )
 }

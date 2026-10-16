@@ -88,6 +88,33 @@ object TextNormalizer {
         .replace(Regex("\n{3,}"), "\n\n").trim()
 }
 
+/**
+ * What a line badge shows. Ropeways have no line number, so the feed gives a full name ("Rittner
+ * Seilbahn") that does not fit a badge: drop the generic word and a leading article ("Rittner"). Every
+ * other mode, and a short name that already fits, is shown as given. Accessibility keeps the full name.
+ */
+object LineNames {
+    private const val FITS = 6
+    private const val MAX_SHORT = 12
+    private val generic = Regex(
+        "(?i)\\b(standseilbahn|seilbahn|kabinenbahn|umlaufbahn|gondelbahn|pendelbahn|funivia|funicolare|cabinovia|ovovia|cable ?car|cableway|funicular)\\b",
+    )
+    private val article = Regex("(?i)^(del|della|dello|dei|di|de)\\s+|^d'\\s*")
+
+    /** The badge text for [name]; empty means the badge shows its icon alone. */
+    fun badge(name: String, mode: TransportMode): String {
+        val trimmed = name.trim()
+        if (mode != TransportMode.CABLE_CAR && mode != TransportMode.FUNICULAR) return trimmed
+        if (trimmed.length <= FITS) return trimmed
+        // Bilingual names ("Rittner Seilbahn/Funivia del Renon") use their first language.
+        return trimmed.split('/').asSequence()
+            .map { part -> generic.replace(part, " ").trim().replace(Regex("\\s+"), " ").replace(article, "").trim(' ', '-', ',') }
+            .firstOrNull { it.isNotEmpty() }
+            ?.takeIf { it.length <= MAX_SHORT }
+            .orEmpty()
+    }
+}
+
 /** Merges alerts that describe the same disruption, preferring GTFS-RT data and unioning scopes. */
 object AlertDeduplicator {
     private fun texts(alert: ServiceAlert) = alert.headers.values.map(TextNormalizer::key).filter { it.length > 3 }.toSet()

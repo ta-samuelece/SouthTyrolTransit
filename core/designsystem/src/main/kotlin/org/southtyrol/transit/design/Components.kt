@@ -78,6 +78,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import org.southtyrol.transit.model.DataError
 import org.southtyrol.transit.model.Freshness
+import org.southtyrol.transit.model.LineNames
 import org.southtyrol.transit.model.ServiceState
 import org.southtyrol.transit.model.TransportMode
 import java.time.Instant
@@ -85,7 +86,8 @@ import java.time.Instant
 fun TransportMode.icon(): ImageVector = when (this) {
     TransportMode.TRAIN -> Icons.Rounded.Train
     TransportMode.TRAM -> Icons.Rounded.Tram
-    TransportMode.CABLE_CAR, TransportMode.FUNICULAR -> Icons.Rounded.DirectionsTransit
+    TransportMode.CABLE_CAR -> RopewayIcons.GondolaLift
+    TransportMode.FUNICULAR -> RopewayIcons.Funicular
     TransportMode.WALK -> Icons.AutoMirrored.Rounded.DirectionsWalk
     TransportMode.ON_DEMAND -> Icons.Rounded.LocalTaxi
     else -> Icons.Rounded.DirectionsBus
@@ -117,6 +119,8 @@ fun LineBadge(
 ) {
     val (bg, fg) = ModeColors.colors(mode, color, textColor)
     val description = stringResource(R.string.ds_line_a11y, Format.mode(mode), name)
+    // Ropeways show a short name; TalkBack still reads the full one.
+    val shown = LineNames.badge(name, mode)
     Row(
         modifier = modifier
             .clip(ModeShapes.badge(mode))
@@ -128,9 +132,9 @@ fun LineBadge(
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         if (showIcon) Icon(mode.icon(), contentDescription = null, tint = fg, modifier = Modifier.size(if (large) 20.dp else 16.dp))
-        if (name.isNotBlank()) {
+        if (shown.isNotBlank()) {
             Text(
-                name,
+                shown,
                 color = fg,
                 style = if (large) MaterialTheme.typography.titleMedium else MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,

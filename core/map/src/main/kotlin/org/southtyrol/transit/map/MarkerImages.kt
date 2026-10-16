@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.vector.toPath
 import org.southtyrol.transit.design.ModeColors
 import org.southtyrol.transit.design.icon
 import org.southtyrol.transit.model.ColorContrast
+import org.southtyrol.transit.model.LineNames
 import org.southtyrol.transit.model.TransportMode
 import kotlin.math.ceil
 import kotlin.math.max
@@ -76,7 +77,7 @@ internal class MarkerImages(private val density: Float, private val dark: Boolea
 
     fun vehicleKey(m: MapMarker): String {
         val mode = m.mode ?: TransportMode.BUS
-        return "veh|$mode|${vehicleColor(m)}|${tagText(m.label)}|${m.selected}|${m.stale}|${tagOnLeft(m.bearing)}"
+        return "veh|$mode|${vehicleColor(m)}|${tagText(LineNames.badge(m.label, mode))}|${m.selected}|${m.stale}|${tagOnLeft(m.bearing)}"
     }
 
     fun arrowKey(m: MapMarker): String = "arrow|${vehicleColor(m)}|${m.selected}"
@@ -92,7 +93,7 @@ internal class MarkerImages(private val density: Float, private val dark: Boolea
         val on = ColorContrast.readableOn(fill, null)
         val r = if (m.selected) 18f else 15f
         val ringOut = if (m.selected) 3f else 0f
-        val text = tagText(m.label)
+        val text = tagText(LineNames.badge(m.label, mode))
         val textPaint = paint(on).apply { typeface = bold; textSize = 14f * density; fontFeatureSettings = "tnum" }
         val textW = textPaint.measureText(text) / density
         val inner = if (m.selected) 22f else 19f
@@ -198,11 +199,15 @@ internal class MarkerImages(private val density: Float, private val dark: Boolea
     }
 
     private fun collectPaths(group: VectorGroup, into: Path) {
+        // Material Symbols shift their grid with a group translation; scale and rotation are not used.
+        val shift = Matrix().apply { setTranslate(group.translationX, group.translationY) }
+        val local = Path()
         for (node in group) when (node) {
-            is VectorGroup -> collectPaths(node, into)
-            is VectorPath -> into.addPath(node.pathData.toPath().asAndroidPath().apply {
+            is VectorGroup -> collectPaths(node, local)
+            is VectorPath -> local.addPath(node.pathData.toPath().asAndroidPath().apply {
                 fillType = if (node.pathFillType == PathFillType.EvenOdd) Path.FillType.EVEN_ODD else Path.FillType.WINDING
             })
         }
+        into.addPath(local, shift)
     }
 }

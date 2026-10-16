@@ -188,8 +188,6 @@ fun SettingsScreen(navigator: Navigator, viewModel: SettingsViewModel = hiltView
         item {
             SettingsGroup(stringResource(R.string.settings_saved)) {
                 item { LinkRow(stringResource(R.string.settings_saved_manage), Icons.Rounded.Star, navigator::saved) }
-                // Android 8 has no backup: it cannot require end-to-end encryption (see backup_rules.xml).
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) item { BackupInfo() }
             }
         }
 
@@ -560,12 +558,6 @@ fun TicketsScreen(navigator: Navigator, viewModel: TicketsViewModel = hiltViewMo
 
 @HiltViewModel
 class TicketsViewModel @Inject constructor(val ticketing: TicketingProvider) : ViewModel()
-
-/** Where saved items and settings are backed up. */
-@Composable
-private fun BackupInfo() {
-    Text(stringResource(R.string.settings_backup_info), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-}
 
 /** The launcher icon variants as round previews; the selected one is outlined and checked. */
 @Composable

@@ -262,7 +262,6 @@
     <string name="alerts_filter_hint">Nach Linie oder Haltestelle filtern</string>
     <string name="settings_saved">Gespeichert</string>
     <string name="settings_saved_manage">Gespeicherte Haltestellen, Linien und Orte</string>
-    <string name="settings_backup_info">Gespeicherte Haltestellen, Linien, Orte und Einstellungen sind in der Sicherung des Telefons enthalten (auf den meisten Telefonen Google-Sicherung), wenn sie eingeschaltet ist und das Telefon eine Displaysperre hat. Sie werden bei einer Neuinstallation oder auf einem neuen Telefon wiederhergestellt.</string>
     <string name="settings_start_tab">App öffnen mit</string>
     <string name="saved_add_stop">Haltestelle hinzufügen</string>
     <string name="settings_general">Allgemein</string>

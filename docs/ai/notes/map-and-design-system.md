@@ -5,7 +5,7 @@ description: Map content is one immutable value re-pushed in full and marker ids
 tags: [map, maplibre, design-system, colors, accessibility]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-13T21:00:00Z"
+  at: "2026-10-16T12:00:00Z"
 status: stable
 ---
 
@@ -15,8 +15,16 @@ status: stable
   the credit line.
 - Content is one immutable `MapContent`; on every change all five GeoJSON sources are re-set. Click
   lookup is `(content.stops + content.vehicles + content.pois).associateBy { it.id }` - **ids must be
-  unique across all three lists**. `MapMarker.color` is the stroke for stops but the fill for vehicles and
-  POIs.
+  unique across all three lists**. `MapMarker.color` is the stroke for stops and the fill for vehicles and
+  journey endpoints; mobility points always use their kind's colour.
+- **Marker shapes say the kind**: stops are circle layers; mobility points (parking, bike and car
+  sharing) are rounded-square images with a Material icon and, from zoom 16, a pill with
+  `MapMarker.label` (the live count); vehicles are images of a mode-icon circle plus the line number in a
+  tag of the mode's badge shape, with a separate rotated arrow image. Below zoom 13 vehicles are plain
+  dots and mobility points are hidden. A heading between 20 and 160 degrees moves the tag to the left so
+  the arrow stays clear; a stale vehicle is grey with the history icon and no arrow. The images are drawn
+  in `MarkerImages.kt` on demand, keyed by everything they show, and re-added after every style load -
+  each is centred on the coordinate, so a new image needs no anchor offset.
 - A `CameraRequest` is applied only when it differs from the last one; bump its `key` to re-apply the same
   request. `interactive` is applied only when the map is created.
 - Clustering: stops up to zoom 13 (radius 42), vehicles up to zoom 10 (radius 36).

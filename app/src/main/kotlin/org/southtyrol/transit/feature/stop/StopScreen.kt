@@ -170,16 +170,16 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
                             )
                         }
                     }
-                    // When the board starts, with departures/arrivals beside it where arrivals differ from the
-                    // departures (hidden at most intermediate stops) and the wheelchair mark at the end.
+                    // When the board starts, with departures/arrivals beside it filling the rest of the row where
+                    // arrivals differ from the departures (hidden at most intermediate stops) and the wheelchair
+                    // mark at the end.
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                         StopTimeChip(viewModel)
-                        androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
                         if (state.showArrivalsToggle || state.arrivals) ConnectedToggleGroup(
                             options = listOf(false, true), selected = state.arrivals, onSelect = viewModel::setArrivals,
                             label = { stringResource(if (it) R.string.stop_arrivals else R.string.stop_departures) },
-                            equalWidth = false,
-                        )
+                            modifier = Modifier.weight(1f),
+                        ) else androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
                         if (state.stop?.wheelchair == Accessibility.ACCESSIBLE) WheelchairIcon()
                     }
                     // Two-way stops pick a side of the road, named after where the buses go next: a group across

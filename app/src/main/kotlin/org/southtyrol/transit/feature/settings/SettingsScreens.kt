@@ -561,22 +561,10 @@ fun TicketsScreen(navigator: Navigator, viewModel: TicketsViewModel = hiltViewMo
 @HiltViewModel
 class TicketsViewModel @Inject constructor(val ticketing: TicketingProvider) : ViewModel()
 
-/**
- * Where saved items and settings are backed up, with a shortcut to the controls: Google's backup screen
- * where it exists (not a public API, so it may vanish), else the phone's settings.
- */
+/** Where saved items and settings are backed up. */
 @Composable
 private fun BackupInfo() {
-    val context = LocalContext.current
     Text(stringResource(R.string.settings_backup_info), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-    TextButton(onClick = {
-        val google = android.content.Intent("com.google.android.gms.backup.ACTION_BACKUP_SETTINGS")
-        try {
-            context.startActivity(google)
-        } catch (_: android.content.ActivityNotFoundException) {
-            runCatching { context.startActivity(android.content.Intent(android.provider.Settings.ACTION_SETTINGS)) }
-        }
-    }) { Text(stringResource(R.string.settings_backup_open)) }
 }
 
 /** The launcher icon variants as round previews; the selected one is outlined and checked. */

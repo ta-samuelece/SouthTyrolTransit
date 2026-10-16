@@ -266,7 +266,6 @@
     <string name="settings_saved">Salvati</string>
     <string name="settings_saved_manage">Fermate, linee e luoghi salvati</string>
     <string name="settings_backup_info">Fermate, linee, luoghi salvati e impostazioni sono inclusi nel backup del telefono (backup Google sulla maggior parte dei telefoni) se è attivo e il telefono ha un blocco schermo. Vengono ripristinati quando reinstalli l\'app o configuri un nuovo telefono.</string>
-    <string name="settings_backup_open">Apri impostazioni di backup</string>
     <string name="settings_start_tab">Apri l\'app su</string>
     <string name="saved_add_stop">Aggiungi fermata</string>
     <string name="settings_general">Generali</string>

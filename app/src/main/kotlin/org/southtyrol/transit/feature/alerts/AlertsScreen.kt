@@ -206,8 +206,8 @@ fun AlertsScreen(navigator: Navigator, viewModel: AlertsViewModel = hiltViewMode
                     )
                 }
                 item {
-                    // When on the left, the "my stops and lines" filter on the right; on a narrow screen the filter
-                    // wraps below.
+                    // Current/planned fills the row, the "my stops and lines" filter on the right; on a narrow
+                    // screen the filter wraps below.
                     FlowRow(
                         Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp),
                         itemVerticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
@@ -215,9 +215,8 @@ fun AlertsScreen(navigator: Navigator, viewModel: AlertsViewModel = hiltViewMode
                         ConnectedToggleGroup(
                             options = listOf(0, 1), selected = tab, onSelect = { tab = it },
                             label = { stringResource(if (it == 0) R.string.alerts_active else R.string.alerts_planned) },
-                            equalWidth = false,
+                            modifier = Modifier.weight(1f),
                         )
-                        Spacer(Modifier.weight(1f))
                         FilterChip(
                             selected = onlyMine, onClick = { onlyMine = !onlyMine },
                             label = { Text(stringResource(R.string.alerts_only_saved)) },

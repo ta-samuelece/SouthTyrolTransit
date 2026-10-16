@@ -277,7 +277,6 @@
     <string name="settings_saved">Saved</string>
     <string name="settings_saved_manage">Saved stops, lines and places</string>
     <string name="settings_backup_info">Your saved stops, lines, places and settings are included in your phone\'s backup (Google backup on most phones) when it is turned on and the phone has a screen lock. They are restored when you reinstall the app or set up a new phone.</string>
-    <string name="settings_backup_open">Open backup settings</string>
     <string name="settings_start_tab">Open the app on</string>
     <string name="saved_add_stop">Add stop</string>
     <string name="settings_general">General</string>

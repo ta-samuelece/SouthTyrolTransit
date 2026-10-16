@@ -5,10 +5,10 @@ description: Android Auto Backup carries user.db and the settings file, cloud on
 tags: [backup, restore, settings, room, datastore, privacy]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-11T13:00:00Z"
+  at: "2026-10-16T15:30:00Z"
 verified:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-11T13:00:00Z"
+  at: "2026-10-16T15:30:00Z"
 status: stable
 ---
 
@@ -51,8 +51,8 @@ restored phone they have to be turned on again in Settings.
   DataStore key silently drops that setting from every backup.
 - Anything new in either file that must not come back belongs in `RestoreCleanup.apply` (pinned by
   `BackupTest`).
-- The "Open backup settings" button uses `com.google.android.gms.backup.ACTION_BACKUP_SETTINGS`, an
-  undocumented Google action; it falls back to `Settings.ACTION_SETTINGS`.
+- Settings only explains the backup; the "Open backup settings" shortcut was removed (2026-10-16) at the
+  user's request.
 - The privacy and "saved items" texts say items are in the phone's encrypted backup; keep them true.
 
 # Testing with bmgr

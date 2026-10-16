@@ -105,9 +105,10 @@ components that default to it (FABs, the contained loading indicator, time picke
 Settled on 2026-10-13 after a review of every screen against the Expressive guidelines:
 
 - **One of several options** is a `ConnectedToggleGroup` (stop departures/arrivals, results sort,
-  alerts current/planned, theme), never filter chips. `equalWidth = false` lets each button take its
-  label's width; wrap the group in `horizontalScroll` where the labels may not fit (results sort, four
-  options). A choice with many options or long labels (start tab, language, "my position" button) is a
+  alerts current/planned, theme), never filter chips. Stop departures/arrivals and alerts
+  current/planned take `Modifier.weight(1f)` and fill the rest of their row with equal buttons.
+  `equalWidth = false` lets each button take its label's width; wrap the group in `horizontalScroll`
+  where the labels may not fit (results sort, four options). A choice with many options or long labels (start tab, language, "my position" button) is a
   `ChoiceRow` that opens a radio `ChoiceDialog` (`SettingsScreens.kt`). **Filter chips are for
   multi-select filters only** (map layers, "My stops and lines").
 - Unselected `ConnectedToggleGroup` buttons default to `surfaceContainer`. On a card of that colour (the

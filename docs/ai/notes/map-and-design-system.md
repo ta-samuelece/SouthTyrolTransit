@@ -81,6 +81,12 @@ carry colours. Journey legs always use mode colours. A new `TransportMode` needs
 `ModeColors.container` and `ModeShapes.badge` - badges differ by shape too, so lines are never told apart
 by colour alone. Status colours are fixed hex values in `Tokens.kt`, chosen by dark/light only.
 
+Ropeways have no line number, so `LineBadge` and the map's vehicle tag show `LineNames.badge` - the feed
+name without its generic word and leading article ("Rittner Seilbahn" becomes "Rittner"), or the icon
+alone when nothing short is left; TalkBack keeps the full name. Cable cars and funiculars use the
+Material Symbols `gondola_lift` and `funicular` glyphs in `RopewayIcons.kt`, because the Compose icon
+set has neither.
+
 # Colour scheme
 
 `TransitTheme` uses the app's own palette unless the user switches on wallpaper colours

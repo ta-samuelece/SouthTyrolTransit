@@ -51,8 +51,8 @@ restored phone they have to be turned on again in Settings.
   DataStore key silently drops that setting from every backup.
 - Anything new in either file that must not come back belongs in `RestoreCleanup.apply` (pinned by
   `BackupTest`).
-- Settings only explains the backup; the "Open backup settings" shortcut was removed (2026-10-16) at the
-  user's request.
+- Settings says nothing about the backup: its info line and "Open backup settings" shortcut were
+  removed (2026-10-16) at the user's request.
 - The privacy and "saved items" texts say items are in the phone's encrypted backup; keep them true.
 
 # Testing with bmgr

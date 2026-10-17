@@ -53,6 +53,8 @@ status: stable
   outside the list so its gestures never fight the list's scrolling; back shrinks it. `placement` puts
   the enlarged map where the small card is - `BOTTOM` on the stop page, whose map is the last item, `TOP`
   elsewhere. A new page with a map should use these rather than an interactive `TransitMap` in a list.
+  The enlarge button sits in the top end corner, where MapLibre puts its compass once the map is
+  rotated, so the card passes `TransitMap(compassTopMargin = 60.dp)` to keep the compass below it.
 - **Lines**: `MapPolyline` has `opacity` and `dashed`. Dashed lines live in their own layer
   (`line-dasharray` cannot be data-driven on Android) - before 2026-10-09 `dashed` was written to the
   feature but never rendered, so walking legs drew solid.

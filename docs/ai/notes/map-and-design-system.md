@@ -157,9 +157,10 @@ Settled on 2026-10-13 after a review of every screen against the Expressive guid
   after a long press - otherwise the button's own click handler would take it as a tap too. TalkBack gets
   the long press as an `onLongClick` semantics action. `UserSettings.savedStopsHintShown` makes the "long
   press to jump to saved stops" snackbar appear once, the first time the map has a saved stop.
-- **Settings is not a tab.** `TopLevelBar(onSettings = navigator::settings)` puts a gear button in the top
-  bars of Plan and Alerts, and `MapSearchBar` has one at its end; see
-  [adding screens](app-screens-navigation-viewmodels.md).
+- **Settings is not a tab, and has one entry point.** `MapSearchBar` ends in the app mark
+  (`drawable/ic_app_mark.xml`: the launcher's two stops and route, white on a `primary` circle), which
+  opens a `DropdownMenu` with Saved, Lines and Settings. `TopLevelBar` has no settings button; About is
+  reached from Settings. See [adding screens](app-screens-navigation-viewmodels.md).
 - **The map's search bar** (`MapSearchBar`, `feature/search/MapSearch.kt`) is the one surface on the map
   with a shadow (3 dp): tone alone does not lift it off light tiles. `UserSettings.searchBar` puts it at the
   bottom by default, in the locate button's row, leaving 88 dp free on the button's side (the FAB menu's

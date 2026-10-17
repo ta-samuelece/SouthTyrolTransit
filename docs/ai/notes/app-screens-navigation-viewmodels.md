@@ -26,7 +26,7 @@ A new **tab** additionally needs a `TopLevel` entry, a `StartTab` value in core:
 `TopLevel.of`), `startTabLabel` in `SettingsScreens.kt` and in the onboarding screen (with its `startTabs`
 list), and nav strings in all three languages. There are
 three tabs (Plan, Map, Alerts). Settings stopped being a tab on 2026-10-13: it is an ordinary sub-route
-(`Navigator.settings()`, the gear button of `TopLevelBar` and of the map's search bar). The Stops tab was
+(`Navigator.settings()`), reached only from the app-mark menu of the map's search bar. The Stops tab was
 merged into the map on 2026-10-17: its search, saved and nearby stops are `MapSearchViewModel` and
 `MapSearchView` in `feature/search/MapSearch.kt`, shown over the map. `StartTab.SETTINGS` and
 `StartTab.DEPARTURES` stay in the enum only so a stored choice still parses: `UserSettings` reads

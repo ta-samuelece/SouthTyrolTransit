@@ -1,11 +1,11 @@
 ---
 type: Reference
 title: Adding screens - routes, the Navigator, ViewModel keys and the search pattern
-description: How the first-run screens are gated before the app, how a route is declared and registered (screen<T> helper, Navigator method), how a tab is added, why parameterised ViewModels need an argument-derived key, the distinctUntilChanged search pattern from 8fcb0b7, and Hilt worker wiring.
+description: How the first-run screens are gated before the app, how a route is declared and registered (screen<T> helper, Navigator method), how a tab is added, how the map's search hides the bottom bar, why parameterised ViewModels need an argument-derived key, the distinctUntilChanged search pattern from 8fcb0b7, and Hilt worker wiring.
 tags: [compose, navigation, viewmodel, hilt, search, workmanager, onboarding]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-14T21:30:00Z"
+  at: "2026-10-17T14:30:00Z"
 status: stable
 ---
 
@@ -25,10 +25,19 @@ status: stable
 A new **tab** additionally needs a `TopLevel` entry, a `StartTab` value in core:data (exhaustive `when` in
 `TopLevel.of`), `startTabLabel` in `SettingsScreens.kt` and in the onboarding screen (with its `startTabs`
 list), and nav strings in all three languages. There are
-four tabs (Plan, Stops, Map, Alerts; the Stops tab was labelled "Departures" until 2026-10-17, and its
-code, route and `nav_departures` string keep that name). Settings stopped being a tab on 2026-10-13: it is an ordinary
-sub-route (`Navigator.settings()`, the gear button of `TopLevelBar`). `StartTab.SETTINGS` stays in the enum
-only so a stored choice still parses; `TopLevel.of` maps it to Plan and the start-tab dialog hides it.
+three tabs (Plan, Map, Alerts). Settings stopped being a tab on 2026-10-13: it is an ordinary sub-route
+(`Navigator.settings()`, the gear button of `TopLevelBar` and of the map's search bar). The Stops tab was
+merged into the map on 2026-10-17: its search, saved and nearby stops are `MapSearchViewModel` and
+`MapSearchView` in `feature/search/MapSearch.kt`, shown over the map. `StartTab.SETTINGS` and
+`StartTab.DEPARTURES` stay in the enum only so a stored choice still parses: `UserSettings` reads
+DEPARTURES back as MAP, `TopLevel.of` maps SETTINGS to Plan, and the start-tab choices hide both.
+
+The map's search covers the screen inside `MapScreen` (not a route), so a stop board or the Lines screen
+opened from it comes back to it. While it is open, `MapScreen` sets `Navigator.searchOpen` and
+`TransitApp` hides the bottom bar through the `NavigationSuiteScaffold` state, but only while the current
+destination is `MapRoute`; a `DisposableEffect` clears the flag when the map leaves the screen. Closing the
+search clears its text; the field takes focus once per opening (`takeFocus`), not on coming back from a
+board.
 
 # First-run screens
 
@@ -51,9 +60,9 @@ is marked done on the spot instead. Skip jumps to the summary and Start sets the
 Two conventions: `hiltViewModel()` + `SavedStateHandle.toRoute<...>()` (`ResultsViewModel`,
 `JourneyDetailViewModel`), and assisted factories keyed by the argument
 (`hiltViewModel<StopViewModel, StopViewModel.Factory>(key = stationKey) { it.create(...) }` for stop,
-trip and line). **The key is required**: `DeparturesScreen` creates several `StopViewModel`s in one
-back-stack entry (two-pane), and stop/trip/line navigation uses `launchSingleTop`. Without an
-argument-derived key a VM shows data for the wrong stop.
+trip and line). **The key is required**: stop/trip/line navigation uses `launchSingleTop`, so one
+back-stack entry can be reused for another argument. Without an argument-derived key a VM shows data for
+the wrong stop.
 
 Journey detail after process death re-plans from the encoded request and matches `Journey.id`
 (`depEpoch:arrEpoch:lines`); a "leave now" request re-plans from the new now, so it usually comes back
@@ -69,7 +78,7 @@ first:
 _state.map { it.query.trim() }.distinctUntilChanged().debounce(200).collectLatest { query -> ... }
 ```
 
-Used by `DeparturesViewModel`, `LinesViewModel`, `StopSearchViewModel`, `LineSearchViewModel`;
+Used by `MapSearchViewModel` (stops and lines from one query), `LinesViewModel`, `StopSearchViewModel`, `LineSearchViewModel`;
 `PlannerViewModel` does the same with `query to field`. Set `loading` only when the trimmed query
 changed, so typing a space does not flash a spinner.
 

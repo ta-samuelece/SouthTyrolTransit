@@ -5,7 +5,7 @@ description: Map content is one immutable value re-pushed in full and marker ids
 tags: [map, maplibre, design-system, colors, accessibility]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-17T12:00:00Z"
+  at: "2026-10-17T14:30:00Z"
 status: stable
 ---
 
@@ -39,8 +39,8 @@ status: stable
 - **Styles**: `MainActivity` uses `MAP_STYLE_DARK`, else **`MAP_STYLE_LIGHT`**, else the OpenFreeMap dark
   default - so overriding only `map.styleUrl` gives a light map in dark mode. The OpenFreeMap defaults are
   repeated in `LocalMapStyle` in `TransitMap.kt`; keep both in sync.
-- **Attribution** `© OpenStreetMap · OpenFreeMap` is hard-coded (the SDK's own attribution and logo are
-  off), and all symbol layers use the font `Noto Sans Regular`. Switching tile provider means updating the
+- **Attribution** `© OpenStreetMap · OpenFreeMap` is hard-coded in `MapAttribution` (`TransitMap.kt`;
+  the SDK's own attribution and logo are off), and all symbol layers use the font `Noto Sans Regular`. Switching tile provider means updating the
   credit (ODbL) and checking the new style serves that font, or labels may not render (inferred).
 
 - **Stops without a timetable**: `MapRepository.stops` reads `stopsIn` from the timetable when one is
@@ -139,7 +139,7 @@ Settled on 2026-10-13 after a review of every screen against the Expressive guid
   ("no vehicles reported" replaces the old map banner). Grey status colours tint only its icon - as text
   on the pill they fail 4.5:1. **It goes in the top bar** (`compact = true`, "Live · 16 s", the full
   sentence for TalkBack) wherever the screen has one: stop, trip, journey, alerts. Inline only where there
-  is no bar - the map, the stop and journey detail panes of the two-pane layouts, and the vehicle count on
+  is no bar - the map, the journey detail pane of the two-pane results layout, and the vehicle count on
   the line page. One indicator per screen: the journey's leg cards have none of their own.
 - **Paging in time** (earlier/later departures, earlier/later connections) is `PageButton` in
   `feature/common/Common.kt`, a centred tonal button with an arrow.
@@ -158,7 +158,16 @@ Settled on 2026-10-13 after a review of every screen against the Expressive guid
   the long press as an `onLongClick` semantics action. `UserSettings.savedStopsHintShown` makes the "long
   press to jump to saved stops" snackbar appear once, the first time the map has a saved stop.
 - **Settings is not a tab.** `TopLevelBar(onSettings = navigator::settings)` puts a gear button in the top
-  bars of Plan, Stops and Alerts; see [adding screens](app-screens-navigation-viewmodels.md).
+  bars of Plan and Alerts, and `MapSearchBar` has one at its end; see
+  [adding screens](app-screens-navigation-viewmodels.md).
+- **The map's search bar** (`MapSearchBar`, `feature/search/MapSearch.kt`) is the one surface on the map
+  with a shadow (3 dp): tone alone does not lift it off light tiles. `UserSettings.searchBar` puts it at the
+  bottom by default, in the locate button's row, leaving 88 dp free on the button's side (the FAB menu's
+  own 16 dp margin, the 56 dp button, 16 dp gap); the map credit then moves into the top column, under
+  the freshness pill (`TransitMap(attribution = false)` plus `MapAttribution` there; on the same row as the
+  pill it looked off, being shorter). At the top, the bar sits above the
+  banners and the freshness pill, and the credit stays in the bottom corner away from the button. The locate button's centre position was removed for this
+  (a stored BOTTOM_CENTER no longer parses and falls back to bottom right).
 - Alert line chips are `LineBadge`s: `AlertScope.routes` keeps the GTFS `Route` behind each line name for
   mode and colour; names from planner notices have no route and get a neutral `OTHER` badge without icon.
 

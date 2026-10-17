@@ -217,6 +217,40 @@ object LiveTripMerge {
     }
 }
 
+/**
+ * A heading for vehicles whose feed sends none (STA's never does): toward the stop the vehicle is
+ * heading to. GTFS-RT names that stop, but STOPPED_AT names the one it stands at, and a fix right next
+ * to the named stop gives no usable direction - both then aim at the call after it in the trip.
+ */
+object VehicleHeadings {
+    /** Closer than this to its target, a vehicle's direction to it is noise. */
+    const val NEAR_METERS = 25.0
+
+    /** Whether the stop GTFS-RT names is enough, or the trip's calls are needed (see [bearing]). */
+    fun needsTrip(vehicle: Vehicle, stopPoint: Point?): Boolean =
+        vehicle.stopId == null || stopPoint == null || vehicle.currentStatus == "STOPPED_AT" ||
+            Geo.distance(vehicle.point, stopPoint) < NEAR_METERS
+
+    /**
+     * The bearing from the vehicle to where it goes next. [stopPoint] is the stop GTFS-RT names;
+     * [calls] are the trip's stops in order (id, point), when known. Null when there is no direction:
+     * no usable stop, or the vehicle is at the end of its run.
+     */
+    fun bearing(vehicle: Vehicle, stopPoint: Point?, calls: List<Pair<String, Point>>?): Float? {
+        if (vehicle.bearing != null) return vehicle.bearing
+        if (!needsTrip(vehicle, stopPoint)) return Geo.bearing(vehicle.point, stopPoint!!)
+        if (calls.isNullOrEmpty()) return null
+        val named = vehicle.stopId?.let { id -> calls.indexOfFirst { it.first == id } } ?: -1
+        // Without a named stop, the nearest call stands in for it.
+        val start = if (named >= 0) named else calls.indices.minBy { Geo.distance(calls[it].second, vehicle.point) }
+        val target = (start until calls.size).firstOrNull { i ->
+            Geo.distance(calls[i].second, vehicle.point) >= NEAR_METERS &&
+                !(i == start && (vehicle.currentStatus == "STOPPED_AT" || named < 0))
+        } ?: return null
+        return Geo.bearing(vehicle.point, calls[target].second)
+    }
+}
+
 /** Where a run is now: a live GPS fix, or a position estimated from the (live or scheduled) stop times. */
 data class RunPosition(
     val point: Point,

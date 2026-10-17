@@ -19,6 +19,15 @@ object Geo {
         return 6_371_000.0 * 2 * asin(sqrt(h.coerceIn(0.0, 1.0)))
     }
 
+    /** Initial compass bearing from [a] to [b] in degrees, 0 = north, clockwise, in [0, 360). */
+    fun bearing(a: Point, b: Point): Float {
+        val la = Math.toRadians(a.latitude)
+        val lb = Math.toRadians(b.latitude)
+        val dl = Math.toRadians(b.longitude - a.longitude)
+        val deg = Math.toDegrees(kotlin.math.atan2(sin(dl) * cos(lb), cos(la) * sin(lb) - sin(la) * cos(lb) * cos(dl)))
+        return ((deg + 360.0) % 360.0).toFloat()
+    }
+
     fun around(center: Point, meters: Double): BoundingBox {
         val dLat = meters / 111_320.0
         val dLon = meters / (111_320.0 * cos(Math.toRadians(center.latitude)).coerceAtLeast(0.01))

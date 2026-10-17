@@ -36,6 +36,8 @@ import org.southtyrol.transit.model.DepartureBoardDataSource
 import org.southtyrol.transit.model.Freshness
 import org.southtyrol.transit.model.FreshnessPolicy
 import org.southtyrol.transit.model.Geo
+import org.southtyrol.transit.model.TransitZone
+import org.southtyrol.transit.model.VehicleHeadings
 import org.southtyrol.transit.model.GeocodingLocationDataSource
 import org.southtyrol.transit.model.Journey
 import org.southtyrol.transit.model.JourneyPlannerDataSource
@@ -506,10 +508,31 @@ class MapRepository(
     suspend fun vehicles(snapshot: RealtimeSnapshot, now: Instant = clock()): List<LiveVehicle> {
         val missing = snapshot.vehicles.mapNotNull { it.routeId }.filter { it !in routes }.toSet()
         if (missing.isNotEmpty() && schedule.isAvailable()) routes = routes + runCatching { schedule.routes(missing) }.getOrDefault(emptyMap())
+        val timetable = schedule.isAvailable()
         return snapshot.vehicles.mapNotNull { v ->
             val freshness = FreshnessPolicy.vehicle(v.timestamp, now)
-            if (freshness == Freshness.UNAVAILABLE) null else LiveVehicle(v, v.routeId?.let { routes[it] }, freshness)
+            if (freshness == Freshness.UNAVAILABLE) null
+            else LiveVehicle(if (timetable && v.bearing == null) v.copy(bearing = inferBearing(v, now)) else v, v.routeId?.let { routes[it] }, freshness)
         }
+    }
+
+    // Stop and trip geometry for inferred headings; static for the life of a timetable, so cached.
+    private val stopPoints = HashMap<String, Point?>()
+    private val tripCalls = HashMap<String, List<Pair<String, Point>>?>()
+
+    private suspend fun inferBearing(v: Vehicle, now: Instant): Float? = try {
+        val stopPoint = v.stopId?.let { id -> stopPoints.getOrPut(id) { schedule.stop(id, LANGUAGE)?.point } }
+        val calls = if (!VehicleHeadings.needsTrip(v, stopPoint)) null else v.tripId?.let { tripId ->
+            val date = v.startDate ?: now.atZone(TransitZone).toLocalDate()
+            tripCalls.getOrPut("$tripId|$date") { schedule.trip(tripId, date, LANGUAGE)?.stops?.map { it.stop.id to it.stop.point } }
+        }
+        if (stopPoints.size > CACHE_LIMIT) stopPoints.clear()
+        if (tripCalls.size > CACHE_LIMIT) tripCalls.clear()
+        VehicleHeadings.bearing(v, stopPoint, calls)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (_: Exception) {
+        null
     }
 
     suspend fun pollVehicles() = realtime.refresh(setOf(RealtimeFeed.VEHICLE_POSITIONS, RealtimeFeed.TRIP_UPDATES))
@@ -520,6 +543,9 @@ class MapRepository(
     companion object {
         /** The map only asks for stops from zoom 13.5; at that zoom a phone screen spans a few kilometres. */
         private const val MAX_ONLINE_RADIUS_METERS = 3000
+        /** Stop and trip lookups for headings only need coordinates, the same in every language. */
+        private const val LANGUAGE = "de"
+        private const val CACHE_LIMIT = 5000
 
         /** Coordinate-search results as map stops: only stops with a global id and a position inside [box]. */
         internal fun onlineStops(places: List<Place>, box: BoundingBox): List<Stop> = places

@@ -375,6 +375,23 @@ fun MapPickerDialog(
     }
 }
 
+/**
+ * The date picker on the standard motion scheme. Its calendar/text-input switch (the pencil icon) slides,
+ * fades and resizes the whole dialog every frame; on the expressive scheme's slow, overshooting springs
+ * that dragged and stuttered (#20). The library has no switch for that animation, so the picker alone
+ * gets the quicker, critically damped standard springs.
+ */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class, androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun TransitDatePicker(state: androidx.compose.material3.DatePickerState) {
+    androidx.compose.material3.MaterialExpressiveTheme(
+        colorScheme = MaterialTheme.colorScheme,
+        motionScheme = androidx.compose.material3.MotionScheme.standard(),
+        shapes = MaterialTheme.shapes,
+        typography = MaterialTheme.typography,
+    ) { androidx.compose.material3.DatePicker(state) }
+}
+
 /** Date then time picker (in South Tyrol time); [onPicked] receives the chosen moment. */
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
@@ -388,7 +405,7 @@ fun DateTimePickerDialogs(initial: java.time.Instant?, onPicked: (java.time.Inst
             onDismissRequest = onDismiss,
             confirmButton = { androidx.compose.material3.TextButton(onClick = { date = dateState.selectedDateMillis ?: initialMillis }) { Text(stringResource(R.string.action_next)) } },
             dismissButton = { androidx.compose.material3.TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
-        ) { androidx.compose.material3.DatePicker(dateState) }
+        ) { TransitDatePicker(dateState) }
     } else {
         val timeState = androidx.compose.material3.rememberTimePickerState(start.hour, start.minute)
         androidx.compose.material3.TimePickerDialog(

@@ -45,7 +45,6 @@ import androidx.compose.material.icons.rounded.TripOrigin
 import androidx.compose.material.icons.rounded.Work
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -386,7 +385,7 @@ private fun TimeAndOptions(state: PlannerState, viewModel: PlannerViewModel) {
             onDismissRequest = { pickDate = false },
             confirmButton = { TextButton(onClick = { chosenDate = dateState.selectedDateMillis ?: initial; pickDate = false; pickTime = true }) { Text(stringResource(R.string.action_next)) } },
             dismissButton = { TextButton(onClick = { pickDate = false }) { Text(stringResource(R.string.action_cancel)) } },
-        ) { DatePicker(dateState) }
+        ) { org.southtyrol.transit.feature.common.TransitDatePicker(dateState) }
     }
     if (pickTime) {
         val now = state.time ?: ZonedDateTime.now(TransitZone)

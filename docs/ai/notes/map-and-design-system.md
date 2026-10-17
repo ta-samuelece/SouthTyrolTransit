@@ -24,9 +24,13 @@ status: stable
   dots and mobility points are hidden. A heading between 20 and 160 degrees moves the tag to the left so
   the arrow stays clear; a stale vehicle is grey with the history icon and no arrow. STA's vehicle
   feed sends **no bearing** (none of 135 vehicles in `docs/fixtures/vehicles.json`), so
-  `MapRepository.vehicles` infers it with `VehicleHeadings`: toward the GTFS-RT `stop_id`, or - when
-  the vehicle is STOPPED_AT it or within 25 m - toward the next call of its trip. It needs the offline
-  timetable; stop points and trip calls are cached. Only the map tab infers headings so far. The images are drawn
+  `VehicleHeadings` infers it: the target is the GTFS-RT `stop_id` (or the next call when the vehicle is
+  STOPPED_AT it or within 25 m), and the heading is the direction of the trip's **route shape** where
+  the vehicle is, 30 m ahead, searched only between the previous call and the target so loops do not
+  confuse it; straight at the stop only without a shape. `MapRepository.withHeadings` feeds the map
+  tab and the line page (needs the offline timetable; trip calls and shapes are cached, shapes once per
+  `shapeId`, at most 20 new trips loaded per update so a first view is not held up); the trip map uses
+  the trip it already shows, and the journey map the leg or approach path. The images are drawn
   in `MarkerImages.kt` on demand, keyed by everything they show, and re-added after every style load -
   each is centred on the coordinate, so a new image needs no anchor offset.
 - A `CameraRequest` is applied only when it differs from the last one; bump its `key` to re-apply the same

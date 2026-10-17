@@ -79,7 +79,8 @@ val LocalMapStyle = staticCompositionLocalOf {
 /**
  * Interactive transit map. Stops and vehicles cluster when zoomed out; tapping a marker reports it,
  * tapping a cluster zooms in. [compassTopMargin] moves the compass (top end, shown once the map is
- * rotated) below a button the caller places in that corner; null keeps the SDK's margin. A caller that
+ * rotated) below what the caller lays over the top of the map - the status bar of an edge-to-edge map, a
+ * search bar, a button in that corner; null keeps the SDK's margin. A caller that
  * places the credit itself (in its own overlay column) passes [attribution] false and shows [MapAttribution].
  */
 @Composable

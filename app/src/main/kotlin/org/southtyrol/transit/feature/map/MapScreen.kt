@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -365,6 +367,9 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel(), s
                 attributionAlignment = if (locate == LocateButtonPosition.BOTTOM_START) Alignment.BottomEnd else Alignment.BottomStart,
                 attributionPadding = androidx.compose.foundation.layout.PaddingValues(8.dp),
                 attribution = !barAtBottom,
+                // The map runs under the status bar: keep the compass below it, and below the search bar
+                // (12 dp margin, 56 dp bar, 8 dp gap) when the bar is at the top.
+                compassTopMargin = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + if (barAtBottom) 12.dp else 76.dp,
             )
 
             Column(Modifier.statusBarsPadding().padding(12.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {

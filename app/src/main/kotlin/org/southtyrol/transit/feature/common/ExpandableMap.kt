@@ -94,7 +94,8 @@ private fun MapCard(content: MapContent, camera: CameraRequest, expanded: Boolea
     }
     Surface(shape = RoundedCornerShape(28.dp), modifier = modifier) {
         Box {
-            TransitMap(content, Modifier.fillMaxSize(), camera = fitted, darkTheme = LocalDarkTheme.current, interactive = expanded)
+            // The compass shares the top end corner with the enlarge button: keep it below the button.
+            TransitMap(content, Modifier.fillMaxSize(), camera = fitted, darkTheme = LocalDarkTheme.current, interactive = expanded, compassTopMargin = 60.dp)
             // The small map ignores gestures; a tap anywhere on it enlarges it.
             if (!expanded) Box(Modifier.matchParentSize().clickable(onClickLabel = label, onClick = onToggle))
             FilledTonalIconButton(onClick = onToggle, modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)) {

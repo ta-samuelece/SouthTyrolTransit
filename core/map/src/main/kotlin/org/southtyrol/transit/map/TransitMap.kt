@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.southtyrol.transit.model.BoundingBox
 import org.southtyrol.transit.model.Point
@@ -77,7 +78,8 @@ val LocalMapStyle = staticCompositionLocalOf {
 
 /**
  * Interactive transit map. Stops and vehicles cluster when zoomed out; tapping a marker reports it,
- * tapping a cluster zooms in.
+ * tapping a cluster zooms in. [compassTopMargin] moves the compass (top end, shown once the map is
+ * rotated) below a button the caller places in that corner; null keeps the SDK's margin.
  */
 @Composable
 fun TransitMap(
@@ -90,9 +92,10 @@ fun TransitMap(
     onViewportChanged: (MapViewport) -> Unit = {},
     attributionAlignment: Alignment = Alignment.BottomStart,
     attributionPadding: PaddingValues = PaddingValues(6.dp),
+    compassTopMargin: Dp? = null,
 ) {
     Box(modifier) {
-        MapLibreTransitMap(content, Modifier.fillMaxSize(), camera, darkTheme, interactive, onMarkerClick, onViewportChanged)
+        MapLibreTransitMap(content, Modifier.fillMaxSize(), camera, darkTheme, interactive, onMarkerClick, onViewportChanged, compassTopMargin)
         // Required data credit (ODbL) shown compactly instead of the SDK's info button.
         Text(
             "© OpenStreetMap · OpenFreeMap",

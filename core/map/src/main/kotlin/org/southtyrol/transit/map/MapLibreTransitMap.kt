@@ -13,6 +13,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -98,6 +99,7 @@ internal fun MapLibreTransitMap(
     interactive: Boolean,
     onMarkerClick: (MapMarker) -> Unit,
     onViewportChanged: (MapViewport) -> Unit,
+    compassTopMargin: Dp?,
 ) {
     val context = LocalContext.current
     val density = LocalDensity.current.density
@@ -144,6 +146,10 @@ internal fun MapLibreTransitMap(
             map.uiSettings.isZoomGesturesEnabled = interactive
             map.uiSettings.isTiltGesturesEnabled = false
             map.uiSettings.isCompassEnabled = interactive
+            compassTopMargin?.let { top ->
+                val ui = map.uiSettings
+                ui.setCompassMargins(ui.compassMarginLeft, (top.value * density).toInt(), ui.compassMarginRight, ui.compassMarginBottom)
+            }
             if (map.cameraPosition.target == null || holder.appliedCamera == null) {
                 map.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(Geo.Bolzano.latitude, Geo.Bolzano.longitude), 9.0))
             }

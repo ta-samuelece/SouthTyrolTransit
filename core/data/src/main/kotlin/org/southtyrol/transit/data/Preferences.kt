@@ -18,14 +18,24 @@ import java.io.IOException
 
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
-/** Tab shown when the app opens. */
+/**
+ * Tab shown when the app opens. DEPARTURES (the old Stops tab, now the map's search) and SETTINGS are no
+ * longer tabs; they stay so stored choices still parse: DEPARTURES reads back as MAP, SETTINGS opens Plan.
+ */
 enum class StartTab { PLAN, DEPARTURES, MAP, ALERTS, SETTINGS }
 
 /** Which GitHub releases the in-app updater offers: only stable ones, or pre-releases ("previews") too. */
 enum class UpdateChannel { STABLE, PREVIEW }
 
-/** Where the map's "center on my position" button sits (or whether it is shown at all). */
-enum class LocateButtonPosition { BOTTOM_END, BOTTOM_CENTER, BOTTOM_START, HIDDEN }
+/**
+ * Where the map's "center on my position" button sits (or whether it is shown at all). The centre position
+ * was dropped when the search bar could move to the bottom: a stored BOTTOM_CENTER no longer parses and
+ * falls back to the default.
+ */
+enum class LocateButtonPosition { BOTTOM_END, BOTTOM_START, HIDDEN }
+
+/** Where the map's search bar floats. At the bottom (the default) it shares the row with the locate button. */
+enum class SearchBarPosition { TOP, BOTTOM }
 
 data class UserSettings(
     val theme: ThemeMode = ThemeMode.SYSTEM,
@@ -45,6 +55,7 @@ data class UserSettings(
     val startTab: StartTab = StartTab.PLAN,
     val showStops: Boolean = true,
     val locateButton: LocateButtonPosition = LocateButtonPosition.BOTTOM_END,
+    val searchBar: SearchBarPosition = SearchBarPosition.BOTTOM,
     /** Ask GitHub for a newer release when the app starts (nothing installs without confirmation). */
     val autoUpdateCheck: Boolean = true,
     /** A release version the user chose to skip; not offered again automatically. */
@@ -85,6 +96,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val startTab = stringPreferencesKey("startTab")
         val stops = booleanPreferencesKey("showStops")
         val locate = stringPreferencesKey("locateButton")
+        val searchBar = stringPreferencesKey("searchBar")
         val autoUpdate = booleanPreferencesKey("autoUpdateCheck")
         val skipped = stringPreferencesKey("skippedUpdate")
         val channel = stringPreferencesKey("updateChannel")
@@ -107,9 +119,10 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
                 scheduleOnMetered = p[Keys.metered] ?: false,
                 ftpFallback = p[Keys.ftp] ?: true,
                 showVehicles = p[Keys.vehicles] ?: true,
-                startTab = p[Keys.startTab]?.let { runCatching { StartTab.valueOf(it) }.getOrNull() } ?: StartTab.PLAN,
+                startTab = p[Keys.startTab]?.let { runCatching { StartTab.valueOf(it) }.getOrNull() }?.let { if (it == StartTab.DEPARTURES) StartTab.MAP else it } ?: StartTab.PLAN,
                 showStops = p[Keys.stops] ?: true,
                 locateButton = p[Keys.locate]?.let { runCatching { LocateButtonPosition.valueOf(it) }.getOrNull() } ?: LocateButtonPosition.BOTTOM_END,
+                searchBar = p[Keys.searchBar]?.let { runCatching { SearchBarPosition.valueOf(it) }.getOrNull() } ?: SearchBarPosition.BOTTOM,
                 autoUpdateCheck = p[Keys.autoUpdate] ?: true,
                 skippedUpdate = p[Keys.skipped] ?: "",
                 updateChannel = p[Keys.channel]?.let { runCatching { UpdateChannel.valueOf(it) }.getOrNull() } ?: UpdateChannel.STABLE,
@@ -134,6 +147,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
     suspend fun setStartTab(value: StartTab) { store.edit { it[Keys.startTab] = value.name } }
     suspend fun setShowStops(value: Boolean) { store.edit { it[Keys.stops] = value } }
     suspend fun setLocateButton(value: LocateButtonPosition) { store.edit { it[Keys.locate] = value.name } }
+    suspend fun setSearchBar(value: SearchBarPosition) { store.edit { it[Keys.searchBar] = value.name } }
     suspend fun setAutoUpdateCheck(value: Boolean) { store.edit { it[Keys.autoUpdate] = value } }
     suspend fun setSkippedUpdate(value: String) { store.edit { it[Keys.skipped] = value } }
     suspend fun setUpdateChannel(value: UpdateChannel) { store.edit { it[Keys.channel] = value.name } }

@@ -120,7 +120,7 @@ fun StopScreen(navigator: Navigator, stationKey: String, name: String) {
 
 /** Live board + stop details; also used as the detail pane next to the stop list on large screens. */
 @Composable
-fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifier = Modifier, showHeader: Boolean = false) {
+fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifier = Modifier) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val board by viewModel.board.collectAsStateWithLifecycle()
     val visible by viewModel.visible.collectAsStateWithLifecycle()
@@ -152,9 +152,6 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
             placement = org.southtyrol.transit.feature.common.MapPlacement.BOTTOM,
         ) { listModifier ->
         LazyColumn(contentPadding = PaddingValues(bottom = 24.dp), modifier = listModifier) {
-            if (showHeader) item {
-                Text(state.name, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(16.dp))
-            }
             item {
                 Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     // Large stations serve dozens of lines: one row that scrolls sideways keeps the live board in view.
@@ -190,7 +187,6 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
                         label = { it?.towards?.joinToString(" · ") ?: stringResource(R.string.stop_all_directions) },
                         modifier = Modifier.fillMaxWidth(),
                     )
-                    if (showHeader) board?.let { FreshnessIndicator(it.realtime, it.realtimeFetchedAt ?: state.loadedAt, now) }
                     if (board?.source == BoardSource.NETWORK) StatusBanner(stringResource(R.string.stop_network_board), kind = BannerKind.INFO)
                     else if (board?.realtime == Freshness.STALE || board?.realtime == Freshness.UNAVAILABLE) StatusBanner(stringResource(R.string.stop_realtime_unavailable), kind = BannerKind.WARNING)
                 }

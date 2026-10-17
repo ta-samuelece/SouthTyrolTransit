@@ -3,7 +3,6 @@
     <string name="app_name">South Tyrol Transit</string>
 
     <string name="nav_plan">Planen</string>
-    <string name="nav_departures">Haltestellen</string>
     <string name="nav_map">Karte</string>
     <string name="nav_alerts">Meldungen</string>
 
@@ -122,7 +121,6 @@
     <string name="departures_use_location">Standort verwenden</string>
     <string name="departures_nearby_none">Keine Haltestellen im Umkreis von 800 m.</string>
     <string name="departures_outside_region">Du scheinst außerhalb Südtirols zu sein. Suche stattdessen eine Haltestelle nach Namen.</string>
-    <string name="departures_pick_stop">Wähle eine Haltestelle, um ihre Abfahrten zu sehen</string>
     <string name="stop_title">Haltestelle</string>
     <string name="stop_code">Haltestellennummer %s</string>
     <string name="stop_departures">Abfahrten</string>
@@ -154,6 +152,7 @@
     <string name="map_layer_parking">Parken</string>
     <string name="map_layer_bikes">Bikesharing</string>
     <string name="map_layer_cars">Carsharing</string>
+    <string name="map_search_hint">Haltestellen und Linien suchen</string>
     <string name="map_center_me">Meinen Standort zeigen</string>
     <string name="map_saved_stops_show">Gespeicherte Haltestellen zeigen</string>
     <string name="map_saved_stops_close">Gespeicherte Haltestellen schließen</string>
@@ -259,7 +258,6 @@
     <string name="about_version">Version %s</string>
     <string name="nav_settings">Einstellungen</string>
     <string name="pick_on_map">Auf der Karte wählen</string>
-    <string name="pick_on_map_short">Auf der Karte</string>
     <string name="pick_hint_point">Karte verschieben, um die Markierung zu setzen, oder eine Haltestelle antippen.</string>
     <string name="pick_hint_stop">Haltestelle antippen. Hineinzoomen, um alle Haltestellen zu sehen.</string>
     <string name="pick_use_point">Diesen Punkt verwenden</string>
@@ -273,9 +271,11 @@
     <string name="settings_general">Allgemein</string>
     <string name="settings_map">Karte</string>
     <string name="settings_map_layers">Auf der Karte anzeigen</string>
+    <string name="settings_search_bar">Suchleiste</string>
+    <string name="search_bar_top">Oben</string>
+    <string name="search_bar_bottom">Unten</string>
     <string name="settings_locate_button">Schaltfläche „Mein Standort“</string>
     <string name="locate_bottom_end">Unten rechts</string>
-    <string name="locate_bottom_center">Unten mittig</string>
     <string name="locate_bottom_start">Unten links</string>
     <string name="locate_hidden">Ausgeblendet</string>
     <string name="saved_add_line">Linie hinzufügen</string>

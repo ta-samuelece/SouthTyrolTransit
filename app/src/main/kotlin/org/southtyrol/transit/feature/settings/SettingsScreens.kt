@@ -90,6 +90,7 @@ import org.southtyrol.transit.data.SettingsRepository
 import org.southtyrol.transit.data.ThemeMode
 import org.southtyrol.transit.data.StartTab
 import org.southtyrol.transit.data.LocateButtonPosition
+import org.southtyrol.transit.data.SearchBarPosition
 import org.southtyrol.transit.model.MobilityKind
 import org.southtyrol.transit.data.UserSettings
 import org.southtyrol.transit.design.Format
@@ -132,6 +133,7 @@ class SettingsViewModel @Inject constructor(
         settings.setMobilityLayers(if (on) current + kind else current - kind)
     }
     fun locateButton(value: LocateButtonPosition) = viewModelScope.launch { settings.setLocateButton(value) }
+    fun searchBar(value: SearchBarPosition) = viewModelScope.launch { settings.setSearchBar(value) }
 }
 
 @Composable
@@ -164,7 +166,7 @@ fun SettingsScreen(navigator: Navigator, viewModel: SettingsViewModel = hiltView
     val dismiss = { choice = null }
     when (choice) {
         CHOICE_START -> ChoiceDialog(
-            stringResource(R.string.settings_start_tab), StartTab.entries.filter { it != StartTab.SETTINGS }, prefs.startTab,
+            stringResource(R.string.settings_start_tab), StartTab.entries.filter { it != StartTab.SETTINGS && it != StartTab.DEPARTURES }, prefs.startTab,
             { stringResource(startTabLabel(it)) }, { viewModel.startTab(it); dismiss() }, dismiss,
         )
         CHOICE_LANGUAGE -> ChoiceDialog(
@@ -174,6 +176,10 @@ fun SettingsScreen(navigator: Navigator, viewModel: SettingsViewModel = hiltView
         CHOICE_LOCATE -> ChoiceDialog(
             stringResource(R.string.settings_locate_button), LocateButtonPosition.entries, prefs.locateButton,
             { stringResource(locateLabel(it)) }, { viewModel.locateButton(it); dismiss() }, dismiss,
+        )
+        CHOICE_SEARCH_BAR -> ChoiceDialog(
+            stringResource(R.string.settings_search_bar), SearchBarPosition.entries, prefs.searchBar,
+            { stringResource(searchBarLabel(it)) }, { viewModel.searchBar(it); dismiss() }, dismiss,
         )
         CHOICE_ICON -> androidx.compose.material3.ModalBottomSheet(onDismissRequest = dismiss) {
             Column(Modifier.padding(start = 24.dp, end = 24.dp, bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -237,6 +243,7 @@ fun SettingsScreen(navigator: Navigator, viewModel: SettingsViewModel = hiltView
                         ToggleChip(stringResource(R.string.map_layer_cars), MobilityKind.CAR_SHARING in prefs.mobilityLayers) { viewModel.layer(MobilityKind.CAR_SHARING, it) }
                     }
                 }
+                item { ChoiceRow(stringResource(R.string.settings_search_bar), stringResource(searchBarLabel(prefs.searchBar))) { choice = CHOICE_SEARCH_BAR } }
                 item { ChoiceRow(stringResource(R.string.settings_locate_button), stringResource(locateLabel(prefs.locateButton))) { choice = CHOICE_LOCATE } }
             }
         }
@@ -321,19 +328,23 @@ fun SettingsScreen(navigator: Navigator, viewModel: SettingsViewModel = hiltView
 private const val CHOICE_START = "start"
 private const val CHOICE_LANGUAGE = "language"
 private const val CHOICE_LOCATE = "locate"
+private const val CHOICE_SEARCH_BAR = "searchBar"
 private const val CHOICE_ICON = "icon"
+
+private fun searchBarLabel(position: SearchBarPosition) = when (position) {
+    SearchBarPosition.TOP -> R.string.search_bar_top
+    SearchBarPosition.BOTTOM -> R.string.search_bar_bottom
+}
 
 private fun locateLabel(position: LocateButtonPosition) = when (position) {
     LocateButtonPosition.BOTTOM_END -> R.string.locate_bottom_end
-    LocateButtonPosition.BOTTOM_CENTER -> R.string.locate_bottom_center
     LocateButtonPosition.BOTTOM_START -> R.string.locate_bottom_start
     LocateButtonPosition.HIDDEN -> R.string.locate_hidden
 }
 
 private fun startTabLabel(tab: StartTab) = when (tab) {
     StartTab.PLAN -> R.string.nav_plan
-    StartTab.DEPARTURES -> R.string.nav_departures
-    StartTab.MAP -> R.string.nav_map
+    StartTab.DEPARTURES, StartTab.MAP -> R.string.nav_map
     StartTab.ALERTS -> R.string.nav_alerts
     StartTab.SETTINGS -> R.string.nav_settings
 }

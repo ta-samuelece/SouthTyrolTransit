@@ -510,12 +510,11 @@ private fun ColumnScope.TimetableStep(meteredSaved: Boolean, onContinue: (metere
 
 // --- Preferences ---
 
-private val startTabs = listOf(StartTab.PLAN, StartTab.DEPARTURES, StartTab.MAP, StartTab.ALERTS)
+private val startTabs = listOf(StartTab.PLAN, StartTab.MAP, StartTab.ALERTS)
 
 private fun startTabLabel(tab: StartTab) = when (tab) {
     StartTab.PLAN -> R.string.nav_plan
-    StartTab.DEPARTURES -> R.string.nav_departures
-    StartTab.MAP -> R.string.nav_map
+    StartTab.DEPARTURES, StartTab.MAP -> R.string.nav_map
     StartTab.ALERTS -> R.string.nav_alerts
     StartTab.SETTINGS -> R.string.nav_settings
 }

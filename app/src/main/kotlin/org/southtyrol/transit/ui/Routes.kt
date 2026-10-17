@@ -3,7 +3,6 @@ package org.southtyrol.transit.ui
 import kotlinx.serialization.Serializable
 
 @Serializable object PlanRoute
-@Serializable object DeparturesRoute
 @Serializable object MapRoute
 @Serializable object AlertsRoute
 @Serializable object SavedRoute

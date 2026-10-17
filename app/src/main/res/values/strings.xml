@@ -4,7 +4,6 @@
 
     <!-- Navigation -->
     <string name="nav_plan">Plan</string>
-    <string name="nav_departures">Stops</string>
     <string name="nav_map">Map</string>
     <string name="nav_alerts">Alerts</string>
 
@@ -129,7 +128,6 @@
     <string name="departures_use_location">Use my location</string>
     <string name="departures_nearby_none">No stops within 800 m.</string>
     <string name="departures_outside_region">You appear to be outside South Tyrol. Search for a stop by name instead.</string>
-    <string name="departures_pick_stop">Choose a stop to see its departures</string>
     <string name="stop_title">Stop</string>
     <string name="stop_code">Stop code %s</string>
     <string name="stop_departures">Departures</string>
@@ -163,6 +161,7 @@
     <string name="map_layer_parking">Parking</string>
     <string name="map_layer_bikes">Bike sharing</string>
     <string name="map_layer_cars">Car sharing</string>
+    <string name="map_search_hint">Search stops and lines</string>
     <string name="map_center_me">Show my location</string>
     <string name="map_saved_stops_show">Show saved stops</string>
     <string name="map_saved_stops_close">Close saved stops</string>
@@ -273,7 +272,6 @@
     <string name="about_version">Version %s</string>
     <string name="nav_settings">Settings</string>
     <string name="pick_on_map">Pick on the map</string>
-    <string name="pick_on_map_short">On the map</string>
     <string name="pick_hint_point">Move the map to place the marker, or tap a stop.</string>
     <string name="pick_hint_stop">Tap a stop. Zoom in to see all stops.</string>
     <string name="pick_use_point">Use this point</string>
@@ -287,9 +285,11 @@
     <string name="settings_general">General</string>
     <string name="settings_map">Map</string>
     <string name="settings_map_layers">Show on the map</string>
+    <string name="settings_search_bar">Search bar</string>
+    <string name="search_bar_top">Top</string>
+    <string name="search_bar_bottom">Bottom</string>
     <string name="settings_locate_button">\"My position\" button</string>
     <string name="locate_bottom_end">Bottom right</string>
-    <string name="locate_bottom_center">Bottom centre</string>
     <string name="locate_bottom_start">Bottom left</string>
     <string name="locate_hidden">Hidden</string>
     <string name="saved_add_line">Add line</string>

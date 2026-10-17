@@ -79,7 +79,8 @@ val LocalMapStyle = staticCompositionLocalOf {
 /**
  * Interactive transit map. Stops and vehicles cluster when zoomed out; tapping a marker reports it,
  * tapping a cluster zooms in. [compassTopMargin] moves the compass (top end, shown once the map is
- * rotated) below a button the caller places in that corner; null keeps the SDK's margin.
+ * rotated) below a button the caller places in that corner; null keeps the SDK's margin. A caller that
+ * places the credit itself (in its own overlay column) passes [attribution] false and shows [MapAttribution].
  */
 @Composable
 fun TransitMap(
@@ -93,17 +94,23 @@ fun TransitMap(
     attributionAlignment: Alignment = Alignment.BottomStart,
     attributionPadding: PaddingValues = PaddingValues(6.dp),
     compassTopMargin: Dp? = null,
+    attribution: Boolean = true,
 ) {
     Box(modifier) {
         MapLibreTransitMap(content, Modifier.fillMaxSize(), camera, darkTheme, interactive, onMarkerClick, onViewportChanged, compassTopMargin)
-        // Required data credit (ODbL) shown compactly instead of the SDK's info button.
-        Text(
-            "© OpenStreetMap · OpenFreeMap",
-            style = MaterialTheme.typography.labelSmall,
-            color = if (darkTheme) Color(0xCCFFFFFF) else Color(0xCC000000),
-            modifier = Modifier.align(attributionAlignment).padding(attributionPadding)
-                .background(if (darkTheme) Color(0x66000000) else Color(0x99FFFFFF), RoundedCornerShape(6.dp))
-                .padding(horizontal = 6.dp, vertical = 2.dp),
-        )
+        if (attribution) MapAttribution(darkTheme, Modifier.align(attributionAlignment).padding(attributionPadding))
     }
+}
+
+/** Required data credit (ODbL) shown compactly instead of the SDK's info button. */
+@Composable
+fun MapAttribution(darkTheme: Boolean, modifier: Modifier = Modifier) {
+    Text(
+        "© OpenStreetMap · OpenFreeMap",
+        style = MaterialTheme.typography.labelSmall,
+        color = if (darkTheme) Color(0xCCFFFFFF) else Color(0xCC000000),
+        modifier = modifier
+            .background(if (darkTheme) Color(0x66000000) else Color(0x99FFFFFF), RoundedCornerShape(6.dp))
+            .padding(horizontal = 6.dp, vertical = 2.dp),
+    )
 }

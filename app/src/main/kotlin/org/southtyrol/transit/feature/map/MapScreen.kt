@@ -56,6 +56,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ToggleFloatingActionButton
 import androidx.compose.material3.ToggleFloatingActionButtonDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -106,6 +107,7 @@ import org.southtyrol.transit.data.SettingsRepository
 import org.southtyrol.transit.data.TripRepository
 import org.southtyrol.transit.data.UserSettings
 import org.southtyrol.transit.data.LocateButtonPosition
+import org.southtyrol.transit.data.SearchBarPosition
 import org.southtyrol.transit.design.BannerKind
 import org.southtyrol.transit.design.DelayLabel
 import org.southtyrol.transit.design.Format
@@ -117,11 +119,15 @@ import org.southtyrol.transit.design.TransitLoading
 import org.southtyrol.transit.design.rememberNow
 import org.southtyrol.transit.feature.common.PollWhileVisible
 import org.southtyrol.transit.feature.common.rememberLocationPermission
+import org.southtyrol.transit.feature.search.MapSearchBar
+import org.southtyrol.transit.feature.search.MapSearchView
+import org.southtyrol.transit.feature.search.MapSearchViewModel
 import org.southtyrol.transit.location.LocationProvider
 import org.southtyrol.transit.location.LocationResult
 import org.southtyrol.transit.map.CameraRequest
 import org.southtyrol.transit.map.MapContent
 import org.southtyrol.transit.map.MapMarker
+import org.southtyrol.transit.map.MapAttribution
 import org.southtyrol.transit.map.MapViewport
 import org.southtyrol.transit.map.MarkerKind
 import org.southtyrol.transit.map.TransitMap
@@ -268,7 +274,14 @@ class MapViewModel @Inject constructor(
 }
 
 @Composable
-fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel()) {
+fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel(), searchViewModel: MapSearchViewModel = hiltViewModel()) {
+    val searchOpen by searchViewModel.open.collectAsStateWithLifecycle()
+    BackHandler(enabled = searchOpen) { searchViewModel.close() }
+    // The bottom bar hides while the search covers the map; leaving this screen (a stop board) brings it back.
+    DisposableEffect(searchOpen) {
+        navigator.searchOpen = searchOpen
+        onDispose { navigator.searchOpen = false }
+    }
     val stops by viewModel.stops.collectAsStateWithLifecycle()
     val vehicles by viewModel.vehicles.collectAsStateWithLifecycle()
     val mobility by viewModel.mobilityPoints.collectAsStateWithLifecycle()
@@ -343,14 +356,19 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel()) {
     Scaffold(snackbarHost = { SnackbarHost(snackbar) }, contentWindowInsets = WindowInsets(0)) { padding ->
         // The map is intentionally edge-to-edge; overlays handle their own insets.
         Box(Modifier.fillMaxSize().padding(padding)) {
+            val locate = prefs.locateButton
+            val barAtBottom = prefs.searchBar == SearchBarPosition.BOTTOM
             TransitMap(
                 content, Modifier.fillMaxSize(), camera = camera, darkTheme = dark, onMarkerClick = viewModel::select, onViewportChanged = viewModel::onViewport,
-                // Keep the map credit clear of the locate button.
-                attributionAlignment = if (prefs.locateButton == LocateButtonPosition.BOTTOM_START) Alignment.BottomEnd else Alignment.BottomStart,
+                // With the search bar at the bottom the map credit goes in the top column, under the live
+                // pill; otherwise it takes the bottom corner away from the locate button.
+                attributionAlignment = if (locate == LocateButtonPosition.BOTTOM_START) Alignment.BottomEnd else Alignment.BottomStart,
                 attributionPadding = androidx.compose.foundation.layout.PaddingValues(8.dp),
+                attribution = !barAtBottom,
             )
 
             Column(Modifier.statusBarsPadding().padding(12.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (!barAtBottom) MapSearchBar(onOpen = searchViewModel::open, onSettings = navigator::settings)
                 val (fetchedAt, error) = feed
                 if (prefs.showVehicles && error != null && (fetchedAt == null || FreshnessPolicy.feed(fetchedAt, now) != Freshness.LIVE)) {
                     StatusBanner(stringResource(R.string.map_vehicles_unavailable), kind = BannerKind.ERROR)
@@ -361,10 +379,21 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel()) {
                     FreshnessPolicy.feed(fetchedAt, now), fetchedAt, now,
                     extra = if (vehicles.isEmpty()) stringResource(R.string.map_no_vehicles_short) else null,
                 )
+                if (barAtBottom) MapAttribution(dark)
             }
 
-            // Only the locate button floats over the map; what is shown is chosen in Settings.
-            val locate = prefs.locateButton
+            // At the bottom the search bar shares the row with the locate button: it leaves the button's
+            // corner free (the FAB menu's own 16 dp margin, the 56 dp button, 16 dp between them).
+            if (barAtBottom) MapSearchBar(
+                onOpen = searchViewModel::open, onSettings = navigator::settings,
+                modifier = Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(
+                    start = if (locate == LocateButtonPosition.BOTTOM_START) 88.dp else 16.dp,
+                    end = if (locate == LocateButtonPosition.BOTTOM_END) 88.dp else 16.dp,
+                    bottom = 16.dp,
+                ),
+            )
+
+            // Besides the search bar, only the locate button floats over the map; what is shown is chosen in Settings.
             if (locate != LocateButtonPosition.HIDDEN) {
                 // A tap anywhere else closes the open menu instead of reaching the map.
                 if (menuOpen) Box(Modifier.fillMaxSize().pointerInput(Unit) { detectTapGestures { menuOpen = false } })
@@ -378,15 +407,13 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel()) {
                     onStop = viewModel::focusStop,
                     modifier = Modifier
                         .align(
-                            when (locate) {
-                                LocateButtonPosition.BOTTOM_START -> Alignment.BottomStart
-                                LocateButtonPosition.BOTTOM_CENTER -> Alignment.BottomCenter
-                                else -> Alignment.BottomEnd
-                            },
+                            if (locate == LocateButtonPosition.BOTTOM_START) Alignment.BottomStart else Alignment.BottomEnd,
                         )
                         .navigationBarsPadding(),
                 )
             }
+
+            if (searchOpen) MapSearchView(searchViewModel, navigator)
         }
     }
 
@@ -461,11 +488,7 @@ private fun LocateFabMenu(
     BackHandler(enabled = expanded) { onExpandedChange(false) }
     FloatingActionButtonMenu(
         expanded = expanded,
-        horizontalAlignment = when (position) {
-            LocateButtonPosition.BOTTOM_START -> Alignment.Start
-            LocateButtonPosition.BOTTOM_CENTER -> Alignment.CenterHorizontally
-            else -> Alignment.End
-        },
+        horizontalAlignment = if (position == LocateButtonPosition.BOTTOM_START) Alignment.Start else Alignment.End,
         modifier = modifier,
         button = {
             ToggleFloatingActionButton(

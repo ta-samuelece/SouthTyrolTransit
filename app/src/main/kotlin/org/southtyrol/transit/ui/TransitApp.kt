@@ -16,11 +16,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.DepartureBoard
 import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Route
-import androidx.compose.material.icons.rounded.DepartureBoard
 import androidx.compose.material.icons.rounded.Map
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Route
@@ -28,6 +26,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteItem
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffoldValue
+import androidx.compose.material3.adaptive.navigationsuite.rememberNavigationSuiteScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -51,7 +51,6 @@ import org.southtyrol.transit.R
 import org.southtyrol.transit.data.StartTab
 import org.southtyrol.transit.design.LocalReducedMotion
 import org.southtyrol.transit.feature.alerts.AlertsScreen
-import org.southtyrol.transit.feature.departures.DeparturesScreen
 import org.southtyrol.transit.feature.journey.JourneyDetailScreen
 import org.southtyrol.transit.feature.journey.ResultsScreen
 import org.southtyrol.transit.feature.lines.LineScreen
@@ -68,7 +67,6 @@ import kotlin.reflect.KClass
 
 enum class TopLevel(val route: Any, val routeClass: KClass<*>, val label: Int, val icon: ImageVector, val selectedIcon: ImageVector) {
     PLAN(PlanRoute, PlanRoute::class, R.string.nav_plan, Icons.Outlined.Route, Icons.Rounded.Route),
-    DEPARTURES(DeparturesRoute, DeparturesRoute::class, R.string.nav_departures, Icons.Outlined.DepartureBoard, Icons.Rounded.DepartureBoard),
     MAP(MapRoute, MapRoute::class, R.string.nav_map, Icons.Outlined.Map, Icons.Rounded.Map),
     ALERTS(AlertsRoute, AlertsRoute::class, R.string.nav_alerts, Icons.Outlined.Notifications, Icons.Rounded.Notifications),
     ;
@@ -76,7 +74,8 @@ enum class TopLevel(val route: Any, val routeClass: KClass<*>, val label: Int, v
     companion object {
         fun of(tab: StartTab) = when (tab) {
             StartTab.PLAN -> PLAN
-            StartTab.DEPARTURES -> DEPARTURES
+            // Stops was merged into the map's search: a stored choice opens the map.
+            StartTab.DEPARTURES -> MAP
             StartTab.MAP -> MAP
             StartTab.ALERTS -> ALERTS
             // Settings is no longer a tab (it opens from the top bar): a stored choice falls back to Plan.
@@ -94,6 +93,9 @@ enum class TopLevel(val route: Any, val routeClass: KClass<*>, val label: Int, v
 class Navigator(private val nav: NavHostController, start: TopLevel) {
     var tab by mutableStateOf(start)
         private set
+
+    /** Set by the map while its search covers the screen; the bottom bar hides meanwhile. */
+    var searchOpen by mutableStateOf(false)
 
     fun back() { nav.popBackStack() }
     fun results(request: String) = nav.navigate(ResultsRoute(request))
@@ -138,14 +140,23 @@ fun TransitApp(startTab: StartTab = StartTab.PLAN, openStop: Pair<String, String
     val navigator = remember(nav) { Navigator(nav, start) }
     val entry by nav.currentBackStackEntryAsState()
     LaunchedEffect(entry) { navigator.sync(entry?.destination) }
-    // Opened from the widget: show that stop under the Departures tab.
+    // Opened from the widget: show that stop under the Map tab, which holds stop search.
     LaunchedEffect(openStop) {
         val (key, name) = openStop ?: return@LaunchedEffect
-        navigator.select(TopLevel.DEPARTURES)
+        navigator.select(TopLevel.MAP)
         navigator.stop(key, name)
         onStopOpened()
     }
     val reduced = LocalReducedMotion.current
+    val suite = rememberNavigationSuiteScaffoldState()
+    val hideBar = navigator.searchOpen && entry?.destination?.hasRoute(MapRoute::class) == true
+    LaunchedEffect(hideBar, reduced) {
+        when {
+            reduced -> suite.snapTo(if (hideBar) NavigationSuiteScaffoldValue.Hidden else NavigationSuiteScaffoldValue.Visible)
+            hideBar -> suite.hide()
+            else -> suite.show()
+        }
+    }
 
     // Sub-views slide in from the end; switching tabs (and reduced motion) is a quick fade.
     // Back follows the system's predictive-back look (as in the stock Settings app): while the gesture
@@ -184,13 +195,13 @@ fun TransitApp(startTab: StartTab = StartTab.PLAN, openStop: Pair<String, String
                 )
             }
         },
+        state = suite,
     ) {
         NavHost(
             nav, startDestination = start.route,
             enterTransition = enter, exitTransition = exit, popEnterTransition = popEnter, popExitTransition = popExit,
         ) {
             screen<PlanRoute> { PlannerScreen(navigator) }
-            screen<DeparturesRoute> { DeparturesScreen(navigator) }
             screen<MapRoute> { MapScreen(navigator) }
             screen<AlertsRoute> { AlertsScreen(navigator) }
             screen<SettingsRoute> { SettingsScreen(navigator) }

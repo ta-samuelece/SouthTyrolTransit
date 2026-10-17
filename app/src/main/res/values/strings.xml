@@ -162,6 +162,7 @@
     <string name="map_layer_bikes">Bike sharing</string>
     <string name="map_layer_cars">Car sharing</string>
     <string name="map_search_hint">Search stops and lines</string>
+    <string name="map_menu">Menu</string>
     <string name="map_center_me">Show my location</string>
     <string name="map_saved_stops_show">Show saved stops</string>
     <string name="map_saved_stops_close">Close saved stops</string>
@@ -413,7 +414,7 @@
     <string name="onboarding_theme">Theme</string>
     <string name="onboarding_finish">Finish</string>
     <string name="onboarding_done_title">You are all set</string>
-    <string name="onboarding_done_body">Change any of this later in Settings, from the gear in the top bar.</string>
+    <string name="onboarding_done_body">Change any of this later in Settings: tap the app\'s mark in the map\'s search bar.</string>
     <string name="onboarding_summary_language">Language</string>
     <string name="onboarding_summary_location">Location</string>
     <string name="onboarding_summary_notices">Service notices</string>

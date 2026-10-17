@@ -78,7 +78,7 @@ enum class TopLevel(val route: Any, val routeClass: KClass<*>, val label: Int, v
             StartTab.DEPARTURES -> MAP
             StartTab.MAP -> MAP
             StartTab.ALERTS -> ALERTS
-            // Settings is no longer a tab (it opens from the top bar): a stored choice falls back to Plan.
+            // Settings is no longer a tab (it opens from the map's search bar menu): a stored choice falls back to Plan.
             StartTab.SETTINGS -> PLAN
         }
 

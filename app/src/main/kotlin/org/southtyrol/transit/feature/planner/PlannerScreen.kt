@@ -150,7 +150,7 @@ fun PlannerScreen(navigator: Navigator, viewModel: PlannerViewModel = hiltViewMo
     val scroll = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Scaffold(
         modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
-        topBar = { TopLevelBar(stringResource(R.string.app_name), scroll, onSettings = navigator::settings) },
+        topBar = { TopLevelBar(stringResource(R.string.app_name), scroll) },
         snackbarHost = { SnackbarHost(snackbar) },
     ) { padding ->
         LazyColumn(

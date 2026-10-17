@@ -23,13 +23,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ExpandLess
 import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.ReportProblem
-import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedListItem
@@ -100,24 +98,18 @@ fun rememberLocationPermission(onResult: (Boolean) -> Unit): () -> Unit {
 }
 
 /**
- * Top bar of a tab's main view. Settings is a destination, not a tab: it is opened from here
- * ([onSettings]) rather than from the navigation bar.
+ * Top bar of a tab's main view. Settings is not reached from here: it sits in the menu behind the
+ * app mark in the map's search bar.
  */
 @Composable
 fun TopLevelBar(
     title: String,
     scrollBehavior: TopAppBarScrollBehavior? = null,
-    onSettings: (() -> Unit)? = null,
     actions: @Composable () -> Unit = {},
 ) {
     TopAppBar(
         title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-        actions = {
-            actions()
-            if (onSettings != null) IconButton(onClick = onSettings) {
-                Icon(Icons.Rounded.Settings, contentDescription = stringResource(R.string.settings_title))
-            }
-        },
+        actions = { actions() },
         scrollBehavior = scrollBehavior,
     )
 }

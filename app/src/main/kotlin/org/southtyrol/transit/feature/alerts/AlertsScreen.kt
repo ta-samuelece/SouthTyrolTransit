@@ -166,7 +166,7 @@ fun AlertsScreen(navigator: Navigator, viewModel: AlertsViewModel = hiltViewMode
 
     Scaffold(
         topBar = {
-            TopLevelBar(stringResource(R.string.alerts_title), onSettings = navigator::settings) {
+            TopLevelBar(stringResource(R.string.alerts_title)) {
                 // How current the notices are sits in the header.
                 ui?.let { FreshnessIndicator(it.state.freshness, it.state.fetchedAt, now, compact = true) }
             }

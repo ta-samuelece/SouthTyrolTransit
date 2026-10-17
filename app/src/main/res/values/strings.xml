@@ -32,6 +32,8 @@
     <string name="planner_swap">Swap start and destination</string>
     <string name="planner_leave_now">Leave now</string>
     <string name="planner_pick_time">Choose date and time</string>
+    <string name="date_picker_to_input">Switch to text input</string>
+    <string name="date_picker_to_calendar">Switch to calendar</string>
     <string name="planner_depart_at">Depart at</string>
     <string name="planner_arrive_by">Arrive by</string>
     <string name="planner_options">Routing options</string>

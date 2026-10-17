@@ -22,6 +22,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.DateRange
+import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Map
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Button
@@ -376,20 +378,50 @@ fun MapPickerDialog(
 }
 
 /**
- * The date picker on the standard motion scheme. Its calendar/text-input switch (the pencil icon) slides,
- * fades and resizes the whole dialog every frame; on the expressive scheme's slow, overshooting springs
- * that dragged and stuttered (#20). The library has no switch for that animation, so the picker alone
- * gets the quicker, critically damped standard springs.
+ * The app's date picker dialog. The library's own calendar/text-input switch (the pencil icon) animates
+ * the content in and out while resizing the dialog window every frame, which drags and stutters on a
+ * phone (#20) and cannot be turned off. So the picker hides that toggle and shows its own in the
+ * headline, which swaps the mode instantly: the picker is recreated in the other mode, keeping the
+ * selected date. [onConfirm] receives the selected day as UTC midnight milliseconds.
  */
-@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class, androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
-fun TransitDatePicker(state: androidx.compose.material3.DatePickerState) {
-    androidx.compose.material3.MaterialExpressiveTheme(
-        colorScheme = MaterialTheme.colorScheme,
-        motionScheme = androidx.compose.material3.MotionScheme.standard(),
-        shapes = MaterialTheme.shapes,
-        typography = MaterialTheme.typography,
-    ) { androidx.compose.material3.DatePicker(state) }
+fun TransitDatePickerDialog(initialMillis: Long, confirmText: String, onConfirm: (Long) -> Unit, onDismiss: () -> Unit) {
+    var typing by rememberSaveable { mutableStateOf(false) }
+    var selected by rememberSaveable { mutableStateOf<Long?>(initialMillis) }
+    androidx.compose.material3.DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = { androidx.compose.material3.TextButton(onClick = { onConfirm(selected ?: initialMillis) }) { Text(confirmText) } },
+        dismissButton = { androidx.compose.material3.TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+    ) {
+        androidx.compose.runtime.key(typing) {
+            val state = androidx.compose.material3.rememberDatePickerState(
+                initialSelectedDateMillis = selected,
+                initialDisplayMode = if (typing) androidx.compose.material3.DisplayMode.Input else androidx.compose.material3.DisplayMode.Picker,
+            )
+            androidx.compose.runtime.LaunchedEffect(state) { androidx.compose.runtime.snapshotFlow { state.selectedDateMillis }.collect { selected = it } }
+            val formatter = remember { androidx.compose.material3.DatePickerDefaults.dateFormatter() }
+            androidx.compose.material3.DatePicker(
+                state,
+                dateFormatter = formatter,
+                showModeToggle = false,
+                headline = {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        androidx.compose.material3.DatePickerDefaults.DatePickerHeadline(
+                            state.selectedDateMillis, state.displayMode, formatter,
+                            Modifier.weight(1f).padding(start = 24.dp, end = 12.dp, bottom = 12.dp),
+                        )
+                        androidx.compose.material3.IconButton(onClick = { typing = !typing }, Modifier.padding(end = 12.dp, bottom = 12.dp)) {
+                            Icon(
+                                if (typing) Icons.Rounded.DateRange else Icons.Rounded.Edit,
+                                contentDescription = stringResource(if (typing) R.string.date_picker_to_calendar else R.string.date_picker_to_input),
+                            )
+                        }
+                    }
+                },
+            )
+        }
+    }
 }
 
 /** Date then time picker (in South Tyrol time); [onPicked] receives the chosen moment. */
@@ -400,12 +432,7 @@ fun DateTimePickerDialogs(initial: java.time.Instant?, onPicked: (java.time.Inst
     var date by rememberSaveable { mutableStateOf<Long?>(null) }
     if (date == null) {
         val initialMillis = start.toLocalDate().atStartOfDay(java.time.ZoneOffset.UTC).toInstant().toEpochMilli()
-        val dateState = androidx.compose.material3.rememberDatePickerState(initialSelectedDateMillis = initialMillis)
-        androidx.compose.material3.DatePickerDialog(
-            onDismissRequest = onDismiss,
-            confirmButton = { androidx.compose.material3.TextButton(onClick = { date = dateState.selectedDateMillis ?: initialMillis }) { Text(stringResource(R.string.action_next)) } },
-            dismissButton = { androidx.compose.material3.TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
-        ) { TransitDatePicker(dateState) }
+        TransitDatePickerDialog(initialMillis, stringResource(R.string.action_next), onConfirm = { date = it }, onDismiss = onDismiss)
     } else {
         val timeState = androidx.compose.material3.rememberTimePickerState(start.hour, start.minute)
         androidx.compose.material3.TimePickerDialog(

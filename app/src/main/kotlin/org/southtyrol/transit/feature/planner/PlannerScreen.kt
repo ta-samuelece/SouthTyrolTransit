@@ -45,7 +45,6 @@ import androidx.compose.material.icons.rounded.TripOrigin
 import androidx.compose.material.icons.rounded.Work
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalIconButton
@@ -68,7 +67,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TimePickerDialog
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
@@ -380,12 +378,10 @@ private fun TimeAndOptions(state: PlannerState, viewModel: PlannerViewModel) {
 
     if (pickDate) {
         val initial = (state.time ?: ZonedDateTime.now(TransitZone)).toLocalDate().atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
-        val dateState = rememberDatePickerState(initialSelectedDateMillis = initial)
-        DatePickerDialog(
-            onDismissRequest = { pickDate = false },
-            confirmButton = { TextButton(onClick = { chosenDate = dateState.selectedDateMillis ?: initial; pickDate = false; pickTime = true }) { Text(stringResource(R.string.action_next)) } },
-            dismissButton = { TextButton(onClick = { pickDate = false }) { Text(stringResource(R.string.action_cancel)) } },
-        ) { org.southtyrol.transit.feature.common.TransitDatePicker(dateState) }
+        org.southtyrol.transit.feature.common.TransitDatePickerDialog(
+            initial, stringResource(R.string.action_next),
+            onConfirm = { chosenDate = it; pickDate = false; pickTime = true }, onDismiss = { pickDate = false },
+        )
     }
     if (pickTime) {
         val now = state.time ?: ZonedDateTime.now(TransitZone)

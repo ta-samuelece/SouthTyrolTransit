@@ -243,8 +243,13 @@ private fun TripContent(detail: TripDetail, navigator: Navigator, alerts: List<o
             stops = detail.stops.mapIndexed { i, it -> MapMarker(it.stop.id, it.stop.point, MarkerKind.STOP, color = color, stale = i < passedUpTo) },
             vehicles = listOfNotNull(
                 position?.let { p ->
+                    // The feed sends no heading: follow the route toward the next call (see VehicleHeadings).
+                    val target = if (p.atStop) p.nextIndex + 1 else p.nextIndex
+                    val heading = vehicle?.bearing ?: target.takeIf { it in detail.stops.indices }?.let {
+                        org.southtyrol.transit.model.VehicleHeadings.toward(p.point, detail.stops.map { s -> s.stop.point }, it, detail.shape)
+                    }
                     MapMarker(
-                        "v:" + detail.trip.id, p.point, MarkerKind.VEHICLE, detail.route.shortName, detail.route.mode, color, vehicle?.bearing,
+                        "v:" + detail.trip.id, p.point, MarkerKind.VEHICLE, detail.route.shortName, detail.route.mode, color, heading,
                         // Estimated positions are drawn dimmed, like stale GPS fixes.
                         stale = p.estimated || vehicleFreshness == Freshness.STALE,
                     )

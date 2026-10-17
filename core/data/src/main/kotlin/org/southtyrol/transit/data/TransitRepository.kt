@@ -508,27 +508,51 @@ class MapRepository(
     suspend fun vehicles(snapshot: RealtimeSnapshot, now: Instant = clock()): List<LiveVehicle> {
         val missing = snapshot.vehicles.mapNotNull { it.routeId }.filter { it !in routes }.toSet()
         if (missing.isNotEmpty() && schedule.isAvailable()) routes = routes + runCatching { schedule.routes(missing) }.getOrDefault(emptyMap())
-        val timetable = schedule.isAvailable()
-        return snapshot.vehicles.mapNotNull { v ->
-            val freshness = FreshnessPolicy.vehicle(v.timestamp, now)
-            if (freshness == Freshness.UNAVAILABLE) null
-            else LiveVehicle(if (timetable && v.bearing == null) v.copy(bearing = inferBearing(v, now)) else v, v.routeId?.let { routes[it] }, freshness)
+        val headed = withHeadings(snapshot.vehicles.filter { FreshnessPolicy.vehicle(it.timestamp, now) != Freshness.UNAVAILABLE }, now)
+        return headed.map { v -> LiveVehicle(v, v.routeId?.let { routes[it] }, FreshnessPolicy.vehicle(v.timestamp, now)) }
+    }
+
+    /**
+     * Fills in the heading the feed leaves out (see [VehicleHeadings]) from each vehicle's trip: its calls
+     * and route shape. Needs the offline timetable; without one, vehicles are returned as they are.
+     */
+    suspend fun withHeadings(vehicles: List<Vehicle>, now: Instant = clock()): List<Vehicle> {
+        if (vehicles.none { it.bearing == null } || !schedule.isAvailable()) return vehicles
+        return headingLock.withLock {
+            var loads = 0
+            vehicles.map { v ->
+                if (v.bearing != null) v else {
+                    val geometry = v.tripId?.let { tripId ->
+                        val key = "$tripId|${v.startDate ?: now.atZone(TransitZone).toLocalDate()}"
+                        if (key in trips) trips[key]
+                        // A first view loads at most a few trips per update, so the vehicles show at once.
+                        else if (loads++ < LOADS_PER_UPDATE) loadTrip(tripId, key).also { trips[key] = it }
+                        else null
+                    }
+                    val stopPoint = if (geometry != null) null else v.stopId?.let { id -> stopPoints.getOrPut(id) { schedule.stop(id, LANGUAGE)?.point } }
+                    v.copy(bearing = VehicleHeadings.bearing(v, stopPoint, geometry?.calls, geometry?.path.orEmpty()))
+                }
+            }.also {
+                if (stopPoints.size > CACHE_LIMIT) stopPoints.clear()
+                if (trips.size > CACHE_LIMIT) trips.clear()
+            }
         }
     }
 
-    // Stop and trip geometry for inferred headings; static for the life of a timetable, so cached.
-    private val stopPoints = HashMap<String, Point?>()
-    private val tripCalls = HashMap<String, List<Pair<String, Point>>?>()
+    /** A trip's calls and route shape; shapes are shared by many trips, so each is kept once. */
+    private class TripGeometry(val calls: List<Pair<String, Point>>, val path: List<Point>)
 
-    private suspend fun inferBearing(v: Vehicle, now: Instant): Float? = try {
-        val stopPoint = v.stopId?.let { id -> stopPoints.getOrPut(id) { schedule.stop(id, LANGUAGE)?.point } }
-        val calls = if (!VehicleHeadings.needsTrip(v, stopPoint)) null else v.tripId?.let { tripId ->
-            val date = v.startDate ?: now.atZone(TransitZone).toLocalDate()
-            tripCalls.getOrPut("$tripId|$date") { schedule.trip(tripId, date, LANGUAGE)?.stops?.map { it.stop.id to it.stop.point } }
+    private val headingLock = Mutex()
+    private val stopPoints = HashMap<String, Point?>()
+    private val trips = HashMap<String, TripGeometry?>()
+    private val shapes = HashMap<String, List<Point>>()
+
+    private suspend fun loadTrip(tripId: String, key: String): TripGeometry? = try {
+        val date = java.time.LocalDate.parse(key.substringAfter('|'))
+        schedule.trip(tripId, date, LANGUAGE)?.let { d ->
+            val path = if (d.trip.shapeId.isBlank()) d.shape else shapes.getOrPut(d.trip.shapeId) { d.shape }
+            TripGeometry(d.stops.map { it.stop.id to it.stop.point }, path)
         }
-        if (stopPoints.size > CACHE_LIMIT) stopPoints.clear()
-        if (tripCalls.size > CACHE_LIMIT) tripCalls.clear()
-        VehicleHeadings.bearing(v, stopPoint, calls)
     } catch (e: CancellationException) {
         throw e
     } catch (_: Exception) {
@@ -537,8 +561,8 @@ class MapRepository(
 
     suspend fun pollVehicles() = realtime.refresh(setOf(RealtimeFeed.VEHICLE_POSITIONS, RealtimeFeed.TRIP_UPDATES))
 
-    fun vehiclesForLine(line: Line, snapshot: RealtimeSnapshot, now: Instant = clock()): List<Vehicle> =
-        snapshot.vehicles.filter { it.routeId in line.routeIds && FreshnessPolicy.vehicle(it.timestamp, now) != Freshness.UNAVAILABLE }
+    suspend fun vehiclesForLine(line: Line, snapshot: RealtimeSnapshot, now: Instant = clock()): List<Vehicle> =
+        withHeadings(snapshot.vehicles.filter { it.routeId in line.routeIds && FreshnessPolicy.vehicle(it.timestamp, now) != Freshness.UNAVAILABLE }, now)
 
     companion object {
         /** The map only asks for stops from zoom 13.5; at that zoom a phone screen spans a few kilometres. */
@@ -546,6 +570,7 @@ class MapRepository(
         /** Stop and trip lookups for headings only need coordinates, the same in every language. */
         private const val LANGUAGE = "de"
         private const val CACHE_LIMIT = 5000
+        private const val LOADS_PER_UPDATE = 20
 
         /** Coordinate-search results as map stops: only stops with a global id and a position inside [box]. */
         internal fun onlineStops(places: List<Place>, box: BoundingBox): List<Stop> = places

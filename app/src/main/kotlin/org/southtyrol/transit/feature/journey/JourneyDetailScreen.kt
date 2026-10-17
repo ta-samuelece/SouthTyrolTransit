@@ -176,14 +176,22 @@ fun JourneyDetailContent(journey: Journey, navigator: Navigator, modifier: Modif
         val vehicles = approaches.map { (i, a) ->
             val leg = journey.legs[i]
             val stale = a.run.vehicle?.let { FreshnessPolicy.vehicle(it.timestamp, now) == Freshness.STALE } ?: false
-            MapMarker("v:leg$i", a.approach.position.point, MarkerKind.VEHICLE, leg.line, leg.mode, ModeColors.container(leg.mode), a.run.vehicle?.bearing, stale = a.approach.position.estimated || stale)
+            MapMarker("v:leg$i", a.approach.position.point, MarkerKind.VEHICLE, leg.line, leg.mode, ModeColors.container(leg.mode),
+                // The feed sends no heading: the direction of the route still to travel to the boarding stop.
+                a.run.vehicle?.bearing ?: org.southtyrol.transit.model.VehicleHeadings.alongPath(a.approach.position.point, a.approach.path),
+                stale = a.approach.position.estimated || stale,
+            )
         }
         // Each leg dimmed up to where its vehicle (or the walker) is now; the leg being ridden shows its vehicle.
         val progress = legLines.map { (i, line) -> i to legProgress(journey.legs[i], line, legRuns[i], now) }
         val riding = progress.mapNotNull { (i, p) ->
             val leg = journey.legs[i]
             val position = p.position?.takeIf { leg.mode.isTransit && i !in approaches } ?: return@mapNotNull null
-            MapMarker("ride:leg$i", position.point, MarkerKind.VEHICLE, leg.line, leg.mode, ModeColors.container(leg.mode), legRuns[i]?.vehicle?.bearing, stale = position.estimated)
+            MapMarker(
+                "ride:leg$i", position.point, MarkerKind.VEHICLE, leg.line, leg.mode, ModeColors.container(leg.mode),
+                legRuns[i]?.vehicle?.bearing ?: org.southtyrol.transit.model.VehicleHeadings.alongPath(position.point, legLines.firstOrNull { it.first == i }?.second?.points.orEmpty()),
+                stale = position.estimated,
+            )
         }
         MapContent(pois = endpoints, vehicles = vehicles + riding, lines = ahead + progress.flatMap { it.second.lines })
     }

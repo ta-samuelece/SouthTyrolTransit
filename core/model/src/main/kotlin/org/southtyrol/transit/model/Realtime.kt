@@ -218,36 +218,99 @@ object LiveTripMerge {
 }
 
 /**
- * A heading for vehicles whose feed sends none (STA's never does): toward the stop the vehicle is
- * heading to. GTFS-RT names that stop, but STOPPED_AT names the one it stands at, and a fix right next
- * to the named stop gives no usable direction - both then aim at the call after it in the trip.
+ * A heading for vehicles whose feed sends none (STA's never does): the direction the vehicle takes to
+ * the stop it is heading to, read off the trip's route shape where the vehicle is now - so a bus about
+ * to turn a corner points down its road, not across the block. Without a shape it points straight at
+ * that stop. GTFS-RT names the stop, but STOPPED_AT names the one the vehicle stands at, and a fix right
+ * next to the named stop says nothing yet - both then aim at the call after it.
  */
 object VehicleHeadings {
     /** Closer than this to its target, a vehicle's direction to it is noise. */
     const val NEAR_METERS = 25.0
 
-    /** Whether the stop GTFS-RT names is enough, or the trip's calls are needed (see [bearing]). */
-    fun needsTrip(vehicle: Vehicle, stopPoint: Point?): Boolean =
-        vehicle.stopId == null || stopPoint == null || vehicle.currentStatus == "STOPPED_AT" ||
-            Geo.distance(vehicle.point, stopPoint) < NEAR_METERS
+    /** How far ahead along the route the heading is taken, smoothing over vertices and GPS jitter. */
+    const val LOOKAHEAD_METERS = 30.0
+
+    /** Stretches this much outside the window between the two calls still count, for imprecise call offsets. */
+    private const val WINDOW_SLACK_METERS = 60.0
 
     /**
-     * The bearing from the vehicle to where it goes next. [stopPoint] is the stop GTFS-RT names;
-     * [calls] are the trip's stops in order (id, point), when known. Null when there is no direction:
-     * no usable stop, or the vehicle is at the end of its run.
+     * The vehicle's heading. [stopPoint] is the stop GTFS-RT names; [calls] are the trip's stops in order
+     * (id, point) and [path] its shape, when known. Null when there is no direction: no usable stop, or
+     * the vehicle is at the end of its run.
      */
-    fun bearing(vehicle: Vehicle, stopPoint: Point?, calls: List<Pair<String, Point>>?): Float? {
+    fun bearing(vehicle: Vehicle, stopPoint: Point?, calls: List<Pair<String, Point>>?, path: List<Point> = emptyList()): Float? {
         if (vehicle.bearing != null) return vehicle.bearing
-        if (!needsTrip(vehicle, stopPoint)) return Geo.bearing(vehicle.point, stopPoint!!)
-        if (calls.isNullOrEmpty()) return null
+        if (!calls.isNullOrEmpty()) {
+            val target = targetIndex(vehicle, calls) ?: return null
+            return toward(vehicle.point, calls.map { it.second }, target, path)
+        }
+        val stop = stopPoint ?: return null
+        if (vehicle.stopId == null || vehicle.currentStatus == "STOPPED_AT" || Geo.distance(vehicle.point, stop) < NEAR_METERS) return null
+        return Geo.bearing(vehicle.point, stop)
+    }
+
+    /** Index of the call the vehicle is heading to, or null at the end of its run. */
+    fun targetIndex(vehicle: Vehicle, calls: List<Pair<String, Point>>): Int? {
+        if (calls.isEmpty()) return null
         val named = vehicle.stopId?.let { id -> calls.indexOfFirst { it.first == id } } ?: -1
         // Without a named stop, the nearest call stands in for it.
         val start = if (named >= 0) named else calls.indices.minBy { Geo.distance(calls[it].second, vehicle.point) }
-        val target = (start until calls.size).firstOrNull { i ->
+        return (start until calls.size).firstOrNull { i ->
             Geo.distance(calls[i].second, vehicle.point) >= NEAR_METERS &&
                 !(i == start && (vehicle.currentStatus == "STOPPED_AT" || named < 0))
-        } ?: return null
-        return Geo.bearing(vehicle.point, calls[target].second)
+        }
+    }
+
+    /**
+     * The heading at [point] on the way to call [target] of [calls]: along [path] between the previous
+     * call and the target where the path is known, else straight at the target.
+     */
+    fun toward(point: Point, calls: List<Point>, target: Int, path: List<Point>): Float {
+        val straight = Geo.bearing(point, calls[target])
+        if (path.size < 2) return straight
+        val route = Route(path)
+        // Each call's distance along the path, in order, so a loop's second pass maps past its first.
+        var from = 0
+        val offsets = calls.map { c ->
+            val i = (from until path.size).minByOrNull { Geo.distance(path[it], c) } ?: from
+            from = i
+            route.cumulative[i]
+        }
+        val lo = (if (target > 0) offsets[target - 1] else 0.0) - WINDOW_SLACK_METERS
+        val hi = offsets[target] + WINDOW_SLACK_METERS
+        return route.headingAt(point, lo..hi) ?: straight
+    }
+
+    /** The heading at [point] along [path] in its direction of travel, for a leg with no calls to aim at. */
+    fun alongPath(point: Point, path: List<Point>): Float? = if (path.size < 2) null else Route(path).headingAt(point, null)
+
+    private class Route(val path: List<Point>) {
+        val cumulative = DoubleArray(path.size).also { c -> for (i in 1 until path.size) c[i] = c[i - 1] + Geo.distance(path[i - 1], path[i]) }
+
+        /** Projects [point] on the nearest segment within [window] (distance along the path), then looks ahead. */
+        fun headingAt(point: Point, window: ClosedFloatingPointRange<Double>?): Float? {
+            var best: Pair<Point, Double>? = null
+            var bestGap = Double.MAX_VALUE
+            for (i in 0 until path.lastIndex) {
+                if (window != null && (cumulative[i + 1] < window.start || cumulative[i] > window.endInclusive)) continue
+                val p = RouteProgress.project(path[i], path[i + 1], point)
+                val gap = Geo.distance(p, point)
+                if (gap < bestGap) { bestGap = gap; best = p to cumulative[i] + Geo.distance(path[i], p) }
+            }
+            val (at, along) = best ?: return if (window != null) headingAt(point, null) else null
+            val ahead = pointAt(along + LOOKAHEAD_METERS)
+            return if (Geo.distance(at, ahead) < 1.0) null else Geo.bearing(at, ahead)
+        }
+
+        private fun pointAt(distance: Double): Point {
+            if (distance >= cumulative.last()) return path.last()
+            val i = (1 until path.size).first { cumulative[it] >= distance }
+            val span = cumulative[i] - cumulative[i - 1]
+            val f = if (span <= 0.0) 0.0 else (distance - cumulative[i - 1]) / span
+            val a = path[i - 1]; val b = path[i]
+            return Point(a.latitude + (b.latitude - a.latitude) * f, a.longitude + (b.longitude - a.longitude) * f)
+        }
     }
 }
 

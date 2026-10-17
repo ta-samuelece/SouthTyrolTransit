@@ -30,9 +30,7 @@ class VehicleHeadingsTest {
 
     @Test fun stoppedAtAStopAimsAtTheNextCall() {
         val calls = listOf("s" to south, "h" to here, "n" to north)
-        val v = vehicle("h", status = "STOPPED_AT")
-        assertEquals(true, VehicleHeadings.needsTrip(v, here))
-        assertEquals(0f, VehicleHeadings.bearing(v, here, calls)!!, 0.5f)
+        assertEquals(0f, VehicleHeadings.bearing(vehicle("h", status = "STOPPED_AT"), here, calls)!!, 0.5f)
     }
 
     @Test fun rightNextToTheNamedStopAimsPastIt() {
@@ -45,8 +43,27 @@ class VehicleHeadingsTest {
         assertEquals(0f, VehicleHeadings.bearing(vehicle(null), null, calls)!!, 0.5f)
     }
 
+    // A road that runs east from here, then turns north to the stop at its end.
+    private val corner = Point(46.5000, 11.3525)
+    private val stop = Point(46.5100, 11.3525)
+    private val road = listOf(here, corner, stop)
+
+    @Test fun followsTheRoadNotTheCrowFlight() {
+        val calls = listOf("a" to Point(46.5000, 11.3490), "t" to stop)
+        // Straight at the stop would be almost north; the road first runs east.
+        assertEquals(90f, VehicleHeadings.bearing(vehicle("t"), stop, calls, road)!!, 1f)
+        // Past the corner the road, and the arrow, turn north.
+        assertEquals(0f, VehicleHeadings.bearing(vehicle("t", point = Point(46.5050, 11.3525)), stop, calls, road)!!, 1f)
+    }
+
+    @Test fun withoutCallsALegFollowsItsPath() {
+        assertEquals(90f, VehicleHeadings.alongPath(Point(46.5001, 11.3505), road)!!, 1f)
+        assertNull(VehicleHeadings.alongPath(here, listOf(here)))
+    }
+
     @Test fun endOfRunOrNothingKnownHasNoHeading() {
         assertNull(VehicleHeadings.bearing(vehicle("h", status = "STOPPED_AT"), here, listOf("s" to south, "h" to here)))
         assertNull(VehicleHeadings.bearing(vehicle(null), null, null))
+        assertNull(VehicleHeadings.bearing(vehicle("h", status = "STOPPED_AT"), here, null))
     }
 }

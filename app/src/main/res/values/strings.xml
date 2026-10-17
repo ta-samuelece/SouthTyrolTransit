@@ -4,7 +4,7 @@
 
     <!-- Navigation -->
     <string name="nav_plan">Plan</string>
-    <string name="nav_departures">Departures</string>
+    <string name="nav_departures">Stops</string>
     <string name="nav_map">Map</string>
     <string name="nav_alerts">Alerts</string>
 

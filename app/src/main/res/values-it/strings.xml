@@ -3,7 +3,7 @@
     <string name="app_name">South Tyrol Transit</string>
 
     <string name="nav_plan">Percorso</string>
-    <string name="nav_departures">Partenze</string>
+    <string name="nav_departures">Fermate</string>
     <string name="nav_map">Mappa</string>
     <string name="nav_alerts">Avvisi</string>
 

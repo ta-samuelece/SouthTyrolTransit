@@ -160,10 +160,11 @@ and picks the standard motion scheme. Only `TransitLoading` and the navigation t
 `Countdown`'s `AnimatedContent` and `StatusBanner`'s `AnimatedVisibility` rely on the system scale. New
 animated components must check `LocalReducedMotion` themselves.
 
-One exception to the expressive scheme: date pickers go through `TransitDatePicker` (`Pickers.kt`),
-which always uses the standard scheme. The library's calendar/text-input switch resizes the dialog on
-every frame, and the expressive springs made it slow and stuttering (issue #20). Use it for any new
-date picker instead of a bare `DatePicker`.
+Date pickers go through `TransitDatePickerDialog` (`Pickers.kt`). The library's calendar/text-input
+switch animates the content while resizing the dialog window every frame, which stuttered on phones
+(issue #20; a faster motion scheme did not help, checked on a device 2026-10-17). So the dialog hides
+the library toggle and puts its own in the headline, which recreates the picker in the other mode
+(`key`), with no animation, keeping the selected date. Use it for any new date picker.
 
 # What was checked
 

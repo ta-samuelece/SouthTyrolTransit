@@ -22,7 +22,11 @@ status: stable
   `MapMarker.label` (the live count); vehicles are images of a mode-icon circle plus the line number in a
   tag of the mode's badge shape, with a separate rotated arrow image. Below zoom 13 vehicles are plain
   dots and mobility points are hidden. A heading between 20 and 160 degrees moves the tag to the left so
-  the arrow stays clear; a stale vehicle is grey with the history icon and no arrow. The images are drawn
+  the arrow stays clear; a stale vehicle is grey with the history icon and no arrow. STA's vehicle
+  feed sends **no bearing** (none of 135 vehicles in `docs/fixtures/vehicles.json`), so
+  `MapRepository.vehicles` infers it with `VehicleHeadings`: toward the GTFS-RT `stop_id`, or - when
+  the vehicle is STOPPED_AT it or within 25 m - toward the next call of its trip. It needs the offline
+  timetable; stop points and trip calls are cached. Only the map tab infers headings so far. The images are drawn
   in `MarkerImages.kt` on demand, keyed by everything they show, and re-added after every style load -
   each is centred on the coordinate, so a new image needs no anchor offset.
 - A `CameraRequest` is applied only when it differs from the last one; bump its `key` to re-apply the same

@@ -1,11 +1,11 @@
 ---
 type: Reference
 title: Map and design-system conventions - MapContent, styles, attribution, colours, reduced motion
-description: Map content is one immutable value re-pushed in full and marker ids must be unique across stops, vehicles and POIs; without a timetable the map's stops come from the EFA coordinate search; maps inside pages use ExpandableMapPage and enlarge where their small card sits; the one convention for showing progress along a run; the dark style falls back to the light override; attribution and font are hard-coded to OpenFreeMap; feed route colours are already used; the colour scheme (own palette by default, optional wallpaper colours and pure black); which Material 3 Expressive component to use for a choice, a hero, a grouped list and data freshness; reduced motion is read once.
+description: Map content is one immutable value re-pushed in full and marker ids must be unique across stops, vehicles and POIs; without a timetable the map's stops come from the EFA coordinate search; maps inside pages use ExpandableMapPage and enlarge where their small card sits; the one convention for showing progress along a run; the dark style falls back to the light override; attribution and font are hard-coded to OpenFreeMap; feed route colours are already used; the colour scheme (own palette by default, optional wallpaper colours and pure black); which Material 3 Expressive component to use for a choice, a hero, a grouped list and data freshness; the map's locate button is a FAB menu opened by a long press; reduced motion is read once.
 tags: [map, maplibre, design-system, colors, accessibility]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-16T12:00:00Z"
+  at: "2026-10-17T12:00:00Z"
 status: stable
 ---
 
@@ -148,6 +148,13 @@ Settled on 2026-10-13 after a review of every screen against the Expressive guid
 - **Every `SegmentedListItem`** passes `colors = groupedItemColors()` (surfaceContainer) and
   `Modifier.groupGap(index, count)` (`feature/common/Common.kt`): the library's default segmented colours
   are indistinguishable from the page in dark mode, and without the gap the separators disappear.
+- **The map's locate button is a FAB menu opened by a long press** (`LocateFabMenu` in
+  `feature/map/MapScreen.kt`). A tap still centres on the user, against the spec's tap-to-open; a long press
+  lists the saved stops, and picking one flies there and opens its sheet. `ToggleFloatingActionButton` has
+  no long click, so a `pointerInput` on its modifier watches the `Initial` pass and consumes the release
+  after a long press - otherwise the button's own click handler would take it as a tap too. TalkBack gets
+  the long press as an `onLongClick` semantics action. `UserSettings.savedStopsHintShown` makes the "long
+  press to jump to saved stops" snackbar appear once, the first time the map has a saved stop.
 - **Settings is not a tab.** `TopLevelBar(onSettings = navigator::settings)` puts a gear button in the top
   bars of Plan, Stops and Alerts; see [adding screens](app-screens-navigation-viewmodels.md).
 - Alert line chips are `LineBadge`s: `AlertScope.routes` keeps the GTFS `Route` behind each line name for

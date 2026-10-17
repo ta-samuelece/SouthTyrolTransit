@@ -149,7 +149,7 @@ Settled on 2026-10-13 after a review of every screen against the Expressive guid
   `Modifier.groupGap(index, count)` (`feature/common/Common.kt`): the library's default segmented colours
   are indistinguishable from the page in dark mode, and without the gap the separators disappear.
 - **Settings is not a tab.** `TopLevelBar(onSettings = navigator::settings)` puts a gear button in the top
-  bars of Plan, Departures and Alerts; see [adding screens](app-screens-navigation-viewmodels.md).
+  bars of Plan, Stops and Alerts; see [adding screens](app-screens-navigation-viewmodels.md).
 - Alert line chips are `LineBadge`s: `AlertScope.routes` keeps the GTFS `Route` behind each line name for
   mode and colour; names from planner notices have no route and get a neutral `OTHER` badge without icon.
 

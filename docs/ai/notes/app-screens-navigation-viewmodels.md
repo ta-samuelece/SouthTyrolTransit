@@ -25,7 +25,8 @@ status: stable
 A new **tab** additionally needs a `TopLevel` entry, a `StartTab` value in core:data (exhaustive `when` in
 `TopLevel.of`), `startTabLabel` in `SettingsScreens.kt` and in the onboarding screen (with its `startTabs`
 list), and nav strings in all three languages. There are
-four tabs (Plan, Departures, Map, Alerts). Settings stopped being a tab on 2026-10-13: it is an ordinary
+four tabs (Plan, Stops, Map, Alerts; the Stops tab was labelled "Departures" until 2026-10-17, and its
+code, route and `nav_departures` string keep that name). Settings stopped being a tab on 2026-10-13: it is an ordinary
 sub-route (`Navigator.settings()`, the gear button of `TopLevelBar`). `StartTab.SETTINGS` stays in the enum
 only so a stored choice still parses; `TopLevel.of` maps it to Plan and the start-tab dialog hides it.
 

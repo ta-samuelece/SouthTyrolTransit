@@ -155,6 +155,10 @@
     <string name="map_layer_bikes">Bikesharing</string>
     <string name="map_layer_cars">Carsharing</string>
     <string name="map_center_me">Meinen Standort zeigen</string>
+    <string name="map_saved_stops_show">Gespeicherte Haltestellen zeigen</string>
+    <string name="map_saved_stops_close">Gespeicherte Haltestellen schließen</string>
+    <string name="map_saved_stops_hint">Tipp: Halte die Standort-Taste gedrückt, um zu deinen gespeicherten Haltestellen zu springen.</string>
+    <string name="map_saved_stops_none">Noch keine Haltestellen gespeichert. Speichere eine Haltestelle auf ihrer Abfahrtstafel, um von hier aus zu ihr zu springen.</string>
     <string name="map_vehicles_unavailable">Live-Fahrzeugpositionen sind gerade nicht verfügbar.</string>
     <string name="map_no_vehicles_short">keine Fahrzeuge gemeldet</string>
     <string name="map_layer_failed">Eine optionale Kartenebene konnte nicht geladen werden.</string>

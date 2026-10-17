@@ -2,6 +2,11 @@
 
 package org.southtyrol.transit.feature.map
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Box
@@ -18,6 +23,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.DepartureBoard
 import androidx.compose.material.icons.rounded.Directions
 import androidx.compose.material.icons.rounded.DirectionsBus
@@ -29,6 +35,8 @@ import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FloatingActionButtonMenu
+import androidx.compose.material3.FloatingActionButtonMenuItem
 import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
@@ -45,16 +53,28 @@ import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ToggleFloatingActionButton
+import androidx.compose.material3.ToggleFloatingActionButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onLongClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -198,22 +218,40 @@ class MapViewModel @Inject constructor(
                     _selection.update { s -> if (s is MapSelection.VehicleSel && s.vehicle.vehicle.id == v.vehicle.id) s.copy(trip = detail, loading = false) else s }
                 }
             }
-            MarkerKind.STOP -> (_stops.value + savedStops.value).firstOrNull { it.id == marker.id }?.let { stop ->
-                _selection.value = MapSelection.StopSel(stop)
-                // Preview of the next departures right in the sheet.
-                viewModelScope.launch {
-                    val now = Instant.now()
-                    val next = runCatching {
-                        val (list, source) = departures.load(stop.id, false, now, language.current(), java.time.Duration.ofHours(2))
-                        val live = if (source == org.southtyrol.transit.data.BoardSource.SCHEDULE) departures.liveOverlay(stop.id, now, false, language.current()) else null
-                        departures.merge(list, source, realtime.snapshot.value, alertState.value.alerts, false, now, live = live).departures.take(5)
-                    }.getOrDefault(emptyList())
-                    _selection.update { s -> if (s is MapSelection.StopSel && s.stop.id == stop.id) s.copy(departures = next) else s }
-                }
-            }
+            MarkerKind.STOP -> (_stops.value + savedStops.value).firstOrNull { it.id == marker.id }?.let(::selectStop)
             MarkerKind.PARKING, MarkerKind.BIKE_SHARING, MarkerKind.CAR_SHARING -> _mobility.value.firstOrNull { it.id == marker.id }?.let { _selection.value = MapSelection.MobilitySel(it) }
             else -> Unit
         }
+    }
+
+    private fun selectStop(stop: Stop) {
+        _selection.value = MapSelection.StopSel(stop)
+        // Preview of the next departures right in the sheet.
+        viewModelScope.launch {
+            val now = Instant.now()
+            val next = runCatching {
+                val (list, source) = departures.load(stop.id, false, now, language.current(), java.time.Duration.ofHours(2))
+                val live = if (source == org.southtyrol.transit.data.BoardSource.SCHEDULE) departures.liveOverlay(stop.id, now, false, language.current()) else null
+                departures.merge(list, source, realtime.snapshot.value, alertState.value.alerts, false, now, live = live).departures.take(5)
+            }.getOrDefault(emptyList())
+            _selection.update { s -> if (s is MapSelection.StopSel && s.stop.id == stop.id) s.copy(departures = next) else s }
+        }
+    }
+
+    /** From the locate button's menu: fly to a saved stop and open its sheet. */
+    fun focusStop(stop: Stop) {
+        _camera.value = CameraRequest.Center(stop.point, 16.0, key = (_camera.value?.key ?: 0) + 1)
+        selectStop(stop)
+    }
+
+    /**
+     * True once, the first time it is asked: the map then tells the user about the saved-stops menu. Read
+     * from the store rather than [prefs], whose first value is the default and would repeat the hint.
+     */
+    suspend fun takeSavedStopsHint(): Boolean {
+        if (settings.current().savedStopsHintShown) return false
+        settings.setSavedStopsHintShown(true)
+        return true
     }
 
     fun clearSelection() { _selection.value = null }
@@ -258,6 +296,17 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel()) {
         snackbar.showSnackbar(if (p is LocationResult.PermissionDenied) deniedText else unavailableText)
         viewModel.clearLocationProblem()
     }
+
+    // Once ever, when there is a saved stop to jump to: say that the locate button can do that.
+    val hintText = stringResource(R.string.map_saved_stops_hint)
+    val hasSaved = savedStops.isNotEmpty()
+    val locateShown = prefs.locateButton != LocateButtonPosition.HIDDEN
+    LaunchedEffect(hasSaved, locateShown) {
+        if (hasSaved && locateShown && viewModel.takeSavedStopsHint()) snackbar.showSnackbar(hintText, withDismissAction = true)
+    }
+    val scope = rememberCoroutineScope()
+    val noSavedText = stringResource(R.string.map_saved_stops_none)
+    var menuOpen by rememberSaveable { mutableStateOf(false) }
 
     val selectedId = when (val s = selection) {
         is MapSelection.VehicleSel -> "v:" + s.vehicle.vehicle.id
@@ -317,11 +366,16 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel()) {
             // Only the locate button floats over the map; what is shown is chosen in Settings.
             val locate = prefs.locateButton
             if (locate != LocateButtonPosition.HIDDEN) {
-                // A muted secondary tone: the map, not this button, is the content.
-                androidx.compose.material3.FloatingActionButton(
-                    onClick = requestLocation,
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                // A tap anywhere else closes the open menu instead of reaching the map.
+                if (menuOpen) Box(Modifier.fillMaxSize().pointerInput(Unit) { detectTapGestures { menuOpen = false } })
+                LocateFabMenu(
+                    position = locate,
+                    savedStops = savedStops,
+                    expanded = menuOpen,
+                    onExpandedChange = { menuOpen = it },
+                    onLocate = requestLocation,
+                    onNoSavedStops = { scope.launch { snackbar.showSnackbar(noSavedText, withDismissAction = true) } },
+                    onStop = viewModel::focusStop,
                     modifier = Modifier
                         .align(
                             when (locate) {
@@ -330,9 +384,8 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel()) {
                                 else -> Alignment.BottomEnd
                             },
                         )
-                        .navigationBarsPadding()
-                        .padding(16.dp),
-                ) { Icon(Icons.Rounded.MyLocation, contentDescription = stringResource(R.string.map_center_me)) }
+                        .navigationBarsPadding(),
+                )
             }
         }
     }
@@ -376,6 +429,84 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel()) {
                     is MapSelection.MobilitySel -> MobilitySheet(sel.point, now)
                 }
             }
+        }
+    }
+}
+
+/**
+ * The locate button as a FAB menu. Unlike the spec's menu, a tap keeps its long-standing job (centre on
+ * the user); a long press opens the saved stops, and the button then turns into the menu's close button.
+ */
+@Composable
+private fun LocateFabMenu(
+    position: LocateButtonPosition,
+    savedStops: List<Stop>,
+    expanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
+    onLocate: () -> Unit,
+    onNoSavedStops: () -> Unit,
+    onStop: (Stop) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = MaterialTheme.colorScheme
+    val haptics = LocalHapticFeedback.current
+    val openMenu: () -> Unit = {
+        if (!expanded) {
+            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+            if (savedStops.isEmpty()) onNoSavedStops() else onExpandedChange(true)
+        }
+    }
+    val currentOpenMenu by rememberUpdatedState(openMenu)
+    val longPressLabel = stringResource(R.string.map_saved_stops_show)
+    BackHandler(enabled = expanded) { onExpandedChange(false) }
+    FloatingActionButtonMenu(
+        expanded = expanded,
+        horizontalAlignment = when (position) {
+            LocateButtonPosition.BOTTOM_START -> Alignment.Start
+            LocateButtonPosition.BOTTOM_CENTER -> Alignment.CenterHorizontally
+            else -> Alignment.End
+        },
+        modifier = modifier,
+        button = {
+            ToggleFloatingActionButton(
+                checked = expanded,
+                onCheckedChange = { if (expanded) onExpandedChange(false) else onLocate() },
+                // A muted secondary tone: the map, not this button, is the content.
+                containerColor = ToggleFloatingActionButtonDefaults.containerColor(colors.secondaryContainer, colors.secondary),
+                modifier = Modifier
+                    // Seen before the button's own click handling: after a long press the release is
+                    // consumed here, so the button does not also take it as a tap.
+                    .pointerInput(Unit) {
+                        awaitEachGesture {
+                            awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                            val ended = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) { waitForUpOrCancellation(PointerEventPass.Initial); true }
+                            if (ended == null) {
+                                currentOpenMenu()
+                                do {
+                                    val event = awaitPointerEvent(PointerEventPass.Initial)
+                                    event.changes.forEach { it.consume() }
+                                } while (event.changes.any { it.pressed })
+                            }
+                        }
+                    }
+                    .semantics { if (!expanded) onLongClick(longPressLabel) { currentOpenMenu(); true } },
+            ) {
+                val iconColor = ToggleFloatingActionButtonDefaults.iconColor(colors.onSecondaryContainer, colors.onSecondary)
+                Icon(
+                    if (checkedProgress > 0.5f) Icons.Rounded.Close else Icons.Rounded.MyLocation,
+                    contentDescription = stringResource(if (expanded) R.string.map_saved_stops_close else R.string.map_center_me),
+                    modifier = with(ToggleFloatingActionButtonDefaults) { Modifier.animateIcon({ checkedProgress }, color = iconColor) },
+                )
+            }
+        },
+    ) {
+        savedStops.forEach { stop ->
+            FloatingActionButtonMenuItem(
+                onClick = { onExpandedChange(false); onStop(stop) },
+                text = { Text(stop.name) },
+                icon = { Icon(Icons.Rounded.Place, contentDescription = null) },
+                containerColor = colors.secondaryContainer,
+            )
         }
     }
 }

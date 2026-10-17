@@ -158,6 +158,10 @@
     <string name="map_layer_bikes">Bike sharing</string>
     <string name="map_layer_cars">Car sharing</string>
     <string name="map_center_me">Mostra la mia posizione</string>
+    <string name="map_saved_stops_show">Mostra le fermate salvate</string>
+    <string name="map_saved_stops_close">Chiudi le fermate salvate</string>
+    <string name="map_saved_stops_hint">Suggerimento: tieni premuto il pulsante della posizione per passare alle fermate salvate.</string>
+    <string name="map_saved_stops_none">Nessuna fermata salvata. Salva una fermata dal suo tabellone delle partenze per raggiungerla da qui.</string>
     <string name="map_vehicles_unavailable">Le posizioni live dei veicoli non sono al momento disponibili.</string>
     <string name="map_no_vehicles_short">nessun veicolo segnalato</string>
     <string name="map_layer_failed">Non è stato possibile caricare un livello opzionale della mappa.</string>

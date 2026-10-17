@@ -164,6 +164,10 @@
     <string name="map_layer_bikes">Bike sharing</string>
     <string name="map_layer_cars">Car sharing</string>
     <string name="map_center_me">Show my location</string>
+    <string name="map_saved_stops_show">Show saved stops</string>
+    <string name="map_saved_stops_close">Close saved stops</string>
+    <string name="map_saved_stops_hint">Tip: long-press the location button to jump to your saved stops.</string>
+    <string name="map_saved_stops_none">No saved stops yet. Save a stop on its departure board to jump to it from here.</string>
     <string name="map_vehicles_unavailable">Live vehicle positions are currently unavailable.</string>
     <string name="map_no_vehicles_short">no vehicles reported</string>
     <string name="map_layer_failed">An optional map layer could not be loaded.</string>

@@ -55,6 +55,8 @@ status: stable
   elsewhere. A new page with a map should use these rather than an interactive `TransitMap` in a list.
   The enlarge button sits in the top end corner, where MapLibre puts its compass once the map is
   rotated, so the card passes `TransitMap(compassTopMargin = 60.dp)` to keep the compass below it.
+  Any edge-to-edge `TransitMap` must pass a margin too, or the compass lands under the status bar: the
+  Map tab passes the status-bar inset plus 12 dp, or plus 76 dp to clear a search bar at the top.
 - **Lines**: `MapPolyline` has `opacity` and `dashed`. Dashed lines live in their own layer
   (`line-dasharray` cannot be data-driven on Android) - before 2026-10-09 `dashed` was written to the
   feature but never rendered, so walking legs drew solid.

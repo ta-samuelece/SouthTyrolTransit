@@ -35,7 +35,8 @@ No timetable, a walking leg or no match gives null - never an error, the leg sim
 # From run to approach
 
 `JourneyLiveViewModel` (in `JourneyViewModels.kt`, assisted factory keyed `"live:" + journey.id`, so the
-two-pane results view gets one per selected journey) merges each run with the realtime snapshot through
+two-pane results view gets one per selected journey) matches all legs with `TripRepository.forJourney`
+(also used by a followed journey, see [following a journey](./follow-journey-live.md)), merges each run with the realtime snapshot through
 `TripRepository.merge`, exactly like the trip screen, and polls trip updates and vehicle positions every
 20 s while visible. The screen then calls, every 10 s:
 

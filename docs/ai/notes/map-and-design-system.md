@@ -74,10 +74,10 @@ predictions at the wrong stop, or nowhere once its scheduled end had passed.
 
 | View | Travelled part | Passed stops |
 | --- | --- | --- |
-| Trip timeline | rail segments and dots dimmed | name in `onSurfaceVariant` |
+| Trip timeline | rail segments and dots dimmed | name in `onSurfaceVariant` (`StopTimelineRow`, `feature/common/StopTimeline.kt`) |
 | Trip map | route split at the vehicle (`RouteProgress.of`) | `MapMarker.stale = true` (stop layers read it) |
 | Journey map | each leg split at its vehicle or walker; finished legs dimmed whole | - |
-| Journey leg card | rail gradient up to `RouteProgress.legFraction`; walk dots dimmed | from/to and intermediate names greyed |
+| Journey leg card | the trip timeline's rows (`LegStops`: rail, dots, vehicle before the next stop, by time); walk dots dimmed | as on the trip timeline |
 
 Use `RouteProgress` (`core/model/.../Progress.kt`) and the token for any new view - don't pick a new alpha
 or a new "passed" rule. Planner legs get the same logic through `RouteProgress.legStops`, which needs no

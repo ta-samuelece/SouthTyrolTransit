@@ -68,6 +68,11 @@ Journey detail after process death re-plans from the encoded request and matches
 (`depEpoch:arrEpoch:lines`); a "leave now" request re-plans from the new now, so it usually comes back
 `DetailState.Missing`. `JourneyRepository` keeps results in memory only.
 
+`FollowRoute` (the journey being followed) takes no argument: its state is the in-memory
+`ActiveJourney`, so after process death it shows "No journey is being followed". The notification opens it
+through `MainActivity.openFollowIntent`, handled in `TransitApp` like the widget's stop intent (see
+[following a journey](./follow-journey-live.md)).
+
 # Search screens - the pattern from 8fcb0b7
 
 A search VM keeps query, loading and results in one `MutableStateFlow`. Searching on that flow directly

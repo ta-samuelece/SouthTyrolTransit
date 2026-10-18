@@ -34,10 +34,10 @@ object FollowNotifications {
     fun build(context: Context, session: FollowSession?, view: FollowView?, now: Instant = Instant.now()): Notification {
         val res = context.resources
         val builder = NotificationCompat.Builder(context, Notifications.CHANNEL_FOLLOW)
-            .setSmallIcon(R.drawable.ic_transit)
+            // Until there is a step: the route of the app mark, as on the always-on display.
+            .setSmallIcon(R.drawable.ic_app_mark)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
-            .setSilent(true)
             .setCategory(NotificationCompat.CATEGORY_NAVIGATION)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
@@ -45,6 +45,9 @@ object FollowNotifications {
             .setContentTitle(res.getString(R.string.follow_title))
         if (session == null) return builder.build()
         builder.addAction(0, res.getString(R.string.follow_n_stop), stopIntent(context))
+            // Android 14+ lets the user swipe it away (only media, calls and a few system apps can forbid
+            // that): the service posts it again at once, until the journey ends or Stop is tapped.
+            .setDeleteIntent(serviceIntent(context, REQUEST_DISMISSED, FollowJourneyService.ACTION_DISMISSED))
         if (view == null) {
             val journey = session.journey
             return builder
@@ -142,13 +145,16 @@ object FollowNotifications {
         PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
     )
 
-    private fun stopIntent(context: Context): PendingIntent = PendingIntent.getService(
-        context, REQUEST_STOP, Intent(context, FollowJourneyService::class.java).setAction(FollowJourneyService.ACTION_STOP),
+    private fun stopIntent(context: Context): PendingIntent = serviceIntent(context, REQUEST_STOP, FollowJourneyService.ACTION_STOP)
+
+    private fun serviceIntent(context: Context, request: Int, action: String): PendingIntent = PendingIntent.getService(
+        context, request, Intent(context, FollowJourneyService::class.java).setAction(action),
         PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
     )
 
     private const val REQUEST_OPEN = 20
     private const val REQUEST_STOP = 21
+    private const val REQUEST_DISMISSED = 22
     private const val GREY = 0xFF90A4AE.toInt()
     private const val BADGE_DP = 24
 }

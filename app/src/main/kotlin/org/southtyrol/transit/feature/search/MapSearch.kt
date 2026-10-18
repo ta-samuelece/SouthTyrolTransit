@@ -3,7 +3,6 @@
 package org.southtyrol.transit.feature.search
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -27,7 +26,6 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
@@ -38,7 +36,6 @@ import androidx.compose.material.icons.rounded.Route
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Star
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -302,11 +299,7 @@ fun MapSearchView(viewModel: MapSearchViewModel, navigator: Navigator, modifier:
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp).focusRequester(focus),
             )
             LazyColumn(contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                item {
-                    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        AssistChip(onClick = navigator::lines, label = { Text(stringResource(R.string.lines_title)) }, leadingIcon = { Icon(Icons.Rounded.Route, contentDescription = null) })
-                    }
-                }
+                // All lines are in the menu behind the app mark in the search bar, not repeated here.
                 if (search.query.isNotBlank()) results(search, onStop, onLine = { navigator.line(it.key) })
                 else suggestions(saved, nearby, onStop, requestPermission, viewModel::locate)
             }

@@ -47,6 +47,13 @@ class FollowJourneyService : Service() {
             if (!running) stopSelf()
             return START_NOT_STICKY
         }
+        if (intent?.action == ACTION_DISMISSED) {
+            // Swiped away while the journey runs: put it back.
+            val session = active.session.value
+            if (running && session != null && Notifications.canPost(this)) post(FollowNotifications.build(this, session, active.view.value))
+            else if (!running) stopSelf()
+            return START_NOT_STICKY
+        }
         // Every startForegroundService must be answered with startForeground, even when the journey was
         // stopped in the meantime, or Android ends the app.
         val session = active.session.value
@@ -140,6 +147,7 @@ class FollowJourneyService : Service() {
 
     companion object {
         const val ACTION_STOP = "org.southtyrol.transit.follow.STOP"
+        const val ACTION_DISMISSED = "org.southtyrol.transit.follow.DISMISSED"
         private const val NOTIFY_MS = 5_000L
     }
 }

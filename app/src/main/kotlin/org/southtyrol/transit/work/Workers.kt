@@ -52,7 +52,7 @@ import javax.inject.Singleton
 object Notifications {
     const val CHANNEL_ALERTS = "alerts"
     const val CHANNEL_SYNC = "sync"
-    const val CHANNEL_FOLLOW = "follow"
+    const val CHANNEL_FOLLOW = "journey"
     const val ID_SYNC = 1
     const val ID_FOLLOW = 2
 
@@ -62,9 +62,16 @@ object Notifications {
             description = context.getString(R.string.channel_alerts_description)
         })
         manager.createNotificationChannel(NotificationChannel(CHANNEL_SYNC, context.getString(R.string.channel_sync), NotificationManager.IMPORTANCE_LOW))
-        // Silent but above MIN, so Android 16 can promote it to a Live Update.
-        manager.createNotificationChannel(NotificationChannel(CHANNEL_FOLLOW, context.getString(R.string.channel_follow), NotificationManager.IMPORTANCE_LOW).apply {
+        // Default importance, as navigation apps use: a low-importance channel counts as silent, and Android
+        // hides silent notifications from the lock screen. No sound or vibration; the notification only
+        // alerts once. Importance cannot be raised on an existing channel, hence a new id and the old one
+        // (IMPORTANCE_LOW, previews only) removed.
+        manager.deleteNotificationChannel("follow")
+        manager.createNotificationChannel(NotificationChannel(CHANNEL_FOLLOW, context.getString(R.string.channel_follow), NotificationManager.IMPORTANCE_DEFAULT).apply {
             description = context.getString(R.string.channel_follow_description)
+            setSound(null, null)
+            enableVibration(false)
+            lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
         })
     }
 

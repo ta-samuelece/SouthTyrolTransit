@@ -23,6 +23,8 @@ class TransitApplication : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
         Notifications.createChannels(this)
+        // Before anything else, so an update never leaves two launcher entries for longer than needed.
+        org.southtyrol.transit.ui.AppIcons.reconcile(this)
         // Registering the periodic sync replaces its constraints, so it must use the saved mobile-data
         // choice; reading settings is a suspend call, hence off the main thread. The one-off initial sync
         // is only for installs that have no timetable yet.

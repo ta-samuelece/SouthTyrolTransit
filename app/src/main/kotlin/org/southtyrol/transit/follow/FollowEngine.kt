@@ -79,12 +79,14 @@ class FollowEngine @Inject constructor(
                 // The times that matter now: the step's leg, or for a walk the leg it leads to.
                 val index = if (step.kind == StepKind.WALK) step.nextTransitIndex ?: step.legIndex else step.legIndex
                 val run = merged[index]
-                // Without a matched run, live times are the planner's as of the start: live only while recent.
+                // GTFS-RT first; otherwise the planner's live times as of the start, live only while recent.
+                // A matched run without a prediction must not hide the planner's delay.
+                val runLive = run?.freshness == Freshness.LIVE
                 val plannerLive = journey.legs[index].realtime
-                val freshness = run?.freshness ?: when {
-                    !plannerLive -> Freshness.SCHEDULED
-                    Duration.between(startedAt, now) < PLANNER_LIVE -> Freshness.LIVE
-                    else -> Freshness.STALE
+                val freshness = when {
+                    runLive -> Freshness.LIVE
+                    plannerLive -> if (Duration.between(startedAt, now) < PLANNER_LIVE) Freshness.LIVE else Freshness.STALE
+                    else -> run?.freshness ?: Freshness.SCHEDULED
                 }
                 active.publish(
                     session,
@@ -95,7 +97,7 @@ class FollowEngine @Inject constructor(
                         runs = merged,
                         fix = position?.point,
                         freshness = freshness,
-                        updatedAt = if (run != null) run.observedAt else startedAt.takeIf { plannerLive },
+                        updatedAt = if (runLive || !plannerLive) run?.observedAt else startedAt,
                     ),
                 )
             }

@@ -40,7 +40,6 @@
     <string name="planner_wheelchair_hint">Nutzt die Barrierefreiheitsdaten der Fahrplanauskunft.</string>
     <string name="planner_search">Verbindungen suchen</string>
     <string name="planner_saved_journeys">Gespeicherte Verbindungen</string>
-    <string name="planner_following">Laufende Fahrt</string>
     <string name="planner_recent">Letzte Suchen</string>
     <string name="planner_saved_places">Gespeicherte Orte</string>
     <string name="planner_recent_places">Zuletzt verwendet</string>
@@ -325,6 +324,7 @@
     <string name="stop_later_arrivals">Spätere Ankünfte</string>
     <string name="settings_app_icon">App-Symbol</string>
     <string name="settings_app_icon_hint">Manche Launcher zeigen das neue Symbol erst nach kurzer Zeit; eine Verknüpfung auf dem Startbildschirm muss eventuell neu angelegt werden.</string>
+    <string name="icon_gradient_path">Verlaufspfad</string>
     <string name="icon_flowing_forest">Fließender Wald</string>
     <string name="icon_abstract_silhouette">Abstrakte Silhouette</string>
     <string name="icon_dusk_peak">Gipfel in der Dämmerung</string>
@@ -460,6 +460,11 @@
     <string name="follow_n_walk">Zu Fuß zu %1$s</string>
     <string name="follow_n_walk_then">%1$s fährt %2$s</string>
     <string name="follow_n_arrive">Ankunft %1$s</string>
+    <string name="follow_strip_open">Tippen, um zur Fahrt zurückzukehren</string>
+    <string name="follow_strip_open_action">Fahrt öffnen</string>
+    <string name="follow_strip_get_off">Aussteigen an %1$s</string>
+    <string name="follow_strip_change">Umsteigen an %1$s</string>
+    <string name="follow_strip_leaves">Abfahrt ab %1$s</string>
     <string name="follow_in_now">jetzt</string>
     <string name="follow_n_stop">Beenden</string>
     <string name="channel_follow">Laufende Fahrt</string>

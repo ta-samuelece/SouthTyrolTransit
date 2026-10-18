@@ -8,7 +8,6 @@ import org.southtyrol.transit.model.Leg
 import org.southtyrol.transit.model.LineNames
 import org.southtyrol.transit.model.OffPlan
 import org.southtyrol.transit.model.StepKind
-import java.time.Duration
 import java.time.Instant
 import org.southtyrol.transit.design.R as DesignR
 
@@ -42,9 +41,8 @@ object FollowText {
     fun source(res: Resources, view: FollowView): String =
         res.getString(if (view.live) DesignR.string.ds_live else DesignR.string.ds_scheduled)
 
-    /** Whole minutes until [at], rounded up, so "1 min" shows until the moment itself. */
-    private fun minutes(at: Instant, now: Instant): Int =
-        Math.floorDiv(Duration.between(now, at).seconds + 59, 60L).coerceIn(0, 999).toInt()
+    /** Whole minutes until [at], rounded down like every countdown in the app ([Format.minutesUntil]), so they agree. */
+    private fun minutes(at: Instant, now: Instant): Int = Format.minutesUntil(at, now).coerceIn(0, 999).toInt()
 
     fun title(res: Resources, view: FollowView): String {
         val step = view.step
@@ -70,6 +68,21 @@ object FollowText {
                 ?.let { res.getString(R.string.follow_n_walk_then, line(res, it), inTime(res, step.at, now)) }
                 ?: res.getString(R.string.follow_n_arrive, inTime(res, step.at, now))
             StepKind.ARRIVED -> res.getString(R.string.follow_arrived_body, target, time(res, step.at))
+        }
+    }
+
+    /** The in-app strip's one line: what to do now, without the countdown it shows beside it. */
+    fun strip(res: Resources, view: FollowView): String {
+        view.offPlan?.let { return offPlan(res, view.journey, it) }
+        val step = view.step
+        val target = step.target.name
+        return when (step.kind) {
+            StepKind.RIDE -> res.getString(if (step.change) R.string.follow_strip_change else R.string.follow_strip_get_off, target)
+            StepKind.BOARD -> res.getString(R.string.follow_strip_leaves, target)
+            // A walk to a boarding names the line it leads to.
+            StepKind.WALK -> res.getString(R.string.follow_n_walk, target) +
+                (view.journey.legs.getOrNull(step.legIndex + 1)?.takeIf { it.mode.isTransit }?.let { " · " + LineNames.badge(it.line, it.mode) } ?: "")
+            StepKind.ARRIVED -> res.getString(R.string.follow_arrived)
         }
     }
 

@@ -27,7 +27,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.AccessibleForward
 import androidx.compose.material.icons.rounded.Bookmark
 import androidx.compose.material.icons.rounded.Close
@@ -36,7 +35,6 @@ import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.LocationOn
 import androidx.compose.material.icons.rounded.Map
 import androidx.compose.material.icons.rounded.MyLocation
-import androidx.compose.material.icons.rounded.Navigation
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Schedule
@@ -85,7 +83,6 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -110,10 +107,6 @@ import org.southtyrol.transit.design.SectionHeader
 import org.southtyrol.transit.design.StatusBanner
 import org.southtyrol.transit.design.TransitLoading
 import org.southtyrol.transit.design.icon
-import org.southtyrol.transit.design.rememberNow
-import org.southtyrol.transit.follow.FollowSession
-import org.southtyrol.transit.follow.FollowText
-import org.southtyrol.transit.follow.FollowView
 import org.southtyrol.transit.feature.common.TopLevelBar
 import org.southtyrol.transit.feature.common.rememberLocationPermission
 import org.southtyrol.transit.location.LocationResult
@@ -134,8 +127,6 @@ fun PlannerScreen(navigator: Navigator, viewModel: PlannerViewModel = hiltViewMo
     val state by viewModel.state.collectAsStateWithLifecycle()
     val search by viewModel.search.collectAsStateWithLifecycle()
     val recentJourneys by viewModel.recentJourneys.collectAsStateWithLifecycle()
-    val followed by viewModel.followed.collectAsStateWithLifecycle()
-    val followedView by viewModel.followedView.collectAsStateWithLifecycle()
     val savedPlaces by viewModel.savedPlaces.collectAsStateWithLifecycle()
     val savedJourneys by viewModel.savedJourneys.collectAsStateWithLifecycle()
     val scheduleInfo by viewModel.scheduleInfo.collectAsStateWithLifecycle()
@@ -213,10 +204,6 @@ fun PlannerScreen(navigator: Navigator, viewModel: PlannerViewModel = hiltViewMo
                     val route = item.route ?: return@itemsIndexed
                     RouteItem(item.label, Icons.Rounded.Bookmark, index, savedJourneys.size) { viewModel.useRoute(route.first, route.second) }
                 }
-            }
-            if (followed != null) {
-                item { SectionHeader(stringResource(R.string.planner_following)) }
-                item(key = "following") { FollowingItem(followed!!, followedView, onClick = navigator::follow) }
             }
             if (recentJourneys.isNotEmpty()) {
                 item { SectionHeader(stringResource(R.string.planner_recent)) }
@@ -423,23 +410,6 @@ fun preferenceLabel(p: RoutePreference) = when (p) {
 @Composable
 private fun QuickChip(label: String, icon: ImageVector, onClick: () -> Unit) {
     androidx.compose.material3.AssistChip(onClick = onClick, label = { Text(label) }, leadingIcon = { Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp)) })
-}
-
-/** The journey being followed: its current step, live as the notification says it; opens it. */
-@Composable
-private fun FollowingItem(session: FollowSession, view: FollowView?, onClick: () -> Unit) {
-    val res = LocalResources.current
-    val now = rememberNow()
-    val title = view?.let { FollowText.title(res, it) } ?: stringResource(R.string.follow_title)
-    val text = view?.let { FollowText.text(res, it, now) }
-        ?: stringResource(R.string.follow_subtitle, Format.time(session.journey.bestArrival), session.journey.legs.last().to.name)
-    SegmentedListItem(
-        onClick = onClick,
-        shapes = ListItemDefaults.segmentedShapes(0, 1), colors = groupedItemColors(), modifier = Modifier.groupGap(0, 1),
-        leadingContent = { Icon(Icons.Rounded.Navigation, contentDescription = null) },
-        trailingContent = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null) },
-        supportingContent = { Text(text, maxLines = 2, overflow = TextOverflow.Ellipsis) },
-    ) { Text(title, maxLines = 2, overflow = TextOverflow.Ellipsis) }
 }
 
 @Composable

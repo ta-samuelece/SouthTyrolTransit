@@ -49,6 +49,20 @@
             android:windowSoftInputMode="adjustResize" />
 
         <!-- Launcher entries, one per selectable app icon (Settings > Appearance); exactly one is enabled. -->
+        <!-- The default icon: a new alias, so no earlier choice changes name (aliases are permanent). -->
+        <activity-alias
+            android:name=".IconGradientPath"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_gradient_path"
+            android:roundIcon="@mipmap/ic_launcher_gradient_path"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
         <activity-alias
             android:name=".IconFlowingForest"
             android:enabled="false"
@@ -64,7 +78,7 @@
 
         <activity-alias
             android:name=".IconAbstractSilhouette"
-            android:enabled="true"
+            android:enabled="false"
             android:exported="true"
             android:icon="@mipmap/ic_launcher_abstract_silhouette"
             android:roundIcon="@mipmap/ic_launcher_abstract_silhouette"

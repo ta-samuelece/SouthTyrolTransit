@@ -9,6 +9,22 @@ import androidx.compose.foundation.background
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.only
+import androidx.compose.ui.Modifier
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import org.southtyrol.transit.feature.follow.FollowViewModel
+import org.southtyrol.transit.feature.follow.JourneyStrip
+import org.southtyrol.transit.feature.follow.journeyStripColor
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.draw.clip
 import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.scaleOut
@@ -197,39 +213,69 @@ fun TransitApp(
     // Offers a newer GitHub release (if any) on start; also shows download progress for manual updates.
     org.southtyrol.transit.update.UpdatePrompt()
 
-    NavigationSuiteScaffold(
-        navigationItems = {
-            TopLevel.entries.forEach { item ->
-                val selected = navigator.tab == item
-                NavigationSuiteItem(
-                    selected = selected,
-                    onClick = { navigator.select(item) },
-                    icon = { Icon(if (selected) item.selectedIcon else item.icon, contentDescription = null) },
-                    label = { Text(stringResource(item.label), maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                )
-            }
-        },
-        state = suite,
+    // The followed journey, minimised: a strip under the bar on every screen but its own and the map search.
+    val follow = hiltViewModel<FollowViewModel>()
+    val followed by follow.session.collectAsStateWithLifecycle()
+    val followView by follow.view.collectAsStateWithLifecycle()
+    val showStrip = followed != null && !hideBar && entry?.destination?.hasRoute(FollowRoute::class) != true
+    val stripColor = journeyStripColor(followView)
+    Column(
+        // Behind the bar's rounded bottom corners the strip's colour shows: its "lips".
+        Modifier.fillMaxSize().then(if (showStrip) Modifier.background(stripColor) else Modifier),
     ) {
-        NavHost(
-            nav, startDestination = start.route,
-            enterTransition = enter, exitTransition = exit, popEnterTransition = popEnter, popExitTransition = popExit,
+        NavigationSuiteScaffold(
+            modifier = Modifier.weight(1f).then(
+                if (showStrip) {
+                    // The strip pads for the gesture area, so the bar does not.
+                    Modifier.consumeWindowInsets(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))
+                        .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
+                } else {
+                    Modifier
+                },
+            ),
+            navigationItems = {
+                TopLevel.entries.forEach { item ->
+                    val selected = navigator.tab == item
+                    NavigationSuiteItem(
+                        selected = selected,
+                        onClick = { navigator.select(item) },
+                        icon = { Icon(if (selected) item.selectedIcon else item.icon, contentDescription = null) },
+                        label = { Text(stringResource(item.label), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                    )
+                }
+            },
+            state = suite,
         ) {
-            screen<PlanRoute> { PlannerScreen(navigator) }
-            screen<MapRoute> { MapScreen(navigator) }
-            screen<AlertsRoute> { AlertsScreen(navigator) }
-            screen<SettingsRoute> { SettingsScreen(navigator) }
-            screen<SavedRoute> { SavedScreen(navigator) }
-            screen<ResultsRoute> { ResultsScreen(navigator) }
-            screen<JourneyRoute> { JourneyDetailScreen(navigator) }
-            screen<FollowRoute> { org.southtyrol.transit.feature.follow.FollowScreen(navigator) }
-            screen<StopRoute> { e -> e.toRoute<StopRoute>().let { StopScreen(navigator, it.stationKey, it.name) } }
-            screen<TripRoute> { e -> e.toRoute<TripRoute>().let { TripScreen(navigator, it.tripId, it.serviceDate, it.liveRef) } }
-            screen<LinesRoute> { LinesScreen(navigator) }
-            screen<LineRoute> { e -> LineScreen(navigator, e.toRoute<LineRoute>().key) }
-            screen<AboutRoute> { AboutScreen(navigator) }
-            screen<LicensesRoute> { org.southtyrol.transit.feature.settings.LicensesScreen(navigator) }
-            screen<TicketsRoute> { TicketsScreen(navigator) }
+            NavHost(
+                nav, startDestination = start.route,
+                enterTransition = enter, exitTransition = exit, popEnterTransition = popEnter, popExitTransition = popExit,
+            ) {
+                screen<PlanRoute> { PlannerScreen(navigator) }
+                screen<MapRoute> { MapScreen(navigator) }
+                screen<AlertsRoute> { AlertsScreen(navigator) }
+                screen<SettingsRoute> { SettingsScreen(navigator) }
+                screen<SavedRoute> { SavedScreen(navigator) }
+                screen<ResultsRoute> { ResultsScreen(navigator) }
+                screen<JourneyRoute> { JourneyDetailScreen(navigator) }
+                screen<FollowRoute> { org.southtyrol.transit.feature.follow.FollowScreen(navigator) }
+                screen<StopRoute> { e -> e.toRoute<StopRoute>().let { StopScreen(navigator, it.stationKey, it.name) } }
+                screen<TripRoute> { e -> e.toRoute<TripRoute>().let { TripScreen(navigator, it.tripId, it.serviceDate, it.liveRef) } }
+                screen<LinesRoute> { LinesScreen(navigator) }
+                screen<LineRoute> { e -> LineScreen(navigator, e.toRoute<LineRoute>().key) }
+                screen<AboutRoute> { AboutScreen(navigator) }
+                screen<LicensesRoute> { org.southtyrol.transit.feature.settings.LicensesScreen(navigator) }
+                screen<TicketsRoute> { TicketsScreen(navigator) }
+            }
+        }
+        AnimatedVisibility(
+            visible = showStrip,
+            enter = if (reduced) EnterTransition.None else expandVertically(tween(250)) + fadeIn(tween(250)),
+            exit = if (reduced) ExitTransition.None else shrinkVertically(tween(200)) + fadeOut(tween(200)),
+        ) {
+            // The last state stays while it slides away after the journey ended.
+            val last = remember { mutableStateOf(followView) }
+            if (followView != null) last.value = followView
+            JourneyStrip(last.value, onOpen = navigator::follow)
         }
     }
 }

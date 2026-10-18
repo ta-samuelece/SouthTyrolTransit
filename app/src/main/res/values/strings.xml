@@ -43,7 +43,6 @@
     <string name="planner_wheelchair_hint">Uses the accessibility data supplied to the journey planner.</string>
     <string name="planner_search">Find connections</string>
     <string name="planner_saved_journeys">Saved journeys</string>
-    <string name="planner_following">Journey in progress</string>
     <string name="planner_recent">Recent journeys</string>
     <string name="planner_saved_places">Saved places</string>
     <string name="planner_recent_places">Recent places</string>
@@ -339,6 +338,7 @@
     <string name="stop_later_arrivals">Later arrivals</string>
     <string name="settings_app_icon">App icon</string>
     <string name="settings_app_icon_hint">Some launchers take a moment to show the new icon; a shortcut on the home screen may need to be added again.</string>
+    <string name="icon_gradient_path">Gradient Path</string>
     <string name="icon_flowing_forest">Flowing Forest</string>
     <string name="icon_abstract_silhouette">Abstract Silhouette</string>
     <string name="icon_dusk_peak">Dusk Peak</string>
@@ -474,6 +474,11 @@
     <string name="follow_n_walk">Walk to %1$s</string>
     <string name="follow_n_walk_then">%1$s leaves %2$s</string>
     <string name="follow_n_arrive">Arrival %1$s</string>
+    <string name="follow_strip_open">Tap to return to your journey</string>
+    <string name="follow_strip_open_action">Open the journey</string>
+    <string name="follow_strip_get_off">Get off at %1$s</string>
+    <string name="follow_strip_change">Change at %1$s</string>
+    <string name="follow_strip_leaves">Leaves from %1$s</string>
     <string name="follow_in_now">now</string>
     <string name="follow_n_stop">Stop</string>
     <string name="channel_follow">Journey in progress</string>

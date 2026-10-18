@@ -33,7 +33,6 @@ import org.southtyrol.transit.data.JourneyRequest
 import org.southtyrol.transit.data.LanguageProvider
 import org.southtyrol.transit.data.PlacesRepository
 import org.southtyrol.transit.data.RecentItem
-import org.southtyrol.transit.follow.ActiveJourney
 import org.southtyrol.transit.data.SavedItem
 import org.southtyrol.transit.data.SavedKind
 import org.southtyrol.transit.data.SavedRepository
@@ -127,11 +126,7 @@ class PlannerViewModel @Inject constructor(
     private val language: LanguageProvider,
     scheduleStore: ScheduleStore,
     private val handle: SavedStateHandle,
-    active: ActiveJourney,
 ) : ViewModel() {
-    /** The journey being followed, if any, to go back to it. */
-    val followed = active.session
-    val followedView = active.view
 
     private val _state = MutableStateFlow(restore())
     val state: StateFlow<PlannerState> = _state.asStateFlow()

@@ -270,7 +270,8 @@ private fun StepHero(view: FollowView, leg: Leg, now: Instant) {
  */
 @Composable
 private fun CurrentLegCard(view: FollowView, leg: Leg, now: Instant, onStop: (String) -> Unit) {
-    val step = view.step
+    // Its last stop is a change when another transit leg follows, whether riding it yet or still waiting.
+    val change = view.journey.legs.drop(view.step.legIndex + 1).any { it.mode.isTransit }
     Surface(color = MaterialTheme.colorScheme.surfaceContainer, shape = RoundedCornerShape(24.dp), modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -280,7 +281,7 @@ private fun CurrentLegCard(view: FollowView, leg: Leg, now: Instant, onStop: (St
             LegStops(
                 leg, now, expanded = true, onToggle = null, onStop = onStop,
                 nextNote = stringResource(R.string.follow_next_stop),
-                lastNote = stringResource(if (step.change) R.string.follow_change_here else R.string.follow_get_off_here),
+                lastNote = stringResource(if (change) R.string.follow_change_here else R.string.follow_get_off_here),
                 live = view.freshness == Freshness.LIVE,
             )
         }

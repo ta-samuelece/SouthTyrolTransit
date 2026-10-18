@@ -12,6 +12,7 @@ import org.southtyrol.transit.R
  * activity-alias of MainActivity in the manifest; exactly one alias is enabled at a time.
  */
 enum class AppIcon(val alias: String, @StringRes val label: Int, @DrawableRes val preview: Int) {
+    GRADIENT_PATH("IconGradientPath", R.string.icon_gradient_path, R.drawable.icon_preview_gradient_path),
     ABSTRACT_SILHOUETTE("IconAbstractSilhouette", R.string.icon_abstract_silhouette, R.drawable.icon_preview_abstract_silhouette),
     FLOWING_FOREST("IconFlowingForest", R.string.icon_flowing_forest, R.drawable.icon_preview_flowing_forest),
     DUSK_PEAK("IconDuskPeak", R.string.icon_dusk_peak, R.drawable.icon_preview_dusk_peak),
@@ -20,7 +21,8 @@ enum class AppIcon(val alias: String, @StringRes val label: Int, @DrawableRes va
     TEAL_VALLEY("IconTealValley", R.string.icon_teal_valley, R.drawable.icon_preview_teal_valley);
 
     companion object {
-        val DEFAULT = ABSTRACT_SILHOUETTE
+        /** The alias enabled in the manifest (`android:enabled="true"`); Abstract Silhouette until 0.1.6. */
+        val DEFAULT = GRADIENT_PATH
     }
 }
 
@@ -29,15 +31,25 @@ object AppIcons {
     // applicationId changes.
     private fun component(context: Context, icon: AppIcon) = ComponentName(context.packageName, "org.southtyrol.transit." + icon.alias)
 
+    /** The icon the user chose (an alias enabled explicitly), else the manifest default. */
     fun current(context: Context): AppIcon {
         val pm = context.packageManager
-        return AppIcon.entries.firstOrNull { icon ->
-            when (pm.getComponentEnabledSetting(component(context, icon))) {
-                PackageManager.COMPONENT_ENABLED_STATE_ENABLED -> true
-                PackageManager.COMPONENT_ENABLED_STATE_DEFAULT -> icon == AppIcon.DEFAULT
-                else -> false
-            }
-        } ?: AppIcon.DEFAULT
+        return AppIcon.entries.firstOrNull { pm.getComponentEnabledSetting(component(context, it)) == PackageManager.COMPONENT_ENABLED_STATE_ENABLED }
+            ?: AppIcon.DEFAULT
+    }
+
+    /**
+     * A choice made before [AppIcon.DEFAULT] existed disabled every alias of its time but not the default's,
+     * which is enabled in the manifest: two launcher entries. Disables the default when another icon is
+     * explicitly chosen. Runs at every start; a no-op once settled.
+     */
+    fun reconcile(context: Context) {
+        val pm = context.packageManager
+        val chosen = current(context)
+        val default = component(context, AppIcon.DEFAULT)
+        if (chosen != AppIcon.DEFAULT && pm.getComponentEnabledSetting(default) == PackageManager.COMPONENT_ENABLED_STATE_DEFAULT) {
+            pm.setComponentEnabledSetting(default, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP)
+        }
     }
 
     /** Enables [icon]'s alias first, then disables the others, so the app never lacks a launcher entry. */

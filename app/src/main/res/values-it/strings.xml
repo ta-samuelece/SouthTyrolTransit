@@ -40,7 +40,6 @@
     <string name="planner_wheelchair_hint">Utilizza i dati di accessibilità forniti al calcolo percorso.</string>
     <string name="planner_search">Cerca collegamenti</string>
     <string name="planner_saved_journeys">Percorsi salvati</string>
-    <string name="planner_following">Viaggio in corso</string>
     <string name="planner_recent">Ricerche recenti</string>
     <string name="planner_saved_places">Luoghi salvati</string>
     <string name="planner_recent_places">Usati di recente</string>
@@ -329,6 +328,7 @@
     <string name="stop_later_arrivals">Arrivi successivi</string>
     <string name="settings_app_icon">Icona dell\'app</string>
     <string name="settings_app_icon_hint">Alcuni launcher mostrano la nuova icona dopo qualche istante; potrebbe essere necessario aggiungere di nuovo il collegamento nella schermata Home.</string>
+    <string name="icon_gradient_path">Percorso sfumato</string>
     <string name="icon_flowing_forest">Foresta fluente</string>
     <string name="icon_abstract_silhouette">Silhouette astratta</string>
     <string name="icon_dusk_peak">Vetta al tramonto</string>
@@ -464,6 +464,11 @@
     <string name="follow_n_walk">A piedi fino a %1$s</string>
     <string name="follow_n_walk_then">%1$s parte %2$s</string>
     <string name="follow_n_arrive">Arrivo %1$s</string>
+    <string name="follow_strip_open">Tocca per tornare al viaggio</string>
+    <string name="follow_strip_open_action">Apri il viaggio</string>
+    <string name="follow_strip_get_off">Scendi a %1$s</string>
+    <string name="follow_strip_change">Cambia a %1$s</string>
+    <string name="follow_strip_leaves">Parte da %1$s</string>
     <string name="follow_in_now">ora</string>
     <string name="follow_n_stop">Termina</string>
     <string name="channel_follow">Viaggio in corso</string>

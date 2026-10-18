@@ -151,9 +151,13 @@ ADAPTIVE = '''<?xml version="1.0" encoding="utf-8"?>
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     <background android:drawable="@color/launcher_background" />
     <foreground android:drawable="@mipmap/ic_launcher_{slug}_foreground" />
-    <monochrome android:drawable="@drawable/ic_launcher_monochrome" />
+    <monochrome android:drawable="@drawable/{monochrome}" />
 </adaptive-icon>
 '''
+
+# Themed-icon silhouettes are drawn by hand in res/drawable: the mountains-and-route one by default,
+# the route alone for art that has no mountains.
+MONOCHROME = {'gradient_path': 'ic_launcher_monochrome_route'}
 
 
 def main():
@@ -167,7 +171,7 @@ def main():
             layer.resize((px, px), Image.LANCZOS).save(f'{d}/ic_launcher_{s}_foreground.png', optimize=True)
         os.makedirs(f'{RES}/mipmap-anydpi', exist_ok=True)
         with open(f'{RES}/mipmap-anydpi/ic_launcher_{s}.xml', 'w', encoding='utf-8', newline='\n') as f:
-            f.write(ADAPTIVE.format(name=os.path.basename(path), slug=s))
+            f.write(ADAPTIVE.format(name=os.path.basename(path), slug=s, monochrome=MONOCHROME.get(s, 'ic_launcher_monochrome')))
         os.makedirs(f'{RES}/drawable-nodpi', exist_ok=True)
         preview(layer).save(f'{RES}/drawable-nodpi/icon_preview_{s}.png', optimize=True)
         print('generated', s)

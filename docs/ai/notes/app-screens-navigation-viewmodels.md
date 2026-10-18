@@ -19,6 +19,15 @@ status: stable
   helper adds the predictive-back shrink, rounded corners and scrim (`BACK_MS`, `BackShrink`).
 - Transitions are global on the `NavHost`: slide plus fade for sub-views, fade for tab switches
   (`isTabSwitch()`) or when `LocalReducedMotion` is set.
+- **Back needs two pairs of transitions.** Navigation Compose 2.10 runs `predictivePopEnterTransition` /
+  `predictivePopExitTransition` during a back *gesture* and `popEnter`/`popExit` only for the back button.
+  Without the predictive pair the library default runs (a shrink to 70% with no fade), which left the
+  closed screen on top of the revealed one after the gesture (fixed 2026-10-18). Both pairs now share
+  `backExit(edge)` / `backEnter()`: the gesture seeks the transition, and on release `NavHost` plays the
+  rest of it at the same speed. So the curves are laid out over the fraction: the card shrinks to 90%
+  and leans away from the swiped edge in the first third, stays opaque until half (`BackFade`), and is
+  gone by 80%, wherever the user lets go. Checked on the API 36 emulator with `adb shell input
+  motionevent` holding the gesture.
 - A sub-route stays under the tab that opened it (`Navigator.sync` changes `tab` only for `TopLevel`
   destinations). `Navigator.select` pops to the user's chosen start tab, not always Plan.
 

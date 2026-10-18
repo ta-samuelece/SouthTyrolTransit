@@ -38,7 +38,10 @@ notification. Built on 2026-10-17; not yet confirmed on a device.
   it. `FollowText` holds the shared wording (`title`, `text`, `strip`) so all three say the same. While
   the strip shows, the scaffold consumes the bottom `navigationBars` inset (the bar stops padding for the
   gesture area; the strip's spacer takes it) and is clipped to 24 dp bottom corners over the strip's
-  colour, as in the design (2026-10-18). The strip replaced a "Journey in progress" item on the Plan tab.
+  colour, as in the design (2026-10-18). The strip is dark in every theme - the inverse surface in the
+  light theme, black (#000000) in the dark and pure-black themes, at the user's request - so it always uses
+  the dark theme's status colours; error red when off plan. It replaced a "Journey in progress" item on
+  the Plan tab.
 
 # The logic, in core/model
 

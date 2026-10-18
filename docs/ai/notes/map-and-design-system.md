@@ -160,9 +160,18 @@ Settled on 2026-10-13 after a review of every screen against the Expressive guid
   the long press as an `onLongClick` semantics action. `UserSettings.savedStopsHintShown` makes the "long
   press to jump to saved stops" snackbar appear once, the first time the map has a saved stop.
 - **Settings is not a tab, and has one entry point.** `MapSearchBar` ends in the app mark
-  (`drawable/ic_app_mark.xml`: the launcher's two stops and route, white on a `primary` circle), which
-  opens a `DropdownMenu` with Saved, Lines and Settings. `TopLevelBar` has no settings button; About is
-  reached from Settings. See [adding screens](app-screens-navigation-viewmodels.md).
+  (`drawable/ic_app_mark.xml`: the launcher's two stops and route, white on a `primary` circle in a
+  `primary` ring), `SearchBarMenuButton` in `feature/search/SearchBarMenu.kt`. It opens a FAB menu (design
+  of 2026-10-18): Saved, the language (its value only; opens the five choices in place, Back returns),
+  the theme (its value only; each tap cycles System, Light, Dark through `SettingsRepository.setTheme`,
+  the menu stays open; primary while not System) and Settings. It is a `Popup` anchored to the mark: with
+  the bar at the bottom it holds Material's `FloatingActionButtonMenu`, whose button slot is a 48 dp
+  close button placed exactly over the mark (the menu pads 16 dp beside and below its button, which
+  `AtAnchorEnd` offsets); with the bar at the top, where Material's menu cannot open downward, a mirrored
+  column of look-alike pills drops below it. Lines is no longer in the menu nor in the search view, at the
+  user's request: the all-lines screen (`LinesRoute`) has no entry point left, single lines open from
+  search results and stop boards. `TopLevelBar` has no settings button; About is reached from Settings.
+  See [adding screens](app-screens-navigation-viewmodels.md).
 - **The map's search bar** (`MapSearchBar`, `feature/search/MapSearch.kt`) is the one surface on the map
   with a shadow (3 dp): tone alone does not lift it off light tiles. `UserSettings.searchBar` puts it at the
   bottom by default, in the locate button's row, leaving 88 dp free on the button's side (the FAB menu's

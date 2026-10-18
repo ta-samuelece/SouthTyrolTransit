@@ -5,7 +5,7 @@ description: Map content is one immutable value re-pushed in full and marker ids
 tags: [map, maplibre, design-system, colors, accessibility]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-17T14:30:00Z"
+  at: "2026-10-18T21:45:00Z"
 status: stable
 ---
 
@@ -164,11 +164,18 @@ Settled on 2026-10-13 after a review of every screen against the Expressive guid
   `primary` ring), `SearchBarMenuButton` in `feature/search/SearchBarMenu.kt`. It opens a FAB menu (design
   of 2026-10-18): Saved, the language (its value only; opens the five choices in place, Back returns),
   the theme (its value only; each tap cycles System, Light, Dark through `SettingsRepository.setTheme`,
-  the menu stays open; primary while not System) and Settings. It is a `Popup` anchored to the mark: with
-  the bar at the bottom it holds Material's `FloatingActionButtonMenu`, whose button slot is a 48 dp
-  close button placed exactly over the mark (the menu pads 16 dp beside and below its button, which
-  `AtAnchorEnd` offsets); with the bar at the top, where Material's menu cannot open downward, a mirrored
-  column of look-alike pills drops below it. Lines is no longer in the menu nor in the search view, at the
+  the menu stays open; primary while not System) and Settings. The button only reports the mark's root
+  bounds; `MapScreen` then draws `SearchBarMenu` as the last layer of its own layout, with a full-size
+  layer behind it that turns an outside tap into a close, and a `BackHandler`. **Not a `Popup`:** a popup
+  window, created on every opening and sized to its content, was resized on each frame of the items'
+  growth - the opening stuttered and the items seemed to slide in from the screen's edge. `AtAnchor`
+  places the menu by the mark's bounds less its own `positionInRoot`. With the bar at the bottom it holds
+  Material's `FloatingActionButtonMenu`, whose button slot is `MarkButton` exactly over the mark (the menu
+  pads 16 dp beside and below its button): the mark morphs into the close X (ring fades, disc grows,
+  icons cross-fade with a quarter turn), and back on close; with the bar at the top, where Material's menu
+  cannot open downward, a mirrored column of look-alike pills drops below it. Closing to the map folds
+  the menu first (`CLOSE_MS`); Saved, Settings and a language pick remove it at once, so nothing lingers
+  over the next screen. Lines is no longer in the menu nor in the search view, at the
   user's request: the all-lines screen (`LinesRoute`) has no entry point left, single lines open from
   search results and stop boards. `TopLevelBar` has no settings button; About is reached from Settings.
   See [adding screens](app-screens-navigation-viewmodels.md).

@@ -40,6 +40,7 @@
     <string name="planner_wheelchair_hint">Utilizza i dati di accessibilità forniti al calcolo percorso.</string>
     <string name="planner_search">Cerca collegamenti</string>
     <string name="planner_saved_journeys">Percorsi salvati</string>
+    <string name="planner_following">Viaggio in corso</string>
     <string name="planner_recent">Ricerche recenti</string>
     <string name="planner_saved_places">Luoghi salvati</string>
     <string name="planner_recent_places">Usati di recente</string>
@@ -420,4 +421,61 @@
     <string name="onboarding_timetable_installing">Installazione in corso</string>
     <string name="onboarding_timetable_ready">Pronto</string>
     <string name="onboarding_start">Inizia</string>
+
+    <string name="stop_passed">Già passata</string>
+    <!-- Following a journey live -->
+    <string name="follow_start">Avvia</string>
+    <string name="follow_following">In corso</string>
+    <string name="follow_sheet_title">Segui questo viaggio</string>
+    <string name="follow_sheet_body">Una notifica mostra il prossimo passo finché non arrivi a %1$s. Termina da sola all\'arrivo.</string>
+    <string name="follow_use_location">Usa la mia posizione</string>
+    <string name="follow_use_location_hint">Rileva una coincidenza persa o un\'uscita dal percorso. Solo mentre il viaggio è in corso.</string>
+    <string name="follow_without_location">Senza posizione, l\'avanzamento segue i dati in tempo reale e l\'orario.</string>
+    <string name="follow_location_denied">Posizione non consentita: il viaggio viene seguito solo in base all\'orario.</string>
+    <string name="follow_notifications_denied">Le notifiche sono disattivate: segui il viaggio qui nell\'app.</string>
+    <string name="follow_start_failed">Impossibile avviare il viaggio.</string>
+    <string name="follow_title">Viaggio in corso</string>
+    <string name="follow_subtitle">Arrivo %1$s · %2$s</string>
+    <string name="follow_get_off_at">Scendi a</string>
+    <string name="follow_change_at">Cambia a</string>
+    <string name="follow_walk_to">A piedi fino a</string>
+    <string name="follow_leaves_from">Parte da</string>
+    <string name="follow_to">per %1$s</string>
+    <string name="follow_arrived">Sei a destinazione</string>
+    <string name="follow_arrived_body">%1$s alle %2$s.</string>
+    <string name="follow_itinerary">Itinerario</string>
+    <string name="follow_next_stop">Prossima fermata</string>
+    <string name="follow_change_here">Scendi e cambia</string>
+    <string name="follow_get_off_here">Scendi · la tua destinazione</string>
+    <string name="follow_stop">Smetti di seguire</string>
+    <string name="follow_none_title">Nessun viaggio in corso</string>
+    <string name="follow_none_body">Avviane uno dai dettagli di un collegamento.</string>
+    <string name="follow_off_title">Il viaggio non può proseguire come previsto</string>
+    <string name="follow_off_cancelled">%1$s delle %2$s è soppresso.</string>
+    <string name="follow_off_connection">La coincidenza con %1$s delle %2$s non è più raggiungibile.</string>
+    <string name="follow_off_missed">Sembra che tu abbia perso %1$s delle %2$s.</string>
+    <string name="follow_off_route">Sembra che tu abbia lasciato il percorso previsto.</string>
+    <string name="follow_find_another_way">Trova un\'altra soluzione</string>
+    <string name="follow_line">%1$s %2$s</string>
+    <string name="follow_n_line_to">%1$s per %2$s</string>
+    <string name="follow_n_get_off">Scendi a %1$s %2$s</string>
+    <string name="follow_n_change">Cambia a %1$s %2$s</string>
+    <string name="follow_n_leaves">Parte da %1$s %2$s</string>
+    <string name="follow_n_walk">A piedi fino a %1$s</string>
+    <string name="follow_n_walk_then">%1$s parte %2$s</string>
+    <string name="follow_n_arrive">Arrivo %1$s</string>
+    <string name="follow_in_now">ora</string>
+    <string name="follow_n_stop">Termina</string>
+    <string name="channel_follow">Viaggio in corso</string>
+    <string name="channel_follow_description">Il prossimo passo mentre segui un viaggio</string>
+    <plurals name="follow_in_minutes">
+        <item quantity="one">tra %d min</item>
+        <item quantity="many">tra %d min</item>
+        <item quantity="other">tra %d min</item>
+    </plurals>
+    <plurals name="follow_chip_minutes">
+        <item quantity="one">%d min</item>
+        <item quantity="many">%d min</item>
+        <item quantity="other">%d min</item>
+    </plurals>
 </resources>

@@ -43,6 +43,7 @@
     <string name="planner_wheelchair_hint">Uses the accessibility data supplied to the journey planner.</string>
     <string name="planner_search">Find connections</string>
     <string name="planner_saved_journeys">Saved journeys</string>
+    <string name="planner_following">Journey in progress</string>
     <string name="planner_recent">Recent journeys</string>
     <string name="planner_saved_places">Saved places</string>
     <string name="planner_recent_places">Recent places</string>
@@ -430,4 +431,59 @@
     <string name="onboarding_timetable_installing">Installing</string>
     <string name="onboarding_timetable_ready">Ready</string>
     <string name="onboarding_start">Start</string>
+
+    <string name="stop_passed">Passed</string>
+    <!-- Following a journey live -->
+    <string name="follow_start">Start</string>
+    <string name="follow_following">Following</string>
+    <string name="follow_sheet_title">Follow this journey</string>
+    <string name="follow_sheet_body">A notification shows your next step until you reach %1$s. It ends by itself when you arrive.</string>
+    <string name="follow_use_location">Use my location</string>
+    <string name="follow_use_location_hint">Notices a missed connection or leaving the route. Used only while the journey runs.</string>
+    <string name="follow_without_location">Without it, progress follows live times and the timetable.</string>
+    <string name="follow_location_denied">Location is not allowed: the journey is followed by time only.</string>
+    <string name="follow_notifications_denied">Notifications are off: follow the journey here in the app.</string>
+    <string name="follow_start_failed">The journey could not be started.</string>
+    <string name="follow_title">Following journey</string>
+    <string name="follow_subtitle">Arrive %1$s · %2$s</string>
+    <string name="follow_get_off_at">Get off at</string>
+    <string name="follow_change_at">Change at</string>
+    <string name="follow_walk_to">Walk to</string>
+    <string name="follow_leaves_from">Leaves from</string>
+    <string name="follow_to">to %1$s</string>
+    <string name="follow_arrived">You have arrived</string>
+    <string name="follow_arrived_body">%1$s at %2$s.</string>
+    <string name="follow_itinerary">Itinerary</string>
+    <string name="follow_next_stop">Next stop</string>
+    <string name="follow_change_here">Get off and change</string>
+    <string name="follow_get_off_here">Get off · your destination</string>
+    <string name="follow_stop">Stop following</string>
+    <string name="follow_none_title">No journey is being followed</string>
+    <string name="follow_none_body">Start one from a journey\'s details.</string>
+    <string name="follow_off_title">Your journey cannot go as planned</string>
+    <string name="follow_off_cancelled">%1$s at %2$s is cancelled.</string>
+    <string name="follow_off_connection">The change to %1$s at %2$s can no longer be made.</string>
+    <string name="follow_off_missed">It looks like you missed %1$s at %2$s.</string>
+    <string name="follow_off_route">You seem to have left the planned route.</string>
+    <string name="follow_find_another_way">Find another way</string>
+    <string name="follow_line">%1$s %2$s</string>
+    <string name="follow_n_line_to">%1$s to %2$s</string>
+    <string name="follow_n_get_off">Get off at %1$s %2$s</string>
+    <string name="follow_n_change">Change at %1$s %2$s</string>
+    <string name="follow_n_leaves">Leaves from %1$s %2$s</string>
+    <string name="follow_n_walk">Walk to %1$s</string>
+    <string name="follow_n_walk_then">%1$s leaves %2$s</string>
+    <string name="follow_n_arrive">Arrival %1$s</string>
+    <string name="follow_in_now">now</string>
+    <string name="follow_n_stop">Stop</string>
+    <string name="channel_follow">Journey in progress</string>
+    <string name="channel_follow_description">Your next step while you follow a journey</string>
+    <plurals name="follow_in_minutes">
+        <item quantity="one">in %d min</item>
+        <item quantity="other">in %d min</item>
+    </plurals>
+    <plurals name="follow_chip_minutes">
+        <item quantity="one">%d min</item>
+        <item quantity="other">%d min</item>
+    </plurals>
 </resources>

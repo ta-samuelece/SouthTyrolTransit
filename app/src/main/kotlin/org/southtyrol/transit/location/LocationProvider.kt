@@ -11,6 +11,10 @@ import android.os.Build
 import android.os.CancellationSignal
 import android.os.Looper
 import androidx.core.content.ContextCompat
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
 import org.southtyrol.transit.model.Point
@@ -22,10 +26,16 @@ sealed class LocationResult {
     data object Unavailable : LocationResult()
 }
 
-/** One-shot foreground location. Never tracks in the background and never logs positions. */
+/**
+ * Foreground location, never logged. One-shot reads, plus [updates], which only a followed journey
+ * uses, from its foreground service, while the user has location turned on for it.
+ */
 interface LocationProvider {
     fun hasPermission(): Boolean
     suspend fun current(): LocationResult
+
+    /** Continuous fixes every [intervalMillis] or [minDistanceMeters]; empty without permission. */
+    fun updates(intervalMillis: Long, minDistanceMeters: Float): Flow<LocationResult.Found> = emptyFlow()
 }
 
 /** Framework LocationManager implementation (no Google Play services dependency). */
@@ -52,6 +62,20 @@ class AndroidLocationProvider(private val context: Context) : LocationProvider {
         return fresh?.toResult()
             ?: providers.mapNotNull { runCatching { manager.getLastKnownLocation(it) }.getOrNull() }.maxByOrNull { it.time }?.toResult()
             ?: LocationResult.Unavailable
+    }
+
+    @SuppressLint("MissingPermission")
+    override fun updates(intervalMillis: Long, minDistanceMeters: Float): Flow<LocationResult.Found> = callbackFlow {
+        val manager = manager
+        if (!hasPermission() || manager == null) { close(); return@callbackFlow }
+        val fused = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) listOf(LocationManager.FUSED_PROVIDER) else emptyList()
+        // The fused provider combines the others; without it, GPS and the network both report.
+        val providers = (fused + listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER))
+            .filter { runCatching { manager.isProviderEnabled(it) }.getOrDefault(false) }
+            .let { enabled -> if (fused.isNotEmpty() && fused[0] in enabled) fused else enabled }
+        val listener = LocationListener { location -> trySend(location.toResult()) }
+        providers.forEach { manager.requestLocationUpdates(it, intervalMillis, minDistanceMeters, listener, Looper.getMainLooper()) }
+        awaitClose { manager.removeUpdates(listener) }
     }
 
     @SuppressLint("MissingPermission")

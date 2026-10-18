@@ -40,6 +40,7 @@
     <string name="planner_wheelchair_hint">Nutzt die Barrierefreiheitsdaten der Fahrplanauskunft.</string>
     <string name="planner_search">Verbindungen suchen</string>
     <string name="planner_saved_journeys">Gespeicherte Verbindungen</string>
+    <string name="planner_following">Laufende Fahrt</string>
     <string name="planner_recent">Letzte Suchen</string>
     <string name="planner_saved_places">Gespeicherte Orte</string>
     <string name="planner_recent_places">Zuletzt verwendet</string>
@@ -416,4 +417,59 @@
     <string name="onboarding_timetable_installing">Wird eingerichtet</string>
     <string name="onboarding_timetable_ready">Bereit</string>
     <string name="onboarding_start">Starten</string>
+
+    <string name="stop_passed">Bereits passiert</string>
+    <!-- Following a journey live -->
+    <string name="follow_start">Starten</string>
+    <string name="follow_following">Wird verfolgt</string>
+    <string name="follow_sheet_title">Diese Verbindung verfolgen</string>
+    <string name="follow_sheet_body">Eine Benachrichtigung zeigt deinen nächsten Schritt, bis du %1$s erreichst. Sie endet von selbst, wenn du ankommst.</string>
+    <string name="follow_use_location">Meinen Standort verwenden</string>
+    <string name="follow_use_location_hint">Bemerkt einen verpassten Anschluss oder ein Abweichen von der Route. Nur während die Fahrt läuft.</string>
+    <string name="follow_without_location">Ohne Standort folgt der Fortschritt den Echtzeitdaten und dem Fahrplan.</string>
+    <string name="follow_location_denied">Standort nicht erlaubt: Die Fahrt wird nur nach der Uhrzeit verfolgt.</string>
+    <string name="follow_notifications_denied">Benachrichtigungen sind aus: Verfolge die Fahrt hier in der App.</string>
+    <string name="follow_start_failed">Die Fahrt konnte nicht gestartet werden.</string>
+    <string name="follow_title">Fahrt wird verfolgt</string>
+    <string name="follow_subtitle">Ankunft %1$s · %2$s</string>
+    <string name="follow_get_off_at">Aussteigen an</string>
+    <string name="follow_change_at">Umsteigen an</string>
+    <string name="follow_walk_to">Zu Fuß zu</string>
+    <string name="follow_leaves_from">Abfahrt ab</string>
+    <string name="follow_to">nach %1$s</string>
+    <string name="follow_arrived">Du bist angekommen</string>
+    <string name="follow_arrived_body">%1$s um %2$s.</string>
+    <string name="follow_itinerary">Reiseverlauf</string>
+    <string name="follow_next_stop">Nächster Halt</string>
+    <string name="follow_change_here">Aussteigen und umsteigen</string>
+    <string name="follow_get_off_here">Aussteigen · dein Ziel</string>
+    <string name="follow_stop">Verfolgen beenden</string>
+    <string name="follow_none_title">Keine Fahrt wird verfolgt</string>
+    <string name="follow_none_body">Starte eine in den Details einer Verbindung.</string>
+    <string name="follow_off_title">Deine Fahrt geht nicht wie geplant</string>
+    <string name="follow_off_cancelled">%1$s um %2$s fällt aus.</string>
+    <string name="follow_off_connection">Der Anschluss an %1$s um %2$s ist nicht mehr erreichbar.</string>
+    <string name="follow_off_missed">Du hast anscheinend %1$s um %2$s verpasst.</string>
+    <string name="follow_off_route">Du scheinst die geplante Route verlassen zu haben.</string>
+    <string name="follow_find_another_way">Andere Verbindung suchen</string>
+    <string name="follow_line">%1$s %2$s</string>
+    <string name="follow_n_line_to">%1$s nach %2$s</string>
+    <string name="follow_n_get_off">Aussteigen an %1$s %2$s</string>
+    <string name="follow_n_change">Umsteigen an %1$s %2$s</string>
+    <string name="follow_n_leaves">Abfahrt ab %1$s %2$s</string>
+    <string name="follow_n_walk">Zu Fuß zu %1$s</string>
+    <string name="follow_n_walk_then">%1$s fährt %2$s</string>
+    <string name="follow_n_arrive">Ankunft %1$s</string>
+    <string name="follow_in_now">jetzt</string>
+    <string name="follow_n_stop">Beenden</string>
+    <string name="channel_follow">Laufende Fahrt</string>
+    <string name="channel_follow_description">Dein nächster Schritt, während du eine Fahrt verfolgst</string>
+    <plurals name="follow_in_minutes">
+        <item quantity="one">in %d Min.</item>
+        <item quantity="other">in %d Min.</item>
+    </plurals>
+    <plurals name="follow_chip_minutes">
+        <item quantity="one">%d Min.</item>
+        <item quantity="other">%d Min.</item>
+    </plurals>
 </resources>

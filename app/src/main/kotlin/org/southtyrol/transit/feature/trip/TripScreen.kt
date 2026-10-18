@@ -2,6 +2,8 @@
 
 package org.southtyrol.transit.feature.trip
 
+import org.southtyrol.transit.feature.common.StopTimelineRow
+import org.southtyrol.transit.feature.common.VehicleMarker
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -300,7 +302,7 @@ private fun TripContent(detail: TripDetail, navigator: Navigator, alerts: List<o
                 !position.atStop && index == position.nextIndex -> VehicleMarker.BEFORE_STOP
                 else -> VehicleMarker.NONE
             }
-            TripStopRow(
+            StopTimelineRow(
                 stop, first = index == 0, last = index == detail.stops.lastIndex,
                 passed = nextIndex >= 0 && index < nextIndex || nextIndex < 0, next = index == nextIndex, color = color,
                 vehicle = marker, mode = detail.route.mode, estimated = position?.estimated ?: true,
@@ -308,66 +310,6 @@ private fun TripContent(detail: TripDetail, navigator: Navigator, alerts: List<o
             )
         }
     }
-    }
-}
-
-/** Where the bus is drawn on the timeline: between the previous stop and this one, or at this stop. */
-private enum class VehicleMarker { NONE, BEFORE_STOP, AT_STOP }
-
-@Composable
-private fun TripStopRow(
-    stop: TripStop, first: Boolean, last: Boolean, passed: Boolean, next: Boolean, color: Long,
-    vehicle: VehicleMarker, mode: org.southtyrol.transit.model.TransportMode, estimated: Boolean, onClick: () -> Unit,
-) {
-    val lineColor = androidx.compose.ui.graphics.Color(0xFF000000 or color)
-    val skipped = stop.state == ServiceState.SKIPPED || stop.state == ServiceState.CANCELLED
-    val scheduled = if (last) stop.scheduledArrival else stop.scheduledDeparture
-    val predicted = if (last) stop.predictedArrival else stop.predictedDeparture
-    val timeText = Format.time(predicted ?: scheduled)
-    val delayText = org.southtyrol.transit.design.delayDescription(predicted?.let { Duration.between(scheduled, it).seconds }, stop.state)
-    val vehicleText = if (vehicle != VehicleMarker.NONE) stringResource(if (vehicle == VehicleMarker.AT_STOP) R.string.trip_vehicle_at_stop else R.string.trip_vehicle_approaching) else null
-    Row(
-        Modifier.fillMaxWidth().height(IntrinsicSize.Min).clickable(onClick = onClick).heightIn(min = 52.dp)
-            .semantics(mergeDescendants = true) { contentDescription = listOfNotNull(stop.stop.name, timeText, delayText, vehicleText).joinToString(", ") },
-    ) {
-        Column(Modifier.width(88.dp).padding(vertical = 8.dp)) {
-            Text(timeText, style = TimeStyles.medium, maxLines = 1, softWrap = false, textDecoration = if (skipped) TextDecoration.LineThrough else null)
-            if (predicted != null && predicted != scheduled) Text(org.southtyrol.transit.design.Format.time(scheduled), style = MaterialTheme.typography.labelSmall, textDecoration = TextDecoration.LineThrough)
-        }
-        Box(Modifier.width(28.dp).fillMaxHeight(), contentAlignment = Alignment.Center) {
-            Column(Modifier.fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
-                Box(Modifier.width(4.dp).weight(1f).background(if (first) androidx.compose.ui.graphics.Color.Transparent else lineColor.copy(alpha = if (passed) org.southtyrol.transit.design.Progress.PASSED_ALPHA else 1f)))
-                Box(
-                    Modifier.size(if (next) 18.dp else 12.dp).clip(CircleShape)
-                        .background(if (next) lineColor else MaterialTheme.colorScheme.surface)
-                        .border(3.dp, lineColor.copy(alpha = if (passed) org.southtyrol.transit.design.Progress.PASSED_ALPHA else 1f), CircleShape),
-                )
-                Box(Modifier.width(4.dp).weight(1f).background(if (last) androidx.compose.ui.graphics.Color.Transparent else lineColor.copy(alpha = if (passed) org.southtyrol.transit.design.Progress.PASSED_ALPHA else 1f)))
-            }
-            // The bus itself: on the line just before this stop (on its way) or on this stop (dwelling).
-            if (vehicle != VehicleMarker.NONE) {
-                Surface(
-                    shape = CircleShape,
-                    color = lineColor.copy(alpha = if (estimated) 0.85f else 1f),
-                    contentColor = androidx.compose.ui.graphics.Color.White,
-                    shadowElevation = 2.dp,
-                    modifier = Modifier.align(if (vehicle == VehicleMarker.AT_STOP) Alignment.Center else Alignment.TopCenter)
-                        .then(if (vehicle == VehicleMarker.AT_STOP) Modifier else Modifier.offset(y = (-12).dp)).size(24.dp),
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(mode.icon(), contentDescription = null, modifier = Modifier.size(16.dp))
-                    }
-                }
-            }
-        }
-        Spacer(Modifier.width(12.dp))
-        Column(Modifier.weight(1f).padding(vertical = 8.dp)) {
-            Text(stop.stop.name, style = MaterialTheme.typography.bodyLarge, fontWeight = if (next) FontWeight.SemiBold else FontWeight.Normal, color = if (passed) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (stop.stop.platform.isNotBlank()) Text(stringResource(org.southtyrol.transit.design.R.string.ds_platform_short, stop.stop.platform), style = MaterialTheme.typography.labelMedium)
-                DelayLabel(predicted?.let { Duration.between(scheduled, it).seconds }, stop.state, if (predicted != null) Freshness.LIVE else Freshness.SCHEDULED)
-            }
-        }
     }
 }
 

@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -27,6 +28,9 @@ import org.southtyrol.transit.data.SavedKind
 import org.southtyrol.transit.data.SavedRepository
 import org.southtyrol.transit.data.TripRepository
 import org.southtyrol.transit.feature.planner.RequestCodec
+import org.southtyrol.transit.follow.ActiveJourney
+import org.southtyrol.transit.follow.FollowController
+import org.southtyrol.transit.follow.FollowSession
 import org.southtyrol.transit.model.DataError
 import org.southtyrol.transit.model.DataException
 import org.southtyrol.transit.model.Journey
@@ -131,8 +135,17 @@ class JourneyDetailViewModel @Inject constructor(
     private val language: LanguageProvider,
     alerts: AlertRepository,
     val ticketing: TicketingProvider,
+    private val follow: FollowController,
+    active: ActiveJourney,
 ) : ViewModel() {
     private val route = handle.toRoute<JourneyRoute>()
+
+    /** The id of the journey being followed, if any (this one or another). */
+    val followedId: StateFlow<String?> = active.session.map { it?.journey?.id }.stateIn(viewModelScope, SharingStarted.Eagerly, active.session.value?.journey?.id)
+
+    /** Starts following [journey], replacing any other; false when Android refused the service. */
+    fun startFollowing(journey: Journey, useLocation: Boolean): Boolean =
+        follow.start(FollowSession(journey, route.request, useLocation))
     private val _state = MutableStateFlow<DetailState>(DetailState.Loading)
     val state: StateFlow<DetailState> = _state.asStateFlow()
     val alerts: StateFlow<AlertsState> = alerts.state.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AlertsState())
@@ -178,13 +191,7 @@ class JourneyLiveViewModel @AssistedInject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
     init {
-        viewModelScope.launch {
-            val lang = language.current()
-            runs.value = journey.legs.withIndex()
-                .filter { it.value.mode.isTransit }
-                .mapNotNull { (i, leg) -> trips.forLeg(leg, lang)?.let { i to it } }
-                .toMap()
-        }
+        viewModelScope.launch { runs.value = trips.forJourney(journey, language.current()) }
     }
 
     /** Refreshes trip updates and vehicle positions; throttled by the repository. */

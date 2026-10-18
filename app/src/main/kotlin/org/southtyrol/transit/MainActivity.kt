@@ -36,12 +36,19 @@ class MainActivity : AppCompatActivity() {
     /** A stop to open, e.g. from the home-screen widget; consumed once shown. */
     private val openStop = mutableStateOf<Pair<String, String>?>(null)
 
+    /** Set when the followed journey's notification was tapped; consumed once shown. */
+    private val openFollow = mutableStateOf(false)
+
     override fun onNewIntent(intent: android.content.Intent) {
         super.onNewIntent(intent)
         readStop(intent)
     }
 
     private fun readStop(intent: android.content.Intent?) {
+        if (intent?.getBooleanExtra(EXTRA_FOLLOW, false) == true) {
+            openFollow.value = true
+            intent.removeExtra(EXTRA_FOLLOW)
+        }
         val key = intent?.getStringExtra(EXTRA_STOP_KEY) ?: return
         openStop.value = key to intent.getStringExtra(EXTRA_STOP_NAME).orEmpty()
         intent.removeExtra(EXTRA_STOP_KEY)
@@ -50,6 +57,13 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private const val EXTRA_STOP_KEY = "org.southtyrol.transit.STOP_KEY"
         private const val EXTRA_STOP_NAME = "org.southtyrol.transit.STOP_NAME"
+        private const val EXTRA_FOLLOW = "org.southtyrol.transit.FOLLOW"
+
+        fun openFollowIntent(context: android.content.Context): android.content.Intent =
+            android.content.Intent(context, MainActivity::class.java)
+                .putExtra(EXTRA_FOLLOW, true)
+                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP or android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                .setData(android.net.Uri.parse("southtyroltransit://follow"))
 
         fun openStopIntent(context: android.content.Context, stopKey: String, name: String): android.content.Intent =
             android.content.Intent(context, MainActivity::class.java)
@@ -96,7 +110,11 @@ class MainActivity : AppCompatActivity() {
                 CompositionLocalProvider(LocalMapStyle provides defaultStyle, LocalDarkTheme provides dark) {
                     // The start tab is read once, when the app first shows: after the first-run screens that is
                     // the tab just chosen there.
-                    if (settings.onboardingDone) TransitApp(startTab = settings.startTab, openStop = openStop.value, onStopOpened = { openStop.value = null })
+                    if (settings.onboardingDone) TransitApp(
+                        startTab = settings.startTab,
+                        openStop = openStop.value, onStopOpened = { openStop.value = null },
+                        openFollow = openFollow.value, onFollowOpened = { openFollow.value = false },
+                    )
                     else OnboardingScreen()
                 }
             }

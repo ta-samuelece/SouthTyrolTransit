@@ -52,7 +52,9 @@ import javax.inject.Singleton
 object Notifications {
     const val CHANNEL_ALERTS = "alerts"
     const val CHANNEL_SYNC = "sync"
+    const val CHANNEL_FOLLOW = "follow"
     const val ID_SYNC = 1
+    const val ID_FOLLOW = 2
 
     fun createChannels(context: Context) {
         val manager = context.getSystemService(NotificationManager::class.java)
@@ -60,6 +62,10 @@ object Notifications {
             description = context.getString(R.string.channel_alerts_description)
         })
         manager.createNotificationChannel(NotificationChannel(CHANNEL_SYNC, context.getString(R.string.channel_sync), NotificationManager.IMPORTANCE_LOW))
+        // Silent but above MIN, so Android 16 can promote it to a Live Update.
+        manager.createNotificationChannel(NotificationChannel(CHANNEL_FOLLOW, context.getString(R.string.channel_follow), NotificationManager.IMPORTANCE_LOW).apply {
+            description = context.getString(R.string.channel_follow_description)
+        })
     }
 
     fun canPost(context: Context): Boolean =

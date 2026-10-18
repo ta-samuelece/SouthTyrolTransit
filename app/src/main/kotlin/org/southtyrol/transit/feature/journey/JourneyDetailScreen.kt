@@ -31,6 +31,7 @@ import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.ExpandLess
 import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.NearMe
+import androidx.compose.material.icons.rounded.Navigation
 import androidx.compose.material.icons.rounded.SyncAlt
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.Card
@@ -66,9 +67,10 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import org.southtyrol.transit.LocalDarkTheme
 import org.southtyrol.transit.R
+import org.southtyrol.transit.feature.common.LegStops
 import org.southtyrol.transit.feature.common.PollWhileVisible
+import org.southtyrol.transit.feature.follow.StartFollowSheet
 import org.southtyrol.transit.design.DelayLabel
 import org.southtyrol.transit.design.ErrorState
 import org.southtyrol.transit.design.Format
@@ -111,6 +113,7 @@ fun JourneyDetailScreen(navigator: Navigator, viewModel: JourneyDetailViewModel 
     val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val found = (state as? DetailState.Found)?.journey
     val headerNow = rememberNow()
+    var showStart by rememberSaveable { mutableStateOf(false) }
     Scaffold(
         modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
         topBar = {
@@ -132,15 +135,40 @@ fun JourneyDetailScreen(navigator: Navigator, viewModel: JourneyDetailViewModel 
                 scrollBehavior = scroll,
             )
         },
+        floatingActionButton = {
+            // Following makes sense until the journey has arrived.
+            val followedId by viewModel.followedId.collectAsStateWithLifecycle()
+            if (found != null && headerNow.isBefore(found.bestArrival)) {
+                val following = followedId == found.id
+                androidx.compose.material3.ExtendedFloatingActionButton(
+                    onClick = { if (following) navigator.follow() else showStart = true },
+                    icon = { Icon(Icons.Rounded.Navigation, contentDescription = null) },
+                    text = { Text(stringResource(if (following) R.string.follow_following else R.string.follow_start)) },
+                )
+            }
+        },
     ) { padding ->
         Box(Modifier.padding(padding).fillMaxSize()) {
             when (val s = state) {
                 DetailState.Loading -> TransitLoading(contained = true)
                 DetailState.Missing -> MessageState(stringResource(R.string.journey_missing), stringResource(R.string.journey_missing_hint), action = stringResource(R.string.action_back), onAction = navigator::back)
                 is DetailState.Error -> ErrorState(s.error, onRetry = viewModel::load)
-                is DetailState.Found -> JourneyDetailContent(s.journey, navigator, Modifier.fillMaxSize(), showHeader = false)
+                // Room below the list for the Start button.
+                is DetailState.Found -> JourneyDetailContent(s.journey, navigator, Modifier.fillMaxSize(), showHeader = false, bottomPadding = 88.dp)
             }
         }
+    }
+    if (showStart && found != null) {
+        StartFollowSheet(
+            journey = found,
+            onDismiss = { showStart = false },
+            onStart = { useLocation ->
+                showStart = false
+                val started = viewModel.startFollowing(found, useLocation)
+                if (started) navigator.follow()
+                started
+            },
+        )
     }
 }
 
@@ -149,12 +177,50 @@ fun JourneyDetailScreen(navigator: Navigator, viewModel: JourneyDetailViewModel 
  * header is left out ([showHeader] false) where the top app bar already shows them.
  */
 @Composable
-fun JourneyDetailContent(journey: Journey, navigator: Navigator, modifier: Modifier = Modifier, showHeader: Boolean = true) {
+fun JourneyDetailContent(journey: Journey, navigator: Navigator, modifier: Modifier = Modifier, showHeader: Boolean = true, bottomPadding: androidx.compose.ui.unit.Dp = 16.dp) {
     val now = rememberNow(10_000)
-    val dark = LocalDarkTheme.current
     val live = hiltViewModel<JourneyLiveViewModel, JourneyLiveViewModel.Factory>(key = "live:" + journey.id) { it.create(journey) }
     val legRuns by live.legRuns.collectAsStateWithLifecycle()
     PollWhileVisible(20_000) { live.poll() }
+    val map = rememberJourneyMap(journey, legRuns, now)
+    val mapState = org.southtyrol.transit.feature.common.rememberExpandableMapState()
+    org.southtyrol.transit.feature.common.ExpandableMapPage(mapState, map.hasLines, map.content, map.camera, modifier) { listModifier ->
+    LazyColumn(listModifier, contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = bottomPadding), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        if (showHeader) item {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text("${Format.time(journey.bestDeparture)} – ${Format.time(journey.bestArrival)}", style = TimeStyles.hero, modifier = Modifier.semantics { heading() })
+                }
+                Text(
+                    listOf(Format.duration(journey.duration), pluralStringResource(R.plurals.changes, journey.changes, journey.changes)).joinToString(" · "),
+                    style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                // Only without a top bar of its own (the detail pane beside the results); the screen's bar shows all this.
+                FreshnessIndicator(if (journey.hasRealtime) Freshness.LIVE else Freshness.SCHEDULED, null, now)
+            }
+        }
+        if (map.hasLines && !mapState.expanded) item {
+            org.southtyrol.transit.feature.common.CompactMapCard(mapState, map.content, map.camera, Modifier.fillMaxWidth().height(220.dp))
+        }
+        itemsIndexed(journey.legs) { index, leg ->
+            val previous = journey.legs.getOrNull(index - 1)
+            if (previous != null && previous.mode.isTransit && leg.mode.isTransit) TransferRow(Duration.between(previous.bestArrival, leg.bestDeparture))
+            if (leg.mode == TransportMode.WALK) WalkLeg(leg, now) else TransitLeg(leg, now, onStop = { gid -> navigator.stop(gid) })
+        }
+        item { FareSection(journey) }
+    }
+    }
+}
+
+/** A journey's map: its legs (dimmed up to where they are now), endpoints, and approaching or ridden vehicles. */
+internal class JourneyMap(val content: MapContent, val camera: CameraRequest.Fit, val hasLines: Boolean)
+
+/**
+ * The map of [journey] at [now], with the matched runs [legRuns] by leg index; [extra] adds markers (e.g.
+ * the user); [focus] is the leg index the camera shows (the whole journey when null).
+ */
+@Composable
+internal fun rememberJourneyMap(journey: Journey, legRuns: Map<Int, TripDetail>, now: Instant, extra: List<MapMarker> = emptyList(), focus: Int? = null): JourneyMap {
     val approaches = remember(journey, legRuns, now) { legApproaches(journey, legRuns, now) }
     val legLines = remember(journey) {
         journey.legs.mapIndexedNotNull { i, leg ->
@@ -169,8 +235,7 @@ fun JourneyDetailContent(journey: Journey, navigator: Navigator, modifier: Modif
             journey.legs.last().to.point?.let { MapMarker("to", it, MarkerKind.DESTINATION, "B") },
         )
     }
-    val mapState = org.southtyrol.transit.feature.common.rememberExpandableMapState()
-    val mapContent = remember(legLines, endpoints, approaches, legRuns, now) {
+    val mapContent = remember(legLines, endpoints, approaches, legRuns, now, extra) {
         // The approach is drawn under the legs; each vehicle carries its line badge.
         val ahead = approaches.map { (i, a) -> MapPolyline("approach$i", a.approach.path, ModeColors.container(journey.legs[i].mode), 4f, dashed = true) }
         val vehicles = approaches.map { (i, a) ->
@@ -193,39 +258,16 @@ fun JourneyDetailContent(journey: Journey, navigator: Navigator, modifier: Modif
                 stale = position.estimated,
             )
         }
-        MapContent(pois = endpoints, vehicles = vehicles + riding, lines = ahead + progress.flatMap { it.second.lines })
+        MapContent(pois = endpoints + extra, vehicles = vehicles + riding, lines = ahead + progress.flatMap { it.second.lines })
     }
     // An approaching vehicle is still before the boarding stop, so outside the journey's own bounds:
     // re-fit once when a leg's vehicle first appears, to include it and the route it still travels.
-    val camera = remember(journey, approaches.keys) {
-        CameraRequest.Fit(lines.flatMap { it.points } + approaches.values.flatMap { it.approach.path })
+    // With a [focus] leg only that leg (and its approaching vehicle) is fitted, re-fitting as the focus moves.
+    val camera = remember(journey.id, approaches.keys, focus) {
+        val focused = focus?.let { f -> legLines.firstOrNull { it.first == f }?.second?.points.orEmpty() + approaches[f]?.approach?.path.orEmpty() }
+        CameraRequest.Fit(focused?.takeIf { it.isNotEmpty() } ?: (lines.flatMap { it.points } + approaches.values.flatMap { it.approach.path }))
     }
-    org.southtyrol.transit.feature.common.ExpandableMapPage(mapState, lines.isNotEmpty(), mapContent, camera, modifier) { listModifier ->
-    LazyColumn(listModifier, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        if (showHeader) item {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Row(verticalAlignment = Alignment.Bottom) {
-                    Text("${Format.time(journey.bestDeparture)} – ${Format.time(journey.bestArrival)}", style = TimeStyles.hero, modifier = Modifier.semantics { heading() })
-                }
-                Text(
-                    listOf(Format.duration(journey.duration), pluralStringResource(R.plurals.changes, journey.changes, journey.changes)).joinToString(" · "),
-                    style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                // Only without a top bar of its own (the detail pane beside the results); the screen's bar shows all this.
-                FreshnessIndicator(if (journey.hasRealtime) Freshness.LIVE else Freshness.SCHEDULED, null, now)
-            }
-        }
-        if (lines.isNotEmpty() && !mapState.expanded) item {
-            org.southtyrol.transit.feature.common.CompactMapCard(mapState, mapContent, camera, Modifier.fillMaxWidth().height(220.dp))
-        }
-        itemsIndexed(journey.legs) { index, leg ->
-            val previous = journey.legs.getOrNull(index - 1)
-            if (previous != null && previous.mode.isTransit && leg.mode.isTransit) TransferRow(Duration.between(previous.bestArrival, leg.bestDeparture))
-            if (leg.mode == TransportMode.WALK) WalkLeg(leg, now) else TransitLeg(leg, now, onStop = { gid -> navigator.stop(gid) })
-        }
-        item { FareSection(journey) }
-    }
-    }
+    return JourneyMap(mapContent, camera, lines.isNotEmpty())
 }
 
 /** A transit leg's vehicle on its way to the boarding stop, with the run it was matched to. */
@@ -264,7 +306,7 @@ private fun legProgress(leg: Leg, line: MapPolyline, run: TripDetail?, now: Inst
 }
 
 @Composable
-private fun TransferRow(wait: Duration) {
+internal fun TransferRow(wait: Duration) {
     Row(Modifier.padding(start = 20.dp), verticalAlignment = Alignment.CenterVertically) {
         Icon(Icons.Rounded.SyncAlt, contentDescription = null, tint = MaterialTheme.colorScheme.tertiary, modifier = Modifier.size(18.dp))
         Spacer(Modifier.width(8.dp))
@@ -276,7 +318,7 @@ private const val WALK_DOTS = 4
 
 /** Walking is visually lighter than transit: a dotted rail and one line of text. */
 @Composable
-private fun WalkLeg(leg: Leg, now: Instant) {
+internal fun WalkLeg(leg: Leg, now: Instant) {
     val walked = (RouteProgress.legFraction(leg, now) * WALK_DOTS).toInt()
     Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min).padding(start = 12.dp)) {
         Column(Modifier.width(24.dp).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -297,10 +339,9 @@ private fun WalkLeg(leg: Leg, now: Instant) {
 }
 
 @Composable
-private fun TransitLeg(leg: Leg, now: Instant, onStop: (String) -> Unit) {
+internal fun TransitLeg(leg: Leg, now: Instant, onStop: (String) -> Unit) {
     var expanded by rememberSaveable(leg.departure.epochSecond, leg.line) { mutableStateOf(false) }
     val status = LocalStatusColors.current
-    val (lineColor, _) = ModeColors.colors(leg.mode, null, null)
     Card(
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
@@ -316,68 +357,14 @@ private fun TransitLeg(leg: Leg, now: Instant, onStop: (String) -> Unit) {
                 }
             }
             if (leg.cancelled) StatusPill(stringResource(org.southtyrol.transit.design.R.string.ds_cancelled), status.cancelled, Icons.Rounded.Warning)
-            Row(Modifier.height(IntrinsicSize.Min)) {
-                val travelled = RouteProgress.legFraction(leg, now)
-                val dimmed = lineColor.copy(alpha = Progress.PASSED_ALPHA)
-                Box(Modifier.width(6.dp).fillMaxHeight().clip(RoundedCornerShape(3.dp)).background(Brush.verticalGradient(0f to dimmed, travelled to dimmed, travelled to lineColor, 1f to lineColor)))
-                Spacer(Modifier.width(12.dp))
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    StopLine(leg.departure, leg.predictedDeparture, leg.from.name, leg.departurePlatform, leg.cancelled, passed = !leg.bestDeparture.isAfter(now), onClick = leg.from.stopGlobalId.takeIf { it.isNotBlank() }?.let { { onStop(it) } })
-                    if (leg.intermediate.isNotEmpty()) {
-                        // A tonal pill on the rail (40 dp, inside a 48 dp touch target).
-                        androidx.compose.material3.FilledTonalButton(
-                            onClick = { expanded = !expanded },
-                            contentPadding = PaddingValues(start = 12.dp, end = 16.dp),
-                            modifier = Modifier.heightIn(min = 40.dp),
-                        ) {
-                            Icon(if (expanded) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore, contentDescription = null, modifier = Modifier.size(20.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text(pluralStringResource(R.plurals.intermediate_stops, leg.intermediate.size, leg.intermediate.size) + " · " + Format.duration(Duration.between(leg.departure, leg.arrival)))
-                        }
-                        AnimatedVisibility(expanded) {
-                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                leg.intermediate.forEach { stop ->
-                                    val time = stop.departure ?: stop.arrival
-                                    Row {
-                                        Text(time?.let { Format.time(stop.predictedDeparture ?: it) } ?: "", style = MaterialTheme.typography.bodySmall, modifier = Modifier.width(80.dp), maxLines = 1)
-                                        val passed = (stop.predictedDeparture ?: stop.departure ?: stop.arrival)?.isAfter(now) == false
-                                        Text(stop.place.name, style = MaterialTheme.typography.bodySmall, color = if (passed) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    StopLine(leg.arrival, leg.predictedArrival, leg.to.name, leg.arrivalPlatform, leg.cancelled, passed = !leg.bestArrival.isAfter(now), onClick = leg.to.stopGlobalId.takeIf { it.isNotBlank() }?.let { { onStop(it) } })
-                }
-            }
+            // The stops as the trip screen draws a run: rail, dots, passed ones dimmed.
+            LegStops(leg, now, expanded, onToggle = { expanded = !expanded }, onStop = onStop)
             leg.notices.forEach { notice ->
                 Row(verticalAlignment = Alignment.Top) {
                     Icon(Icons.Rounded.Warning, contentDescription = null, tint = status.delayed, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
                     Text(notice, style = MaterialTheme.typography.bodySmall)
                 }
-            }
-        }
-    }
-}
-
-
-@Composable
-private fun StopLine(scheduled: Instant, predicted: Instant?, name: String, platform: String, cancelled: Boolean, passed: Boolean, onClick: (() -> Unit)?) {
-    val changed = predicted != null && predicted != scheduled
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth().then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier).heightIn(min = 40.dp),
-    ) {
-        Column(Modifier.width(88.dp)) {
-            Text(Format.time(predicted ?: scheduled), style = TimeStyles.medium, maxLines = 1, softWrap = false, textDecoration = if (cancelled) TextDecoration.LineThrough else null)
-            if (changed) Text(Format.time(scheduled), style = MaterialTheme.typography.labelSmall, textDecoration = TextDecoration.LineThrough, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        Column(Modifier.weight(1f)) {
-            Text(name, style = MaterialTheme.typography.bodyLarge, color = if (passed) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (platform.isNotBlank()) Text(stringResource(org.southtyrol.transit.design.R.string.ds_platform, platform), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                if (predicted != null) DelayLabel(Duration.between(scheduled, predicted).seconds, if (cancelled) ServiceState.CANCELLED else ServiceState.NORMAL, Freshness.LIVE)
             }
         }
     }

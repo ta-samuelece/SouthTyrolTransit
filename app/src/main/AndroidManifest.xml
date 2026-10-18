@@ -12,6 +12,11 @@
     <!-- The one-off timetable import shows a progress notification while it runs. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <!-- A followed journey keeps a foreground service: location type when the user turns location on for it. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <!-- Lets Android 16 show the followed journey as a Live Update (status bar chip). -->
+    <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
 
     <!-- In-app updates from GitHub Releases: Android still asks the user to confirm every install. -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
@@ -138,6 +143,16 @@
             android:name="androidx.work.impl.foreground.SystemForegroundService"
             android:foregroundServiceType="dataSync"
             tools:node="merge" />
+
+        <!-- Follows a started journey until arrival; runs only while a journey is followed. -->
+        <service
+            android:name=".follow.FollowJourneyService"
+            android:exported="false"
+            android:foregroundServiceType="location|specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Shows the next step of a public transport journey the user started following, until arrival." />
+        </service>
 
         <!-- Home-screen widget: next departures at a chosen stop. -->
         <receiver

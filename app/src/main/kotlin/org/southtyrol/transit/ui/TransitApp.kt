@@ -100,6 +100,7 @@ class Navigator(private val nav: NavHostController, start: TopLevel) {
     fun back() { nav.popBackStack() }
     fun results(request: String) = nav.navigate(ResultsRoute(request))
     fun journey(request: String, id: String) = nav.navigate(JourneyRoute(request, id))
+    fun follow() = nav.navigate(FollowRoute) { launchSingleTop = true }
     fun stop(stationKey: String, name: String = "") = nav.navigate(StopRoute(stationKey, name)) { launchSingleTop = true }
     fun trip(tripId: String, serviceDate: String, liveRef: String = "") = nav.navigate(TripRoute(tripId, serviceDate, liveRef)) { launchSingleTop = true }
     fun lines() = nav.navigate(LinesRoute)
@@ -134,7 +135,13 @@ private fun AnimatedContentTransitionScope<NavBackStackEntry>.isTabSwitch() =
     TopLevel.of(initialState.destination) != null && TopLevel.of(targetState.destination) != null
 
 @Composable
-fun TransitApp(startTab: StartTab = StartTab.PLAN, openStop: Pair<String, String>? = null, onStopOpened: () -> Unit = {}) {
+fun TransitApp(
+    startTab: StartTab = StartTab.PLAN,
+    openStop: Pair<String, String>? = null,
+    onStopOpened: () -> Unit = {},
+    openFollow: Boolean = false,
+    onFollowOpened: () -> Unit = {},
+) {
     val nav = rememberNavController()
     val start = remember { TopLevel.of(startTab) }
     val navigator = remember(nav) { Navigator(nav, start) }
@@ -146,6 +153,13 @@ fun TransitApp(startTab: StartTab = StartTab.PLAN, openStop: Pair<String, String
         navigator.select(TopLevel.MAP)
         navigator.stop(key, name)
         onStopOpened()
+    }
+    // Opened from the followed journey's notification: show it under the Plan tab, where journeys start.
+    LaunchedEffect(openFollow) {
+        if (!openFollow) return@LaunchedEffect
+        navigator.select(TopLevel.PLAN)
+        navigator.follow()
+        onFollowOpened()
     }
     val reduced = LocalReducedMotion.current
     val suite = rememberNavigationSuiteScaffoldState()
@@ -208,6 +222,7 @@ fun TransitApp(startTab: StartTab = StartTab.PLAN, openStop: Pair<String, String
             screen<SavedRoute> { SavedScreen(navigator) }
             screen<ResultsRoute> { ResultsScreen(navigator) }
             screen<JourneyRoute> { JourneyDetailScreen(navigator) }
+            screen<FollowRoute> { org.southtyrol.transit.feature.follow.FollowScreen(navigator) }
             screen<StopRoute> { e -> e.toRoute<StopRoute>().let { StopScreen(navigator, it.stationKey, it.name) } }
             screen<TripRoute> { e -> e.toRoute<TripRoute>().let { TripScreen(navigator, it.tripId, it.serviceDate, it.liveRef) } }
             screen<LinesRoute> { LinesScreen(navigator) }

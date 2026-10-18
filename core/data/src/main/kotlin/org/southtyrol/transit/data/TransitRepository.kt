@@ -437,6 +437,13 @@ class TripRepository(
         } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (_: Exception) { null }
     }
 
+    /** [forLeg] for every transit leg of [journey], by leg index; unmatched legs are absent. */
+    suspend fun forJourney(journey: org.southtyrol.transit.model.Journey, language: String): Map<Int, TripDetail> =
+        journey.legs.withIndex()
+            .filter { it.value.mode.isTransit }
+            .mapNotNull { (i, leg) -> forLeg(leg, language)?.let { i to it } }
+            .toMap()
+
     /** Best effort: null on any error or when there is no reference. */
     suspend fun liveTrip(ref: String): LiveTrip? {
         if (ref.isBlank() || live == null) return null

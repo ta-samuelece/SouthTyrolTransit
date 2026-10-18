@@ -27,7 +27,10 @@ object Format {
 
     @Composable
     @ReadOnlyComposable
-    fun time(instant: Instant): String = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale()).format(instant.atZone(TransitZone))
+    fun time(instant: Instant): String = time(instant, locale())
+
+    /** [time] outside Compose (notifications, widgets). */
+    fun time(instant: Instant, locale: Locale): String = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale).format(instant.atZone(TransitZone))
 
     @Composable
     @ReadOnlyComposable
@@ -80,19 +83,21 @@ object Format {
 
     @Composable
     @ReadOnlyComposable
-    fun mode(mode: TransportMode): String = stringResource(
-        when (mode) {
-            TransportMode.BUS -> R.string.ds_mode_bus
-            TransportMode.CITY_BUS -> R.string.ds_mode_city_bus
-            TransportMode.TRAIN -> R.string.ds_mode_train
-            TransportMode.CABLE_CAR -> R.string.ds_mode_cable_car
-            TransportMode.FUNICULAR -> R.string.ds_mode_funicular
-            TransportMode.TRAM -> R.string.ds_mode_tram
-            TransportMode.ON_DEMAND -> R.string.ds_mode_on_demand
-            TransportMode.WALK -> R.string.ds_mode_walk
-            TransportMode.OTHER -> R.string.ds_mode_other
-        },
-    )
+    fun mode(mode: TransportMode): String = stringResource(modeName(mode))
+
+    /** The name of [mode] as a string resource, for use outside Compose too. */
+    @androidx.annotation.StringRes
+    fun modeName(mode: TransportMode): Int = when (mode) {
+        TransportMode.BUS -> R.string.ds_mode_bus
+        TransportMode.CITY_BUS -> R.string.ds_mode_city_bus
+        TransportMode.TRAIN -> R.string.ds_mode_train
+        TransportMode.CABLE_CAR -> R.string.ds_mode_cable_car
+        TransportMode.FUNICULAR -> R.string.ds_mode_funicular
+        TransportMode.TRAM -> R.string.ds_mode_tram
+        TransportMode.ON_DEMAND -> R.string.ds_mode_on_demand
+        TransportMode.WALK -> R.string.ds_mode_walk
+        TransportMode.OTHER -> R.string.ds_mode_other
+    }
 
     @Composable
     @ReadOnlyComposable

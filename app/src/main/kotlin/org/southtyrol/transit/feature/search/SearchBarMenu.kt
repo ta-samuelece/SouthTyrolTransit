@@ -2,7 +2,25 @@
 
 package org.southtyrol.transit.feature.search
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.positionInRoot
+import kotlin.math.roundToInt
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.unit.lerp
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.background
@@ -32,7 +50,6 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.FloatingActionButtonMenu
 import androidx.compose.material3.FloatingActionButtonMenuItem
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -48,21 +65,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
-import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.IntRect
-import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Popup
-import androidx.compose.ui.window.PopupPositionProvider
-import androidx.compose.ui.window.PopupProperties
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -98,88 +106,115 @@ class SearchBarMenuViewModel @Inject constructor(private val settings: SettingsR
 }
 
 /**
- * The app mark at the end of the map's search bar, and the menu it opens: Saved, the language, the
- * theme and Settings. A Material FAB menu rising from the mark (which turns into the close button) when
- * the bar is at the bottom; the same items dropping below it when the bar is at the top, which Material's
- * menu cannot do. Language turns the menu into the choices; the theme changes at once and the menu stays.
+ * The app mark at the end of the map's search bar. A tap reports where it is ([onOpen], in root
+ * coordinates); the map screen then shows [SearchBarMenu] over the map, from that spot.
  */
 @Composable
-fun SearchBarMenuButton(navigator: Navigator, opensUp: Boolean, viewModel: SearchBarMenuViewModel = hiltViewModel()) {
-    var open by remember { mutableStateOf(false) }
-    Box {
-        IconButton(onClick = { open = true }) {
-            // The mark in a ring of the accent colour, 2 dp apart.
-            Box(
-                Modifier.size(40.dp).border(2.dp, MaterialTheme.colorScheme.primary, CircleShape).padding(4.dp)
-                    .background(MaterialTheme.colorScheme.primary, CircleShape),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    painterResource(R.drawable.ic_app_mark), contentDescription = stringResource(R.string.map_menu),
-                    tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(20.dp),
-                )
-            }
+fun SearchBarMenuButton(onOpen: (Rect) -> Unit) {
+    var anchor by remember { mutableStateOf(Rect.Zero) }
+    Box(Modifier.onGloballyPositioned { anchor = it.boundsInRoot() }) {
+        MarkButton(progress = 0f, label = stringResource(R.string.map_menu), onClick = { onOpen(anchor) })
+    }
+}
+
+/**
+ * The menu the app mark opens: Saved, the language, the theme and Settings. The mark itself morphs into
+ * the menu's close button. A Material FAB menu rising from it when the bar is at the bottom; the same
+ * items dropping below it when the bar is at the top, which Material's menu cannot do. Language turns
+ * the menu into the choices; the theme changes at once and the menu stays.
+ *
+ * Drawn in the map screen's own layout, over the map, like the locate button's menu: a popup window,
+ * created on every opening and first sized to its content, made the opening stutter and the items appear
+ * to slide in from the screen's edge.
+ */
+@Composable
+fun SearchBarMenu(navigator: Navigator, opensUp: Boolean, anchor: Rect, onClose: () -> Unit, viewModel: SearchBarMenuViewModel = hiltViewModel()) {
+    val theme by viewModel.theme.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
+    // Collapsed for the first frame, so the items grow in and the mark morphs; collapsed again to close.
+    var expanded by remember { mutableStateOf(false) }
+    var languages by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { expanded = true }
+    val progress by animateFloatAsState(if (expanded) 1f else 0f, MaterialTheme.motionScheme.fastSpatialSpec(), label = "mark")
+    // Back to the map: the menu folds away and the close button turns back into the mark.
+    fun dismiss() {
+        expanded = false
+        scope.launch {
+            delay(CLOSE_MS)
+            onClose()
         }
-        if (open) {
-            val density = LocalDensity.current
-            Popup(
-                popupPositionProvider = remember(opensUp, density) { AtAnchorEnd(opensUp, density) },
-                onDismissRequest = { open = false },
-                properties = PopupProperties(focusable = true),
-            ) {
-                SearchBarMenu(navigator, opensUp, viewModel, onClose = { open = false })
+    }
+    // Away from the map: gone at once, so nothing of it lingers over the next screen.
+    fun leave(then: () -> Unit) {
+        onClose()
+        then()
+    }
+    BackHandler(onBack = ::dismiss)
+    val items = if (languages) languageItems(onPick = { option -> leave { AppLanguage.select(option) } }, onBack = { languages = false })
+    else mainItems(
+        theme,
+        onSaved = { leave(navigator::saved) },
+        onLanguage = { languages = true },
+        onTheme = viewModel::nextTheme,
+        onSettings = { leave(navigator::settings) },
+    )
+    val closeButton: @Composable () -> Unit = { MarkButton(progress, stringResource(R.string.map_menu_close), onClick = ::dismiss) }
+    Box(Modifier.fillMaxSize()) {
+        // The rest of the map: a tap there closes the menu instead of reaching the map.
+        Box(Modifier.fillMaxSize().pointerInput(Unit) { detectTapGestures { dismiss() } })
+        AtAnchor(anchor, opensUp) {
+            if (opensUp) {
+                FloatingActionButtonMenu(expanded = expanded, button = closeButton, horizontalAlignment = Alignment.End) {
+                    items.forEach { item ->
+                        FloatingActionButtonMenuItem(
+                            onClick = item.onClick,
+                            text = { Text(item.label) },
+                            icon = { MenuIcon(item.icon) },
+                            modifier = Modifier.menuItemSemantics(item),
+                            containerColor = item.container(),
+                            contentColor = contentColorFor(item.container()),
+                        )
+                    }
+                }
+            } else {
+                // Mirrored: the close button over the mark, the items below it, the first at the top.
+                Column(Modifier.padding(horizontal = MENU_PADDING), horizontalAlignment = Alignment.End) {
+                    closeButton()
+                    AnimatedVisibility(
+                        expanded,
+                        enter = fadeIn() + expandVertically(expandFrom = Alignment.Top),
+                        exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Top),
+                    ) {
+                        Column(Modifier.padding(top = 8.dp), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            items.reversed().forEach { MenuPill(it) }
+                        }
+                    }
+                }
             }
         }
     }
 }
 
+/**
+ * Places [content] so its button lands on the mark ([anchor], in root coordinates, less this layout's
+ * own position; nothing is drawn until that is known): Material's menu pads 16 dp beside and below its
+ * button, the downward column 16 dp beside it.
+ */
 @Composable
-private fun SearchBarMenu(navigator: Navigator, opensUp: Boolean, viewModel: SearchBarMenuViewModel, onClose: () -> Unit) {
-    val theme by viewModel.theme.collectAsStateWithLifecycle()
-    val scope = rememberCoroutineScope()
-    // Shown collapsed for one frame, so the items rise in with Material's stagger; collapsed again before closing.
-    var expanded by remember { mutableStateOf(false) }
-    var languages by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { expanded = true }
-    fun close(then: () -> Unit = {}) {
-        expanded = false
-        scope.launch {
-            delay(CLOSE_MS)
-            onClose()
-            then()
-        }
-    }
-    val items = if (languages) languageItems(onPick = { option -> close { AppLanguage.select(option) } }, onBack = { languages = false })
-    else mainItems(
-        theme,
-        onSaved = { close(navigator::saved) },
-        onLanguage = { languages = true },
-        onTheme = viewModel::nextTheme,
-        onSettings = { close(navigator::settings) },
-    )
-    val closeButton: @Composable () -> Unit = { CloseButton(onClick = { close() }) }
-    if (opensUp) {
-        FloatingActionButtonMenu(expanded = expanded, button = closeButton, horizontalAlignment = Alignment.End) {
-            items.forEach { item ->
-                FloatingActionButtonMenuItem(
-                    onClick = item.onClick,
-                    text = { Text(item.label) },
-                    icon = { MenuIcon(item.icon) },
-                    modifier = Modifier.menuItemSemantics(item),
-                    containerColor = item.container(),
-                    contentColor = contentColorFor(item.container()),
-                )
-            }
-        }
-    } else {
-        // Mirrored: the close button over the mark, the items below it, the first at the top.
-        Column(Modifier.padding(horizontal = MENU_PADDING), horizontalAlignment = Alignment.End) {
-            closeButton()
-            AnimatedVisibility(expanded, enter = fadeIn() + expandVertically(expandFrom = Alignment.Top)) {
-                Column(Modifier.padding(top = 8.dp), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    items.reversed().forEach { MenuPill(it) }
-                }
-            }
+private fun AtAnchor(anchor: Rect, opensUp: Boolean, content: @Composable () -> Unit) {
+    var origin by remember { mutableStateOf<Offset?>(null) }
+    Layout(
+        content,
+        Modifier.fillMaxSize().onGloballyPositioned { origin = it.positionInRoot() }
+            .graphicsLayer { alpha = if (origin == null) 0f else 1f },
+    ) { measurables, constraints ->
+        val placeable = measurables.first().measure(constraints.copy(minWidth = 0, minHeight = 0))
+        val padding = MENU_PADDING.roundToPx()
+        val at = anchor.translate(-(origin ?: Offset.Zero))
+        layout(constraints.maxWidth, constraints.maxHeight) {
+            val x = at.right.roundToInt() + padding - placeable.width
+            val y = if (opensUp) at.bottom.roundToInt() + padding - placeable.height else at.top.roundToInt()
+            placeable.place(x, y)
         }
     }
 }
@@ -255,14 +290,30 @@ private fun MenuIcon(icon: ImageVector?) {
     if (icon != null) Icon(icon, contentDescription = null) else Spacer(Modifier.size(24.dp))
 }
 
-/** The mark turned into the menu's close button: drawn exactly where the mark is. */
+/**
+ * The app mark at [progress] 0 - white route on a primary disc in a primary ring - and the menu's close
+ * button at 1 - an X on a larger primary disc. In between the ring fades into the growing disc and the
+ * mark turns into the X, so opening and closing the menu morphs one into the other in place.
+ */
 @Composable
-private fun CloseButton(onClick: () -> Unit) {
-    val label = stringResource(R.string.map_menu_close)
-    Surface(onClick = onClick, shape = CircleShape, color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(48.dp).semantics { contentDescription = label }) {
-        Box(contentAlignment = Alignment.Center) {
-            Icon(Icons.Rounded.Close, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary)
-        }
+private fun MarkButton(progress: Float, label: String, onClick: () -> Unit) {
+    val primary = MaterialTheme.colorScheme.primary
+    val onPrimary = MaterialTheme.colorScheme.onPrimary
+    Box(
+        Modifier.size(48.dp).clip(CircleShape).clickable(onClick = onClick).semantics { contentDescription = label },
+        contentAlignment = Alignment.Center,
+    ) {
+        val ring = 1f - progress.coerceIn(0f, 1f)
+        if (ring > 0f) Box(Modifier.size(40.dp).graphicsLayer { alpha = ring }.border(2.dp, primary, CircleShape))
+        Box(Modifier.size(lerp(32.dp, 48.dp, progress)).background(primary, CircleShape))
+        Icon(
+            painterResource(R.drawable.ic_app_mark), contentDescription = null, tint = onPrimary,
+            modifier = Modifier.size(20.dp).graphicsLayer { alpha = 1f - progress; rotationZ = 90f * progress },
+        )
+        Icon(
+            Icons.Rounded.Close, contentDescription = null, tint = onPrimary,
+            modifier = Modifier.size(24.dp).graphicsLayer { alpha = progress; rotationZ = -90f * (1f - progress) },
+        )
     }
 }
 
@@ -279,20 +330,6 @@ private fun MenuPill(item: MenuItem) {
             Spacer(Modifier.width(12.dp))
             Text(item.label, style = MaterialTheme.typography.titleMedium)
         }
-    }
-}
-
-/**
- * Places the menu so its close button lands exactly on the mark: Material's menu pads 16 dp at the sides
- * and below its button, the downward one 16 dp at the sides only.
- */
-private class AtAnchorEnd(private val opensUp: Boolean, density: Density) : PopupPositionProvider {
-    private val padding = with(density) { MENU_PADDING.roundToPx() }
-
-    override fun calculatePosition(anchorBounds: IntRect, windowSize: IntSize, layoutDirection: LayoutDirection, popupContentSize: IntSize): IntOffset {
-        val x = anchorBounds.right - popupContentSize.width + padding
-        val y = if (opensUp) anchorBounds.bottom - popupContentSize.height + padding else anchorBounds.top
-        return IntOffset(x, y)
     }
 }
 

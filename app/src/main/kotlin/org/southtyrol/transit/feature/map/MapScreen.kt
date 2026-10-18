@@ -357,6 +357,8 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel(), s
 
     Scaffold(snackbarHost = { SnackbarHost(snackbar) }, contentWindowInsets = WindowInsets(0)) { padding ->
         // The map is intentionally edge-to-edge; overlays handle their own insets.
+        // Where the search bar's app mark is while its menu is open (root coordinates), else null.
+        var searchMenu by remember { mutableStateOf<androidx.compose.ui.geometry.Rect?>(null) }
         Box(Modifier.fillMaxSize().padding(padding)) {
             val locate = prefs.locateButton
             val barAtBottom = prefs.searchBar == SearchBarPosition.BOTTOM
@@ -373,7 +375,7 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel(), s
             )
 
             Column(Modifier.statusBarsPadding().padding(12.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (!barAtBottom) MapSearchBar(onOpen = searchViewModel::open, navigator = navigator, menuOpensUp = false)
+                if (!barAtBottom) MapSearchBar(onOpen = searchViewModel::open, onMenu = { searchMenu = it })
                 val (fetchedAt, error) = feed
                 if (prefs.showVehicles && error != null && (fetchedAt == null || FreshnessPolicy.feed(fetchedAt, now) != Freshness.LIVE)) {
                     StatusBanner(stringResource(R.string.map_vehicles_unavailable), kind = BannerKind.ERROR)
@@ -390,7 +392,7 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel(), s
             // At the bottom the search bar shares the row with the locate button: it leaves the button's
             // corner free (the FAB menu's own 16 dp margin, the 56 dp button, 16 dp between them).
             if (barAtBottom) MapSearchBar(
-                onOpen = searchViewModel::open, navigator = navigator,
+                onOpen = searchViewModel::open, onMenu = { searchMenu = it },
                 modifier = Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(
                     start = if (locate == LocateButtonPosition.BOTTOM_START) 88.dp else 16.dp,
                     end = if (locate == LocateButtonPosition.BOTTOM_END) 88.dp else 16.dp,
@@ -416,6 +418,11 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel(), s
                         )
                         .navigationBarsPadding(),
                 )
+            }
+
+            // The app mark's menu, from where the mark is; over the map and the locate button.
+            searchMenu?.let { anchor ->
+                org.southtyrol.transit.feature.search.SearchBarMenu(navigator, opensUp = barAtBottom, anchor = anchor, onClose = { searchMenu = null })
             }
 
             if (searchOpen) MapSearchView(searchViewModel, navigator)

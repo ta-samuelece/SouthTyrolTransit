@@ -215,7 +215,7 @@ class MapSearchViewModel @Inject constructor(
  * the app menu - saved items, lines and settings - the one place Settings is reached from.
  */
 @Composable
-fun MapSearchBar(onOpen: () -> Unit, navigator: Navigator, modifier: Modifier = Modifier, menuOpensUp: Boolean = true) {
+fun MapSearchBar(onOpen: () -> Unit, onMenu: (androidx.compose.ui.geometry.Rect) -> Unit, modifier: Modifier = Modifier) {
     Surface(
         onClick = onOpen, shape = RoundedCornerShape(28.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh,
         // The one raised surface on the map: tone alone does not separate it from light map tiles.
@@ -228,7 +228,7 @@ fun MapSearchBar(onOpen: () -> Unit, navigator: Navigator, modifier: Modifier = 
                 stringResource(R.string.map_search_hint), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f),
             )
-            SearchBarMenuButton(navigator, opensUp = menuOpensUp)
+            SearchBarMenuButton(onOpen = onMenu)
         }
     }
 }

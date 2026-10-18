@@ -1,6 +1,9 @@
 package org.southtyrol.transit.ui
 
 import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.activity.BackEventCompat
+import androidx.compose.animation.core.Easing
+import androidx.compose.animation.scaleIn
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
@@ -189,25 +192,29 @@ fun TransitApp(
     }
 
     // Sub-views slide in from the end; switching tabs (and reduced motion) is a quick fade.
-    // Back follows the system's predictive-back look (as in the stock Settings app): while the gesture
-    // is held, the current screen shrinks to a rounded card with the previous one visible behind it;
-    // on release it slides away. Navigation Compose seeks these pop transitions with the gesture, so
-    // the curves keep most of the gesture range in the "shrunk card" phase.
     val enter: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition = {
         if (reduced || isTabSwitch()) fadeIn(tween(180)) else slideInHorizontally(tween(300)) { it / 5 } + fadeIn(tween(300))
     }
     val exit: AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition = {
         if (reduced || isTabSwitch()) fadeOut(tween(120)) else slideOutHorizontally(tween(300)) { -it / 10 } + fadeOut(tween(200))
     }
+    // Back, by gesture or button, looks like the system's predictive back: the closing screen shrinks to a
+    // rounded card that leans away from the swiped edge, the previous screen settles behind it, and on
+    // release the card fades out. Navigation Compose seeks these with the gesture and, on release, plays
+    // the rest; the card stays opaque for the first half and is gone by 80%, so it never lingers.
+    // The gesture needs its own predictive transitions: without them the library's default (a shrink with
+    // no fade) runs, which is what left the closed card on top after the gesture.
     val popEnter: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition = {
-        if (reduced || isTabSwitch()) fadeIn(tween(180))
-        else slideInHorizontally(tween(BACK_MS, easing = BackParallax)) { -it / 10 } + fadeIn(tween(BACK_MS, easing = BackParallax), initialAlpha = 0.6f)
+        if (reduced || isTabSwitch()) fadeIn(tween(180)) else backEnter()
     }
     val popExit: AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition = {
-        if (reduced || isTabSwitch()) fadeOut(tween(120))
-        else scaleOut(tween(BACK_MS, easing = BackShrink), targetScale = 0.9f) +
-            slideOutHorizontally(tween(BACK_MS, easing = BackSlide)) { it } +
-            fadeOut(tween(BACK_MS, easing = BackSlide))
+        if (reduced || isTabSwitch()) fadeOut(tween(120)) else backExit(BackEventCompat.EDGE_LEFT)
+    }
+    val predictivePopEnter: AnimatedContentTransitionScope<NavBackStackEntry>.(Int) -> EnterTransition = {
+        if (reduced || isTabSwitch()) fadeIn(tween(BACK_MS)) else backEnter()
+    }
+    val predictivePopExit: AnimatedContentTransitionScope<NavBackStackEntry>.(Int) -> ExitTransition = { edge ->
+        if (reduced || isTabSwitch()) fadeOut(tween(BACK_MS, easing = BackFade)) else backExit(edge)
     }
 
     // Offers a newer GitHub release (if any) on start; also shows download progress for manual updates.
@@ -249,6 +256,7 @@ fun TransitApp(
             NavHost(
                 nav, startDestination = start.route,
                 enterTransition = enter, exitTransition = exit, popEnterTransition = popEnter, popExitTransition = popExit,
+                predictivePopEnterTransition = predictivePopEnter, predictivePopExitTransition = predictivePopExit,
             ) {
                 screen<PlanRoute> { PlannerScreen(navigator) }
                 screen<MapRoute> { MapScreen(navigator) }
@@ -280,18 +288,31 @@ fun TransitApp(
     }
 }
 
-private const val BACK_MS = 400
+private const val BACK_MS = 350
 
-/** Scale reaches 90% in the first half of the back gesture, then holds while the card slides away. */
-private val BackShrink = androidx.compose.animation.core.Easing { f -> (f / 0.5f).coerceAtMost(1f).let { 1f - (1f - it) * (1f - it) } }
+/**
+ * Easings over the whole back transition, whose first part the gesture drives (release usually comes
+ * between 20% and 50%) and whose rest plays after release.
+ */
+/** The card reaches 90% in the first third, then holds. */
+private val BackShrink = Easing { f -> (f / 0.35f).coerceAtMost(1f).let { 1f - (1f - it) * (1f - it) } }
 
-/** Barely moves while the gesture is held (a small nudge), then slides off quickly on release. */
-private val BackSlide = androidx.compose.animation.core.Easing { f ->
-    if (f < 0.6f) 0.06f * (f / 0.6f) else 0.06f + 0.94f * ((f - 0.6f) / 0.4f).let { it * it }
+/** Opaque while held (as the system's card), then fades out fast: gone at 80%, so never left on top. */
+private val BackFade = Easing { f -> ((f - 0.5f) / 0.3f).coerceIn(0f, 1f) }
+
+/** The screen behind settles from a slight shrink while the card shrinks away. */
+private val BackParallax = Easing { f -> (f / 0.6f).coerceAtMost(1f).let { 1f - (1f - it) * (1f - it) } }
+
+/** The closing screen: shrinks to a card leaning away from the swiped edge, then fades out. */
+private fun backExit(edge: Int): ExitTransition {
+    val away = if (edge == BackEventCompat.EDGE_RIGHT) -1 else 1
+    return scaleOut(tween(BACK_MS, easing = BackShrink), targetScale = 0.9f) +
+        slideOutHorizontally(tween(BACK_MS, easing = BackShrink)) { away * it / 16 } +
+        fadeOut(tween(BACK_MS, easing = BackFade))
 }
 
-/** The screen behind settles from a slight offset while the card shrinks. */
-private val BackParallax = androidx.compose.animation.core.Easing { f -> (f / 0.6f).coerceAtMost(1f).let { 1f - (1f - it) * (1f - it) } }
+/** The screen revealed behind it: grows from 95% as the card leaves. */
+private fun backEnter(): EnterTransition = scaleIn(tween(BACK_MS, easing = BackParallax), initialScale = 0.95f)
 
 /**
  * A destination whose content gets rounded corners while it leaves (e.g. shrinking into a card on

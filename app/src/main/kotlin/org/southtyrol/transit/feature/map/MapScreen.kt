@@ -373,7 +373,7 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel(), s
             )
 
             Column(Modifier.statusBarsPadding().padding(12.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (!barAtBottom) MapSearchBar(onOpen = searchViewModel::open, navigator = navigator)
+                if (!barAtBottom) MapSearchBar(onOpen = searchViewModel::open, navigator = navigator, menuOpensUp = false)
                 val (fetchedAt, error) = feed
                 if (prefs.showVehicles && error != null && (fetchedAt == null || FreshnessPolicy.feed(fetchedAt, now) != Freshness.LIVE)) {
                     StatusBanner(stringResource(R.string.map_vehicles_unavailable), kind = BannerKind.ERROR)

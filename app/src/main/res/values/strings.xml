@@ -163,6 +163,9 @@
     <string name="map_layer_cars">Car sharing</string>
     <string name="map_search_hint">Search stops and lines</string>
     <string name="map_menu">Menu</string>
+    <string name="map_menu_close">Close menu</string>
+    <string name="map_menu_language">Language: %1$s</string>
+    <string name="map_menu_theme">Theme: %1$s</string>
     <string name="map_center_me">Show my location</string>
     <string name="map_saved_stops_show">Show saved stops</string>
     <string name="map_saved_stops_close">Close saved stops</string>

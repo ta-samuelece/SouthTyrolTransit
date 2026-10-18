@@ -157,6 +157,9 @@
     <string name="map_layer_cars">Car sharing</string>
     <string name="map_search_hint">Cerca fermate e linee</string>
     <string name="map_menu">Menu</string>
+    <string name="map_menu_close">Chiudi menu</string>
+    <string name="map_menu_language">Lingua: %1$s</string>
+    <string name="map_menu_theme">Tema: %1$s</string>
     <string name="map_center_me">Mostra la mia posizione</string>
     <string name="map_saved_stops_show">Mostra le fermate salvate</string>
     <string name="map_saved_stops_close">Chiudi le fermate salvate</string>

@@ -2,16 +2,9 @@
 
 package org.southtyrol.transit.feature.search
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -32,7 +25,6 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.LocationOff
 import androidx.compose.material.icons.rounded.NearMe
-import androidx.compose.material.icons.rounded.Route
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Star
@@ -223,8 +215,7 @@ class MapSearchViewModel @Inject constructor(
  * the app menu - saved items, lines and settings - the one place Settings is reached from.
  */
 @Composable
-fun MapSearchBar(onOpen: () -> Unit, navigator: Navigator, modifier: Modifier = Modifier) {
-    var menu by remember { mutableStateOf(false) }
+fun MapSearchBar(onOpen: () -> Unit, navigator: Navigator, modifier: Modifier = Modifier, menuOpensUp: Boolean = true) {
     Surface(
         onClick = onOpen, shape = RoundedCornerShape(28.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh,
         // The one raised surface on the map: tone alone does not separate it from light map tiles.
@@ -237,35 +228,7 @@ fun MapSearchBar(onOpen: () -> Unit, navigator: Navigator, modifier: Modifier = 
                 stringResource(R.string.map_search_hint), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f),
             )
-            Box {
-                IconButton(onClick = { menu = true }) {
-                    Box(
-                        Modifier.size(32.dp).background(MaterialTheme.colorScheme.primary, CircleShape),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            painterResource(R.drawable.ic_app_mark), contentDescription = stringResource(R.string.map_menu),
-                            tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(20.dp),
-                        )
-                    }
-                }
-                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, shape = RoundedCornerShape(20.dp)) {
-                    fun go(action: () -> Unit) { menu = false; action() }
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.settings_saved)) }, onClick = { go(navigator::saved) },
-                        leadingIcon = { Icon(Icons.Rounded.Star, contentDescription = null, tint = MaterialTheme.colorScheme.tertiary) },
-                    )
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.lines_title)) }, onClick = { go(navigator::lines) },
-                        leadingIcon = { Icon(Icons.Rounded.Route, contentDescription = null) },
-                    )
-                    HorizontalDivider(Modifier.padding(vertical = 8.dp))
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.settings_title)) }, onClick = { go(navigator::settings) },
-                        leadingIcon = { Icon(Icons.Rounded.Settings, contentDescription = null) },
-                    )
-                }
-            }
+            SearchBarMenuButton(navigator, opensUp = menuOpensUp)
         }
     }
 }

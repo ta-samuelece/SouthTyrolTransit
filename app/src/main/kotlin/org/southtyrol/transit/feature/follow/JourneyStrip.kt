@@ -112,7 +112,7 @@ fun JourneyStrip(view: FollowView?, onOpen: () -> Unit, modifier: Modifier = Mod
 /** The countdown to the step: live green with the live glyph only when a live time backs it; a delay as "+3". */
 @Composable
 private fun Countdown(view: FollowView, now: Instant) {
-    val status = inverseStatus()
+    val status = stripStatus()
     val delayMinutes = (view.step.delaySeconds ?: 0) / 60
     if (delayMinutes > 0) Text("+$delayMinutes", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = status.delayed)
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -121,15 +121,25 @@ private fun Countdown(view: FollowView, now: Instant) {
     }
 }
 
-/** The strip sits on an inverse surface: its status colours are the other theme's. */
+/** The strip is dark in every theme, so its status colours are always the dark theme's. */
 @Composable
-private fun inverseStatus(): StatusColors = if (LocalDarkTheme.current) StatusColors.Light else StatusColors.Dark
+private fun stripStatus(): StatusColors = StatusColors.Dark
 
-/** The strip's colour: inverse surface, error when the journey is off plan. */
+/**
+ * The strip's colour: dark in every theme, as Google Maps' trip strip - the inverse surface in the light
+ * theme, black in the dark and pure-black themes - and error when the journey is off plan.
+ */
 @Composable
-fun journeyStripColor(view: FollowView?): Color =
-    if (view?.offPlan != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.inverseSurface
+fun journeyStripColor(view: FollowView?): Color = when {
+    view?.offPlan != null -> MaterialTheme.colorScheme.error
+    LocalDarkTheme.current -> Color.Black
+    else -> MaterialTheme.colorScheme.inverseSurface
+}
 
 @Composable
-private fun contentColor(view: FollowView?): Color =
-    if (view?.offPlan != null) MaterialTheme.colorScheme.onError else MaterialTheme.colorScheme.inverseOnSurface
+private fun contentColor(view: FollowView?): Color = when {
+    view?.offPlan != null -> MaterialTheme.colorScheme.onError
+    // On black, the dark theme's own text colour; on the light theme's inverse surface, its pair.
+    LocalDarkTheme.current -> MaterialTheme.colorScheme.onSurface
+    else -> MaterialTheme.colorScheme.inverseOnSurface
+}

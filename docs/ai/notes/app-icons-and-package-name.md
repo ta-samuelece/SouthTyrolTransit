@@ -29,12 +29,24 @@ Running `tools/generate_icons.py` is only one of five steps; README section 1 li
 
 # Treat alias names as permanent
 
-`MainActivity` has no launcher filter - only the aliases do. `AppIcons.set` explicitly disables every alias
-but the chosen one, and `AppIcons.current` treats the manifest default state as `AppIcon.DEFAULT`. So:
+`MainActivity` has no launcher filter - only the aliases do. `AppIcons.set` explicitly enables the chosen
+alias and disables every other alias **of its time**; `AppIcons.current` is the explicitly enabled alias,
+else `AppIcon.DEFAULT`. So:
 
-- the alias with `android:enabled="true"` (`.IconAbstractSilhouette`) must be `AppIcon.DEFAULT`;
-- Abstract Silhouette is also hard-coded in `mipmap-anydpi/ic_launcher.xml`, the splash
+- the alias with `android:enabled="true"` (`.IconGradientPath` since 2026-10-18, before that
+  `.IconAbstractSilhouette`) must be `AppIcon.DEFAULT`;
+- each icon's themed (monochrome) silhouette is drawn by hand: `ic_launcher_monochrome` (mountains and
+  route) by default, `ic_launcher_monochrome_route` (route only) for Gradient Path, chosen per slug by
+  `MONOCHROME` in `generate_icons.py`. Android 16 appears to show it on the always-on display for the
+  journey notification (inferred from a device report, 2026-10-18), so a mismatched silhouette shows there;
+- the default is also hard-coded in `mipmap-anydpi/ic_launcher.xml`, the splash
   `windowSplashScreenAnimatedIcon` (`values/styles.xml`) and the widget's `previewImage`;
+- changing the default to a **new** alias leaves users who had chosen an icon with two launcher entries
+  (their choice, plus the new alias enabled by the manifest), because their earlier `set` never disabled
+  an alias that did not exist. `AppIcons.reconcile`, at every start in `TransitApplication.onCreate`,
+  disables the default when another icon is explicitly chosen; until the app is first opened after the
+  update, both entries show. Users who never chose follow the manifest and switch to the new default;
+  a home-screen shortcut to the old alias may disappear;
 - renaming or removing an alias a user has selected most likely leaves the app with **no launcher entry**
   after the update (inferred). Add new aliases; don't rename old ones.
 
@@ -49,4 +61,5 @@ switcher and widget configuration. The in-app updater's FileProvider authority i
 
 # What was checked
 
-The script's imports, the 12 activity-aliases (six icons) and `AppIcons.component` re-read on 2026-10-09.
+The script's imports, the activity-aliases (seven icons since Gradient Path) and `AppIcons.component` re-read on 2026-10-18; the
+reconcile path is reasoned from the component-state rules, not tried on a device.

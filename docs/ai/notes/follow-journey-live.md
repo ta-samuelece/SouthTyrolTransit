@@ -1,7 +1,7 @@
 ---
 type: Reference
 title: Following a journey live - the service, the step logic and what it cannot know
-description: A started journey lives only in memory (ActiveJourney) and is lost when Android ends the app; a foreground service (location or specialUse type) runs FollowEngine, which applies matched runs' live times to the plan, computes the step and off-plan state in core/model, and feeds the screen and the notification; planner delays are frozen at planning time; the Android 16 Live Update needs POST_PROMOTED_NOTIFICATIONS and a channel above MIN.
+description: A started journey lives only in memory (ActiveJourney) and is lost when Android ends the app; a foreground service (location or specialUse type) runs FollowEngine, which applies matched runs' live times to the plan, computes the step and off-plan state in core/model, and feeds the screen and the notification; planner delays are frozen at planning time; the notification channel must be default importance to show on the lock screen, and a swiped-away notification is posted again because Android 14+ allows no non-dismissable one; the Android 16 Live Update needs POST_PROMOTED_NOTIFICATIONS.
 tags: [journey, follow, service, notification, location, realtime]
 generated:
   by: claude-code/claude-opus-5-5
@@ -33,7 +33,12 @@ notification. Built on 2026-10-17; not yet confirmed on a device.
   matched, reads location every 10 s / 20 m when allowed, and recomputes every 15 s and on every new
   snapshot or fix. It stops the journey itself 2 min after arrival (`JourneyFollow.finished`).
 - The screen (`FollowScreen`, route `FollowRoute`, no arguments) and the notification only read
-  `FollowView`; so does the Plan tab's "Journey in progress" item (before Recent journeys), which opens it; `FollowText` holds the shared wording so both say the same.
+  `FollowView`; so does the **journey strip** (`feature/follow/JourneyStrip.kt`), which `TransitApp` draws
+  under the `NavigationSuiteScaffold` on every screen but `FollowRoute` and the map search, and which opens
+  it. `FollowText` holds the shared wording (`title`, `text`, `strip`) so all three say the same. While
+  the strip shows, the scaffold consumes the bottom `navigationBars` inset (the bar stops padding for the
+  gesture area; the strip's spacer takes it) and is clipped to 24 dp bottom corners over the strip's
+  colour, as in the design (2026-10-18). The strip replaced a "Journey in progress" item on the Plan tab.
 
 # The logic, in core/model
 
@@ -45,10 +50,14 @@ notification. Built on 2026-10-17; not yet confirmed on a device.
   refreshed while following. A walk after a late leg is moved to start when that leg arrives (same
   length); without this, a late last bus followed by a walk ended following while the user was still on
   board.
-- Freshness is that of the step's own leg (for a walk, the leg it leads to): its merged run's, else the
-  planner's live times count as Live for 5 minutes after the start (`TRIP_UPDATE_MAX_AGE`), then Not
-  current. `FollowView.live` (Live and a delay behind the step) is the one rule for drawing a time live,
-  used by the hero, the timeline and the notification.
+- Freshness is that of the step's own leg (for a walk, the leg it leads to): Live when its merged run
+  has a GTFS-RT prediction; else, when the planner reported live times for the leg, Live for 5 minutes
+  after the start (`TRIP_UPDATE_MAX_AGE`), then Not current; else the run's (Scheduled). A matched run
+  **without** a prediction must not win over the planner's delay: it did at first, and a leg showing
+  "+2" was labelled Scheduled (seen on the emulator, 2026-10-18). `FollowView.live` (Live and a delay
+  behind the step) is the one rule for drawing a time live, used by the hero, the timeline, the strip
+  and the notification. Minutes in the notification round down like `Format.countdown`, so the
+  notification and the screen agree.
 - `step`: the first leg not yet arrived decides - a walk (counting down to the next boarding), BOARD
   before a transit leg leaves, RIDE (with `change` when another transit leg follows), ARRIVED.
 - `offPlan`, in order: a cancelled leg still ahead; a connection that can no longer be made (previous
@@ -62,7 +71,13 @@ same destination, leaving now. The user starts the new journey themselves.
 
 # The notification
 
-Channel `follow` (IMPORTANCE_LOW, silent), id 2. Title and text from `FollowText`, a Stop action
+Channel `journey`, id 2: **IMPORTANCE_DEFAULT with no sound or vibration**, lock-screen visibility public.
+The first version used IMPORTANCE_LOW, which Android counts as silent and keeps off the lock screen by
+default; importance cannot be raised on an existing channel, so the channel got a new id and
+`createChannels` deletes the old `follow`. **It cannot be made non-dismissable**: since Android 14 the
+system lets the user swipe away any ongoing notification except media, calls and a few exempt packages
+(`canBeNonDismissible` in `NotificationManagerService`), so a delete intent (`ACTION_DISMISSED`) makes
+the service post it again at once while the journey runs. Title and text from `FollowText`, a Stop action
 (`PendingIntent.getService` with `ACTION_STOP`) and a tap that opens `FollowRoute` through
 `MainActivity.openFollowIntent` (the same pattern as the widget's stop intent). The small icon is the
 step's own (`ic_mode_*`, `ic_follow_change`, `ic_follow_arrived`), because Android 16 shows it in the

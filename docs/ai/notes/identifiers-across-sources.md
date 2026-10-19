@@ -52,8 +52,11 @@ stop_id segment scheme. `AlertCheckWorker` matches notifications on the same str
 # `liveRef` - the link from a board to EFA trip live times
 
 `EfaXml.departures` builds `stateless|stopID|tripCode|yyyyMMdd|HHmm` (planned time from
-`itdDateTimeBaseTimetable` when present); `EfaClient.liveTrip` splits on `|` and requires exactly five
-non-blank parts. `LiveOverlay` copies the matched EFA entry's `liveRef` onto the timetable departure, which
+`itdDateTimeBaseTimetable` when present); `EfaXml.leg` builds the same for a planned trip leg
+(`Leg.liveRef`, from the means of transport's `stateless` and `tC` - the board's `tripCode`, both `34`
+for Railjet 87 in the fixtures - and the departure point), which is how a followed journey refreshes
+its delays ([following](./follow-journey-live.md)). `EfaClient.liveTrip` splits on `|` and requires
+exactly five non-blank parts. `LiveOverlay` copies the matched EFA entry's `liveRef` onto the timetable departure, which
 is how a GTFS trip gets EFA per-stop times ([live times](./live-times-two-sources.md)). The line
 `stateless` contains spaces - never trim or whitespace-split it; the date must stay in the `EFA_DATE`
 format (`yyyyMMdd`, no offset). A broken format fails **silently**: `TripRepository.liveTrip` swallows

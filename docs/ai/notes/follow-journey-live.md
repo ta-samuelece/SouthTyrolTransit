@@ -1,11 +1,11 @@
 ---
 type: Reference
 title: Following a journey live - the service, the step logic and what it cannot know
-description: A started journey lives only in memory (ActiveJourney) and is lost when Android ends the app; a foreground service (location or specialUse type) runs FollowEngine, which applies matched runs' live times to the plan, computes the step and off-plan state in core/model, and feeds the screen and the notification; planner delays are frozen at planning time; the notification channel must be default importance to show on the lock screen, and a swiped-away notification is posted again because Android 14+ allows no non-dismissable one; the Android 16 Live Update needs POST_PROMOTED_NOTIFICATIONS.
+description: A started journey lives only in memory (ActiveJourney) and is lost when Android ends the app; a foreground service (location or specialUse type) runs FollowEngine, which applies matched runs' live times to the plan, computes the step and off-plan state in core/model, and feeds the screen and the notification; the planner's delays are re-fetched every 30 s through each leg's liveRef; the notification channel must be default importance to show on the lock screen, and a swiped-away notification is posted again because Android 14+ allows no non-dismissable one; the Android 16 Live Update needs POST_PROMOTED_NOTIFICATIONS.
 tags: [journey, follow, service, notification, location, realtime]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-17T16:00:00Z"
+  at: "2026-10-19T16:30:00Z"
 status: stable
 ---
 
@@ -30,7 +30,9 @@ notification. Built on 2026-10-17; not yet confirmed on a device.
   none; a refused type falls back to the other once.
 - `FollowEngine` matches legs to timetable runs with `TripRepository.forJourney` (retrying every 2 min
   until one matches - the timetable may still be downloading), polls realtime every 30 s while a run is
-  matched, reads location every 10 s / 20 m when allowed, and recomputes every 15 s and on every new
+  matched, fetches the journey planner's live times (`TripRepository.liveTrip`, the trip screen's
+  stop-sequence request) every 30 s for each transit leg not yet arrived, reads location every 10 s /
+  20 m when allowed, and recomputes every 15 s and on every new
   snapshot or fix. It stops the journey itself 2 min after arrival (`JourneyFollow.finished`).
 - The screen (`FollowScreen`, route `FollowRoute`, no arguments) and the notification only read
   `FollowView`; so does the **journey strip** (`feature/follow/JourneyStrip.kt`), which `TransitApp` draws
@@ -47,15 +49,23 @@ notification. Built on 2026-10-17; not yet confirmed on a device.
 
 `JourneyFollow.kt`, tested by `JourneyFollowTest`:
 
-- `LiveJourney.apply` copies a merged run's predictions and cancellation onto its planner leg (boarding
-  call by `Approaches.boardingIndex`, alighting = the first later call at the leg's destination station).
-  Without a matched run the leg keeps the **planner's times as of planning** - EFA delays are not
-  refreshed while following. A walk after a late leg is moved to start when that leg arrives (same
+- **Planner delays are refreshed** (2026-10-19): they used to be frozen at planning time, so a bus
+  GTFS-RT had nothing for showed its delay from the moment of Start and turned "Not current" after
+  5 minutes (seen on a device, line 111). Each EFA trip leg now carries `Leg.liveRef`, built by
+  `EfaXml.leg` in the board's format (see [identifiers](./identifiers-across-sources.md)).
+  `LiveJourney.applyPlanner` replaces the planned delays with the latest fetch (boarding by station and
+  planned departure within 2 min, alighting = the first later call at the destination station, null when
+  neither end has a delay). The latest fetch is applied however old - a failed or empty fetch keeps the
+  last one, so a leg never falls back to its planning-time delay - and only its freshness ages.
+- `LiveJourney.apply` then copies a merged run's GTFS-RT predictions and cancellation onto that leg
+  (boarding call by `Approaches.boardingIndex`, alighting = the first later call at the leg's destination
+  station); a call without a prediction keeps the planner's time. A walk after a late leg is moved to start when that leg arrives (same
   length); without this, a late last bus followed by a walk ended following while the user was still on
   board.
 - Freshness is that of the step's own leg (for a walk, the leg it leads to): Live when its merged run
   has a GTFS-RT prediction; else, when the planner reported live times for the leg, Live for 5 minutes
-  after the start (`TRIP_UPDATE_MAX_AGE`), then Not current; else the run's (Scheduled). A matched run
+  (`TRIP_UPDATE_MAX_AGE`) after their last applied fetch - or after the start, before any - then Not
+  current, with "updated ... ago" counting from the same moment; else the run's (Scheduled). A matched run
   **without** a prediction must not win over the planner's delay: it did at first, and a leg showing
   "+2" was labelled Scheduled (seen on the emulator, 2026-10-18). `FollowView.live` (Live and a delay
   behind the step) is the one rule for drawing a time live, used by the hero, the timeline, the strip
@@ -110,5 +120,8 @@ stops are `LegStops` (`feature/common/StopTimeline.kt`): the trip screen's own `
 leg looks like an opened bus trip. Its map is
 fitted to the current step's leg (`rememberJourneyMap(focus = ...)`) and re-fits when the step moves on.
 
-Unit tests (`JourneyFollowTest`, 13 cases), the full unit-test run and `lintDebug` on 2026-10-17. Not run
+Unit tests (`JourneyFollowTest`, 13 cases), the full unit-test run and `lintDebug` on 2026-10-17. The
+planner refresh (2026-10-19): `core:model` tests only (`JourneyFollowTest`, 14 cases), in a container
+without the Android SDK - the parser test, `app` and `lintDebug` were not run, and the refresh has not
+been seen on a device or against the live EFA. Not run
 on a device: the Live Update chip, the location service type on Android 14+, and permission denials.

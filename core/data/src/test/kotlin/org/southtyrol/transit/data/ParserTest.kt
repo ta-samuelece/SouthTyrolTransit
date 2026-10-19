@@ -73,6 +73,8 @@ class EfaXmlTest {
         assertTrue(train.intermediate.isNotEmpty())
         assertTrue(train.geometry.size > 2)
         assertEquals("212", first.legs[1].line)
+        // Same reference format as a departure board entry, so a followed leg can fetch live times.
+        assertEquals("apb:03102:T:H:26a|66000468|24|20261005|0801", train.liveRef)
         assertNotNull(first.fare)
         val fare = first.fare!!
         assertEquals(BigDecimal("9.00"), fare.single?.price)

@@ -7,9 +7,12 @@ import java.time.Instant
  * Live times of matched timetable runs applied to a planned journey: each run (by leg index, see
  * [LegMatch]) updates its leg's boarding, alighting and intermediate times and its cancellation. A run
  * without a prediction for a call leaves the planner's time (which may carry the planner's own delay).
+ * The planner's own live times can be refreshed first with [applyPlanner].
  * A walk after a late leg starts when that leg arrives and keeps its planned length.
  */
 object LiveJourney {
+    private const val TOLERANCE_SECONDS = 120L
+
     fun apply(journey: Journey, runs: Map<Int, TripDetail>): Journey {
         val legs = journey.legs.mapIndexed { i, leg -> runs[i]?.let { apply(leg, it) } ?: leg }.toMutableList()
         for (i in 1 until legs.size) {
@@ -42,6 +45,42 @@ object LiveJourney {
             intermediate = intermediate,
             realtime = leg.realtime || board.predictedDeparture != null || alight.predictedArrival != null,
             cancelled = leg.cancelled || run.state == ServiceState.CANCELLED || board.state in lost || alight.state in lost,
+        )
+    }
+
+    /**
+     * The planner's live stop times of the leg's run applied to it: boarding matched by station and
+     * planned departure (within two minutes), alighting = the first later call at the leg's destination
+     * station. Replaces the delays the leg was planned with. Null when neither end has a delay - nothing
+     * fresh to show.
+     */
+    fun applyPlanner(leg: Leg, live: List<LiveStopTime>): Leg? {
+        fun near(planned: Instant?, scheduled: Instant?) =
+            planned != null && scheduled != null && kotlin.math.abs(Duration.between(planned, scheduled).seconds) <= TOLERANCE_SECONDS
+        val boarding = live.indexOfFirst { it.stationKey == leg.from.stopGlobalId && near(leg.departure, it.scheduledDeparture) }
+        if (boarding < 0) return null
+        val alighting = (boarding + 1 until live.size).firstOrNull { live[it].stationKey == leg.to.stopGlobalId } ?: return null
+        val board = live[boarding]
+        val alight = live[alighting]
+        val depDelay = board.departureDelayMinutes ?: board.arrivalDelayMinutes
+        val arrDelay = alight.arrivalDelayMinutes ?: alight.departureDelayMinutes
+        if (depDelay == null && arrDelay == null) return null
+        val between = live.subList(boarding + 1, alighting)
+        val intermediate = leg.intermediate.map { s ->
+            val call = between.firstOrNull { it.stationKey == s.place.stopGlobalId && (near(s.arrival, it.scheduledArrival) || near(s.departure, it.scheduledDeparture)) }
+                ?: return@map s
+            val arr = call.arrivalDelayMinutes ?: call.departureDelayMinutes
+            val dep = call.departureDelayMinutes ?: call.arrivalDelayMinutes
+            s.copy(
+                predictedArrival = s.arrival?.let { a -> arr?.let { a.plusSeconds(it * 60L) } } ?: s.predictedArrival,
+                predictedDeparture = s.departure?.let { d -> dep?.let { d.plusSeconds(it * 60L) } } ?: s.predictedDeparture,
+            )
+        }
+        return leg.copy(
+            predictedDeparture = depDelay?.let { leg.departure.plusSeconds(it * 60L) } ?: leg.predictedDeparture,
+            predictedArrival = arrDelay?.let { leg.arrival.plusSeconds(it * 60L) } ?: leg.predictedArrival,
+            intermediate = intermediate,
+            realtime = true,
         )
     }
 

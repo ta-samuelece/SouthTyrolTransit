@@ -212,6 +212,8 @@ data class Leg(
     val notices: List<String> = emptyList(),
     val distanceMeters: Int? = null,
     val lineName: String = "",
+    /** Journey-planner reference to this run (see [TripLiveDataSource]); empty when unknown. */
+    val liveRef: String = "",
 ) {
     val bestDeparture: Instant get() = predictedDeparture ?: departure
     val bestArrival: Instant get() = predictedArrival ?: arrival

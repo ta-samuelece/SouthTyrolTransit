@@ -206,7 +206,6 @@ fun SettingsScreen(navigator: Navigator, viewModel: SettingsViewModel = hiltView
                 }
                 item {
                     ChoiceRow(stringResource(R.string.settings_language), stringResource(languageLabel(language))) { choice = CHOICE_LANGUAGE }
-                    Text(stringResource(R.string.settings_ladin_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 8.dp))
                 }
             }
         }
@@ -459,7 +458,6 @@ private fun languageLabel(option: AppLanguage.Option) = when (option) {
     AppLanguage.Option.ENGLISH -> R.string.language_english
     AppLanguage.Option.GERMAN -> R.string.language_german
     AppLanguage.Option.ITALIAN -> R.string.language_italian
-    AppLanguage.Option.LADIN -> R.string.language_ladin
 }
 
 @Composable

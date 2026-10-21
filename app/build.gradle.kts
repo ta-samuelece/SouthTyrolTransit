@@ -82,9 +82,6 @@ android {
         htmlReport = true
         // Version-bump suggestions are handled deliberately via the version catalog.
         disable += setOf("NewerVersionAvailable", "GradleDependency", "AndroidGradlePluginVersion", "OldTargetApi")
-        // Ladin intentionally falls back to German via the locale list (lld,de,it); en/de/it
-        // completeness is enforced by TranslationsTest instead.
-        warning += "MissingTranslation"
     }
 }
 

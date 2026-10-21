@@ -4,7 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.io.File
 
-/** English, German and Italian must stay complete (Ladin deliberately falls back to German). */
+/** English, German and Italian must stay complete. */
 class TranslationsTest {
     private val pattern = Regex("<(?:string|plurals) name=\"([^\"]+)\"")
     private fun keys(file: File) = pattern.findAll(file.readText()).map { it.groupValues[1] }.toSet()

@@ -39,4 +39,4 @@ Statuses:
 | Shared mobility (bike/car sharing) | Partially implemented | Optional map layers from ODH Mobility. South Tyrol data is sparse or stale, so the layers are off by default and stale values are flagged |
 | Parking / Park & Ride | Implemented | ODH parking occupancy layer (on by default) with freshness |
 | Offline timetable | Implemented | ~150 MB GTFS imported into a ~96 MB SQLite database, refreshed weekly on Wi-Fi with atomic swap |
-| Multilingual UI | Implemented (en, de, it) / Partial (Ladin) | Ladin UI falls back to German. Ladin feed texts are shown when supplied |
+| Multilingual UI | Implemented (en, de, it) | Ladin was offered with a German UI and was removed |

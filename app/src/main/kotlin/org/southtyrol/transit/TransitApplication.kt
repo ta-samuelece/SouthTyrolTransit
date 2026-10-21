@@ -23,6 +23,7 @@ class TransitApplication : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
         Notifications.createChannels(this)
+        org.southtyrol.transit.di.AppLanguage.dropLadin()
         // Before anything else, so an update never leaves two launcher entries for longer than needed.
         org.southtyrol.transit.ui.AppIcons.reconcile(this)
         // Registering the periodic sync replaces its constraints, so it must use the saved mobile-data

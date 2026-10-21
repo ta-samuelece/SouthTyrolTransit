@@ -208,11 +208,10 @@
     <string name="settings_title">Impostazioni</string>
     <string name="settings_language">Lingua</string>
     <string name="language_system">Lingua di sistema</string>
+    <string name="language_system_short">Sistema</string>
     <string name="language_english">English</string>
     <string name="language_german">Deutsch</string>
     <string name="language_italian">Italiano</string>
-    <string name="language_ladin">Ladin</string>
-    <string name="settings_ladin_note">Ladino: gli avvisi di servizio sono mostrati in ladino quando l\'operatore li fornisce; gli altri testi sono in tedesco.</string>
     <string name="settings_appearance">Aspetto</string>
     <string name="theme_system">Sistema</string>
     <string name="theme_light">Chiaro</string>
@@ -380,7 +379,6 @@
     <string name="onboarding_welcome_body">Partenze, percorsi e avvisi di servizio per autobus, treni e funivie in tutto l\'Alto Adige. Un\'app non ufficiale, costruita solo con dati aperti.</string>
     <string name="onboarding_language">Scegli la lingua</string>
     <string name="onboarding_phone_language">Lingua del telefono</string>
-    <string name="onboarding_ladin_hint">Tradotto in parte; il resto appare in tedesco.</string>
     <string name="onboarding_get_started">Inizia</string>
     <string name="onboarding_location_title">Trova le fermate intorno a te</string>
     <string name="onboarding_location_body">Consenti la posizione per partire da dove sei. Tutto il resto funziona anche senza.</string>

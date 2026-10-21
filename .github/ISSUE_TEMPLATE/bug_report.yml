@@ -113,7 +113,6 @@ body:
         - English
         - German
         - Italian
-        - Ladin
 
   - type: dropdown
     id: connection

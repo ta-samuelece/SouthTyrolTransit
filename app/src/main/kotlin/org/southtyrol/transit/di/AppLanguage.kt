@@ -12,8 +12,6 @@ object AppLanguage : LanguageProvider {
         ENGLISH("en"),
         GERMAN("de"),
         ITALIAN("it"),
-        // Ladin UI strings fall back to German (then Italian) where no Ladin translation exists.
-        LADIN("lld,de,it"),
     }
 
     override fun current(): String {
@@ -40,9 +38,16 @@ object AppLanguage : LanguageProvider {
             "en" -> Option.ENGLISH
             "de" -> Option.GERMAN
             "it" -> Option.ITALIAN
-            "lld" -> Option.LADIN
             else -> Option.SYSTEM
         }
+    }
+
+    /**
+     * Ladin was a UI language until 2026-10-21 (locale list `lld,de,it`, shown in German): whoever still
+     * has it gets German, what they saw. Called at app start.
+     */
+    fun dropLadin() {
+        if (AppCompatDelegate.getApplicationLocales()[0]?.language == "lld") select(Option.GERMAN)
     }
 
     fun select(option: Option) {

@@ -43,7 +43,6 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.LightMode
 import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material.icons.rounded.Smartphone
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.Translate
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
@@ -260,27 +259,22 @@ private fun mainItems(theme: ThemeMode, onSaved: () -> Unit, onLanguage: () -> U
 @Composable
 private fun languageItems(onPick: (AppLanguage.Option) -> Unit, onBack: () -> Unit): List<MenuItem> {
     val current = AppLanguage.selected()
-    val order = listOf(AppLanguage.Option.ENGLISH, AppLanguage.Option.GERMAN, AppLanguage.Option.ITALIAN, AppLanguage.Option.LADIN, AppLanguage.Option.SYSTEM)
+    val order = listOf(AppLanguage.Option.ENGLISH, AppLanguage.Option.GERMAN, AppLanguage.Option.ITALIAN, AppLanguage.Option.SYSTEM)
     return order.map { option ->
         val name = languageName(option)
-        // The current one checked, the phone's language its own icon, the others aligned with no icon.
-        val icon = when {
-            option == current -> Icons.Rounded.Check
-            option == AppLanguage.Option.SYSTEM -> Icons.Rounded.Smartphone
-            else -> null
-        }
-        MenuItem(name, icon, { onPick(option) }, selected = option == current)
+        // The current one checked, the others aligned with no icon.
+        MenuItem(name, if (option == current) Icons.Rounded.Check else null, { onPick(option) }, selected = option == current)
     } + MenuItem(stringResource(R.string.action_back), Icons.AutoMirrored.Rounded.ArrowBack, onBack)
 }
 
 @Composable
 private fun languageName(option: AppLanguage.Option): String = stringResource(
     when (option) {
-        AppLanguage.Option.SYSTEM -> R.string.language_system
+        // The menu is narrow: "System", not "System default" as in Settings.
+        AppLanguage.Option.SYSTEM -> R.string.language_system_short
         AppLanguage.Option.ENGLISH -> R.string.language_english
         AppLanguage.Option.GERMAN -> R.string.language_german
         AppLanguage.Option.ITALIAN -> R.string.language_italian
-        AppLanguage.Option.LADIN -> R.string.language_ladin
     },
 )
 

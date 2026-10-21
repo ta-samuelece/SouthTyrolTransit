@@ -217,11 +217,10 @@
     <string name="settings_title">Settings</string>
     <string name="settings_language">Language</string>
     <string name="language_system">System default</string>
+    <string name="language_system_short">System</string>
     <string name="language_english">English</string>
     <string name="language_german">Deutsch</string>
     <string name="language_italian">Italiano</string>
-    <string name="language_ladin">Ladin</string>
-    <string name="settings_ladin_note">Ladin: service notices are shown in Ladin when the operator provides them; other texts fall back to German.</string>
     <string name="settings_appearance">Appearance</string>
     <string name="theme_system">System</string>
     <string name="theme_light">Light</string>
@@ -390,7 +389,6 @@
     <string name="onboarding_welcome_body">Departures, journeys and service notices for buses, trains and cable cars across South Tyrol. An unofficial app, built only on open data.</string>
     <string name="onboarding_language">Choose your language</string>
     <string name="onboarding_phone_language">Phone language</string>
-    <string name="onboarding_ladin_hint">Partly translated; the rest is shown in German.</string>
     <string name="onboarding_get_started">Get started</string>
     <string name="onboarding_location_title">Find the stops around you</string>
     <string name="onboarding_location_body">Allow location so the app can start from where you are. Everything else works without it.</string>

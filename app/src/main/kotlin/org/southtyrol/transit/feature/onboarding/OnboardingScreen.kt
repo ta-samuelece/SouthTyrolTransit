@@ -330,7 +330,7 @@ private fun TextPair(title: String, hint: String?, modifier: Modifier = Modifier
 
 // --- Welcome and language ---
 
-private val languages = listOf(AppLanguage.Option.GERMAN, AppLanguage.Option.ITALIAN, AppLanguage.Option.ENGLISH, AppLanguage.Option.LADIN)
+private val languages = listOf(AppLanguage.Option.GERMAN, AppLanguage.Option.ITALIAN, AppLanguage.Option.ENGLISH)
 
 /** The listed language the phone itself uses; English, the app's fallback, when it is none of them. */
 private fun phoneLanguage(): AppLanguage.Option {
@@ -343,7 +343,6 @@ private fun languageLabel(option: AppLanguage.Option) = when (option) {
     AppLanguage.Option.ENGLISH -> R.string.language_english
     AppLanguage.Option.GERMAN -> R.string.language_german
     AppLanguage.Option.ITALIAN -> R.string.language_italian
-    AppLanguage.Option.LADIN -> R.string.language_ladin
 }
 
 /** The language in effect: the app's own choice, or the phone's when it follows the system. */
@@ -378,11 +377,7 @@ private fun ColumnScope.WelcomeStep(onNext: () -> Unit) {
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     RadioButton(selected = isSelected, onClick = null)
-                    TextPair(
-                        stringResource(languageLabel(option)),
-                        if (option == AppLanguage.Option.LADIN) stringResource(R.string.onboarding_ladin_hint) else null,
-                        Modifier.weight(1f),
-                    )
+                    TextPair(stringResource(languageLabel(option)), null, Modifier.weight(1f))
                     if (option == phone) Text(stringResource(R.string.onboarding_phone_language), style = MaterialTheme.typography.labelMedium)
                 }
             }

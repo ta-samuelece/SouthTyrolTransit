@@ -163,6 +163,20 @@ class EfaXmlTest {
         assertNotNull(stops.first().point)
     }
 
+    @Test fun onlineStopSearchKeysStopsByStation() {
+        val stops = StopSearchRepository.namedStops(EfaXml.places(fixture("efa_stopfinder_list.xml")))
+        assertEquals(listOf("it:22021:998"), stops.map { it.id })
+        assertEquals("it:22021:998", stops[0].stationKey)
+    }
+
+    @Test fun onlineNearbyStopsHaveDistancesAndNoDuplicates() {
+        val center = org.southtyrol.transit.model.Point(46.4979, 11.3541)
+        val stops = StopSearchRepository.nearbyStops(EfaXml.coordStops(fixture("efa_coord.xml")), center)
+        assertTrue(stops.isNotEmpty())
+        assertEquals(stops.size, stops.map { it.id }.toSet().size)
+        assertTrue(stops.all { it.id == it.stationKey && it.distanceMeters != null })
+    }
+
     @Test fun addInfoAlerts() {
         val alerts = EfaXml.alerts(fixture("efa_addinfo.xml"), Instant.parse("2026-10-04T18:00:00Z"))
         assertTrue(alerts.size in 30..65)

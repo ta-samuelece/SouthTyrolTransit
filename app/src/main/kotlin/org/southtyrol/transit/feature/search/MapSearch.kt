@@ -69,7 +69,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.southtyrol.transit.R
-import org.southtyrol.transit.data.EfaClient
+import org.southtyrol.transit.data.StopSearchRepository
 import org.southtyrol.transit.data.LanguageProvider
 import org.southtyrol.transit.data.LineRepository
 import org.southtyrol.transit.data.SavedItem
@@ -91,10 +91,8 @@ import org.southtyrol.transit.location.LocationResult
 import org.southtyrol.transit.model.DataError
 import org.southtyrol.transit.model.DataException
 import org.southtyrol.transit.model.Line
-import org.southtyrol.transit.model.PlaceType
 import org.southtyrol.transit.model.Point
 import org.southtyrol.transit.model.Stop
-import org.southtyrol.transit.model.TransitScheduleDataSource
 import org.southtyrol.transit.model.TransportMode
 import org.southtyrol.transit.ui.Navigator
 import javax.inject.Inject
@@ -119,8 +117,7 @@ data class SearchState(
 /** The map's search: stops and lines by name, plus saved and nearby stops while nothing is typed. */
 @HiltViewModel
 class MapSearchViewModel @Inject constructor(
-    private val schedule: TransitScheduleDataSource,
-    private val efa: EfaClient,
+    private val stopSearch: StopSearchRepository,
     private val lines: LineRepository,
     private val location: LocationProvider,
     private val language: LanguageProvider,
@@ -144,11 +141,10 @@ class MapSearchViewModel @Inject constructor(
             _search.map { it.query.trim() }.distinctUntilChanged().debounce(250).collectLatest { query ->
                 if (query.length < 2) { _search.update { it.copy(stops = emptyList(), lines = emptyList(), loading = false, error = null) }; return@collectLatest }
                 _search.update { it.copy(loading = true) }
-                val lang = language.current()
                 // Lines come only from the offline timetable; without it the section simply stays empty.
                 val found = runCatching { lines.search(query) }.getOrDefault(emptyList())
                 try {
-                    val stops = if (schedule.isAvailable()) schedule.searchStops(query, lang) else efaStops(query, lang)
+                    val stops = stopSearch.search(query, language.current())
                     _search.update { it.copy(stops = stops, lines = found, loading = false, error = null) }
                 } catch (e: DataException) {
                     _search.update { it.copy(stops = emptyList(), lines = found, loading = false, error = e.error) }
@@ -158,11 +154,6 @@ class MapSearchViewModel @Inject constructor(
         // Restored open (after the process was stopped): fill nearby stops again.
         if (_open.value && location.hasPermission()) locate()
     }
-
-    /** Without a cached timetable, stop search goes through the EFA stop finder. */
-    private suspend fun efaStops(query: String, lang: String): List<Stop> = efa.search(query, lang)
-        .filter { it.type == PlaceType.STOP && it.stopGlobalId.isNotBlank() && it.point != null }
-        .map { Stop(it.stopGlobalId, it.name, it.point!!, stationKey = it.stopGlobalId) }
 
     fun query(value: String) { handle["q"] = value; _search.update { it.copy(query = value) } }
 
@@ -189,8 +180,7 @@ class MapSearchViewModel @Inject constructor(
             when (val result = location.current()) {
                 is LocationResult.Found -> {
                     try {
-                        val lang = language.current()
-                        val stops = if (schedule.isAvailable()) schedule.nearbyStops(result.point, 800.0, lang, 25) else efaNearby(result.point, lang)
+                        val stops = stopSearch.nearby(result.point, language.current())
                         _nearby.value = NearbyState.Found(stops, result.point !in org.southtyrol.transit.model.Geo.SouthTyrol)
                     } catch (e: DataException) {
                         _nearby.value = NearbyState.Error(e.error)
@@ -201,11 +191,6 @@ class MapSearchViewModel @Inject constructor(
             }
         }
     }
-
-    private suspend fun efaNearby(point: Point, lang: String): List<Stop> = efa.nearbyStops(point, 800, lang)
-        .filter { it.stopGlobalId.isNotBlank() && it.point != null }
-        .map { Stop(it.stopGlobalId, it.name, it.point!!, stationKey = it.stopGlobalId, distanceMeters = org.southtyrol.transit.model.Geo.distance(point, it.point!!)) }
-        .distinctBy { it.id }
 
     fun denied() { _nearby.value = NearbyState.PermissionDenied }
 }

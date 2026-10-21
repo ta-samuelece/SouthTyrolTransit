@@ -36,7 +36,7 @@ import org.southtyrol.transit.data.RecentItem
 import org.southtyrol.transit.data.SavedItem
 import org.southtyrol.transit.data.SavedKind
 import org.southtyrol.transit.data.SavedRepository
-import org.southtyrol.transit.data.ScheduleStore
+import org.southtyrol.transit.data.ScheduleRepository
 import org.southtyrol.transit.data.SettingsRepository
 import org.southtyrol.transit.location.LocationProvider
 import org.southtyrol.transit.location.LocationResult
@@ -124,7 +124,7 @@ class PlannerViewModel @Inject constructor(
     private val settings: SettingsRepository,
     private val location: LocationProvider,
     private val language: LanguageProvider,
-    scheduleStore: ScheduleStore,
+    timetable: ScheduleRepository,
     private val handle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -140,12 +140,12 @@ class PlannerViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val savedJourneys: StateFlow<List<SavedItem>> = saved.saved.map { items -> items.filter { it.kind == SavedKind.JOURNEY } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-    val scheduleInfo = scheduleStore.info
-    val scheduleStatus = scheduleStore.status
+    val scheduleInfo = timetable.info
+    val scheduleStatus = timetable.status
 
     init {
         viewModelScope.launch {
-            scheduleStore.loadInfo()
+            timetable.loadInfo()
             val prefs = settings.current()
             _state.update { if (handle.get<String>(KEY) == null) it.copy(wheelchair = prefs.wheelchair, walkingSpeed = prefs.walkingSpeed) else it }
         }

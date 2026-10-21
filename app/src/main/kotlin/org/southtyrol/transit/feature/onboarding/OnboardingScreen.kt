@@ -93,7 +93,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.southtyrol.transit.R
 import org.southtyrol.transit.data.ScheduleStatus
-import org.southtyrol.transit.data.ScheduleStore
+import org.southtyrol.transit.data.ScheduleRepository
 import org.southtyrol.transit.data.SettingsRepository
 import org.southtyrol.transit.data.StartTab
 import org.southtyrol.transit.data.ThemeMode
@@ -134,21 +134,21 @@ object OnboardingGate {
 @HiltViewModel
 class OnboardingViewModel @Inject constructor(
     private val settings: SettingsRepository,
-    private val store: ScheduleStore,
+    private val timetable: ScheduleRepository,
     private val work: BackgroundWork,
 ) : ViewModel() {
     val prefs: StateFlow<UserSettings> = settings.settings.stateIn(viewModelScope, SharingStarted.Eagerly, UserSettings())
-    val schedule = store.info
-    val status = store.status
+    val schedule = timetable.info
+    val status = timetable.status
 
-    init { viewModelScope.launch { store.loadInfo() } }
+    init { viewModelScope.launch { timetable.loadInfo() } }
 
     fun alerts(value: Boolean) = viewModelScope.launch { settings.setAlertNotifications(value); work.setAlertChecks(value) }
 
     /** Also re-registers the download, so a choice of mobile data starts it right away. */
     fun metered(value: Boolean) = viewModelScope.launch {
         settings.setScheduleOnMetered(value)
-        work.scheduleTimetableRefresh(allowMetered = value, initialSync = store.activeName() == null)
+        work.scheduleTimetableRefresh(allowMetered = value, initialSync = !timetable.downloaded())
     }
 
     fun startTab(value: StartTab) = viewModelScope.launch { settings.setStartTab(value) }

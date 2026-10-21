@@ -76,7 +76,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.southtyrol.transit.LocalDarkTheme
 import org.southtyrol.transit.R
-import org.southtyrol.transit.data.EfaClient
+import org.southtyrol.transit.data.StopSearchRepository
 import org.southtyrol.transit.data.LanguageProvider
 import org.southtyrol.transit.data.MapRepository
 import org.southtyrol.transit.data.SavedKind
@@ -95,7 +95,6 @@ import org.southtyrol.transit.map.TransitMap
 import org.southtyrol.transit.model.DataError
 import org.southtyrol.transit.model.DataException
 import org.southtyrol.transit.model.Geo
-import org.southtyrol.transit.model.PlaceType
 import org.southtyrol.transit.model.Point
 import org.southtyrol.transit.model.Stop
 import org.southtyrol.transit.model.TransitScheduleDataSource
@@ -118,8 +117,7 @@ data class StopQueryState(val query: String = "", val loading: Boolean = false, 
 /** Stop search by name: offline timetable when available, otherwise the EFA stop finder. */
 @HiltViewModel
 class StopSearchViewModel @Inject constructor(
-    private val schedule: TransitScheduleDataSource,
-    private val efa: EfaClient,
+    private val stops: StopSearchRepository,
     private val language: LanguageProvider,
 ) : ViewModel() {
     private val _state = MutableStateFlow(StopQueryState())
@@ -133,10 +131,7 @@ class StopSearchViewModel @Inject constructor(
                 if (query.length < 2) { _state.update { it.copy(results = emptyList(), loading = false, error = null) }; return@collectLatest }
                 _state.update { it.copy(loading = true) }
                 try {
-                    val lang = language.current()
-                    val results = if (schedule.isAvailable()) schedule.searchStops(query, lang) else efa.search(query, lang)
-                        .filter { it.type == PlaceType.STOP && it.stopGlobalId.isNotBlank() && it.point != null }
-                        .map { Stop(it.stopGlobalId, it.name, it.point!!, stationKey = it.stopGlobalId) }
+                    val results = stops.search(query, language.current())
                     _state.update { it.copy(results = results, loading = false, error = null) }
                 } catch (e: DataException) {
                     _state.update { it.copy(results = emptyList(), loading = false, error = e.error) }

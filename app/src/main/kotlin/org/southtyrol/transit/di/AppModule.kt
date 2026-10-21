@@ -22,8 +22,10 @@ import org.southtyrol.transit.data.OdhRealtime
 import org.southtyrol.transit.data.PlacesRepository
 import org.southtyrol.transit.data.RealtimeRepository
 import org.southtyrol.transit.data.SavedRepository
+import org.southtyrol.transit.data.ScheduleRepository
 import org.southtyrol.transit.data.ScheduleStore
 import org.southtyrol.transit.data.SettingsRepository
+import org.southtyrol.transit.data.StopSearchRepository
 import org.southtyrol.transit.data.TransitHttp
 import org.southtyrol.transit.data.TripRepository
 import org.southtyrol.transit.data.UserDao
@@ -88,6 +90,12 @@ object AppModule {
 
     @Provides @Singleton
     fun places(efa: EfaClient, schedule: TransitScheduleDataSource): PlacesRepository = PlacesRepository(efa, schedule)
+
+    @Provides @Singleton
+    fun stopSearch(schedule: TransitScheduleDataSource, efa: EfaClient): StopSearchRepository = StopSearchRepository(schedule, efa)
+
+    @Provides @Singleton
+    fun timetable(store: ScheduleStore): ScheduleRepository = ScheduleRepository(store)
 
     @Provides @Singleton
     fun trips(schedule: TransitScheduleDataSource, realtime: RealtimeRepository, efa: EfaClient): TripRepository = TripRepository(schedule, realtime, efa)

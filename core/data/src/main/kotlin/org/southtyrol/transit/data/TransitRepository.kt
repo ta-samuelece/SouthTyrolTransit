@@ -353,6 +353,44 @@ class PlacesRepository(private val geocoder: GeocodingLocationDataSource, privat
     }
 }
 
+/**
+ * Stops by name or near a point: from the offline timetable, or - before it has been downloaded - from
+ * the EFA stop finder. Online stops use the station key (the EFA global id) as their id, like timetable
+ * stations, so saved stops still match.
+ */
+class StopSearchRepository(private val schedule: TransitScheduleDataSource, private val efa: EfaClient) {
+    suspend fun search(query: String, language: String): List<Stop> =
+        if (schedule.isAvailable()) schedule.searchStops(query, language) else namedStops(efa.search(query, language))
+
+    suspend fun nearby(point: Point, language: String): List<Stop> =
+        if (schedule.isAvailable()) schedule.nearbyStops(point, NEARBY_METERS.toDouble(), language, 25)
+        else nearbyStops(efa.nearbyStops(point, NEARBY_METERS, language), point)
+
+    companion object {
+        private const val NEARBY_METERS = 800
+
+        internal fun namedStops(places: List<Place>): List<Stop> = places
+            .filter { it.type == PlaceType.STOP && it.stopGlobalId.isNotBlank() && it.point != null }
+            .map { Stop(it.stopGlobalId, it.name, it.point!!, stationKey = it.stopGlobalId) }
+
+        internal fun nearbyStops(places: List<Place>, center: Point): List<Stop> = places
+            .filter { it.stopGlobalId.isNotBlank() && it.point != null }
+            .map { Stop(it.stopGlobalId, it.name, it.point!!, stationKey = it.stopGlobalId, distanceMeters = Geo.distance(center, it.point!!)) }
+            .distinctBy { it.id }
+    }
+}
+
+/** The downloaded timetable as screens see it; downloading it is `BackgroundWork`'s job. */
+class ScheduleRepository(private val store: ScheduleStore) {
+    val info: StateFlow<ScheduleInfo?> = store.info
+    val status: StateFlow<ScheduleStatus> = store.status
+
+    suspend fun loadInfo(): ScheduleInfo? = store.loadInfo()
+
+    /** False until a timetable has been downloaded once. */
+    fun downloaded(): Boolean = store.activeName() != null
+}
+
 enum class SavedKind { STOP, LINE, PLACE, JOURNEY }
 
 data class SavedItem(val kind: SavedKind, val id: String, val label: String, val subtitle: String, val payload: String) {

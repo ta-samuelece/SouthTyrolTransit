@@ -85,7 +85,7 @@ import kotlinx.coroutines.launch
 import org.southtyrol.transit.BuildConfig
 import org.southtyrol.transit.R
 import org.southtyrol.transit.data.ScheduleStatus
-import org.southtyrol.transit.data.ScheduleStore
+import org.southtyrol.transit.data.ScheduleRepository
 import org.southtyrol.transit.data.SettingsRepository
 import org.southtyrol.transit.data.ThemeMode
 import org.southtyrol.transit.data.StartTab
@@ -106,14 +106,14 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val settings: SettingsRepository,
-    private val store: ScheduleStore,
+    private val timetable: ScheduleRepository,
     private val work: BackgroundWork,
 ) : ViewModel() {
     val prefs: StateFlow<UserSettings> = settings.settings.stateIn(viewModelScope, SharingStarted.Eagerly, UserSettings())
-    val schedule = store.info
-    val status = store.status
+    val schedule = timetable.info
+    val status = timetable.status
 
-    init { viewModelScope.launch { store.loadInfo() } }
+    init { viewModelScope.launch { timetable.loadInfo() } }
 
     fun theme(value: ThemeMode) = viewModelScope.launch { settings.setTheme(value) }
     fun dynamic(value: Boolean) = viewModelScope.launch { settings.setDynamicColor(value) }

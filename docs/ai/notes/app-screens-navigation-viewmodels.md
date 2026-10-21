@@ -5,7 +5,7 @@ description: How the first-run screens are gated before the app, how a route is 
 tags: [compose, navigation, viewmodel, hilt, search, workmanager, onboarding]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-17T14:30:00Z"
+  at: "2026-10-21T12:00:00Z"
 status: stable
 ---
 
@@ -95,6 +95,11 @@ _state.map { it.query.trim() }.distinctUntilChanged().debounce(200).collectLates
 Used by `MapSearchViewModel` (stops and lines from one query), `LinesViewModel`, `StopSearchViewModel`, `LineSearchViewModel`;
 `PlannerViewModel` does the same with `query to field`. Set `loading` only when the trimmed query
 changed, so typing a space does not flash a spinner.
+
+Screens never take `EfaClient` or `ScheduleStore`. Stop search by name or nearby goes through
+`StopSearchRepository` (offline timetable when downloaded, else the EFA stop finder, keyed by station so
+saved stops match); the timetable's info, status and "downloaded yet" go through `ScheduleRepository`.
+Both live in `TransitRepository.kt` and are provided in `AppModule`.
 
 # Polling and workers
 

@@ -11,6 +11,8 @@
     <string name="action_clear">Cancella</string>
     <string name="action_collapse">Comprimi</string>
     <string name="action_expand">Espandi</string>
+    <string name="state_expanded">Espanso</string>
+    <string name="state_collapsed">Compresso</string>
     <string name="action_done">Fatto</string>
     <string name="action_next">Avanti</string>
     <string name="action_remove">Rimuovi</string>

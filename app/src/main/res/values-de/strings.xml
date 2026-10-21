@@ -11,6 +11,8 @@
     <string name="action_clear">Löschen</string>
     <string name="action_collapse">Einklappen</string>
     <string name="action_expand">Ausklappen</string>
+    <string name="state_expanded">Ausgeklappt</string>
+    <string name="state_collapsed">Eingeklappt</string>
     <string name="action_done">Fertig</string>
     <string name="action_next">Weiter</string>
     <string name="action_remove">Entfernen</string>

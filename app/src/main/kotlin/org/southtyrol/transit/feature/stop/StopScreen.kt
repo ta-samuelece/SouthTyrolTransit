@@ -34,9 +34,11 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.toggleableState
+import androidx.compose.ui.state.ToggleableState
+import androidx.compose.material3.minimumInteractiveComponentSize
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
@@ -162,7 +164,7 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
                     ) {
                         state.lines.forEach { line ->
                             LineFilterBadge(
-                                line, selected = line.key in state.lineFilter, anySelected = state.lineFilter.isNotEmpty(),
+                                line, selected = line.key in state.lineFilter,
                                 onToggle = { viewModel.toggleLine(line.key) }, onOpen = { navigator.line(line.key) },
                             )
                         }
@@ -262,21 +264,22 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
 
 /**
  * A served line as a filter: tap to show only its departures, long-press to open the line page.
- * While some lines are selected, the others are dimmed and selected ones are outlined.
+ * Selected lines are outlined. The others keep their full colour: they can still be tapped, so fading
+ * them would drop the badge text below readable contrast.
  */
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
-private fun LineFilterBadge(line: org.southtyrol.transit.model.Line, selected: Boolean, anySelected: Boolean, onToggle: () -> Unit, onOpen: () -> Unit) {
+private fun LineFilterBadge(line: org.southtyrol.transit.model.Line, selected: Boolean, onToggle: () -> Unit, onOpen: () -> Unit) {
     val openLabel = stringResource(R.string.stop_open_line)
     Box(
         Modifier
+            .minimumInteractiveComponentSize()
             .clip(RoundedCornerShape(50))
             // The outline's space is always reserved, so selecting a line never shifts the row.
             .border(2.dp, if (selected) MaterialTheme.colorScheme.onSurface else androidx.compose.ui.graphics.Color.Transparent, RoundedCornerShape(50))
             .padding(2.dp)
-            .alpha(if (anySelected && !selected) 0.4f else 1f)
             .combinedClickable(onLongClickLabel = openLabel, onLongClick = onOpen, onClick = onToggle)
-            .semantics { this.selected = selected; role = androidx.compose.ui.semantics.Role.Checkbox },
+            .semantics { toggleableState = ToggleableState(selected); role = androidx.compose.ui.semantics.Role.Checkbox },
     ) {
         LineBadge(line.name, line.mode, color = line.color, textColor = line.textColor)
     }
@@ -302,10 +305,16 @@ private fun StopTimeChip(viewModel: StopViewModel, modifier: Modifier = Modifier
         label = { Text(state.start?.let { Format.dateTime(it) } ?: stringResource(R.string.stop_time_now), maxLines = 1) },
         // A chosen time: the chip's close icon returns to the live board.
         trailingIcon = if (!state.live) ({
-            Icon(
-                androidx.compose.material.icons.Icons.Rounded.Close, contentDescription = stringResource(R.string.stop_back_to_now),
-                modifier = Modifier.size(18.dp).clickable(role = androidx.compose.ui.semantics.Role.Button, onClick = viewModel::now),
-            )
+            // A target of its own inside the chip, so it gets more than the icon's 18 dp to aim at.
+            Box(
+                Modifier.size(32.dp).clip(CircleShape).clickable(role = androidx.compose.ui.semantics.Role.Button, onClick = viewModel::now),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    androidx.compose.material.icons.Icons.Rounded.Close, contentDescription = stringResource(R.string.stop_back_to_now),
+                    modifier = Modifier.size(18.dp),
+                )
+            }
         }) else null,
         modifier = modifier,
     )

@@ -36,6 +36,7 @@ import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.appwidget.state.updateAppWidgetState
 import androidx.glance.background
+import androidx.glance.color.ColorProvider
 import androidx.glance.currentState
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
@@ -80,7 +81,9 @@ import org.southtyrol.transit.data.LanguageProvider
 import org.southtyrol.transit.data.RealtimeRepository
 import org.southtyrol.transit.data.SettingsRepository
 import org.southtyrol.transit.data.ThemeMode
+import org.southtyrol.transit.design.StatusColors
 import org.southtyrol.transit.design.TransitTheme
+import org.southtyrol.transit.model.ColorContrast
 import org.southtyrol.transit.model.ServiceState
 import org.southtyrol.transit.model.TransitZone
 import java.time.Duration
@@ -101,6 +104,13 @@ data class WidgetDeparture(
     val textColor: Long? = null,
 ) {
     val best: Long get() = predicted ?: scheduled
+}
+
+/** The app's status colours, following the widget's own day/night background rather than a single fixed tone. */
+private object WidgetColors {
+    val cancelled = ColorProvider(day = StatusColors.Light.cancelled, night = StatusColors.Dark.cancelled)
+    val delayed = ColorProvider(day = StatusColors.Light.delayed, night = StatusColors.Dark.delayed)
+    val onTime = ColorProvider(day = StatusColors.Light.onTime, night = StatusColors.Dark.onTime)
 }
 
 internal object WidgetState {
@@ -189,10 +199,11 @@ class DeparturesWidget : GlanceAppWidget() {
                 )
                 else -> rows.take(capacity).forEach { d ->
                     Row(GlanceModifier.fillMaxWidth().height(36.dp).clickable(openStop), verticalAlignment = Alignment.CenterVertically) {
-                        val badge = d.color?.let { Color(it.toInt()) } ?: Color(0xFF00695C)
-                        val badgeText = d.textColor?.let { Color(it.toInt()) } ?: Color.White
+                        // Feed colours are plain RGB; the text colour is checked like the app's own badges.
+                        val badge = d.color ?: 0x00695C
+                        val badgeText = Color(0xFF000000 or ColorContrast.readableOn(badge, d.textColor))
                         Box(
-                            GlanceModifier.width(52.dp).background(ColorProvider(badge)).cornerRadius(8.dp).padding(vertical = 3.dp),
+                            GlanceModifier.width(52.dp).background(ColorProvider(Color(0xFF000000 or badge))).cornerRadius(8.dp).padding(vertical = 3.dp),
                             contentAlignment = Alignment.Center,
                         ) {
                             Text(d.line, style = TextStyle(color = ColorProvider(badgeText), fontSize = 13.sp, fontWeight = FontWeight.Bold), maxLines = 1)
@@ -216,13 +227,13 @@ class DeparturesWidget : GlanceAppWidget() {
         val context = LocalContext.current
         Column(horizontalAlignment = Alignment.End) {
             if (d.cancelled) {
-                Text(context.getString(org.southtyrol.transit.design.R.string.ds_cancelled), style = TextStyle(color = ColorProvider(Color(0xFFB3261E)), fontSize = 13.sp, fontWeight = FontWeight.Bold))
+                Text(context.getString(org.southtyrol.transit.design.R.string.ds_cancelled), style = TextStyle(color = WidgetColors.cancelled, fontSize = 13.sp, fontWeight = FontWeight.Bold))
             } else {
                 Text(clock(d.best), style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 15.sp, fontWeight = FontWeight.Bold))
                 val delay = d.predicted?.let { (it - d.scheduled) / 60 }
                 if (delay != null) Text(
                     if (delay > 0) "+$delay" else if (delay < 0) "$delay" else context.getString(R.string.widget_on_time),
-                    style = TextStyle(color = ColorProvider(if (delay > 1) Color(0xFFB45309) else Color(0xFF2E7D32)), fontSize = 11.sp, fontWeight = FontWeight.Medium),
+                    style = TextStyle(color = if (delay > 1) WidgetColors.delayed else WidgetColors.onTime, fontSize = 11.sp, fontWeight = FontWeight.Medium),
                 )
             }
         }

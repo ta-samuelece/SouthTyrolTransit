@@ -47,6 +47,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -284,7 +285,18 @@ fun AlertCard(
         color = MaterialTheme.colorScheme.surfaceContainer,
         modifier = modifier.fillMaxWidth().animateContentSize(),
     ) {
-        Column(Modifier.clickable { expanded = !expanded }.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        // TalkBack hears the state ("collapsed") and the action ("double-tap to expand"), not just a chevron.
+        val stateText = stringResource(if (expanded) R.string.state_expanded else R.string.state_collapsed)
+        Column(
+            Modifier
+                .clickable(
+                    onClickLabel = stringResource(if (expanded) R.string.action_collapse else R.string.action_expand),
+                    role = androidx.compose.ui.semantics.Role.Button,
+                ) { expanded = !expanded }
+                .semantics { stateDescription = stateText }
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
             Row(verticalAlignment = Alignment.Top) {
                 val (container, onContainer) = if (alert.isDisruption) {
                     MaterialTheme.colorScheme.errorContainer to MaterialTheme.colorScheme.onErrorContainer
@@ -302,7 +314,7 @@ fun AlertCard(
                     Text(header.ifBlank { stringResource(R.string.alerts_untitled) }, style = MaterialTheme.typography.titleMedium)
                     Text(validity(alert, now), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                Icon(if (expanded) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore, contentDescription = stringResource(if (expanded) R.string.action_collapse else R.string.action_expand))
+                Icon(if (expanded) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore, contentDescription = null)
             }
             val lines = lineNames.distinct().sortedWith(compareBy({ it.takeWhile(Char::isDigit).toIntOrNull() ?: Int.MAX_VALUE }, { it })).take(12)
             if (lines.isNotEmpty()) {

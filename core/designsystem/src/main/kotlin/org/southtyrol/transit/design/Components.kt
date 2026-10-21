@@ -61,6 +61,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -212,7 +213,7 @@ fun DelayLabel(delaySeconds: Long?, state: ServiceState, freshness: Freshness, m
         state == ServiceState.CANCELLED -> StatusPill(stringResource(R.string.ds_cancelled), status.cancelled, Icons.Rounded.Error, modifier)
         state == ServiceState.SKIPPED -> StatusPill(stringResource(R.string.ds_skipped), status.cancelled, Icons.Rounded.Error, modifier)
         state == ServiceState.ADDED -> StatusPill(stringResource(R.string.ds_added), status.early, null, modifier)
-        freshness == Freshness.STALE -> StatusPill(stringResource(R.string.ds_stale), status.stale, Icons.Rounded.History, modifier)
+        freshness == Freshness.STALE -> StatusPill(stringResource(R.string.ds_stale), status.stale, Icons.Rounded.History, modifier, textColor = MaterialTheme.colorScheme.onSurfaceVariant)
         delaySeconds == null -> Unit
         else -> {
             val minutes = Math.floorDiv(delaySeconds + 30, 60L).toInt()
@@ -244,15 +245,21 @@ fun delayDescription(delaySeconds: Long?, state: ServiceState): String? {
     }
 }
 
+/**
+ * A small status label: [color] tints the icon, the text (unless [textColor] says otherwise) and the pill.
+ * The tint is laid on the lowest surface, not left translucent, so the text keeps 4.5:1 whatever card the
+ * pill sits on. Colours too light for small text (the grey "stale") pass a neutral [textColor].
+ */
 @Composable
-fun StatusPill(text: String, color: Color, icon: ImageVector?, modifier: Modifier = Modifier) {
+fun StatusPill(text: String, color: Color, icon: ImageVector?, modifier: Modifier = Modifier, textColor: Color = color) {
+    val background = color.copy(alpha = 0.14f).compositeOver(MaterialTheme.colorScheme.surfaceContainerLowest)
     Row(
-        modifier.clip(RoundedCornerShape(50)).background(color.copy(alpha = 0.14f)).padding(horizontal = 8.dp, vertical = 2.dp),
+        modifier.clip(RoundedCornerShape(50)).background(background).padding(horizontal = 8.dp, vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         if (icon != null) Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(14.dp))
-        Text(text, color = color, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, maxLines = 1)
+        Text(text, color = textColor, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, maxLines = 1)
     }
 }
 

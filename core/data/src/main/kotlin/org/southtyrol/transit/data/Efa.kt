@@ -398,6 +398,12 @@ object EfaXml {
         val operator = means?.child("itdOperator")?.text("name").orEmpty()
         val distance = part.a("distance").toIntOrNull()
             ?: part.all("itdFootPathElem").firstOrNull()?.child("attributes")?.a("distance")?.toIntOrNull()
+        // The same reference a departure board entry carries ([departures]), so a followed leg can fetch fresh live times.
+        val stateless = means?.a("stateless").orEmpty()
+        val tripCode = means?.a("tC").orEmpty()
+        val planned = (dateTime(from.child("itdDateTimeBaseTimetable")) ?: departure).atZone(TransitZone)
+        val liveRef = if (!mode.isTransit || stateless.isBlank() || from.a("stopID").isBlank() || tripCode.isBlank()) "" else
+            listOf(stateless, from.a("stopID"), tripCode, planned.format(EFA_DATE), planned.format(DateTimeFormatter.ofPattern("HHmm"))).joinToString("|")
         return Leg(
             mode = mode, line = if (mode == TransportMode.WALK) "" else line, destination = means?.a("destination").orEmpty(),
             from = from.place(), to = to.place(), departure = departure, arrival = arrival,
@@ -406,6 +412,7 @@ object EfaXml {
             departurePlatform = from.a("platformName"), arrivalPlatform = to.a("platformName"),
             realtime = realtime && mode.isTransit, cancelled = part.isCancelled() || (means?.isCancelled() ?: false),
             notices = notices(part, language), distanceMeters = distance, lineName = if (mode == TransportMode.WALK) "" else lineName,
+            liveRef = liveRef,
         )
     }
 

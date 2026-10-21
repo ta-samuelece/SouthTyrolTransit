@@ -145,4 +145,19 @@ class JourneyFollowTest {
         val elsewhere = run.copy(stops = run.stops.take(1))
         assertEquals(bus, LiveJourney.apply(journey, mapOf(2 to elsewhere)).legs[2])
     }
+
+    @Test fun plannerLiveTimesReplaceThoseItPlannedWith() {
+        fun stop(p: Place, minute: Long, delay: Int?) = LiveStopTime(p.stopGlobalId, p.name, at(minute), at(minute), delay, delay)
+        // Planned at +2; the planner now says +5, +6 at c and +7 on arrival.
+        val planned = bus.copy(predictedDeparture = at(45), predictedArrival = at(102), realtime = true)
+        val live = listOf(stop(place("z", 46.65), 30, 4), stop(bBus, 43, 5), stop(c, 70, 6), stop(d, 100, 7))
+        val leg = LiveJourney.applyPlanner(planned, live)!!
+        assertEquals(at(48), leg.predictedDeparture)
+        assertEquals(at(107), leg.predictedArrival)
+        assertEquals(at(76), leg.intermediate.single().predictedArrival)
+        assertTrue(leg.realtime)
+        // Another run of the line (other minute) or no delays at all: nothing fresh.
+        assertNull(LiveJourney.applyPlanner(planned, live.map { it.copy(scheduledDeparture = it.scheduledDeparture!!.plusSeconds(600)) }))
+        assertNull(LiveJourney.applyPlanner(planned, live.map { it.copy(arrivalDelayMinutes = null, departureDelayMinutes = null) }))
+    }
 }

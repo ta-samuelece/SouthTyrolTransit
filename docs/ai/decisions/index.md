@@ -9,4 +9,4 @@ MapLibre OpenGL ES build, and features as packages rather than modules.
 
 # Records
 
-None yet.
+* [0001 Clean-architecture layering in the existing modules, without a rebuild](./0001-clean-architecture-layering.md) - core/model is the pure domain, screens and ViewModels reach data only through core/data repositories (never EfaClient, ScheduleStore or DAOs), dependencies point one way; UseCase-per-call, Koin, a presentation/domain module split and blanket Result wrapping were considered and rejected.

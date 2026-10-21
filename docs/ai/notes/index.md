@@ -19,7 +19,7 @@ entry repeats the note's `description`.
 * [Live vehicles in the journey view](./journey-leg-live-vehicles.md) - journey-planner legs carry no trip id, so each transit leg is matched to a timetable run at its boarding station (line and minute, train fallback) and then treated like the trip screen; works only with a downloaded timetable and only until the vehicle leaves the boarding stop.
 * [EFA parsing](./efa-parsing-quirks.md) - Which EFA fields count as realtime or cancelled, the different delay windows per parser, why trains are labelled "R", the empty-list-not-error contract, AddInfo filtering, and how the DOCTYPE guard works.
 * [How service alerts are deduplicated, matched to departures and cached](./alerts-merge-and-matching.md) - GTFS-RT and EFA alerts merge on one identical normalised header plus overlapping periods, ignoring scope across sources; matching is string-exact and stop scope only counts for alerts without line scope; alerts count as live for 15 minutes.
-* [Languages across sources](./languages-across-sources.md) - Ladin users see German GTFS names but Italian EFA results; never pass the comma-separated textLanguages() to EFA; localized() prefers a language-neutral text over fallbacks; the seven places a new UI language must be registered.
+* [Languages across sources](./languages-across-sources.md) - The app speaks en, de and it (Ladin was removed as a UI language on 2026-10-21; its feed texts still normalise to lld); never pass the comma-separated textLanguages() to EFA; localized() prefers a language-neutral text over fallbacks; the seven places a new UI language must be registered.
 
 # App
 

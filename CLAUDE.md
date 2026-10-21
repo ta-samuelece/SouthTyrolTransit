@@ -117,8 +117,7 @@ and any reorganisation to the user before touching anything.
 change under `app/` or `core/`, run the unit tests of the modules you touched and `./gradlew lintDebug`
 (`abortOnError = true`) before reporting the work as finished, and say which ones you ran. A UI string
 added to `values/strings.xml` must be added to `values-de/` and `values-it/` in the same change -
-`TranslationsTest` fails on a missing *or* a stale key. Ladin (`values-b+lld/`) is deliberately partial and
-falls back to German. Details and the opt-in network tests:
+`TranslationsTest` fails on a missing *or* a stale key. Details and the opt-in network tests:
 [test suite](docs/ai/notes/test-suite-and-opt-in-live-tests.md).
 
 **10. Signing material and `local.properties` are off limits.** Every release must be signed with the

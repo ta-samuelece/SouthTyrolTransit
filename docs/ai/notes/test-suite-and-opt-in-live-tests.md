@@ -68,9 +68,9 @@ feed from STA's server.
 
 `TranslationsTest` compares string keys of `values/` against `values-de/` and `values-it/`, for `app`
 and `core/designsystem`, and fails on a key that is **missing** or **stale** (present only in a
-translation).[^translations] Lint's `MissingTranslation` is downgraded to a warning on purpose, because
-Ladin (`values-b+lld/`) is deliberately partial and falls back to German through the locale list
-`lld,de,it`. So: adding, renaming or removing a string means touching all three files.
+translation).[^translations] Lint's `MissingTranslation` is an error again since the partial Ladin
+locale was removed (2026-10-21). So: adding, renaming or removing a string means touching all three
+files.
 
 # What was checked
 

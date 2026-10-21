@@ -158,11 +158,12 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
                 Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     // Large stations serve dozens of lines: one row that scrolls sideways keeps the live board in view.
                     // Tap a line to show only its departures (several can be combined); long-press opens the line.
-                    if (state.lines.isNotEmpty()) Row(
+                    val filterLines by viewModel.filterLines.collectAsStateWithLifecycle()
+                    if (filterLines.isNotEmpty()) Row(
                         Modifier.horizontalScroll(androidx.compose.foundation.rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        state.lines.forEach { line ->
+                        filterLines.forEach { line ->
                             LineFilterBadge(
                                 line, selected = line.key in state.lineFilter,
                                 onToggle = { viewModel.toggleLine(line.key) }, onOpen = { navigator.line(line.key) },

@@ -89,6 +89,12 @@ class StopViewModel @AssistedInject constructor(
 
     val isSaved = saved.isSaved(SavedKind.STOP, stationKey).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
+    /** The lines for the filter: the user's saved lines first, each group in the usual line order. */
+    val filterLines: StateFlow<List<Line>> = combine(_state, saved.saved) { s, items ->
+        val keys = items.filter { it.kind == SavedKind.LINE }.map { it.id }.toSet()
+        s.lines.sortedBy { it.key !in keys }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     private val alertState = alerts.state.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), org.southtyrol.transit.data.AlertsState())
 
     /** Alerts for this stop or the lines serving it. */

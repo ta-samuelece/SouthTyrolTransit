@@ -233,6 +233,7 @@ Place search falls back to timetable stops. Journey planning needs the EFA servi
 - EFA StopFinder ignores `language=en` (it returns "not identified") and matches names per language. The app queries de and it in parallel and merges the results.
 - GTFS has no route colours, `feed_info`, transfers or fares. Translations cover German only, and headsigns only partly.
 - Realtime coverage is partial: about 57 trip updates and 135 vehicles at a time. Vehicles not matched to a trip show "trip unknown".
+- The vehicle feed puts many buses (most city lines, some regional ones) on their line's run scheduled two hours earlier, the UTC offset; their trip updates name the same wrong run. With a downloaded timetable the app moves each such bus, and its updates, to the run of its line and direction due at its stop now.
 - Bike and car sharing data for South Tyrol on ODH is sparse or stale, so those layers are off by default.
 - EFA `infoLinkURL`s point to an internal network address and are not opened.
 

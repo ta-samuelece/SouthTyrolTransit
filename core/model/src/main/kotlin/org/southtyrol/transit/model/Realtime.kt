@@ -218,6 +218,35 @@ object LiveTripMerge {
 }
 
 /**
+ * Which run a live vehicle is really on. STA's vehicle feed labels many buses - most city lines, some
+ * regional ones - with the run of their line scheduled two hours earlier (the UTC offset, so one hour in
+ * winter), while their position and stop are current; their trip updates name the same wrong run. On
+ * 2026-10-21, 27 of 52 vehicles reported a run 90-140 minutes behind the clock at their stop, and each
+ * had exactly one run of its line and direction due there within 20 minutes.
+ */
+object VehicleRuns {
+    /** A reported run due at the vehicle's stop further than this from the clock is not the one it is on. */
+    val MAX_OFFSET: Duration = Duration.ofMinutes(60)
+
+    /** How far from the clock the actual run may be due at that stop. */
+    val WINDOW: Duration = Duration.ofMinutes(20)
+
+    data class Run(val tripId: String, val serviceDate: LocalDate)
+
+    /** The run's call at [stopId] closest to [now] (a loop calls twice), or null when it does not call there. */
+    fun callAt(stops: List<TripStop>, stopId: String, now: Instant): TripStop? =
+        stops.filter { it.stop.id == stopId }.minByOrNull { gap(it.scheduledDeparture, now) }
+
+    fun misplaced(call: TripStop, now: Instant): Boolean = gap(call.scheduledDeparture, now) > MAX_OFFSET.seconds
+
+    /** [calls] of the same line at the vehicle's stop that could be its run: within [WINDOW], closest first. */
+    fun candidates(calls: List<Departure>, now: Instant): List<Departure> =
+        calls.filter { gap(it.scheduled, now) <= WINDOW.seconds }.sortedBy { gap(it.scheduled, now) }
+
+    private fun gap(at: Instant, now: Instant) = kotlin.math.abs(Duration.between(at, now).seconds)
+}
+
+/**
  * A heading for vehicles whose feed sends none (STA's never does): the direction the vehicle takes to
  * the stop it is heading to, read off the trip's route shape where the vehicle is now - so a bus about
  * to turn a corner points down its road, not across the block. Without a shape it points straight at

@@ -19,10 +19,14 @@ import org.southtyrol.transit.model.RealtimeTransitDataSource
 import org.southtyrol.transit.model.ServiceAlert
 import org.southtyrol.transit.model.ServiceState
 import org.southtyrol.transit.model.StopUpdate
+import org.southtyrol.transit.model.TransitScheduleDataSource
+import org.southtyrol.transit.model.TransitZone
 import org.southtyrol.transit.model.TripUpdate
 import org.southtyrol.transit.model.Vehicle
+import org.southtyrol.transit.model.VehicleRuns
 import java.time.Duration
 import java.time.Instant
+import java.time.LocalDate
 
 data class ParsedFeed(val timestamp: Instant, val updates: List<TripUpdate>, val vehicles: List<Vehicle>, val alerts: List<ServiceAlert>)
 
@@ -141,6 +145,8 @@ data class FeedStatus(val lastSuccess: Instant? = null, val lastAttempt: Instant
 class RealtimeRepository(
     private val source: RealtimeTransitDataSource,
     private val user: UserDao,
+    /** Puts vehicles and their trip updates on the run they are really on; none in tests. */
+    private val runs: VehicleRunResolver? = null,
     private val clock: () -> Instant = Instant::now,
 ) {
     private val mutex = Mutex()
@@ -163,7 +169,7 @@ class RealtimeRepository(
             try {
                 val bytes = source.fetch(feed)
                 val parsed = withContext(Dispatchers.Default) { GtfsRealtimeParser.parse(bytes, now) }
-                apply(feed, parsed, now)
+                apply(feed, runs?.correct(parsed, now) ?: parsed, now)
                 if (feed == RealtimeFeed.SERVICE_ALERTS) withContext(Dispatchers.IO) { user.cache(CacheRow(CACHE_ALERTS, bytes, now.toEpochMilli())) }
                 _status.update { it + (feed to FeedStatus(now, now, null)) }
             } catch (e: CancellationException) {
@@ -196,5 +202,87 @@ class RealtimeRepository(
 
     companion object {
         const val CACHE_ALERTS = "gtfsrt:service-alerts"
+    }
+}
+
+/**
+ * Moves each vehicle the feed puts on the wrong run ([VehicleRuns]) to the run of the same line and
+ * direction due at its stop now, and the trip updates of the reported run with it - so the map, the trip
+ * screen and matched journey legs see the bus that is actually running. Needs the offline timetable;
+ * without one the feed is left as it is. A vehicle's answer is kept while it reports the same run.
+ */
+class VehicleRunResolver(private val schedule: TransitScheduleDataSource) {
+    private val lock = Mutex()
+
+    /** By "vehicle|reported trip|date": the run it is really on, or null when the reported one is right. */
+    private val fixes = HashMap<String, VehicleRuns.Run?>()
+
+    /** By "reported trip|date", from the latest vehicle feed; applied to the trip updates feed. */
+    @Volatile private var moved: Map<String, VehicleRuns.Run> = emptyMap()
+
+    suspend fun correct(feed: ParsedFeed, now: Instant): ParsedFeed = when {
+        feed.vehicles.isNotEmpty() -> feed.copy(vehicles = vehicles(feed.vehicles, now))
+        feed.updates.isNotEmpty() -> feed.copy(updates = updates(feed.updates, now))
+        else -> feed
+    }
+
+    internal suspend fun vehicles(list: List<Vehicle>, now: Instant): List<Vehicle> = lock.withLock {
+        if (!schedule.isAvailable()) return@withLock list
+        val today = now.atZone(TransitZone).toLocalDate()
+        // A first feed resolves a batch per update, so it does not hold up the vehicles' first appearance.
+        var loads = 0
+        val result = list.map { v ->
+            val tripId = v.tripId ?: return@map v
+            val stopId = v.stopId ?: return@map v
+            val date = v.startDate ?: today
+            val key = "${v.id}|$tripId|$date"
+            val run = when {
+                key in fixes -> fixes[key]
+                loads++ < LOADS_PER_UPDATE -> resolve(tripId, date, stopId, now).also { fixes[key] = it }
+                else -> null
+            }
+            if (run == null) v else v.copy(tripId = run.tripId, startDate = run.serviceDate)
+        }
+        moved = list.zip(result).filter { (a, b) -> a.tripId != b.tripId }
+            .associate { (a, b) -> "${a.tripId}|${a.startDate ?: today}" to VehicleRuns.Run(b.tripId!!, b.startDate!!) }
+        if (fixes.size > CACHE_LIMIT) fixes.clear()
+        result
+    }
+
+    internal fun updates(list: List<TripUpdate>, now: Instant): List<TripUpdate> {
+        val runs = moved
+        if (runs.isEmpty()) return list
+        val today = now.atZone(TransitZone).toLocalDate()
+        val (fixed, kept) = list.partition { "${it.tripId}|${it.date ?: today}" in runs }
+        // A moved update comes first: the reported run's own entry, if any, belongs to a bus hours later.
+        return fixed.map { u -> runs.getValue("${u.tripId}|${u.date ?: today}").let { u.copy(tripId = it.tripId, date = it.serviceDate) } } + kept
+    }
+
+    private suspend fun resolve(tripId: String, date: LocalDate, stopId: String, now: Instant): VehicleRuns.Run? = try {
+        val reported = schedule.trip(tripId, date, LANGUAGE)
+        val call = reported?.let { VehicleRuns.callAt(it.stops, stopId, now) }
+        if (reported == null || call == null || !VehicleRuns.misplaced(call, now)) null
+        else {
+            val from = now.minus(VehicleRuns.WINDOW)
+            val until = now.plus(VehicleRuns.WINDOW)
+            fun sameLine(calls: List<org.southtyrol.transit.model.Departure>) = calls.filter { it.routeId == reported.trip.routeId && it.tripId != tripId }
+            // At its last stop a run has no departure, only an arrival.
+            val calls = sameLine(schedule.scheduledDepartures(listOf(stopId), from, until, false, LANGUAGE, 40))
+                .ifEmpty { sameLine(schedule.scheduledDepartures(listOf(stopId), from, until, true, LANGUAGE, 40)) }
+            VehicleRuns.candidates(calls, now).take(3).firstNotNullOfOrNull { d ->
+                schedule.trip(d.tripId, d.serviceDate, LANGUAGE)?.takeIf { it.trip.direction == reported.trip.direction }?.let { VehicleRuns.Run(d.tripId, d.serviceDate) }
+            }
+        }
+    } catch (e: CancellationException) {
+        throw e
+    } catch (_: Exception) {
+        null
+    }
+
+    private companion object {
+        /** Trip lookups only need times, the same in every language. */
+        const val LANGUAGE = "de"
+        const val LOADS_PER_UPDATE = 20
+        const val CACHE_LIMIT = 2000
     }
 }

@@ -30,6 +30,7 @@ import org.southtyrol.transit.data.TransitHttp
 import org.southtyrol.transit.data.TripRepository
 import org.southtyrol.transit.data.UserDao
 import org.southtyrol.transit.data.UserDatabase
+import org.southtyrol.transit.data.VehicleRunResolver
 import org.southtyrol.transit.location.AndroidLocationProvider
 import org.southtyrol.transit.location.LocationProvider
 import org.southtyrol.transit.model.MobilityKind
@@ -74,7 +75,8 @@ object AppModule {
     fun efa(http: TransitHttp): EfaClient = EfaClient(http)
 
     @Provides @Singleton
-    fun realtime(http: TransitHttp, user: UserDao): RealtimeRepository = RealtimeRepository(OdhRealtime(http), user)
+    fun realtime(http: TransitHttp, user: UserDao, schedule: TransitScheduleDataSource): RealtimeRepository =
+        RealtimeRepository(OdhRealtime(http), user, VehicleRunResolver(schedule))
 
     @Provides @Singleton
     fun alerts(realtime: RealtimeRepository, efa: EfaClient, user: UserDao): AlertRepository = AlertRepository(realtime, efa, user)

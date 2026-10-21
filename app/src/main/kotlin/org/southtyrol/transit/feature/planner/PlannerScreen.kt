@@ -198,19 +198,14 @@ fun PlannerScreen(navigator: Navigator, viewModel: PlannerViewModel = hiltViewMo
                     work?.let { p -> QuickChip(stringResource(R.string.place_work), Icons.Rounded.Work) { viewModel.useRoute(state.from ?: p, p) } }
                 }
             }
-            if (savedJourneys.isNotEmpty()) {
-                item { SectionHeader(stringResource(R.string.planner_saved_journeys)) }
-                itemsIndexed(savedJourneys, key = { _, it -> "saved:" + it.id }) { index, item ->
-                    val route = item.route ?: return@itemsIndexed
-                    RouteItem(item.label, Icons.Rounded.Bookmark, index, savedJourneys.size) { viewModel.useRoute(route.first, route.second) }
-                }
+            // Each group is one item: the list's 12 dp spacing belongs between form blocks, not between rows.
+            val saved = savedJourneys.mapNotNull { item -> item.route?.let { item.label to it } }
+            if (saved.isNotEmpty()) item(key = "saved") {
+                RouteGroup(stringResource(R.string.planner_saved_journeys), Icons.Rounded.Bookmark, saved) { viewModel.useRoute(it.first, it.second) }
             }
-            if (recentJourneys.isNotEmpty()) {
-                item { SectionHeader(stringResource(R.string.planner_recent)) }
-                itemsIndexed(recentJourneys, key = { _, it -> "recent:" + it.id }) { index, item ->
-                    val route = item.route ?: return@itemsIndexed
-                    RouteItem(item.label, Icons.Rounded.History, index, recentJourneys.size) { viewModel.useRoute(route.first, route.second) }
-                }
+            val recent = recentJourneys.mapNotNull { item -> item.route?.let { item.label to it } }
+            if (recent.isNotEmpty()) item(key = "recent") {
+                RouteGroup(stringResource(R.string.planner_recent), Icons.Rounded.History, recent) { viewModel.useRoute(it.first, it.second) }
             }
         }
     }
@@ -410,6 +405,14 @@ fun preferenceLabel(p: RoutePreference) = when (p) {
 @Composable
 private fun QuickChip(label: String, icon: ImageVector, onClick: () -> Unit) {
     androidx.compose.material3.AssistChip(onClick = onClick, label = { Text(label) }, leadingIcon = { Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp)) })
+}
+
+@Composable
+private fun RouteGroup(title: String, icon: ImageVector, routes: List<Pair<String, Pair<Place, Place>>>, onClick: (Pair<Place, Place>) -> Unit) {
+    Column {
+        SectionHeader(title)
+        routes.forEachIndexed { index, (label, route) -> RouteItem(label, icon, index, routes.size) { onClick(route) } }
+    }
 }
 
 @Composable

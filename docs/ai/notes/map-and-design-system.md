@@ -1,11 +1,11 @@
 ---
 type: Reference
 title: Map and design-system conventions - MapContent, styles, attribution, colours, reduced motion
-description: Map content is one immutable value re-pushed in full and marker ids must be unique across stops, vehicles and POIs; without a timetable the map's stops come from the EFA coordinate search; maps inside pages use ExpandableMapPage and enlarge where their small card sits; the one convention for showing progress along a run; the dark style falls back to the light override; attribution and font are hard-coded to OpenFreeMap; feed route colours are already used; the colour scheme (own palette by default, optional wallpaper colours and pure black); which Material 3 Expressive component to use for a choice, a hero, a grouped list and data freshness; the map's locate button is a FAB menu opened by a long press; reduced motion is read once.
+description: Map content is one immutable value re-pushed in full and marker ids must be unique across stops, vehicles and POIs; without a timetable the map's stops come from the EFA coordinate search; maps inside pages use ExpandableMapPage and enlarge where their small card sits; the one convention for showing progress along a run; the dark style falls back to the light override; four map types from one provider catalogue, Province rasters under the transit layers, credit per style and the font every style must serve; feed route colours are already used; the colour scheme (own palette by default, optional wallpaper colours and pure black); which Material 3 Expressive component to use for a choice, a hero, a grouped list and data freshness; the map's locate button is a FAB menu opened by a long press, with the layers button above it; reduced motion is read once.
 tags: [map, maplibre, design-system, colors, accessibility]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-18T21:45:00Z"
+  at: "2026-10-22T12:00:00Z"
 status: stable
 ---
 
@@ -36,12 +36,28 @@ status: stable
 - A `CameraRequest` is applied only when it differs from the last one; bump its `key` to re-apply the same
   request. `interactive` is applied only when the map is created.
 - Clustering: stops up to zoom 13 (radius 42), vehicles up to zoom 10 (radius 36).
-- **Styles**: `MainActivity` uses `MAP_STYLE_DARK`, else **`MAP_STYLE_LIGHT`**, else the OpenFreeMap dark
-  default - so overriding only `map.styleUrl` gives a light map in dark mode. The OpenFreeMap defaults are
-  repeated in `LocalMapStyle` in `TransitMap.kt`; keep both in sync.
-- **Attribution** `© OpenStreetMap · OpenFreeMap` is hard-coded in `MapAttribution` (`TransitMap.kt`;
-  the SDK's own attribution and logo are off), and all symbol layers use the font `Noto Sans Regular`. Switching tile provider means updating the
-  credit (ODbL) and checking the new style serves that font, or labels may not render (inferred).
+- **Styles are one design per theme**: a `MapStyle` has a light, a dark and a pure-black URL, and they must
+  be the same map in other colours - the user rejected a dark mode that changed which roads, shops and
+  buildings appear. The standard map is OpenFreeMap Positron (light), Fiord (dark) and Dark Matter
+  (`/styles/dark`, only with pure black on: `LocalMapPureBlack`, provided by `MainActivity` as dark mode
+  and `amoledDark`); all three are recolourings of Positron. A style with no dark variant uses its light
+  one in every theme rather than borrowing another design. `MainActivity` builds the standard style
+  from the build override: `MAP_STYLE_DARK`, else **`MAP_STYLE_LIGHT`**, serves both dark and pure black -
+  so overriding only `map.styleUrl` gives a light map in dark mode. The OpenFreeMap defaults are repeated
+  in `LocalMapStyle` in `TransitMap.kt`; keep both in sync.
+- **Map types** (`MapBase` in `core/model`, setting `mapBase`): `MapBase.style(standard)` in `TransitMap.kt`
+  is the one provider catalogue, and `MainActivity` provides its result as `LocalMapStyle`, so every map
+  (map tab, page maps, map picker) follows the choice. STANDARD keeps the build override; DETAILED is
+  OpenFreeMap Liberty in every theme (it has no dark variant); AERIAL and TOPOGRAPHIC are the standard style plus `MapStyle.raster`, the
+  Province of Bolzano WMTS (details in `docs/API_DISCOVERY.md` section 5) limited to its bounds and to
+  zoom 10 and up, so the vector style shows outside South Tyrol. `installRaster` adds the raster before
+  `installLayers`: above the base style, below every transit layer. The style effect is keyed on URL,
+  raster and theme; the camera and click listeners are registered once, in their own effect, or every
+  style change would stack another copy.
+- **Attribution** is `MapStyle.credit`, drawn by `MapAttribution` (the SDK's own attribution and logo
+  are off); a style must name every source it draws (ODbL for OSM). All symbol layers use the font `Noto
+  Sans Regular`: a new vector style must serve it from its glyphs URL (every OpenFreeMap style does,
+  checked 2026-10-22), or labels may not render.
 
 - **Stops without a timetable**: `MapRepository.stops` reads `stopsIn` from the timetable when one is
   installed, otherwise the EFA coordinate search (`EfaClient.nearbyStops`, `max = 400`) around the
@@ -159,6 +175,12 @@ Settled on 2026-10-13 after a review of every screen against the Expressive guid
   after a long press - otherwise the button's own click handler would take it as a tap too. TalkBack gets
   the long press as an `onLongClick` semantics action. `UserSettings.savedStopsHintShown` makes the "long
   press to jump to saved stops" snackbar appear once, the first time the map has a saved stop.
+- **The layers button** (`MapLayersButton`, `feature/map/MapLayersSheet.kt`) is a FAB the size of
+  the locate button, in a grey tone (`surfaceContainerHigh`), stacked above it in its corner (84 dp up; above the bottom search bar
+  when the locate button is hidden). It hides while the locate menu is open, whose items rise over it,
+  and Settings > Map can turn it off (`showLayersButton`). A top-corner placement with a left/right
+  setting was tried and dropped by the user. Its sheet holds the map type as four selectable tiles (one of four: not chips) and the same layer chips as Settings > Map (`ToggleChip`
+  is shared); Settings > Map also has a "Map type" `ChoiceRow`.
 - **Settings is not a tab, and has one entry point.** `MapSearchBar` ends in the app mark
   (`drawable/ic_app_mark.xml`: the launcher's two stops and route, white on a `primary` circle in a
   `primary` ring), `SearchBarMenuButton` in `feature/search/SearchBarMenu.kt`. It opens a FAB menu (design

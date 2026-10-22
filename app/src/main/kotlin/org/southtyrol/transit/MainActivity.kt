@@ -23,8 +23,10 @@ import org.southtyrol.transit.data.UserSettings
 import org.southtyrol.transit.design.TransitTheme
 import org.southtyrol.transit.feature.onboarding.OnboardingGate
 import org.southtyrol.transit.feature.onboarding.OnboardingScreen
+import org.southtyrol.transit.map.LocalMapPureBlack
 import org.southtyrol.transit.map.LocalMapStyle
 import org.southtyrol.transit.map.MapStyle
+import org.southtyrol.transit.map.style
 import org.southtyrol.transit.ui.TransitApp
 import javax.inject.Inject
 
@@ -83,9 +85,12 @@ class MainActivity : AppCompatActivity() {
         )
         super.onCreate(savedInstanceState)
         if (savedInstanceState == null) readStop(intent)
+        // A build's overridden dark style serves both dark mode and pure black.
+        val darkOverride = BuildConfig.MAP_STYLE_DARK.ifBlank { BuildConfig.MAP_STYLE_LIGHT }
         val defaultStyle = MapStyle(
             lightUrl = BuildConfig.MAP_STYLE_LIGHT.ifBlank { "https://tiles.openfreemap.org/styles/positron" },
-            darkUrl = BuildConfig.MAP_STYLE_DARK.ifBlank { BuildConfig.MAP_STYLE_LIGHT.ifBlank { "https://tiles.openfreemap.org/styles/dark" } },
+            darkUrl = darkOverride.ifBlank { "https://tiles.openfreemap.org/styles/fiord" },
+            blackUrl = darkOverride.ifBlank { "https://tiles.openfreemap.org/styles/dark" },
         )
         lifecycleScope.launch { initial = settingsRepository.current() }
         setContent {
@@ -107,7 +112,11 @@ class MainActivity : AppCompatActivity() {
                 onDispose {}
             }
             TransitTheme(darkTheme = dark, dynamicColor = settings.dynamicColor, amoled = settings.amoledDark) {
-                CompositionLocalProvider(LocalMapStyle provides defaultStyle, LocalDarkTheme provides dark) {
+                CompositionLocalProvider(
+                    LocalMapStyle provides settings.mapBase.style(defaultStyle),
+                    LocalMapPureBlack provides (dark && settings.amoledDark),
+                    LocalDarkTheme provides dark,
+                ) {
                     // The start tab is read once, when the app first shows: after the first-run screens that is
                     // the tab just chosen there.
                     if (settings.onboardingDone) TransitApp(

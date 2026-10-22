@@ -135,6 +135,7 @@ import org.southtyrol.transit.map.MarkerKind
 import org.southtyrol.transit.map.TransitMap
 import org.southtyrol.transit.model.Freshness
 import org.southtyrol.transit.model.FreshnessPolicy
+import org.southtyrol.transit.model.MapBase
 import org.southtyrol.transit.model.MobilityKind
 import org.southtyrol.transit.model.MobilityPoint
 import org.southtyrol.transit.model.Point
@@ -262,6 +263,15 @@ class MapViewModel @Inject constructor(
         return true
     }
 
+    // The layers sheet: the same settings as Settings > Map.
+    fun mapBase(value: MapBase) = viewModelScope.launch { settings.setMapBase(value) }
+    fun showStops(value: Boolean) = viewModelScope.launch { settings.setShowStops(value) }
+    fun showVehicles(value: Boolean) = viewModelScope.launch { settings.setShowVehicles(value) }
+    fun layer(kind: MobilityKind, on: Boolean) = viewModelScope.launch {
+        val current = prefs.value.mobilityLayers
+        settings.setMobilityLayers(if (on) current + kind else current - kind)
+    }
+
     fun clearSelection() { _selection.value = null }
 
     fun centerOnMe() = viewModelScope.launch {
@@ -322,6 +332,7 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel(), s
     val scope = rememberCoroutineScope()
     val noSavedText = stringResource(R.string.map_saved_stops_none)
     var menuOpen by rememberSaveable { mutableStateOf(false) }
+    var layersOpen by rememberSaveable { mutableStateOf(false) }
 
     val selectedId = when (val s = selection) {
         is MapSelection.VehicleSel -> "v:" + s.vehicle.vehicle.id
@@ -400,7 +411,21 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel(), s
                 ),
             )
 
-            // Besides the search bar, only the locate button floats over the map; what is shown is chosen in Settings.
+            // The layers button stacks above the locate button in its corner (the FAB menu's 16 dp margin, the
+            // 56 dp button, 12 dp between), or above the bottom search bar when there is no locate button.
+            // Hidden while the locate menu is open, whose items rise over that spot.
+            if (prefs.showLayersButton && !menuOpen) {
+                val stacked = locate != LocateButtonPosition.HIDDEN || barAtBottom
+                MapLayersButton(
+                    onClick = { layersOpen = true },
+                    modifier = Modifier
+                        .align(if (locate == LocateButtonPosition.BOTTOM_START) Alignment.BottomStart else Alignment.BottomEnd)
+                        .navigationBarsPadding()
+                        .padding(horizontal = 16.dp, vertical = if (stacked) 84.dp else 16.dp),
+                )
+            }
+
+            // Besides the search bar, only the locate and layers buttons float over the map; Settings chooses which.
             if (locate != LocateButtonPosition.HIDDEN) {
                 // A tap anywhere else closes the open menu instead of reaching the map.
                 if (menuOpen) Box(Modifier.fillMaxSize().pointerInput(Unit) { detectTapGestures { menuOpen = false } })
@@ -428,6 +453,12 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel(), s
             if (searchOpen) MapSearchView(searchViewModel, navigator)
         }
     }
+
+    if (layersOpen) MapLayersSheet(
+        prefs,
+        onMapBase = viewModel::mapBase, onStops = viewModel::showStops, onVehicles = viewModel::showVehicles, onLayer = viewModel::layer,
+        onDismiss = { layersOpen = false },
+    )
 
     selection?.let { sel ->
         // Fully expanded only: the stop sheet grows when its departures arrive, and a partially expanded

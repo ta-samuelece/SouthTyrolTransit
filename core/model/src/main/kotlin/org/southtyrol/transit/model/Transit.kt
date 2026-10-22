@@ -302,6 +302,12 @@ data class ServiceAlert(
 
 enum class MobilityKind { PARKING, BIKE_SHARING, CAR_SHARING }
 
+/**
+ * The map's base layer. The names are stored in settings: never rename one. AERIAL and TOPOGRAPHIC are
+ * the Province of Bolzano's own maps and cover South Tyrol only; the standard map fills in around them.
+ */
+enum class MapBase { STANDARD, DETAILED, AERIAL, TOPOGRAPHIC }
+
 data class MobilityPoint(
     val id: String,
     val kind: MobilityKind,

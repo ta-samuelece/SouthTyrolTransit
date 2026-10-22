@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import org.southtyrol.transit.model.MapBase
 import org.southtyrol.transit.model.MobilityKind
 import org.southtyrol.transit.model.WalkingSpeed
 import java.io.IOException
@@ -56,6 +57,9 @@ data class UserSettings(
     val showStops: Boolean = true,
     val locateButton: LocateButtonPosition = LocateButtonPosition.BOTTOM_END,
     val searchBar: SearchBarPosition = SearchBarPosition.BOTTOM,
+    val mapBase: MapBase = MapBase.STANDARD,
+    /** The map's layers button (map type and what is shown), above the locate button. */
+    val showLayersButton: Boolean = true,
     /** Ask GitHub for a newer release when the app starts (nothing installs without confirmation). */
     val autoUpdateCheck: Boolean = true,
     /** A release version the user chose to skip; not offered again automatically. */
@@ -97,6 +101,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val stops = booleanPreferencesKey("showStops")
         val locate = stringPreferencesKey("locateButton")
         val searchBar = stringPreferencesKey("searchBar")
+        val mapBase = stringPreferencesKey("mapBase")
+        val layersButton = booleanPreferencesKey("showLayersButton")
         val autoUpdate = booleanPreferencesKey("autoUpdateCheck")
         val skipped = stringPreferencesKey("skippedUpdate")
         val channel = stringPreferencesKey("updateChannel")
@@ -123,6 +129,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
                 showStops = p[Keys.stops] ?: true,
                 locateButton = p[Keys.locate]?.let { runCatching { LocateButtonPosition.valueOf(it) }.getOrNull() } ?: LocateButtonPosition.BOTTOM_END,
                 searchBar = p[Keys.searchBar]?.let { runCatching { SearchBarPosition.valueOf(it) }.getOrNull() } ?: SearchBarPosition.BOTTOM,
+                mapBase = p[Keys.mapBase]?.let { runCatching { MapBase.valueOf(it) }.getOrNull() } ?: MapBase.STANDARD,
+                showLayersButton = p[Keys.layersButton] ?: true,
                 autoUpdateCheck = p[Keys.autoUpdate] ?: true,
                 skippedUpdate = p[Keys.skipped] ?: "",
                 updateChannel = p[Keys.channel]?.let { runCatching { UpdateChannel.valueOf(it) }.getOrNull() } ?: UpdateChannel.STABLE,
@@ -148,6 +156,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
     suspend fun setShowStops(value: Boolean) { store.edit { it[Keys.stops] = value } }
     suspend fun setLocateButton(value: LocateButtonPosition) { store.edit { it[Keys.locate] = value.name } }
     suspend fun setSearchBar(value: SearchBarPosition) { store.edit { it[Keys.searchBar] = value.name } }
+    suspend fun setMapBase(value: MapBase) { store.edit { it[Keys.mapBase] = value.name } }
+    suspend fun setShowLayersButton(value: Boolean) { store.edit { it[Keys.layersButton] = value } }
     suspend fun setAutoUpdateCheck(value: Boolean) { store.edit { it[Keys.autoUpdate] = value } }
     suspend fun setSkippedUpdate(value: String) { store.edit { it[Keys.skipped] = value } }
     suspend fun setUpdateChannel(value: UpdateChannel) { store.edit { it[Keys.channel] = value.name } }

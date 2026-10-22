@@ -269,7 +269,7 @@
     <string name="source_mobility">Parking and shared mobility – Open Data Hub</string>
     <string name="source_mobility_detail">Car park occupancy and sharing stations from the Open Data Hub mobility API, where providers publish them.</string>
     <string name="source_map">Map – OpenFreeMap and OpenStreetMap</string>
-    <string name="source_map_detail">Map tiles by OpenFreeMap, map data © OpenStreetMap contributors (ODbL). Rendered with MapLibre.</string>
+    <string name="source_map_detail">Map tiles by OpenFreeMap, map data © OpenStreetMap contributors (ODbL). Aerial and topographic maps © Autonomous Province of Bolzano (CC0). Rendered with MapLibre.</string>
     <string name="about_privacy">Privacy</string>
     <string name="about_privacy_text">No account, no analytics, no advertising and no tracking. Saved items and settings stay on this device and in your phone\'s backup, only when that backup is end-to-end encrypted. Your location is only requested when you use a location feature; coordinates are sent to the journey planner only when you plan from your location.</string>
     <string name="about_realtime">Live data</string>
@@ -290,6 +290,12 @@
     <string name="settings_general">General</string>
     <string name="settings_map">Map</string>
     <string name="settings_map_layers">Show on the map</string>
+    <string name="map_layers">Map type and layers</string>
+    <string name="map_type">Map type</string>
+    <string name="map_type_standard">Standard</string>
+    <string name="map_type_detailed">Detailed</string>
+    <string name="map_type_aerial">Aerial</string>
+    <string name="map_type_topographic">Topographic</string>
     <string name="settings_search_bar">Search bar</string>
     <string name="search_bar_top">Top</string>
     <string name="search_bar_bottom">Bottom</string>
@@ -297,6 +303,8 @@
     <string name="locate_bottom_end">Bottom right</string>
     <string name="locate_bottom_start">Bottom left</string>
     <string name="locate_hidden">Hidden</string>
+    <string name="settings_layers_button">Layers button</string>
+    <string name="settings_layers_button_hint">Map type and layers, above the \"My position\" button</string>
     <string name="saved_add_line">Add line</string>
     <string name="saved_lines_need_timetable">Line search uses the offline timetable. Download it in Settings first.</string>
     <string name="alerts_nothing_saved">You have not saved any stops or lines yet. Save them to see only the notices that concern you.</string>

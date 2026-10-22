@@ -9,6 +9,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.southtyrol.transit.model.MapBase
 
 /** In memory: the file-backed DataStore cannot replace its file on Windows outside Android. */
 private class MemoryPreferences : DataStore<Preferences> {
@@ -27,6 +28,7 @@ class BackupTest {
         settings.setAppIcon("NIGHT_ROUTE")
         settings.setAlertNotifications(true)
         settings.setSkippedUpdate("0.2.0")
+        settings.setMapBase(MapBase.AERIAL)
         val user = FakeUserDao()
         user.save(SavedRow("STOP", "it:22021:468", "Bolzano"))
         user.touch(RecentRow(SavedRepository.KIND_PLACE, "x", "Merano", "", "", 1))
@@ -39,6 +41,7 @@ class BackupTest {
         assertEquals(ThemeMode.DARK, s.theme)
         assertTrue(s.amoledDark)
         assertEquals("NIGHT_ROUTE", s.appIcon)
+        assertEquals(MapBase.AERIAL, s.mapBase)
         // The notification permission is not restored, so notices start off.
         assertFalse(s.alertNotifications)
         assertEquals("", s.skippedUpdate)

@@ -145,11 +145,23 @@ Other behaviour:
 | | |
 |---|---|
 | Provider | OpenFreeMap (OpenMapTiles schema, OSM data) |
-| Endpoints | `https://tiles.openfreemap.org/styles/positron` (light), `/styles/dark` (dark) |
+| Endpoints | `https://tiles.openfreemap.org/styles/positron` (light), `/styles/fiord` (dark), `/styles/dark` (pure black): all three are Positron's layout in other colours. `/styles/liberty` for the Detailed map type in every theme (no dark variant exists) |
 | Auth | None, no API key |
 | Licence | Tiles free to use; data © OpenStreetMap contributors (ODbL). Attribution is shown by MapLibre and on the About screen |
 | Override | `map.styleUrl` / `map.styleUrlDark` in `local.properties`, or `TRANSIT_MAP_STYLE_URL[_DARK]` env vars |
 | Status | Implemented via MapLibre Android 13.6.1 behind the provider-agnostic `TransitMap` API |
+
+### Province of Bolzano raster layers (Aerial and Topographic map types)
+
+| | |
+|---|---|
+| Provider | Autonomous Province of Bolzano, via the municipalities' consortium MapProxy |
+| Endpoint | `https://geoservices.buergernetz.bz.it/mapproxy/root/service`, WMTS 1.0.0 KVP `GetTile` (the capabilities have no RESTful `ResourceURL`) |
+| Layers | `p_bz-Orthoimagery:Aerial-2023-RGB` (aerial), `p_bz-BasemapImagery:TopographicMap-Dynamic` (topographic); `STYLE=default`, `FORMAT=image/png` |
+| Grid | `TILEMATRIXSET=EPSG_3857`, standard Web Mercator 256 px tiles, levels `00`-`24`; MapLibre's `{z}/{x}/{y}` fill `TILEMATRIX/TILECOL/TILEROW`, unpadded zoom accepted (checked 2026-10-22) |
+| Coverage | South Tyrol only (≈ 10.35-12.53 E, 46.17-47.15 N). The app requests them only inside that box and from zoom 10, over the standard OpenFreeMap style, which shows elsewhere |
+| Auth | None. Capabilities: Fees and AccessConstraints "none" |
+| Licence | Provincial geodata are CC0 by the Province's open-data policy; exceptions are stated per layer, none on these two. Credited in the map and on the About screen anyway |
 
 ---
 

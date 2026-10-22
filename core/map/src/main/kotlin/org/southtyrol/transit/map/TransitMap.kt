@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.southtyrol.transit.model.BoundingBox
+import org.southtyrol.transit.model.MapBase
 import org.southtyrol.transit.model.Point
 import org.southtyrol.transit.model.TransportMode
 
@@ -67,14 +68,60 @@ sealed class CameraRequest {
 
 data class MapViewport(val box: BoundingBox, val zoom: Double, val center: Point)
 
-data class MapStyle(val lightUrl: String, val darkUrl: String)
+/**
+ * A base map: a vector style per theme, optionally with [raster] tiles laid over it (below every transit
+ * layer). The three URLs must be one design in different colours - the same roads, labels and places in
+ * every theme - so a style without a dark variant uses its light one throughout. [blackUrl] is for dark
+ * mode with pure black backgrounds ([LocalMapPureBlack]). [credit] is the data credit [MapAttribution]
+ * shows, and must name every source drawn.
+ */
+@Immutable
+data class MapStyle(
+    val lightUrl: String,
+    val darkUrl: String,
+    val blackUrl: String = darkUrl,
+    val raster: RasterTiles? = null,
+    val credit: String = OSM_CREDIT,
+)
 
+/** XYZ raster tiles ({z}/{x}/{y} in [urlTemplate]), requested only inside [bounds] and from [minZoom]. */
+@Immutable
+data class RasterTiles(val urlTemplate: String, val bounds: BoundingBox, val minZoom: Float, val maxZoom: Float)
+
+private const val OSM_CREDIT = "© OpenStreetMap · OpenFreeMap"
+private const val PROVINCE_CREDIT = "$OSM_CREDIT · Prov. Bozen-Bolzano"
+private const val OFM = "https://tiles.openfreemap.org/styles/"
+
+/** Province of Bolzano WMTS (keyless, provincial geodata under CC0), Web Mercator grid; see API_DISCOVERY.md. */
+private fun provinceTiles(layer: String, format: String) = RasterTiles(
+    urlTemplate = "https://geoservices.buergernetz.bz.it/mapproxy/root/service?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0" +
+        "&LAYER=$layer&STYLE=default&TILEMATRIXSET=EPSG_3857&FORMAT=$format&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}",
+    // The layers' own extent; outside it (and zoomed far out) the vector style underneath shows.
+    bounds = BoundingBox(south = 46.17, west = 10.35, north = 47.15, east = 12.53),
+    minZoom = 10f,
+    maxZoom = 19f,
+)
+
+/** The style for this base map; [standard] is the app's default style (a build may override its URLs). */
+fun MapBase.style(standard: MapStyle): MapStyle = when (this) {
+    MapBase.STANDARD -> standard
+    // Liberty has no dark variant (Fiord is Positron's, with far less detail): the same map in every theme.
+    MapBase.DETAILED -> MapStyle(lightUrl = OFM + "liberty", darkUrl = OFM + "liberty")
+    MapBase.AERIAL -> standard.copy(raster = provinceTiles("p_bz-Orthoimagery:Aerial-2023-RGB", "image/png"), credit = PROVINCE_CREDIT)
+    MapBase.TOPOGRAPHIC -> standard.copy(raster = provinceTiles("p_bz-BasemapImagery:TopographicMap-Dynamic", "image/png"), credit = PROVINCE_CREDIT)
+}
+
+/** Positron and its two dark recolourings: Fiord for dark mode, Dark Matter for pure black. */
 val LocalMapStyle = staticCompositionLocalOf {
     MapStyle(
-        lightUrl = "https://tiles.openfreemap.org/styles/positron",
-        darkUrl = "https://tiles.openfreemap.org/styles/dark",
+        lightUrl = OFM + "positron",
+        darkUrl = OFM + "fiord",
+        blackUrl = OFM + "dark",
     )
 }
+
+/** Dark mode with pure black backgrounds is on: the map uses [MapStyle.blackUrl]. */
+val LocalMapPureBlack = staticCompositionLocalOf { false }
 
 /**
  * Interactive transit map. Stops and vehicles cluster when zoomed out; tapping a marker reports it,
@@ -103,11 +150,11 @@ fun TransitMap(
     }
 }
 
-/** Required data credit (ODbL) shown compactly instead of the SDK's info button. */
+/** Required data credit (ODbL, plus the Province for its layers) shown compactly instead of the SDK's info button. */
 @Composable
 fun MapAttribution(darkTheme: Boolean, modifier: Modifier = Modifier) {
     Text(
-        "© OpenStreetMap · OpenFreeMap",
+        LocalMapStyle.current.credit,
         style = MaterialTheme.typography.labelSmall,
         color = if (darkTheme) Color(0xCCFFFFFF) else Color(0xCC000000),
         modifier = modifier

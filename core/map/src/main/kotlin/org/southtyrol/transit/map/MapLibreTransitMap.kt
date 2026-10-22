@@ -37,9 +37,12 @@ import org.maplibre.android.style.layers.CircleLayer
 import org.maplibre.android.style.layers.LineLayer
 import org.maplibre.android.style.layers.Property
 import org.maplibre.android.style.layers.PropertyFactory
+import org.maplibre.android.style.layers.RasterLayer
 import org.maplibre.android.style.layers.SymbolLayer
 import org.maplibre.android.style.sources.GeoJsonOptions
 import org.maplibre.android.style.sources.GeoJsonSource
+import org.maplibre.android.style.sources.RasterSource
+import org.maplibre.android.style.sources.TileSet
 import org.maplibre.geojson.Feature
 import org.maplibre.geojson.FeatureCollection
 import org.maplibre.geojson.LineString
@@ -104,7 +107,13 @@ internal fun MapLibreTransitMap(
     val context = LocalContext.current
     val density = LocalDensity.current.density
     val style = LocalMapStyle.current
-    val styleUrl = if (darkTheme) style.darkUrl else style.lightUrl
+    val pureBlack = LocalMapPureBlack.current
+    val styleUrl = when {
+        !darkTheme -> style.lightUrl
+        pureBlack -> style.blackUrl
+        else -> style.darkUrl
+    }
+    val raster = style.raster
     val holder = remember { MapHolder() }
     var styleVersion by remember { mutableStateOf(0) }
     val clickHandler by rememberUpdatedState(onMarkerClick)
@@ -147,7 +156,8 @@ internal fun MapLibreTransitMap(
         }
     }
 
-    LaunchedEffect(mapView, styleUrl) {
+    // Listeners once per map view: the style effect below re-runs on every theme or map type change.
+    LaunchedEffect(mapView) {
         mapView.getMapAsync { map ->
             holder.map = map
             map.uiSettings.isRotateGesturesEnabled = interactive
@@ -157,13 +167,6 @@ internal fun MapLibreTransitMap(
             map.uiSettings.isCompassEnabled = interactive
             if (map.cameraPosition.target == null || holder.appliedCamera == null) {
                 map.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(Geo.Bolzano.latitude, Geo.Bolzano.longitude), 9.0))
-            }
-            map.setStyle(Style.Builder().fromUri(styleUrl)) { loaded ->
-                installLayers(loaded)
-                holder.images = MarkerImages(density, darkTheme)
-                holder.added.clear()
-                holder.style = loaded
-                styleVersion++
             }
             map.addOnCameraIdleListener {
                 val bounds = map.projection.visibleRegion.latLngBounds
@@ -188,6 +191,20 @@ internal fun MapLibreTransitMap(
                 val hit = map.queryRenderedFeatures(box, L_VEHICLES, L_VEHICLE_DOT, L_POIS, L_POI_POINTS, L_STOPS, L_STOPS_PLAIN).firstNotNullOfOrNull { f -> f.getStringProperty("id")?.let { holder.markers[it] } }
                 if (hit != null) clickHandler(hit)
                 hit != null
+            }
+        }
+    }
+
+    LaunchedEffect(mapView, styleUrl, raster, darkTheme) {
+        mapView.getMapAsync { map ->
+            map.setStyle(Style.Builder().fromUri(styleUrl)) { loaded ->
+                // Above the base style, below every transit layer installLayers adds next.
+                if (raster != null) installRaster(loaded, raster)
+                installLayers(loaded)
+                holder.images = MarkerImages(density, darkTheme)
+                holder.added.clear()
+                holder.style = loaded
+                styleVersion++
             }
         }
     }
@@ -293,6 +310,19 @@ private fun MapPolyline.toFeature(): Feature {
         addProperty("opacity", LINE_OPACITY * opacity.coerceIn(0f, 1f))
     }
     return Feature.fromGeometry(LineString.fromLngLats(points.map { GeoPoint.fromLngLat(it.longitude, it.latitude) }), props)
+}
+
+private const val SRC_BASE_RASTER = "st-base-raster"
+private const val L_BASE_RASTER = "st-base-raster-layer"
+
+private fun installRaster(style: Style, raster: RasterTiles) {
+    val tiles = TileSet("2.2.0", raster.urlTemplate).apply {
+        minZoom = raster.minZoom
+        maxZoom = raster.maxZoom
+        setBounds(raster.bounds.west.toFloat(), raster.bounds.south.toFloat(), raster.bounds.east.toFloat(), raster.bounds.north.toFloat())
+    }
+    style.addSource(RasterSource(SRC_BASE_RASTER, tiles, 256))
+    style.addLayer(RasterLayer(L_BASE_RASTER, SRC_BASE_RASTER))
 }
 
 private fun installLayers(style: Style) {

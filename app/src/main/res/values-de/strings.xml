@@ -255,7 +255,7 @@
     <string name="source_mobility">Parken und Sharing – Open Data Hub</string>
     <string name="source_mobility_detail">Parkplatzbelegung und Sharing-Stationen aus der Open Data Hub Mobility-API, sofern Anbieter sie veröffentlichen.</string>
     <string name="source_map">Karte – OpenFreeMap und OpenStreetMap</string>
-    <string name="source_map_detail">Kartenkacheln von OpenFreeMap, Kartendaten © OpenStreetMap-Mitwirkende (ODbL). Darstellung mit MapLibre.</string>
+    <string name="source_map_detail">Kartenkacheln von OpenFreeMap, Kartendaten © OpenStreetMap-Mitwirkende (ODbL). Luftbild und topografische Karte © Autonome Provinz Bozen (CC0). Darstellung mit MapLibre.</string>
     <string name="about_privacy">Datenschutz</string>
     <string name="about_privacy_text">Kein Konto, keine Analyse, keine Werbung, kein Tracking. Gespeicherte Einträge und Einstellungen bleiben auf diesem Gerät und in der Sicherung des Telefons, nur wenn diese Ende-zu-Ende-verschlüsselt ist. Der Standort wird nur abgefragt, wenn du eine Standortfunktion nutzt; Koordinaten gehen nur an die Fahrplanauskunft, wenn du ab deinem Standort planst.</string>
     <string name="about_realtime">Echtzeitdaten</string>
@@ -276,6 +276,12 @@
     <string name="settings_general">Allgemein</string>
     <string name="settings_map">Karte</string>
     <string name="settings_map_layers">Auf der Karte anzeigen</string>
+    <string name="map_layers">Kartentyp und Ebenen</string>
+    <string name="map_type">Kartentyp</string>
+    <string name="map_type_standard">Standard</string>
+    <string name="map_type_detailed">Detailliert</string>
+    <string name="map_type_aerial">Luftbild</string>
+    <string name="map_type_topographic">Topografisch</string>
     <string name="settings_search_bar">Suchleiste</string>
     <string name="search_bar_top">Oben</string>
     <string name="search_bar_bottom">Unten</string>
@@ -283,6 +289,8 @@
     <string name="locate_bottom_end">Unten rechts</string>
     <string name="locate_bottom_start">Unten links</string>
     <string name="locate_hidden">Ausgeblendet</string>
+    <string name="settings_layers_button">Ebenen-Schaltfläche</string>
+    <string name="settings_layers_button_hint">Kartentyp und Ebenen, über der Schaltfläche „Mein Standort“</string>
     <string name="saved_add_line">Linie hinzufügen</string>
     <string name="saved_lines_need_timetable">Die Liniensuche nutzt den Offline-Fahrplan. Bitte zuerst in den Einstellungen herunterladen.</string>
     <string name="alerts_nothing_saved">Du hast noch keine Haltestellen oder Linien gespeichert. Speichere sie, um nur die Meldungen zu sehen, die dich betreffen.</string>

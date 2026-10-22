@@ -97,6 +97,7 @@ import org.southtyrol.transit.design.Format
 import org.southtyrol.transit.design.SectionHeader
 import org.southtyrol.transit.di.AppLanguage
 import org.southtyrol.transit.model.GtfsTime
+import org.southtyrol.transit.model.MapBase
 import org.southtyrol.transit.model.TicketingProvider
 import org.southtyrol.transit.ui.Navigator
 import org.southtyrol.transit.work.BackgroundWork
@@ -134,6 +135,8 @@ class SettingsViewModel @Inject constructor(
     }
     fun locateButton(value: LocateButtonPosition) = viewModelScope.launch { settings.setLocateButton(value) }
     fun searchBar(value: SearchBarPosition) = viewModelScope.launch { settings.setSearchBar(value) }
+    fun mapBase(value: MapBase) = viewModelScope.launch { settings.setMapBase(value) }
+    fun showLayersButton(value: Boolean) = viewModelScope.launch { settings.setShowLayersButton(value) }
 }
 
 @Composable
@@ -180,6 +183,10 @@ fun SettingsScreen(navigator: Navigator, viewModel: SettingsViewModel = hiltView
         CHOICE_SEARCH_BAR -> ChoiceDialog(
             stringResource(R.string.settings_search_bar), SearchBarPosition.entries, prefs.searchBar,
             { stringResource(searchBarLabel(it)) }, { viewModel.searchBar(it); dismiss() }, dismiss,
+        )
+        CHOICE_MAP_BASE -> ChoiceDialog(
+            stringResource(R.string.map_type), MapBase.entries, prefs.mapBase,
+            { stringResource(mapBaseLabel(it)) }, { viewModel.mapBase(it); dismiss() }, dismiss,
         )
         CHOICE_ICON -> androidx.compose.material3.ModalBottomSheet(onDismissRequest = dismiss) {
             Column(Modifier.padding(start = 24.dp, end = 24.dp, bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -232,6 +239,7 @@ fun SettingsScreen(navigator: Navigator, viewModel: SettingsViewModel = hiltView
 
         item {
             SettingsGroup(stringResource(R.string.settings_map)) {
+                item { ChoiceRow(stringResource(R.string.map_type), stringResource(mapBaseLabel(prefs.mapBase))) { choice = CHOICE_MAP_BASE } }
                 item {
                     ChipLabel(stringResource(R.string.settings_map_layers))
                     FlowRow(Modifier.padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -244,6 +252,7 @@ fun SettingsScreen(navigator: Navigator, viewModel: SettingsViewModel = hiltView
                 }
                 item { ChoiceRow(stringResource(R.string.settings_search_bar), stringResource(searchBarLabel(prefs.searchBar))) { choice = CHOICE_SEARCH_BAR } }
                 item { ChoiceRow(stringResource(R.string.settings_locate_button), stringResource(locateLabel(prefs.locateButton))) { choice = CHOICE_LOCATE } }
+                item { SwitchRow(stringResource(R.string.settings_layers_button), stringResource(R.string.settings_layers_button_hint), prefs.showLayersButton) { viewModel.showLayersButton(it) } }
             }
         }
 
@@ -329,6 +338,14 @@ private const val CHOICE_LANGUAGE = "language"
 private const val CHOICE_LOCATE = "locate"
 private const val CHOICE_SEARCH_BAR = "searchBar"
 private const val CHOICE_ICON = "icon"
+private const val CHOICE_MAP_BASE = "mapBase"
+
+internal fun mapBaseLabel(base: MapBase) = when (base) {
+    MapBase.STANDARD -> R.string.map_type_standard
+    MapBase.DETAILED -> R.string.map_type_detailed
+    MapBase.AERIAL -> R.string.map_type_aerial
+    MapBase.TOPOGRAPHIC -> R.string.map_type_topographic
+}
 
 private fun searchBarLabel(position: SearchBarPosition) = when (position) {
     SearchBarPosition.TOP -> R.string.search_bar_top
@@ -441,9 +458,9 @@ private fun AppIconRow(chosen: String, onClick: () -> Unit) {
     }
 }
 
-/** Multiple selection: each chip toggles on its own. */
+/** Multiple selection: each chip toggles on its own. Also the map's layers sheet. */
 @Composable
-private fun ToggleChip(label: String, selected: Boolean, onChange: (Boolean) -> Unit) {
+internal fun ToggleChip(label: String, selected: Boolean, onChange: (Boolean) -> Unit) {
     FilterChip(
         selected = selected,
         onClick = { onChange(!selected) },

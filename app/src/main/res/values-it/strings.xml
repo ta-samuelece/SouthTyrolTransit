@@ -258,7 +258,7 @@
     <string name="source_mobility">Parcheggi e mobilità condivisa – Open Data Hub</string>
     <string name="source_mobility_detail">Occupazione dei parcheggi e stazioni di sharing dall\'API mobilità di Open Data Hub, dove i fornitori le pubblicano.</string>
     <string name="source_map">Mappa – OpenFreeMap e OpenStreetMap</string>
-    <string name="source_map_detail">Tasselli di OpenFreeMap, dati cartografici © contributori OpenStreetMap (ODbL). Visualizzazione con MapLibre.</string>
+    <string name="source_map_detail">Tasselli di OpenFreeMap, dati cartografici © contributori OpenStreetMap (ODbL). Ortofoto e carta topografica © Provincia autonoma di Bolzano (CC0). Visualizzazione con MapLibre.</string>
     <string name="about_privacy">Privacy</string>
     <string name="about_privacy_text">Nessun account, nessuna analisi, nessuna pubblicità, nessun tracciamento. Elementi salvati e impostazioni restano su questo dispositivo e nel backup del telefono, solo se è crittografato end-to-end. La posizione viene richiesta solo quando usi una funzione di posizione; le coordinate vengono inviate al servizio orari solo quando pianifichi dalla tua posizione.</string>
     <string name="about_realtime">Dati in tempo reale</string>
@@ -279,6 +279,12 @@
     <string name="settings_general">Generali</string>
     <string name="settings_map">Mappa</string>
     <string name="settings_map_layers">Mostra sulla mappa</string>
+    <string name="map_layers">Tipo di mappa e livelli</string>
+    <string name="map_type">Tipo di mappa</string>
+    <string name="map_type_standard">Standard</string>
+    <string name="map_type_detailed">Dettagliata</string>
+    <string name="map_type_aerial">Aerea</string>
+    <string name="map_type_topographic">Topografica</string>
     <string name="settings_search_bar">Barra di ricerca</string>
     <string name="search_bar_top">In alto</string>
     <string name="search_bar_bottom">In basso</string>
@@ -286,6 +292,8 @@
     <string name="locate_bottom_end">In basso a destra</string>
     <string name="locate_bottom_start">In basso a sinistra</string>
     <string name="locate_hidden">Nascosto</string>
+    <string name="settings_layers_button">Pulsante livelli</string>
+    <string name="settings_layers_button_hint">Tipo di mappa e livelli, sopra il pulsante \"La mia posizione\"</string>
     <string name="saved_add_line">Aggiungi linea</string>
     <string name="saved_lines_need_timetable">La ricerca delle linee usa l\'orario offline. Scaricalo prima nelle Impostazioni.</string>
     <string name="alerts_nothing_saved">Non hai ancora salvato fermate o linee. Salvale per vedere solo gli avvisi che ti riguardano.</string>

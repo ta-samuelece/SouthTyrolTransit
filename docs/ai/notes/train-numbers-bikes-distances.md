@@ -40,6 +40,9 @@ number, no bike symbol, no warning except in the bike search below.
   estimate or a stale fix would claim a precision the app does not have. The stretch to the next stop is
   measured on the shape and clamped to the timetable's gap, so it never contradicts the stop list.
 - Distances per stop on the trip screen are relative to the run's first stop.
+- The stop board's next-departure card does **not** show the distance to the run's last stop: it was
+  removed on 2026-10-24 at the user's request. `Departure.remainingMeters` is still imported but no
+  screen reads it.
 
 # Travelling with a bike
 

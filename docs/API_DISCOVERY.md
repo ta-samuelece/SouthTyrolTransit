@@ -129,14 +129,33 @@ Other behaviour:
 | | |
 |---|---|
 | Provider | NOI Techpark Open Data Hub |
-| Endpoint | `https://mobility.api.opendatahub.com/v2/flat,node/{ParkingStation\|BikesharingStation\|CarsharingStation}/{free\|number-available}/latest` |
+| Endpoint | `https://mobility.api.opendatahub.com/v2/flat,node/{ParkingStation\|BikesharingStation\|CarsharingStation}/{free\|number-available}/latest`; charging stations below |
 | Filters | `where=sactive.eq.true,scoordinate.bbi.(w,s,e,n,4326)`, `select=scode,sname,scoordinate,sorigin,mvalue,mvalidtime,smetadata.capacity` |
 | Classification | Public open-source infrastructure (production API) |
 | Auth | None for open data |
 | Licence | Per origin; the open records used here are published as open data by ODH |
-| Freshness (4 Oct 2026) | Parking (FAMAS / municipalities / skidata): current (minutes old). Bike sharing in South Tyrol: 2 stations, last value Sept 2026 (stale). Car sharing: sparse and partly years old |
+| Freshness (4 Oct 2026; car sharing 24 Oct) | Parking (FAMAS / municipalities / skidata): current (minutes old). Bike sharing in South Tyrol: 2 stations, last value Sept 2026 (stale). Car sharing: AlpsGo, 48 of 53 stations updated within 3 h on 24 Oct 2026 |
 | App policy | Parking is on by default. Bike and car sharing are off by default. Values older than 3 h are shown as "no current availability", and values older than 7 days are dropped (dead sensors). Every layer fails independently (`MobilityRepository`) |
 | Status | Implemented behind toggles |
+
+### EV charging stations (`OdhChargingSource`)
+
+Three requests for the visible area, run together and joined in the app:
+
+| Request | Path and `select` |
+|---|---|
+| Stations | `EChargingStation`, `select=scode,sname,scoordinate,sorigin,smetadata` |
+| Charging points | `EChargingPlug`, `select=scode,pcode,smetadata`; a point's `pcode` is its station's `scode` |
+| Status | `EChargingPlug/echarging-plug-status,echarging-plug-status-ocpi,echarging-plug-status-oicp/latest`, `select=scode,mvalue,mvalidtime`; best effort, stations still show without it |
+
+- **Coverage (24 Oct 2026, South Tyrol):** about 780 active stations. Neogy (about 450, OCPI) reports point status; route220 (about 80), BFE, DRIWE and IIT report some; about 230 stations from one spreadsheet import (origin `1ucCQz…`, e.g. Be Charge, Leitner Energy) have no status and often no address.
+- **Status vocabularies:** OCPI `AVAILABLE`, `CHARGING`, `BLOCKED`, `RESERVED`, `INOPERATIVE`, `OUTOFORDER`, `UNKNOWN`, `REMOVED`; OICP `Available`, `Occupied`, `OutOfService`, `Unknown`; route220 a bare `0` or `1`, meaning undocumented. All are mapped in `Charging.status`; `REMOVED` drops the point, the numbers count as unknown.
+- **Change-only reporting:** a status is published when it changes, so most are hours or days old while still true. The app counts a status as current for up to 7 days (`FreshnessPolicy.CHARGING_MAX_AGE`) and shows its time ("Status as of 16:00"), never "Live".
+- **Point descriptions:** OCPI `smetadata.connectors[]` (`standard`, `power_type`, `max_electric_power` in W, `format` CABLE or SOCKET); older feeds `smetadata.outlets[]` (`outletTypeCode`, `maxPower` in kW, `hasFixedCable`).
+- **Not chargers:** IIT's hydrogen dispenser (`outletTypeCode` "700 bar small vehicles") and stations with `state` PLANNED are left out.
+- **Station names** are often operator codes ("BZ_P_VITTORIA", "IT*BEC*EH000137*1"); the app then shows the address, or "Charging station" when there is none. Neogy cities are upper case ("BOLZANO - BOZEN") and are title-cased.
+- **No prices** are published by any operator.
+- Fixtures: `docs/fixtures/odh_charging_stations.json`, `odh_charging_plugs.json`, `odh_charging_status.json` (central Bolzano, 24 Oct 2026).
 
 ---
 

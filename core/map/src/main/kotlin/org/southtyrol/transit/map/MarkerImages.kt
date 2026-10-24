@@ -8,7 +8,9 @@ import android.graphics.Path
 import android.graphics.RectF
 import android.graphics.Typeface
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material.icons.rounded.DirectionsCar
+import androidx.compose.material.icons.rounded.EvStation
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.LocalParking
 import androidx.compose.material.icons.rounded.PedalBike
@@ -48,19 +50,26 @@ private const val MAX_TAG_CHARS = 6
 
 internal fun tagText(label: String): String = label.trim().let { if (it.length > MAX_TAG_CHARS) it.take(MAX_TAG_CHARS - 1) + "…" else it }
 
-internal fun MapMarker.isMobility(): Boolean = kind == MarkerKind.PARKING || kind == MarkerKind.BIKE_SHARING || kind == MarkerKind.CAR_SHARING
+internal fun MapMarker.isMobility(): Boolean =
+    kind == MarkerKind.PARKING || kind == MarkerKind.BIKE_SHARING || kind == MarkerKind.CAR_SHARING || kind == MarkerKind.CHARGING
 
 internal fun mobilityColor(kind: MarkerKind): Long = when (kind) {
     MarkerKind.PARKING -> 0x1565C0
     MarkerKind.BIKE_SHARING -> 0x2E7D32
+    MarkerKind.CHARGING -> 0xAD1457
     else -> 0x6A1B9A
 }
 
 private fun mobilityIcon(kind: MarkerKind): ImageVector = when (kind) {
     MarkerKind.PARKING -> Icons.Rounded.LocalParking
     MarkerKind.BIKE_SHARING -> Icons.Rounded.PedalBike
+    MarkerKind.CHARGING -> Icons.Rounded.EvStation
     else -> Icons.Rounded.DirectionsCar
 }
+
+/** Fill and glyph of the corner badge (tertiary amber with on-tertiary-container), the same in every theme. */
+private const val BADGE_COLOR = 0xF2C048L
+private const val ON_BADGE_COLOR = 0x261900L
 
 /** Corner radius in dp of a vehicle's line tag; follows ModeShapes.badge, simplified to one radius. */
 private fun tagRadius(mode: TransportMode): Float = when (mode) {
@@ -83,7 +92,7 @@ internal class MarkerImages(private val density: Float, private val dark: Boolea
     fun arrowKey(m: MapMarker): String = "arrow|${vehicleColor(m)}|${m.selected}"
 
     fun mobilityKey(m: MapMarker, withCount: Boolean): String =
-        "poi|${m.kind}|${if (withCount) m.label.trim() else ""}|${m.selected}|$dark"
+        "poi|${m.kind}|${m.color ?: ""}|${m.badge}|${if (withCount) m.label.trim() else ""}|${m.selected}|$dark"
 
     fun vehicleColor(m: MapMarker): Long = if (m.stale) STALE_VEHICLE_COLOR else (m.color ?: ModeColors.container(m.mode ?: TransportMode.BUS))
 
@@ -142,7 +151,8 @@ internal class MarkerImages(private val density: Float, private val dark: Boolea
     }
 
     fun mobility(m: MapMarker, withCount: Boolean): Bitmap {
-        val fill = mobilityColor(m.kind)
+        // A colour on the marker overrides the kind's, e.g. grey for a charging station out of service.
+        val fill = m.color ?: mobilityColor(m.kind)
         val s = if (m.selected) 18f else 14f
         val ringOut = if (m.selected) 3f else 0f
         val count = if (withCount) m.label.trim() else ""
@@ -150,7 +160,9 @@ internal class MarkerImages(private val density: Float, private val dark: Boolea
         val pillW = if (count.isEmpty()) 0f else max(18f, countPaint.measureText(count) / density + 10f)
         val pillX = if (m.selected) 10f else 6f
         val pillY = if (m.selected) 8f else 4f
-        val half = max(s + ringOut, if (pillW > 0f) max(pillX + pillW, pillY + 18f) else 0f) + 1f
+        // The badge sits on the opposite corner from the pill, centred just outside the tile's corner.
+        val badgeAt = s + 1f
+        val half = max(max(s + ringOut, if (pillW > 0f) max(pillX + pillW, pillY + 18f) else 0f), if (m.badge) badgeAt + 8f else 0f) + 1f
         val (bitmap, canvas) = canvas(half, half)
         val c = half * density
         val rad = (if (m.selected) 10f else 8f) * density
@@ -163,6 +175,12 @@ internal class MarkerImages(private val density: Float, private val dark: Boolea
         tile.inset(2f * density, 2f * density)
         canvas.drawRoundRect(tile, rad - 2f * density, rad - 2f * density, paint(fill))
         drawIcon(canvas, mobilityIcon(m.kind), c, c, if (m.selected) 22f else 18f, 0xFFFFFF)
+        if (m.badge) {
+            val bx = c - badgeAt * density
+            canvas.drawCircle(bx, bx, 8f * density, paint(0xFFFFFF))
+            canvas.drawCircle(bx, bx, 6.5f * density, paint(BADGE_COLOR))
+            drawIcon(canvas, Icons.Rounded.Bolt, bx, bx, 11f, ON_BADGE_COLOR)
+        }
         if (pillW > 0f) {
             // Nothing left reads in a neutral colour rather than the kind's, still with its number.
             val none = count == "0"

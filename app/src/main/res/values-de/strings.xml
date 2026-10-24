@@ -154,6 +154,7 @@
     <string name="map_layer_parking">Parken</string>
     <string name="map_layer_bikes">Bikesharing</string>
     <string name="map_layer_cars">Carsharing</string>
+    <string name="map_layer_charging">E-Ladestationen</string>
     <string name="map_search_hint">Haltestellen und Linien suchen</string>
     <string name="map_menu">Menü</string>
     <string name="map_menu_close">Menü schließen</string>
@@ -176,6 +177,37 @@
     <string name="mobility_available_of">%1$d von %2$d frei</string>
     <string name="mobility_no_current">Keine aktuelle Belegung gemeldet.</string>
     <string name="mobility_source">Daten: Open Data Hub Mobility-API.</string>
+    <string name="charging_station">Ladestation</string>
+    <plurals name="charging_points_free">
+        <item quantity="one">%1$d von %2$d Ladepunkten frei</item>
+        <item quantity="other">%1$d von %2$d Ladepunkten frei</item>
+    </plurals>
+    <plurals name="charging_points">
+        <item quantity="one">%d Ladepunkt</item>
+        <item quantity="other">%d Ladepunkte</item>
+    </plurals>
+    <plurals name="charging_free">
+        <item quantity="one">%d frei</item>
+        <item quantity="other">%d frei</item>
+    </plurals>
+    <plurals name="charging_out_of_order">
+        <item quantity="one">%d außer Betrieb</item>
+        <item quantity="other">%d außer Betrieb</item>
+    </plurals>
+    <string name="charging_of">von %d</string>
+    <string name="charging_status_as_of">Stand: %s</string>
+    <string name="charging_cable">Kabel vorhanden</string>
+    <string name="charging_socket">Steckdose, eigenes Kabel mitbringen</string>
+    <string name="charging_connector_unknown">Der Betreiber gibt weder Stecker noch Leistung an</string>
+    <string name="charging_type2">Typ 2</string>
+    <string name="charging_type1">Typ 1</string>
+    <string name="charging_domestic">Haushaltssteckdose</string>
+    <string name="charging_other">Anderer Stecker</string>
+    <string name="charging_open_all_day">Rund um die Uhr geöffnet</string>
+    <string name="charging_private_public">Privat, öffentlich zugänglich</string>
+    <string name="charging_rfid">RFID-Karte</string>
+    <string name="charging_how_to_pay">Bezahlung</string>
+    <string name="charging_source">Daten: Open Data Hub, vom Betreiber. Preise werden nicht veröffentlicht.</string>
 
     <string name="alerts_title">Betriebsmeldungen</string>
     <string name="alerts_active">Aktuell</string>
@@ -252,8 +284,8 @@
     <string name="source_gtfs_detail">Statisches GTFS und GTFS-Realtime (Fahrtaktualisierungen, Fahrzeugpositionen, Meldungen) für den ÖPNV in Südtirol. Lizenz: CC0.</string>
     <string name="source_efa">Fahrplanauskunft – STA-EFA-Schnittstelle</string>
     <string name="source_efa_detail">Verbindungssuche, Ortssuche, Abfahrtstafeln und Hinweise über die öffentliche STA-EFA-XML-Schnittstelle. Lizenz: CC0.</string>
-    <string name="source_mobility">Parken und Sharing – Open Data Hub</string>
-    <string name="source_mobility_detail">Parkplatzbelegung und Sharing-Stationen aus der Open Data Hub Mobility-API, sofern Anbieter sie veröffentlichen.</string>
+    <string name="source_mobility">Parken, Sharing und Laden – Open Data Hub</string>
+    <string name="source_mobility_detail">Parkplatzbelegung, Sharing-Stationen und Ladestationen für Elektrofahrzeuge aus der Open Data Hub Mobility-API, sofern Anbieter sie veröffentlichen.</string>
     <string name="source_map">Karte – OpenFreeMap und OpenStreetMap</string>
     <string name="source_map_detail">Kartenkacheln von OpenFreeMap, Kartendaten © OpenStreetMap-Mitwirkende (ODbL). Luftbild und topografische Karte © Autonome Provinz Bozen (CC0). Darstellung mit MapLibre.</string>
     <string name="about_privacy">Datenschutz</string>

@@ -90,6 +90,7 @@ internal fun MapLayersSheet(
                 ToggleChip(stringResource(R.string.map_layer_parking), MobilityKind.PARKING in prefs.mobilityLayers) { onLayer(MobilityKind.PARKING, it) }
                 ToggleChip(stringResource(R.string.map_layer_bikes), MobilityKind.BIKE_SHARING in prefs.mobilityLayers) { onLayer(MobilityKind.BIKE_SHARING, it) }
                 ToggleChip(stringResource(R.string.map_layer_cars), MobilityKind.CAR_SHARING in prefs.mobilityLayers) { onLayer(MobilityKind.CAR_SHARING, it) }
+                ToggleChip(stringResource(R.string.map_layer_charging), MobilityKind.CHARGING in prefs.mobilityLayers) { onLayer(MobilityKind.CHARGING, it) }
             }
         }
     }

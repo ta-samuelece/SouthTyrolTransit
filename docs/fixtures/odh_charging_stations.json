@@ -1,0 +1,209 @@
+{
+ "offset": 0,
+ "limit": 500,
+ "data": [
+  {
+   "scode": "326",
+   "scoordinate": {
+    "srid": 4326,
+    "x": 11.31814,
+    "y": 46.47524
+   },
+   "smetadata": {
+    "city": "Bozen",
+    "state": "UNAVAILABLE",
+    "address": "Via Enrico Mattei 1 - 39100 Bozen - IT",
+    "provider": "H2 Center",
+    "accessInfo": "Served refueling Mon-Fri. 8 a.m. to 5 p.m. (short telephone announcement necessary)\r\n+39 (0)471 1964 888      info@iithydrogen.it    DE  IT  EN",
+    "accessType": "PUBLIC",
+    "reservable": true,
+    "paymentInfo": "http://www.h2-suedtirol.com/it/rent-a-h2-car/dati-tecnici-rifornimento/",
+    "municipality": "Bozen"
+   },
+   "sname": "Bozen",
+   "sorigin": "IIT"
+  },
+  {
+   "scode": "Be Charge srl:IT*BEC*EH000137*1",
+   "scoordinate": {
+    "srid": 4326,
+    "x": 11.343172,
+    "y": 46.487615
+   },
+   "smetadata": {
+    "state": "ACTIVE",
+    "provider": "Be Charge srl",
+    "accessType": "PUBLIC"
+   },
+   "sname": "IT*BEC*EH000137*1",
+   "sorigin": "1ucCQzAVGmvyRpeq-lIPffALQaWcG4LfPakc2mjt79fY"
+  },
+  {
+   "scode": "IT*ETN*E00411",
+   "scoordinate": {
+    "srid": 4326,
+    "x": 11.358355,
+    "y": 46.50035
+   },
+   "smetadata": {
+    "city": "Bolzano - Bozen",
+    "state": "UNKNOWN",
+    "address": "Via Piave, 2",
+    "capacity": 1,
+    "provider": "Route220",
+    "accessInfo": "24/7",
+    "accessType": "PRIVATE_WITHPUBLICACCESS",
+    "categories": [
+     "SLEEP&CHARGE"
+    ],
+    "reservable": false,
+    "paymentInfo": "https://evway.net/app/"
+   },
+   "sname": "Hotel Luna",
+   "sorigin": "route220"
+  },
+  {
+   "scode": "Leitner Energy:Erbacherhof 1 - 11kW - Bozen/Bolzano - RentschnerstraÃŸe 28a/Via Rencio 28a",
+   "scoordinate": {
+    "srid": 4326,
+    "x": 11.3733594,
+    "y": 46.4984198
+   },
+   "smetadata": {
+    "state": "PLANNED",
+    "provider": "Leitner Energy",
+    "accessType": "PUBLIC"
+   },
+   "sname": "Erbacherhof 1 - 11kW - Bozen/Bolzano - RentschnerstraÃŸe 28a/Via Rencio 28a",
+   "sorigin": "1ucCQzAVGmvyRpeq-lIPffALQaWcG4LfPakc2mjt79fY"
+  },
+  {
+   "scode": "Neogy-AMPECO:77436",
+   "scoordinate": {
+    "srid": 4326,
+    "x": 11.345377,
+    "y": 46.500802
+   },
+   "smetadata": {
+    "city": "BOLZANO - BOZEN",
+    "address": "Piazza della Vittoria - Siegesplatz 48",
+    "capacity": 3,
+    "party_id": "NEO",
+    "time_zone": "Europe/Rome",
+    "directions": [
+     {
+      "text": "Piazza della Vittoria - Siegesplatz 48 - 39100 - BOLZANO - BOZEN - (BZ)",
+      "language": "en"
+     },
+     {
+      "text": "Piazza della Vittoria - Siegesplatz 48 - 39100 - BOLZANO - BOZEN - (BZ)",
+      "language": "it"
+     }
+    ],
+    "postal_code": "39100",
+    "country_code": "IT",
+    "opening_times": {
+     "twentyfourseven": true
+    }
+   },
+   "sname": "BZ_P_VITTORIA",
+   "sorigin": "Neogy-AMPECO"
+  },
+  {
+   "scode": "Neogy-AMPECO:77594",
+   "scoordinate": {
+    "srid": 4326,
+    "x": 11.326131,
+    "y": 46.473117
+   },
+   "smetadata": {
+    "city": "BOLZANO - BOZEN",
+    "address": "Via Marco Polo StraÃŸe",
+    "capacity": 3,
+    "party_id": "NEO",
+    "time_zone": "Europe/Rome",
+    "directions": [
+     {
+      "text": "Via Marco Polo StraÃŸe - 39100 - BOLZANO - BOZEN - (BZ)",
+      "language": "en"
+     },
+     {
+      "text": "Via Marco Polo StraÃŸe - 39100 - BOLZANO - BOZEN - (BZ)",
+      "language": "it"
+     }
+    ],
+    "postal_code": "39100",
+    "country_code": "IT",
+    "opening_times": {
+     "twentyfourseven": true
+    }
+   },
+   "sname": "BZ_FIERA",
+   "sorigin": "Neogy-AMPECO"
+  },
+  {
+   "scode": "Neogy-AMPECO:78231",
+   "scoordinate": {
+    "srid": 4326,
+    "x": 11.324325,
+    "y": 46.488724
+   },
+   "smetadata": {
+    "city": "BOLZANO - BOZEN",
+    "address": "Via Sassari - Sassari Strasse",
+    "capacity": 3,
+    "party_id": "NEO",
+    "time_zone": "Europe/Rome",
+    "directions": [
+     {
+      "text": "Via Sassari - Sassari Strasse - 39100 - BOLZANO - BOZEN - (BZ)",
+      "language": "en"
+     },
+     {
+      "text": "Via Sassari - Sassari Strasse - 39100 - BOLZANO - BOZEN - (BZ)",
+      "language": "it"
+     }
+    ],
+    "postal_code": "39100",
+    "country_code": "IT",
+    "opening_times": {
+     "twentyfourseven": true
+    }
+   },
+   "sname": "BZ_SASSARI_01",
+   "sorigin": "Neogy-AMPECO"
+  },
+  {
+   "scode": "Neogy-AMPECO:78284",
+   "scoordinate": {
+    "srid": 4326,
+    "x": 11.315241,
+    "y": 46.493166
+   },
+   "smetadata": {
+    "city": "BOLZANO - BOZEN",
+    "address": "Via Resia - ReschenstraÃŸe",
+    "capacity": 3,
+    "party_id": "NEO",
+    "time_zone": "Europe/Rome",
+    "directions": [
+     {
+      "text": "Via Resia - ReschenstraÃŸe - 39100 - BOLZANO - BOZEN - (BZ)",
+      "language": "en"
+     },
+     {
+      "text": "Via Resia - ReschenstraÃŸe - 39100 - BOLZANO - BOZEN - (BZ)",
+      "language": "it"
+     }
+    ],
+    "postal_code": "39100",
+    "country_code": "IT",
+    "opening_times": {
+     "twentyfourseven": true
+    }
+   },
+   "sname": "BZ_RESIA_02",
+   "sorigin": "Neogy-AMPECO"
+  }
+ ]
+}

@@ -1,0 +1,242 @@
+{
+ "offset": 0,
+ "limit": 3000,
+ "data": [
+  {
+   "scode": "326-1",
+   "pcode": "326",
+   "smetadata": {
+    "outlets": [
+     {
+      "id": "1",
+      "outletTypeCode": "700 bar small vehicles"
+     }
+    ]
+   }
+  },
+  {
+   "scode": "Be Charge srl:IT*BEC*EH000137*1:1",
+   "pcode": "Be Charge srl:IT*BEC*EH000137*1",
+   "smetadata": {
+    "outlets": []
+   }
+  },
+  {
+   "scode": "IT*ETN*E00411-IT*ETN*E00411",
+   "pcode": "IT*ETN*E00411",
+   "smetadata": {
+    "outlets": [
+     {
+      "id": "IT*ETN*E00411",
+      "maxPower": 7.4,
+      "maxCurrent": 0.0,
+      "minCurrent": 0.0,
+      "hasFixedCable": false,
+      "outletTypeCode": "Type2Mennekes"
+     }
+    ]
+   }
+  },
+  {
+   "scode": "Leitner Energy:Erbacherhof 1 - 11kW - Bozen/Bolzano - RentschnerstraÃŸe 28a/Via Rencio 28a:1",
+   "pcode": "Leitner Energy:Erbacherhof 1 - 11kW - Bozen/Bolzano - RentschnerstraÃŸe 28a/Via Rencio 28a",
+   "smetadata": {
+    "outlets": [
+     {
+      "id": "Leitner Energy:Erbacherhof 1 - 11kW - Bozen/Bolzano - RentschnerstraÃŸe 28a/Via Rencio 28a:1:1",
+      "outletTypeCode": "Type2Mennekes"
+     }
+    ]
+   }
+  },
+  {
+   "scode": "Neogy-AMPECO:253566",
+   "pcode": "Neogy-AMPECO:77436",
+   "smetadata": {
+    "connectors": [
+     {
+      "id": "256291",
+      "format": "SOCKET",
+      "standard": "IEC_62196_T2",
+      "max_ampere": 32,
+      "power_type": "AC_1_PHASE",
+      "max_voltage": 230,
+      "max_electric_power": 7400
+     }
+    ],
+    "capabilities": [
+     "REMOTE_START_STOP_CAPABLE",
+     "RFID_READER"
+    ]
+   }
+  },
+  {
+   "scode": "Neogy-AMPECO:254788",
+   "pcode": "Neogy-AMPECO:77436",
+   "smetadata": {
+    "connectors": [
+     {
+      "id": "257513",
+      "format": "SOCKET",
+      "standard": "IEC_62196_T2",
+      "max_ampere": 32,
+      "power_type": "AC_3_PHASE",
+      "max_voltage": 230,
+      "max_electric_power": 22000
+     }
+    ],
+    "capabilities": [
+     "REMOTE_START_STOP_CAPABLE",
+     "RFID_READER"
+    ]
+   }
+  },
+  {
+   "scode": "Neogy-AMPECO:255719",
+   "pcode": "Neogy-AMPECO:77436",
+   "smetadata": {
+    "connectors": [
+     {
+      "id": "258440",
+      "format": "SOCKET",
+      "standard": "IEC_62196_T2",
+      "max_ampere": 32,
+      "power_type": "AC_3_PHASE",
+      "max_voltage": 230,
+      "max_electric_power": 22000
+     }
+    ],
+    "capabilities": [
+     "REMOTE_START_STOP_CAPABLE",
+     "RFID_READER"
+    ]
+   }
+  },
+  {
+   "scode": "Neogy-AMPECO:254100",
+   "pcode": "Neogy-AMPECO:77594",
+   "smetadata": {
+    "connectors": [
+     {
+      "id": "256821",
+      "format": "SOCKET",
+      "standard": "IEC_62196_T2",
+      "max_ampere": 32,
+      "power_type": "AC_3_PHASE",
+      "max_voltage": 230,
+      "max_electric_power": 22000
+     }
+    ],
+    "capabilities": [
+     "REMOTE_START_STOP_CAPABLE",
+     "RFID_READER"
+    ]
+   }
+  },
+  {
+   "scode": "Neogy-AMPECO:255050",
+   "pcode": "Neogy-AMPECO:77594",
+   "smetadata": {
+    "connectors": [
+     {
+      "id": "257777",
+      "format": "CABLE",
+      "standard": "IEC_62196_T2_COMBO",
+      "max_ampere": 144,
+      "power_type": "DC",
+      "max_voltage": 400,
+      "max_electric_power": 100000
+     }
+    ],
+    "capabilities": [
+     "REMOTE_START_STOP_CAPABLE",
+     "RFID_READER"
+    ]
+   }
+  },
+  {
+   "scode": "Neogy-AMPECO:255055",
+   "pcode": "Neogy-AMPECO:77594",
+   "smetadata": {
+    "connectors": [
+     {
+      "id": "257789",
+      "format": "SOCKET",
+      "standard": "IEC_62196_T2",
+      "max_ampere": 32,
+      "power_type": "AC_3_PHASE",
+      "max_voltage": 230,
+      "max_electric_power": 22000
+     }
+    ],
+    "capabilities": [
+     "REMOTE_START_STOP_CAPABLE",
+     "RFID_READER"
+    ]
+   }
+  },
+  {
+   "scode": "Neogy-AMPECO:253728",
+   "pcode": "Neogy-AMPECO:78231",
+   "smetadata": {
+    "connectors": [
+     {
+      "id": "256457",
+      "format": "CABLE",
+      "standard": "IEC_62196_T2_COMBO",
+      "max_ampere": 129,
+      "power_type": "DC",
+      "max_voltage": 400,
+      "max_electric_power": 90000
+     }
+    ],
+    "capabilities": [
+     "REMOTE_START_STOP_CAPABLE",
+     "RFID_READER"
+    ]
+   }
+  },
+  {
+   "scode": "Neogy-AMPECO:253960",
+   "pcode": "Neogy-AMPECO:78231",
+   "smetadata": {
+    "connectors": [
+     {
+      "id": "256683",
+      "format": "CABLE",
+      "standard": "IEC_62196_T2_COMBO",
+      "max_ampere": 129,
+      "power_type": "DC",
+      "max_voltage": 400,
+      "max_electric_power": 90000
+     }
+    ],
+    "capabilities": [
+     "REMOTE_START_STOP_CAPABLE",
+     "RFID_READER"
+    ]
+   }
+  },
+  {
+   "scode": "Neogy-AMPECO:254571",
+   "pcode": "Neogy-AMPECO:78231",
+   "smetadata": {
+    "connectors": [
+     {
+      "id": "257309",
+      "format": "SOCKET",
+      "standard": "IEC_62196_T2",
+      "max_ampere": 32,
+      "power_type": "AC_3_PHASE",
+      "max_voltage": 230,
+      "max_electric_power": 22000
+     }
+    ],
+    "capabilities": [
+     "REMOTE_START_STOP_CAPABLE",
+     "RFID_READER"
+    ]
+   }
+  }
+ ]
+}

@@ -248,6 +248,7 @@ fun SettingsScreen(navigator: Navigator, viewModel: SettingsViewModel = hiltView
                         ToggleChip(stringResource(R.string.map_layer_parking), MobilityKind.PARKING in prefs.mobilityLayers) { viewModel.layer(MobilityKind.PARKING, it) }
                         ToggleChip(stringResource(R.string.map_layer_bikes), MobilityKind.BIKE_SHARING in prefs.mobilityLayers) { viewModel.layer(MobilityKind.BIKE_SHARING, it) }
                         ToggleChip(stringResource(R.string.map_layer_cars), MobilityKind.CAR_SHARING in prefs.mobilityLayers) { viewModel.layer(MobilityKind.CAR_SHARING, it) }
+                        ToggleChip(stringResource(R.string.map_layer_charging), MobilityKind.CHARGING in prefs.mobilityLayers) { viewModel.layer(MobilityKind.CHARGING, it) }
                     }
                 }
                 item { ChoiceRow(stringResource(R.string.settings_search_bar), stringResource(searchBarLabel(prefs.searchBar))) { choice = CHOICE_SEARCH_BAR } }

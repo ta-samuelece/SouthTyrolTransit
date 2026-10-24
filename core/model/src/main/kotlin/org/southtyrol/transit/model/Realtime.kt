@@ -56,6 +56,12 @@ object FreshnessPolicy {
     /** Mobility (parking etc.) values older than this are not shown as current. */
     const val MOBILITY_MAX_AGE = 3 * 3600L
 
+    /**
+     * A charging point's status counts as current up to this age. Operators report a status only when it
+     * changes, so a quiet charger's last report is still its state; older ones are treated as dead feeds.
+     */
+    const val CHARGING_MAX_AGE = 7 * 24 * 3600L
+
     fun vehicle(timestamp: Instant, now: Instant): Freshness {
         val age = Duration.between(timestamp, now).seconds
         return when {
@@ -74,6 +80,12 @@ object FreshnessPolicy {
     fun mobility(updatedAt: Instant?, now: Instant): Freshness = when {
         updatedAt == null -> Freshness.UNAVAILABLE
         Duration.between(updatedAt, now).seconds <= MOBILITY_MAX_AGE -> Freshness.LIVE
+        else -> Freshness.STALE
+    }
+
+    fun charging(updatedAt: Instant?, now: Instant): Freshness = when {
+        updatedAt == null -> Freshness.UNAVAILABLE
+        Duration.between(updatedAt, now).seconds <= CHARGING_MAX_AGE -> Freshness.LIVE
         else -> Freshness.STALE
     }
 }

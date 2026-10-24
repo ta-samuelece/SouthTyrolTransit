@@ -26,7 +26,7 @@ import org.southtyrol.transit.model.TransportMode
  * in MapLibreTransitMap.kt and can be swapped for another SDK without touching features.
  */
 
-enum class MarkerKind { STOP, VEHICLE, PARKING, BIKE_SHARING, CAR_SHARING, ORIGIN, DESTINATION, USER, ALERT }
+enum class MarkerKind { STOP, VEHICLE, PARKING, BIKE_SHARING, CAR_SHARING, CHARGING, ORIGIN, DESTINATION, USER, ALERT }
 
 @Immutable
 data class MapMarker(
@@ -42,6 +42,8 @@ data class MapMarker(
     val selected: Boolean = false,
     /** Emphasised marker, e.g. a saved stop. */
     val highlighted: Boolean = false,
+    /** Mobility points: a small corner badge, e.g. a charging station with fast charging. */
+    val badge: Boolean = false,
 )
 
 /** A line on the map; [opacity] below 1 marks a part already travelled (see RouteProgress). */

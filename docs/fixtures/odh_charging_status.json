@@ -1,0 +1,94 @@
+{
+ "offset": 0,
+ "limit": 3000,
+ "data": [
+  {
+   "_timestamp": "2026-10-20 23:47:38.957+0000",
+   "tname": "echarging-plug-status-ocpi",
+   "mvalidtime": "2026-10-20 23:47:38.957+0000",
+   "mvalue": "AVAILABLE",
+   "pcode": "Neogy-AMPECO:78231",
+   "scode": "Neogy-AMPECO:254571"
+  },
+  {
+   "_timestamp": "2026-10-23 18:01:30.446+0000",
+   "tname": "echarging-plug-status-ocpi",
+   "mvalidtime": "2026-10-23 18:01:30.446+0000",
+   "mvalue": "AVAILABLE",
+   "pcode": "Neogy-AMPECO:78231",
+   "scode": "Neogy-AMPECO:253728"
+  },
+  {
+   "_timestamp": "2026-10-24 16:00:10.709+0000",
+   "tname": "echarging-plug-status-ocpi",
+   "mvalidtime": "2026-10-24 16:00:10.709+0000",
+   "mvalue": "INOPERATIVE",
+   "pcode": "Neogy-AMPECO:77594",
+   "scode": "Neogy-AMPECO:255050"
+  },
+  {
+   "_timestamp": "2026-10-24 16:29:04.316+0000",
+   "tname": "echarging-plug-status-ocpi",
+   "mvalidtime": "2026-10-24 16:29:04.316+0000",
+   "mvalue": "AVAILABLE",
+   "pcode": "Neogy-AMPECO:77436",
+   "scode": "Neogy-AMPECO:253566"
+  },
+  {
+   "_timestamp": "2026-10-24 17:11:42.756+0000",
+   "tname": "echarging-plug-status-ocpi",
+   "mvalidtime": "2026-10-24 17:11:42.756+0000",
+   "mvalue": "AVAILABLE",
+   "pcode": "Neogy-AMPECO:78231",
+   "scode": "Neogy-AMPECO:253960"
+  },
+  {
+   "_timestamp": "2026-10-24 19:29:34.301+0000",
+   "tname": "echarging-plug-status-ocpi",
+   "mvalidtime": "2026-10-24 19:29:34.301+0000",
+   "mvalue": "AVAILABLE",
+   "pcode": "Neogy-AMPECO:77594",
+   "scode": "Neogy-AMPECO:255055"
+  },
+  {
+   "_timestamp": "2026-10-24 19:36:06.877+0000",
+   "tname": "echarging-plug-status-ocpi",
+   "mvalidtime": "2026-10-24 19:36:06.877+0000",
+   "mvalue": "CHARGING",
+   "pcode": "Neogy-AMPECO:77436",
+   "scode": "Neogy-AMPECO:255719"
+  },
+  {
+   "_timestamp": "2026-10-24 20:07:04.960+0000",
+   "tname": "echarging-plug-status-ocpi",
+   "mvalidtime": "2026-10-24 20:07:04.960+0000",
+   "mvalue": "CHARGING",
+   "pcode": "Neogy-AMPECO:77436",
+   "scode": "Neogy-AMPECO:254788"
+  },
+  {
+   "_timestamp": "2026-10-24 21:34:11.846+0000",
+   "tname": "echarging-plug-status-ocpi",
+   "mvalidtime": "2026-10-24 21:34:11.846+0000",
+   "mvalue": "AVAILABLE",
+   "pcode": "Neogy-AMPECO:77594",
+   "scode": "Neogy-AMPECO:254100"
+  },
+  {
+   "_timestamp": "2026-10-24 21:40:00.267+0000",
+   "tname": "echarging-plug-status",
+   "mvalidtime": "2026-10-24 21:40:00.267+0000",
+   "mvalue": 0,
+   "pcode": "326",
+   "scode": "326-1"
+  },
+  {
+   "_timestamp": "2026-10-24 21:40:00.383+0000",
+   "tname": "echarging-plug-status",
+   "mvalidtime": "2026-10-24 21:40:00.383+0000",
+   "mvalue": 0,
+   "pcode": "IT*ETN*E00411",
+   "scode": "IT*ETN*E00411-IT*ETN*E00411"
+  }
+ ]
+}

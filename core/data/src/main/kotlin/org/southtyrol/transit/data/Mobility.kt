@@ -40,6 +40,7 @@ class OdhMobilitySource(
         MobilityKind.PARKING -> "ParkingStation"
         MobilityKind.BIKE_SHARING -> "BikesharingStation"
         MobilityKind.CAR_SHARING -> "CarsharingStation"
+        MobilityKind.CHARGING -> throw IllegalArgumentException("Charging stations come from OdhChargingSource")
     }
     private val dataType = when (kind) {
         MobilityKind.PARKING -> "free"

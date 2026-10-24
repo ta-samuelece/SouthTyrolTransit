@@ -17,6 +17,7 @@ import org.southtyrol.transit.data.LanguageProvider
 import org.southtyrol.transit.data.LineRepository
 import org.southtyrol.transit.data.MapRepository
 import org.southtyrol.transit.data.MobilityRepository
+import org.southtyrol.transit.data.OdhChargingSource
 import org.southtyrol.transit.data.OdhMobilitySource
 import org.southtyrol.transit.data.OdhRealtime
 import org.southtyrol.transit.data.PlacesRepository
@@ -109,7 +110,9 @@ object AppModule {
     fun map(schedule: TransitScheduleDataSource, realtime: RealtimeRepository, efa: EfaClient): MapRepository = MapRepository(schedule, realtime, efa)
 
     @Provides @Singleton
-    fun mobility(http: TransitHttp): MobilityRepository = MobilityRepository(MobilityKind.entries.map { OdhMobilitySource(http, it) })
+    fun mobility(http: TransitHttp): MobilityRepository = MobilityRepository(
+        listOf(MobilityKind.PARKING, MobilityKind.BIKE_SHARING, MobilityKind.CAR_SHARING).map { OdhMobilitySource(http, it) } + OdhChargingSource(http),
+    )
 
     @Provides @Singleton
     fun language(): LanguageProvider = AppLanguage

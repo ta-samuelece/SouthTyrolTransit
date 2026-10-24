@@ -228,7 +228,7 @@ class MapViewModel @Inject constructor(
                 }
             }
             MarkerKind.STOP -> (_stops.value + savedStops.value).firstOrNull { it.id == marker.id }?.let(::selectStop)
-            MarkerKind.PARKING, MarkerKind.BIKE_SHARING, MarkerKind.CAR_SHARING -> _mobility.value.firstOrNull { it.id == marker.id }?.let { _selection.value = MapSelection.MobilitySel(it) }
+            MarkerKind.PARKING, MarkerKind.BIKE_SHARING, MarkerKind.CAR_SHARING, MarkerKind.CHARGING -> _mobility.value.firstOrNull { it.id == marker.id }?.let { _selection.value = MapSelection.MobilitySel(it) }
             else -> Unit
         }
     }
@@ -359,8 +359,17 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel(), s
             },
             pois = mobility.map { p ->
                 MapMarker(
-                    p.id, p.point, when (p.kind) { MobilityKind.PARKING -> MarkerKind.PARKING; MobilityKind.BIKE_SHARING -> MarkerKind.BIKE_SHARING; MobilityKind.CAR_SHARING -> MarkerKind.CAR_SHARING },
-                    label = if (p.freshness == Freshness.LIVE) p.available?.toString().orEmpty() else "", stale = p.freshness != Freshness.LIVE, selected = p.id == selectedId,
+                    p.id, p.point,
+                    when (p.kind) {
+                        MobilityKind.PARKING -> MarkerKind.PARKING
+                        MobilityKind.BIKE_SHARING -> MarkerKind.BIKE_SHARING
+                        MobilityKind.CAR_SHARING -> MarkerKind.CAR_SHARING
+                        MobilityKind.CHARGING -> MarkerKind.CHARGING
+                    },
+                    // A charging station with every point out of order turns grey (status-stale) and loses its count.
+                    label = if (p.freshness == Freshness.LIVE && p.charging?.outOfService != true) p.available?.toString().orEmpty() else "",
+                    color = if (p.charging?.outOfService == true) STALE_TILE_COLOR else null,
+                    stale = p.freshness != Freshness.LIVE, selected = p.id == selectedId, badge = p.charging?.fast == true,
                 )
             } + listOfNotNull(user?.let { MapMarker("me", it, MarkerKind.USER) }),
         )
@@ -496,7 +505,7 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel(), s
                             DirectionsButton(sel.stop.point, compact = true)
                         }
                     }
-                    is MapSelection.MobilitySel -> MobilitySheet(sel.point, now)
+                    is MapSelection.MobilitySel -> if (sel.point.charging != null) ChargingSheet(sel.point, now) else MobilitySheet(sel.point, now)
                 }
             }
         }
@@ -604,6 +613,9 @@ private fun VehicleSheet(sel: MapSelection.VehicleSel, now: Instant, onTrip: (St
     }
 }
 
+/** status-stale: a mobility tile with nothing usable, e.g. a charging station whose points are all out of order. */
+private const val STALE_TILE_COLOR = 0x6F7977L
+
 @Composable
 private fun MobilitySheet(p: MobilityPoint, now: Instant) {
     Text(p.name, style = MaterialTheme.typography.headlineSmall)
@@ -612,6 +624,7 @@ private fun MobilitySheet(p: MobilityPoint, now: Instant) {
             MobilityKind.PARKING -> stringResource(R.string.map_layer_parking)
             MobilityKind.BIKE_SHARING -> stringResource(R.string.map_layer_bikes)
             MobilityKind.CAR_SHARING -> stringResource(R.string.map_layer_cars)
+            MobilityKind.CHARGING -> stringResource(R.string.charging_station)
         } + " · " + p.provider,
         style = MaterialTheme.typography.bodyMedium,
     )
@@ -635,7 +648,7 @@ private fun MobilitySheet(p: MobilityPoint, now: Instant) {
  * is a tonal icon button for a row whose main action is something else.
  */
 @Composable
-private fun DirectionsButton(point: Point, compact: Boolean = false) {
+internal fun DirectionsButton(point: Point, compact: Boolean = false) {
     val uri = androidx.compose.ui.platform.LocalUriHandler.current
     // No app can open the link (no browser either): nothing to do.
     val open = { runCatching { uri.openUri("https://www.google.com/maps/dir/?api=1&destination=${point.latitude},${point.longitude}") }; Unit }

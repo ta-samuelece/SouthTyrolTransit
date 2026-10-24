@@ -163,6 +163,7 @@
     <string name="map_layer_parking">Parking</string>
     <string name="map_layer_bikes">Bike sharing</string>
     <string name="map_layer_cars">Car sharing</string>
+    <string name="map_layer_charging">EV charging</string>
     <string name="map_search_hint">Search stops and lines</string>
     <string name="map_menu">Menu</string>
     <string name="map_menu_close">Close menu</string>
@@ -185,6 +186,37 @@
     <string name="mobility_available_of">%1$d of %2$d available</string>
     <string name="mobility_no_current">No current availability reported.</string>
     <string name="mobility_source">Data: Open Data Hub mobility API.</string>
+    <string name="charging_station">Charging station</string>
+    <plurals name="charging_points_free">
+        <item quantity="one">%1$d of %2$d points free</item>
+        <item quantity="other">%1$d of %2$d points free</item>
+    </plurals>
+    <plurals name="charging_points">
+        <item quantity="one">%d charging point</item>
+        <item quantity="other">%d charging points</item>
+    </plurals>
+    <plurals name="charging_free">
+        <item quantity="one">%d free</item>
+        <item quantity="other">%d free</item>
+    </plurals>
+    <plurals name="charging_out_of_order">
+        <item quantity="one">%d out of order</item>
+        <item quantity="other">%d out of order</item>
+    </plurals>
+    <string name="charging_of">of %d</string>
+    <string name="charging_status_as_of">Status as of %s</string>
+    <string name="charging_cable">cable attached</string>
+    <string name="charging_socket">socket, bring your cable</string>
+    <string name="charging_connector_unknown">The operator does not say which connector or how much power</string>
+    <string name="charging_type2">Type 2</string>
+    <string name="charging_type1">Type 1</string>
+    <string name="charging_domestic">Household socket</string>
+    <string name="charging_other">Other connector</string>
+    <string name="charging_open_all_day">Open 24/7</string>
+    <string name="charging_private_public">Private, open to the public</string>
+    <string name="charging_rfid">RFID card</string>
+    <string name="charging_how_to_pay">How to pay</string>
+    <string name="charging_source">Data: Open Data Hub, from the operator. Prices are not published.</string>
 
     <!-- Alerts -->
     <string name="alerts_title">Service alerts</string>
@@ -266,8 +298,8 @@
     <string name="source_gtfs_detail">Static GTFS and GTFS-Realtime (trip updates, vehicle positions, service alerts) for South Tyrol public transport. Licence: CC0.</string>
     <string name="source_efa">Journey planner – STA EFA interface</string>
     <string name="source_efa_detail">Journey planning, place search, departure boards and notices from the public STA EFA XML interface. Licence: CC0.</string>
-    <string name="source_mobility">Parking and shared mobility – Open Data Hub</string>
-    <string name="source_mobility_detail">Car park occupancy and sharing stations from the Open Data Hub mobility API, where providers publish them.</string>
+    <string name="source_mobility">Parking, shared mobility and charging – Open Data Hub</string>
+    <string name="source_mobility_detail">Car park occupancy, sharing stations and electric vehicle chargers from the Open Data Hub mobility API, where providers publish them.</string>
     <string name="source_map">Map – OpenFreeMap and OpenStreetMap</string>
     <string name="source_map_detail">Map tiles by OpenFreeMap, map data © OpenStreetMap contributors (ODbL). Aerial and topographic maps © Autonomous Province of Bolzano (CC0). Rendered with MapLibre.</string>
     <string name="about_privacy">Privacy</string>

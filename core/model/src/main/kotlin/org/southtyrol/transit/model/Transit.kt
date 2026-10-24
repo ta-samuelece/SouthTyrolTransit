@@ -334,7 +334,8 @@ data class ServiceAlert(
     }
 }
 
-enum class MobilityKind { PARKING, BIKE_SHARING, CAR_SHARING }
+/** The names are stored in settings (the enabled map layers): never rename one. */
+enum class MobilityKind { PARKING, BIKE_SHARING, CAR_SHARING, CHARGING }
 
 /**
  * The map's base layer. The names are stored in settings: never rename one. AERIAL and TOPOGRAPHIC are
@@ -352,6 +353,8 @@ data class MobilityPoint(
     val updatedAt: Instant?,
     val provider: String,
     val freshness: Freshness,
+    /** Charging stations only: the points and what the operator says about the station. */
+    val charging: ChargingDetails? = null,
 )
 
 enum class RoutePreference { FASTEST, FEWEST_CHANGES, LEAST_WALKING }

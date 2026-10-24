@@ -292,7 +292,7 @@ private fun MapMarker.toMobilityFeature(style: Style, images: MarkerImages, adde
 }
 
 private fun MapMarker.defaultColor(): Long = when (kind) {
-    MarkerKind.PARKING, MarkerKind.BIKE_SHARING, MarkerKind.CAR_SHARING -> mobilityColor(kind)
+    MarkerKind.PARKING, MarkerKind.BIKE_SHARING, MarkerKind.CAR_SHARING, MarkerKind.CHARGING -> mobilityColor(kind)
     MarkerKind.ORIGIN -> 0x2E7D32
     MarkerKind.DESTINATION -> 0xC62828
     MarkerKind.USER -> 0x1A73E8

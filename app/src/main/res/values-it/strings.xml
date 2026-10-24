@@ -157,6 +157,7 @@
     <string name="map_layer_parking">Parcheggi</string>
     <string name="map_layer_bikes">Bike sharing</string>
     <string name="map_layer_cars">Car sharing</string>
+    <string name="map_layer_charging">Ricarica elettrica</string>
     <string name="map_search_hint">Cerca fermate e linee</string>
     <string name="map_menu">Menu</string>
     <string name="map_menu_close">Chiudi menu</string>
@@ -179,6 +180,41 @@
     <string name="mobility_available_of">%1$d di %2$d disponibili</string>
     <string name="mobility_no_current">Nessuna disponibilità attuale segnalata.</string>
     <string name="mobility_source">Dati: API mobilità Open Data Hub.</string>
+    <string name="charging_station">Stazione di ricarica</string>
+    <plurals name="charging_points_free">
+        <item quantity="one">%1$d punto libero su %2$d</item>
+        <item quantity="many">%1$d punti liberi su %2$d</item>
+        <item quantity="other">%1$d punti liberi su %2$d</item>
+    </plurals>
+    <plurals name="charging_points">
+        <item quantity="one">%d punto di ricarica</item>
+        <item quantity="many">%d punti di ricarica</item>
+        <item quantity="other">%d punti di ricarica</item>
+    </plurals>
+    <plurals name="charging_free">
+        <item quantity="one">%d libero</item>
+        <item quantity="many">%d liberi</item>
+        <item quantity="other">%d liberi</item>
+    </plurals>
+    <plurals name="charging_out_of_order">
+        <item quantity="one">%d fuori servizio</item>
+        <item quantity="many">%d fuori servizio</item>
+        <item quantity="other">%d fuori servizio</item>
+    </plurals>
+    <string name="charging_of">su %d</string>
+    <string name="charging_status_as_of">Stato: %s</string>
+    <string name="charging_cable">cavo integrato</string>
+    <string name="charging_socket">presa, porta il tuo cavo</string>
+    <string name="charging_connector_unknown">Il gestore non indica né il connettore né la potenza</string>
+    <string name="charging_type2">Tipo 2</string>
+    <string name="charging_type1">Tipo 1</string>
+    <string name="charging_domestic">Presa domestica</string>
+    <string name="charging_other">Altro connettore</string>
+    <string name="charging_open_all_day">Aperto 24 ore su 24</string>
+    <string name="charging_private_public">Privato, aperto al pubblico</string>
+    <string name="charging_rfid">Tessera RFID</string>
+    <string name="charging_how_to_pay">Come pagare</string>
+    <string name="charging_source">Dati: Open Data Hub, dal gestore. I prezzi non sono pubblicati.</string>
 
     <string name="alerts_title">Avvisi di servizio</string>
     <string name="alerts_active">Attuali</string>
@@ -255,8 +291,8 @@
     <string name="source_gtfs_detail">GTFS statico e GTFS-Realtime (aggiornamenti corse, posizioni veicoli, avvisi) per il trasporto pubblico in Alto Adige. Licenza: CC0.</string>
     <string name="source_efa">Calcolo percorso – interfaccia EFA di STA</string>
     <string name="source_efa_detail">Calcolo percorso, ricerca luoghi, tabelloni partenze e comunicazioni dall\'interfaccia pubblica EFA XML di STA. Licenza: CC0.</string>
-    <string name="source_mobility">Parcheggi e mobilità condivisa – Open Data Hub</string>
-    <string name="source_mobility_detail">Occupazione dei parcheggi e stazioni di sharing dall\'API mobilità di Open Data Hub, dove i fornitori le pubblicano.</string>
+    <string name="source_mobility">Parcheggi, mobilità condivisa e ricarica – Open Data Hub</string>
+    <string name="source_mobility_detail">Occupazione dei parcheggi, stazioni di sharing e colonnine di ricarica per veicoli elettrici dall\'API mobilità di Open Data Hub, dove i fornitori le pubblicano.</string>
     <string name="source_map">Mappa – OpenFreeMap e OpenStreetMap</string>
     <string name="source_map_detail">Tasselli di OpenFreeMap, dati cartografici © contributori OpenStreetMap (ODbL). Ortofoto e carta topografica © Provincia autonoma di Bolzano (CC0). Visualizzazione con MapLibre.</string>
     <string name="about_privacy">Privacy</string>

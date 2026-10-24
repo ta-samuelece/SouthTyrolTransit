@@ -100,7 +100,7 @@ object AppModule {
     fun timetable(store: ScheduleStore): ScheduleRepository = ScheduleRepository(store)
 
     @Provides @Singleton
-    fun trips(schedule: TransitScheduleDataSource, realtime: RealtimeRepository, efa: EfaClient): TripRepository = TripRepository(schedule, realtime, efa)
+    fun trips(schedule: TransitScheduleDataSource, realtime: RealtimeRepository, efa: EfaClient): TripRepository = TripRepository(schedule, realtime, efa, efa)
 
     @Provides @Singleton
     fun lines(schedule: TransitScheduleDataSource): LineRepository = LineRepository(schedule)

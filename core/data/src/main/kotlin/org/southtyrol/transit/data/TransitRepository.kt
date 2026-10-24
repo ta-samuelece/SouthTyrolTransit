@@ -454,9 +454,36 @@ class TripRepository(
     private val schedule: TransitScheduleDataSource,
     private val realtime: RealtimeRepository,
     private val live: org.southtyrol.transit.model.TripLiveDataSource? = null,
+    private val board: DepartureBoardDataSource? = null,
     private val clock: () -> Instant = Instant::now,
 ) {
     suspend fun trip(tripId: String, date: LocalDate, language: String): TripDetail? = schedule.trip(tripId, date, language)
+
+    /**
+     * The journey-planner reference ([Departure.liveRef]) of [detail]'s run, for a trip opened without one -
+     * from a line's departures, or any train, which GTFS-RT never covers. Looked up on the planner's board at
+     * the run's next call (its final arrival once nothing is left to depart) and matched with the board
+     * overlay's rules ([org.southtyrol.transit.model.LiveOverlay], train fallback included). Empty when the run
+     * is over, the planner has no live time for it, or anything fails - best effort, never an error.
+     */
+    suspend fun findLiveRef(detail: TripDetail, language: String, now: Instant = clock()): String {
+        val board = board ?: return ""
+        val calls = detail.stops
+        if (calls.isEmpty()) return ""
+        val departing = calls.dropLast(1).firstOrNull { !it.scheduledDeparture.isBefore(now) }
+        val call = departing ?: calls.last().takeIf { Duration.between(it.scheduledArrival, now) < Duration.ofHours(1) } ?: return ""
+        val arrivals = departing == null
+        val time = if (arrivals) call.scheduledArrival else call.scheduledDeparture
+        val station = call.stop.stationKey.ifBlank { return "" }
+        return try {
+            val window = Duration.ofMinutes(2)
+            val own = schedule.scheduledDepartures(listOf(station), time.minus(window), time.plus(window), arrivals, language, 60)
+                .filter { it.tripId == detail.trip.id }
+                .minByOrNull { kotlin.math.abs(Duration.between(it.scheduled, time).seconds) } ?: return ""
+            val planner = board.departures(station, time.minusSeconds(60), arrivals, language, 40)
+            org.southtyrol.transit.model.LiveOverlay.apply(listOf(own), planner, now).first().liveRef
+        } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (_: Exception) { "" }
+    }
 
     /**
      * The timetable run a journey-planner [leg] rides on, matched at its boarding station by line and

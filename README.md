@@ -201,6 +201,8 @@ Fixtures live in `docs/fixtures`.
 ## 13. Realtime update strategy
 
 - Trip updates and vehicle positions are fetched as protobuf **only while a live screen is visible**: 30 s on boards and lines, 20 s on map and trips. They are throttled to at most every 20 s per feed across screens.
+- Where GTFS-RT has no prediction, boards and trips fall back to the live times of the STA journey planner (EFA). This is the only live source for trains: STA's GTFS-RT feeds carry buses only (checked 24 Oct 2026). A trip opened without a planner reference (from a line page, for example) finds its run on the planner's board at its next station, at most every 2 min while the planner has nothing for it and never while GTFS-RT covers it.
+- No open source gives train positions, so trains never appear as vehicles on the map. The trip screen places a train by its live or scheduled times and says it is an estimate.
 - Alerts are fetched at most every 2 min (GTFS-RT) and 10 min (EFA AddInfo), and cached on disk.
 - Freshness rules (`FreshnessPolicy`):
   - Trip predictions older than 5 min are ignored.

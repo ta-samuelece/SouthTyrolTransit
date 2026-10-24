@@ -124,7 +124,7 @@ class TripViewModel @AssistedInject constructor(
     @Assisted("date") private val date: String,
     @Assisted("live") private val liveRef: String,
     private val trips: TripRepository,
-    realtime: RealtimeRepository,
+    private val realtime: RealtimeRepository,
     private val language: LanguageProvider,
     private val alerts: org.southtyrol.transit.data.AlertRepository,
 ) : ViewModel() {
@@ -172,9 +172,28 @@ class TripViewModel @AssistedInject constructor(
         }
     }
 
+    /** The planner reference: the one the screen was opened with, else looked up ([lookUpRef]). */
+    private var ref = liveRef
+    private var lastLookup: java.time.Instant? = null
+
     suspend fun poll() {
         trips.pollRealtime()
-        trips.liveTrip(liveRef)?.let { liveTrip.value = it }
+        if (ref.isBlank()) ref = lookUpRef()
+        trips.liveTrip(ref)?.let { liveTrip.value = it }
+    }
+
+    /**
+     * Finds the run on the journey planner's board when the screen was opened without a reference (from a
+     * line, or a train GTFS-RT never covers). Not while GTFS-RT has an update for the run, and at most every
+     * two minutes while the planner has no live time for it yet.
+     */
+    private suspend fun lookUpRef(): String {
+        val detail = (base.value as? TripLoad.Ready)?.detail ?: return ""
+        val now = java.time.Instant.now()
+        if (realtime.snapshot.value.update(detail.trip.id, detail.serviceDate) != null) return ""
+        if (lastLookup?.let { java.time.Duration.between(it, now) < java.time.Duration.ofMinutes(2) } == true) return ""
+        lastLookup = now
+        return trips.findLiveRef(detail, language.current(), now)
     }
 }
 

@@ -268,6 +268,44 @@ class ScheduleTest {
         assertEquals(Freshness.LIVE, board.realtime)
     }
 
+    @Test fun tripOpenedWithoutReferenceFindsItOnThePlannerBoard() = runTest {
+        store.importFile(SyntheticGtfs.zip(context.cacheDir), emptyMap())
+        val date = LocalDate.of(2026, 10, 4)
+        val train = schedule.trip("t3", date, "it")!!
+        val asked = mutableListOf<Pair<String, Boolean>>()
+        // The planner names the train "R 1834" towards "Brixen": only the train fallback matches it.
+        var planner = listOf(Departure("efa", "it:1:100", 0, "", "R 1834", TransportMode.TRAIN, "Brixen Bressanone", at("2026-10-04", "09:00"), predicted = at("2026-10-04", "09:04"), liveRef = "ref-t3"))
+        val board = object : DepartureBoardDataSource {
+            override suspend fun departures(stopGlobalId: String, at: Instant, arrivals: Boolean, language: String, limit: Int): List<Departure> {
+                asked += stopGlobalId to arrivals
+                return planner
+            }
+        }
+        val realtime = RealtimeRepository(object : RealtimeTransitDataSource { override suspend fun fetch(feed: RealtimeFeed) = throw java.io.IOException() }, FakeUserDao())
+        val trips = TripRepository(schedule, realtime, board = board)
+
+        // Before departure: the board of the first station, departures.
+        assertEquals("ref-t3", trips.findLiveRef(train, "it", at("2026-10-04", "08:50")))
+        assertEquals(train.stops.first().stop.stationKey to false, asked.last())
+        // Under way, nothing left to depart: the arrivals board of the last station.
+        planner = planner.map { it.copy(scheduled = at("2026-10-04", "09:30"), predicted = at("2026-10-04", "09:33")) }
+        assertEquals("ref-t3", trips.findLiveRef(train, "it", at("2026-10-04", "09:10")))
+        assertEquals(train.stops.last().stop.stationKey to true, asked.last())
+        // Long over: nothing is asked.
+        val calls = asked.size
+        assertEquals("", trips.findLiveRef(train, "it", at("2026-10-04", "11:00")))
+        assertEquals(calls, asked.size)
+        // No live time on the planner's board: no reference.
+        planner = planner.map { it.copy(predicted = null) }
+        assertEquals("", trips.findLiveRef(train, "it", at("2026-10-04", "09:10")))
+        // No board at all, or a failing one: no reference, no error.
+        assertEquals("", TripRepository(schedule, realtime).findLiveRef(train, "it", at("2026-10-04", "08:50")))
+        val failing = object : DepartureBoardDataSource {
+            override suspend fun departures(stopGlobalId: String, at: Instant, arrivals: Boolean, language: String, limit: Int): List<Departure> = throw DataException(DataError.Offline)
+        }
+        assertEquals("", TripRepository(schedule, realtime, board = failing).findLiveRef(train, "it", at("2026-10-04", "08:50")))
+    }
+
     @Test fun scheduledDeparturesMergeRealtimeAndAlerts() = runTest {
         store.importFile(SyntheticGtfs.zip(context.cacheDir), emptyMap())
         val now = at("2026-10-02", "07:55")

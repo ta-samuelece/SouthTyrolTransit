@@ -504,7 +504,6 @@
     </plurals>
     <string name="trip_distance_progress">%1$s percorsi · mancano %2$s</string>
     <string name="trip_next_stop_in">Prossima fermata tra %s</string>
-    <string name="departure_distance_to">%1$s fino a %2$s</string>
     <string name="planner_bike">Viaggio con la bici</string>
     <string name="planner_bike_hint">Nasconde i collegamenti che secondo l\'orario non trasportano bici. Richiede l\'orario scaricato.</string>
     <string name="journey_bikes_unknown">L\'orario non indica se %s trasporta bici. Verifica prima di partire.</string>

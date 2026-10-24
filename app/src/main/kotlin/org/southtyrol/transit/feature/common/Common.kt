@@ -24,7 +24,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ExpandLess
 import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.PedalBike
-import androidx.compose.material.icons.rounded.Straighten
 import androidx.compose.material.icons.rounded.ReportProblem
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.minimumInteractiveComponentSize
@@ -145,10 +144,9 @@ fun NextDepartureCard(departure: Departure, now: Instant, onClick: (() -> Unit)?
     val title = stringResource(R.string.stop_next_departure)
     val alertText = if (departure.hasAlert) stringResource(org.southtyrol.transit.design.R.string.ds_has_alert) else null
     val bikesText = bikesText(departure.bikes)
-    val distance = departure.remainingMeters?.let { stringResource(R.string.departure_distance_to, Format.distance(it), departure.destination) }
     val description = listOfNotNull(
         title, "${Format.mode(departure.mode)} ${departure.line}", departure.tripName.ifBlank { null }, departure.destination,
-        Format.countdown(departure.best, now), Format.time(departure.best), delay, platform, alertText, bikesText, distance,
+        Format.countdown(departure.best, now), Format.time(departure.best), delay, platform, alertText, bikesText,
     ).joinToString(", ")
     val content = MaterialTheme.colorScheme.onSecondaryContainer
     androidx.compose.material3.Surface(
@@ -181,13 +179,7 @@ fun NextDepartureCard(departure: Departure, now: Instant, onClick: (() -> Unit)?
                         DelayLabel(departure.delaySeconds, departure.state, departure.freshness)
                         if (departure.hasAlert) Icon(Icons.Rounded.Warning, contentDescription = null, tint = LocalStatusColors.current.delayed, modifier = Modifier.size(16.dp))
                     }
-                    if (departure.bikes != Bikes.UNKNOWN || distance != null) {
-                        val pill = MaterialTheme.colorScheme.surfaceContainerLowest
-                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            BikesPill(departure.bikes, pill)
-                            if (distance != null) InfoPill(distance, pill, icon = Icons.Rounded.Straighten)
-                        }
-                    }
+                    if (departure.bikes != Bikes.UNKNOWN) BikesPill(departure.bikes, MaterialTheme.colorScheme.surfaceContainerLowest)
                 }
                 Spacer(Modifier.width(12.dp))
                 Countdown(departure.scheduled, departure.predicted, departure.state, departure.freshness, now, style = org.southtyrol.transit.design.TimeStyles.display)

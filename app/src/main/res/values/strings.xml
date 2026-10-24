@@ -512,7 +512,6 @@
     </plurals>
     <string name="trip_distance_progress">%1$s travelled · %2$s to go</string>
     <string name="trip_next_stop_in">Next stop in %s</string>
-    <string name="departure_distance_to">%1$s to %2$s</string>
     <string name="planner_bike">Travelling with a bike</string>
     <string name="planner_bike_hint">Hides connections the timetable says take no bikes. Needs the downloaded timetable.</string>
     <string name="journey_bikes_unknown">The timetable does not say whether %s takes bikes. Check before you travel.</string>

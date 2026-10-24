@@ -498,7 +498,6 @@
     </plurals>
     <string name="trip_distance_progress">%1$s zurückgelegt · noch %2$s</string>
     <string name="trip_next_stop_in">Nächster Halt in %s</string>
-    <string name="departure_distance_to">%1$s bis %2$s</string>
     <string name="planner_bike">Mit Fahrrad unterwegs</string>
     <string name="planner_bike_hint">Blendet Verbindungen aus, die laut Fahrplan keine Fahrräder mitnehmen. Braucht den heruntergeladenen Fahrplan.</string>
     <string name="journey_bikes_unknown">Der Fahrplan sagt nicht, ob %s Fahrräder mitnimmt. Prüfe das vor der Fahrt.</string>

@@ -169,7 +169,8 @@ server that does not exist yet.
 
 **A stop board has two sources of live times, not one.** GTFS-RT predictions come first; where GTFS-RT
 has nothing (often), the EFA departure monitor's delays are overlaid by matching line and scheduled
-minute. The README's realtime section describes only GTFS-RT. Details:
+minute. For trains EFA is the only live source - GTFS-RT carries buses only - and trains are never drawn
+on the map, since nothing gives their positions. Details:
 [live times on boards](docs/ai/notes/live-times-two-sources.md).
 
 **Material 3 Expressive is pinned to an alpha** (`material3` 1.5.0-alpha, Compose 1.13.0-alpha). Do not

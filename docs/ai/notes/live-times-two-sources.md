@@ -1,11 +1,11 @@
 ---
 type: Finding
 title: Stop boards take live times from two sources - GTFS-RT first, then the EFA departure monitor
-description: Where GTFS-RT has no prediction (often), boards, the map stop sheet and the widget overlay EFA delays matched by line and scheduled minute; trips do the same per stop; GTFS-RT delays only propagate through updates with a stop_sequence. The README's realtime section mentions only GTFS-RT.
-tags: [realtime, gtfs-rt, efa, departures, freshness]
+description: Where GTFS-RT has no prediction (often), boards, the map stop sheet and the widget overlay EFA delays matched by line and scheduled minute; trips do the same per stop, looking up the planner reference themselves when opened without one, which is the only way trains get live times; GTFS-RT delays only propagate through updates with a stop_sequence.
+tags: [realtime, gtfs-rt, efa, departures, freshness, trains]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-09T12:00:00Z"
+  at: "2026-10-24T18:30:00Z"
 verified:
   by: claude-code/claude-opus-5-5
   at: "2026-10-09T12:00:00Z"
@@ -46,7 +46,22 @@ Callers: `StopViewModel`, the map's stop sheet (`MapScreen`) and `DeparturesWidg
 when the board comes from the downloaded timetable (`BoardSource.SCHEDULE`).[^commits]
 
 Trips use the sibling `LiveTripMerge`: the EFA stop sequence for the run, matched per call by station and
-scheduled time within **120 s**, so loops visiting a station twice still match the right call.
+scheduled time within **120 s**, so loops visiting a station twice still match the right call. The stop
+sequence needs the run's planner reference (`Departure.liveRef`). A trip opened from a board gets it from
+the overlay match above; one opened without it (from a line page, a map vehicle) looks it up with
+`TripRepository.findLiveRef`: the EFA board of the run's next station still to depart by timetable (the
+arrivals board of the last station once only that is left, up to an hour after it), matched with the same
+`LiveOverlay` rules. `TripViewModel` tries this on its poll only while GTFS-RT has no update for the run,
+at most every 2 minutes, and keeps the first reference found.
+
+# Trains
+
+STA's GTFS-RT feeds carry **buses only**: on 2026-10-24 at 18:16 the live vehicle feed had 135 line labels
+and the trip-updates feed 183 updates, none of them a train. So for trains the planner is the only live
+source, and no open source gives their positions (the Open Data Hub mobility API has no train type either).
+The trip screen places a train by its stop times (`RunPositions.estimate`) and labels it as estimated. The
+user decided on 2026-10-24 that trains must **not** be drawn on the main map from such estimates: map
+vehicles are GPS fixes, and an estimated train would not be an actual live entry.
 
 # How GTFS-RT predictions propagate
 
@@ -75,7 +90,10 @@ KDoc; `UNAVAILABLE` means never fetched.
 # What was checked
 
 Read the code paths named above on 2026-10-09 (`Realtime.kt`, `TransitRepository.kt`, the three call
-sites); the propagation section from a second code read the same day. Not checked against a live feed.
+sites); the propagation section from a second code read the same day. The reference lookup is pinned by
+`ScheduleTest.tripOpenedWithoutReferenceFindsItOnThePlannerBoard` (2026-10-24); it has not been checked
+against the live planner or on a device. The train coverage of the GTFS-RT feeds was read from the live
+feeds on 2026-10-24.
 
 [^board-merge]: DepartureRepository.liveOverlay and merge
 [^overlay-code]: LiveOverlay and LiveTripMerge

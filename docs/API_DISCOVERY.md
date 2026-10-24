@@ -36,8 +36,8 @@ Fields used:
 
 - `stops`: `stop_id`, `stop_name`, `stop_lat/lon`, `stop_code`, `location_type`, `parent_station`, `platform_code`, `wheelchair_boarding`.
 - `routes`: `route_id`, `route_short_name`, `route_long_name`, `route_type`, `agency_id`, plus `route_color` and `route_text_color` if ever supplied.
-- `trips`: `trip_id`, `route_id`, `service_id`, `trip_headsign`, `direction_id`, `shape_id`, `wheelchair_accessible`.
-- `stop_times`: arrival/departure (times ≥ 24:00 supported), `stop_sequence`, `pickup_type`, `drop_off_type`.
+- `trips`: `trip_id`, `route_id`, `service_id`, `trip_headsign`, `direction_id`, `shape_id`, `wheelchair_accessible`, `trip_short_name` (train numbers), `bikes_allowed`. The last two were empty in every sampled row (buses only).
+- `stop_times`: arrival/departure (times ≥ 24:00 supported), `stop_sequence`, `pickup_type`, `drop_off_type`, `shape_dist_traveled` (metres in the STA feed, stored rounded; distances per stop, run length, a leg's distance).
 - `calendar` and `calendar_dates`.
 - `shapes`: simplified with Douglas–Peucker at 4 m and stored as encoded polylines (96 MB database in total).
 - `translations`: `table_name`, `field_name`, `language`, `translation`, `record_id`. Only ~80 % of trips have headsign translations, so the importer derives a headsign-text dictionary for the rest.

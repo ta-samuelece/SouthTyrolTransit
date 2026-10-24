@@ -31,9 +31,11 @@ import org.southtyrol.transit.feature.planner.RequestCodec
 import org.southtyrol.transit.follow.ActiveJourney
 import org.southtyrol.transit.follow.FollowController
 import org.southtyrol.transit.follow.FollowSession
+import org.southtyrol.transit.model.Bikes
 import org.southtyrol.transit.model.DataError
 import org.southtyrol.transit.model.DataException
 import org.southtyrol.transit.model.Journey
+import org.southtyrol.transit.model.JourneyBikes
 import org.southtyrol.transit.model.TicketingProvider
 import org.southtyrol.transit.model.TripDetail
 import org.southtyrol.transit.ui.JourneyRoute
@@ -51,13 +53,26 @@ data class ResultsState(
     val fetchedAt: Instant? = null,
     val sort: ResultSort = ResultSort.RECOMMENDED,
     val selectedId: String? = null,
+    /** Travelling with a bike: the timetable's bike rule per transit leg index, by journey id. */
+    val bikes: Map<String, Map<Int, Bikes>> = emptyMap(),
+    /** Show the journeys hidden because a run takes no bikes. */
+    val showHidden: Boolean = false,
 ) {
+    val withBike: Boolean get() = request?.options?.withBike == true
+
+    /** Journeys with a run the timetable says takes no bikes; only when travelling with a bike. */
+    val hidden: List<Journey>
+        get() = if (!withBike) emptyList() else journeys.filter { JourneyBikes.excluded(it, bikes[it.id].orEmpty()) }
+
     val sorted: List<Journey>
-        get() = when (sort) {
-            ResultSort.RECOMMENDED -> journeys
-            ResultSort.EARLIEST_ARRIVAL -> journeys.sortedWith(compareBy<Journey> { it.bestArrival }.thenBy { it.duration })
-            ResultSort.FEWEST_CHANGES -> journeys.sortedWith(compareBy<Journey> { it.changes }.thenBy { it.bestArrival })
-            ResultSort.LEAST_WALKING -> journeys.sortedWith(compareBy<Journey> { it.walkingDuration }.thenBy { it.bestArrival })
+        get() {
+            val shown = if (showHidden) journeys else hidden.map { it.id }.toSet().let { out -> journeys.filter { it.id !in out } }
+            return when (sort) {
+                ResultSort.RECOMMENDED -> shown
+                ResultSort.EARLIEST_ARRIVAL -> shown.sortedWith(compareBy<Journey> { it.bestArrival }.thenBy { it.duration })
+                ResultSort.FEWEST_CHANGES -> shown.sortedWith(compareBy<Journey> { it.changes }.thenBy { it.bestArrival })
+                ResultSort.LEAST_WALKING -> shown.sortedWith(compareBy<Journey> { it.walkingDuration }.thenBy { it.bestArrival })
+            }
         }
 }
 
@@ -67,6 +82,7 @@ class ResultsViewModel @Inject constructor(
     private val journeys: JourneyRepository,
     private val saved: SavedRepository,
     private val language: LanguageProvider,
+    private val trips: TripRepository,
 ) : ViewModel() {
     val encoded: String = handle.toRoute<ResultsRoute>().request
     private val base = RequestCodec.decode(encoded)
@@ -89,7 +105,13 @@ class ResultsViewModel @Inject constructor(
             _state.update { it.copy(loading = true, error = null, request = request) }
             try {
                 val result = journeys.plan(request, language.current())
-                _state.update { it.copy(loading = false, journeys = result, fetchedAt = Instant.now(), error = if (result.isEmpty()) DataError.NotFound else null) }
+                // With a bike: match every leg to its timetable run first, so a journey without bike
+                // transport never shows up and then disappears.
+                val bikes = if (request.options.withBike) {
+                    val lang = language.current()
+                    result.associate { j -> j.id to trips.forJourney(j, lang).mapValues { it.value.trip.bikes } }
+                } else emptyMap()
+                _state.update { it.copy(loading = false, journeys = result, bikes = bikes, fetchedAt = Instant.now(), error = if (result.isEmpty()) DataError.NotFound else null) }
             } catch (e: DataException) {
                 android.util.Log.w("Transit", "Journey planning failed: ${e.error}", e.cause)
                 _state.update { it.copy(loading = false, error = e.error) }
@@ -112,6 +134,7 @@ class ResultsViewModel @Inject constructor(
 
     fun sort(value: ResultSort) { handle["sort"] = value.name; _state.update { it.copy(sort = value) } }
     fun select(id: String?) { _state.update { it.copy(selectedId = id) } }
+    fun toggleHidden() { _state.update { it.copy(showHidden = !it.showHidden) } }
 
     fun toggleSaved() {
         val r = base ?: return
@@ -139,6 +162,9 @@ class JourneyDetailViewModel @Inject constructor(
     active: ActiveJourney,
 ) : ViewModel() {
     private val route = handle.toRoute<JourneyRoute>()
+
+    /** The search was for travelling with a bike: legs whose bike rule is unknown get a warning. */
+    val withBike: Boolean = RequestCodec.decode(route.request)?.options?.withBike == true
 
     /** The id of the journey being followed, if any (this one or another). */
     val followedId: StateFlow<String?> = active.session.map { it?.journey?.id }.stateIn(viewModelScope, SharingStarted.Eagerly, active.session.value?.journey?.id)
@@ -185,13 +211,20 @@ class JourneyLiveViewModel @AssistedInject constructor(
     /** Static runs by leg index; legs without a match are absent. */
     private val runs = MutableStateFlow<Map<Int, TripDetail>>(emptyMap())
 
+    /** True once the legs have been matched (also when none matched). */
+    private val _matched = MutableStateFlow(false)
+    val matched: StateFlow<Boolean> = _matched.asStateFlow()
+
     /** Runs merged with the latest realtime snapshot (GTFS-RT predictions and vehicle positions). */
     val legRuns: StateFlow<Map<Int, TripDetail>> = combine(runs, realtime.snapshot) { byLeg, snapshot ->
         byLeg.mapValues { (_, detail) -> trips.merge(detail, snapshot) }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
     init {
-        viewModelScope.launch { runs.value = trips.forJourney(journey, language.current()) }
+        viewModelScope.launch {
+            runs.value = trips.forJourney(journey, language.current())
+            _matched.value = true
+        }
     }
 
     /** Refreshes trip updates and vehicle positions; throttled by the repository. */

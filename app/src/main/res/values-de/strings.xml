@@ -488,4 +488,24 @@
         <item quantity="one">%d Min.</item>
         <item quantity="other">%d Min.</item>
     </plurals>
+
+    <!-- Train numbers, bikes and distances from the timetable -->
+    <string name="bikes_allowed">Fahrradmitnahme möglich</string>
+    <string name="bikes_not_allowed">Keine Fahrräder</string>
+    <plurals name="trip_length">
+        <item quantity="one">%1$s · %2$d Halt</item>
+        <item quantity="other">%1$s · %2$d Halte</item>
+    </plurals>
+    <string name="trip_distance_progress">%1$s zurückgelegt · noch %2$s</string>
+    <string name="trip_next_stop_in">Nächster Halt in %s</string>
+    <string name="departure_distance_to">%1$s bis %2$s</string>
+    <string name="planner_bike">Mit Fahrrad unterwegs</string>
+    <string name="planner_bike_hint">Blendet Verbindungen aus, die laut Fahrplan keine Fahrräder mitnehmen. Braucht den heruntergeladenen Fahrplan.</string>
+    <string name="journey_bikes_unknown">Der Fahrplan sagt nicht, ob %s Fahrräder mitnimmt. Prüfe das vor der Fahrt.</string>
+    <plurals name="results_hidden_no_bikes">
+        <item quantity="one">%d Verbindung ausgeblendet: keine Fahrradmitnahme</item>
+        <item quantity="other">%d Verbindungen ausgeblendet: keine Fahrradmitnahme</item>
+    </plurals>
+    <string name="results_show_hidden">Anzeigen</string>
+    <string name="results_hide_no_bikes">Ausblenden</string>
 </resources>

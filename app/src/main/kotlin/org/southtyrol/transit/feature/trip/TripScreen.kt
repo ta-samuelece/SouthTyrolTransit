@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.material.icons.rounded.CloseFullscreen
 import androidx.compose.material.icons.rounded.OpenInFull
 import androidx.compose.material.icons.rounded.ExpandMore
+import androidx.compose.material.icons.rounded.Straighten
 import androidx.compose.material.icons.rounded.ExpandLess
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material.icons.rounded.ReportProblem
@@ -229,6 +230,11 @@ private fun TripContent(detail: TripDetail, navigator: Navigator, alerts: List<o
     // one whose (predicted) departure is still ahead.
     val nextIndex = if (position != null && !position.estimated) position.nextIndex - (if (position.atStop) 1 else 0)
     else detail.stops.indexOfFirst { (it.predictedDeparture ?: it.scheduledDeparture).isAfter(now) }
+    // Distances along the run (travelled, to go, to the next stop): only for a fresh GPS fix between two stops.
+    val runDistance = remember(detail, position, vehicleFreshness) {
+        if (vehicleFreshness == Freshness.LIVE) org.southtyrol.transit.model.RouteDistance.of(detail.shape, detail.stops, position) else null
+    }
+    val firstDistance = detail.stops.firstOrNull()?.distanceMeters
     val mapState = org.southtyrol.transit.feature.common.rememberExpandableMapState()
     val routeLine = detail.shape.takeIf { it.size >= 2 } ?: detail.stops.map { it.stop.point }.filter { it.isValid }
     val hasMap = routeLine.size >= 2
@@ -279,7 +285,33 @@ private fun TripContent(detail: TripDetail, navigator: Navigator, alerts: List<o
     LazyColumn(state = listState, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(0.dp), modifier = listModifier) {
         item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 12.dp)) {
-                Text(listOfNotNull(Format.mode(detail.route.mode), detail.route.operator?.name, Format.date(detail.serviceDate)).joinToString(" · "), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    listOfNotNull(detail.trip.shortName.ifBlank { null }, Format.mode(detail.route.mode), detail.route.operator?.name, Format.date(detail.serviceDate)).joinToString(" · "),
+                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                // Length and bikes, from the timetable; each only when it is published.
+                val length = detail.lengthMeters
+                if (length != null || detail.trip.bikes != org.southtyrol.transit.model.Bikes.UNKNOWN) {
+                    val pill = MaterialTheme.colorScheme.surfaceContainerHighest
+                    androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (length != null) org.southtyrol.transit.feature.common.InfoPill(
+                            pluralStringResource(R.plurals.trip_length, detail.stops.size, Format.distance(length), detail.stops.size), pill,
+                            icon = androidx.compose.material.icons.Icons.Rounded.Straighten,
+                        )
+                        org.southtyrol.transit.feature.common.BikesPill(detail.trip.bikes, pill)
+                    }
+                }
+                // How far the vehicle has come, only from a live GPS fix.
+                if (runDistance != null && length != null) {
+                    androidx.compose.material3.LinearProgressIndicator(
+                        progress = { (runDistance.travelledMeters / length).toFloat().coerceIn(0f, 1f) },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    Text(
+                        stringResource(R.string.trip_distance_progress, Format.distance(runDistance.travelledMeters), Format.distance(runDistance.remainingMeters)),
+                        style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 if (detail.state == ServiceState.CANCELLED) Text(stringResource(org.southtyrol.transit.design.R.string.ds_cancelled), color = LocalStatusColors.current.cancelled, style = MaterialTheme.typography.titleMedium)
                 val positionText = when {
                     vehicle != null -> stringResource(R.string.trip_vehicle_seen, Format.age(vehicle.timestamp, now)) + if (vehicleFreshness == Freshness.STALE) " · " + stringResource(org.southtyrol.transit.design.R.string.ds_stale) else ""
@@ -307,6 +339,8 @@ private fun TripContent(detail: TripDetail, navigator: Navigator, alerts: List<o
                 passed = nextIndex >= 0 && index < nextIndex || nextIndex < 0, next = index == nextIndex, color = color,
                 vehicle = marker, mode = detail.route.mode, estimated = position?.estimated ?: true,
                 onClick = { navigator.stop(stop.stop.stationKey, stop.stop.name) },
+                note = if (runDistance != null && marker == VehicleMarker.BEFORE_STOP) stringResource(R.string.trip_next_stop_in, Format.distance(runDistance.toNextStopMeters)) else null,
+                distance = if (index > 0 && firstDistance != null) stop.distanceMeters?.let { Format.distance(it - firstDistance) } else null,
             )
         }
     }

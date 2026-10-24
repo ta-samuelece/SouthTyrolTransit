@@ -31,6 +31,7 @@ import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.ExpandLess
 import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.NearMe
+import androidx.compose.material.icons.rounded.Straighten
 import androidx.compose.material.icons.rounded.Navigation
 import androidx.compose.material.icons.rounded.SyncAlt
 import androidx.compose.material.icons.rounded.Warning
@@ -93,10 +94,12 @@ import org.southtyrol.transit.map.MarkerKind
 import org.southtyrol.transit.map.TransitMap
 import org.southtyrol.transit.model.Approach
 import org.southtyrol.transit.model.Approaches
+import org.southtyrol.transit.model.Bikes
 import org.southtyrol.transit.model.Freshness
 import org.southtyrol.transit.model.FreshnessPolicy
 import org.southtyrol.transit.model.Journey
 import org.southtyrol.transit.model.Leg
+import org.southtyrol.transit.model.LegDistance
 import org.southtyrol.transit.model.RouteProgress
 import org.southtyrol.transit.model.RunPosition
 import org.southtyrol.transit.model.RunPositions
@@ -154,7 +157,7 @@ fun JourneyDetailScreen(navigator: Navigator, viewModel: JourneyDetailViewModel 
                 DetailState.Missing -> MessageState(stringResource(R.string.journey_missing), stringResource(R.string.journey_missing_hint), action = stringResource(R.string.action_back), onAction = navigator::back)
                 is DetailState.Error -> ErrorState(s.error, onRetry = viewModel::load)
                 // Room below the list for the Start button.
-                is DetailState.Found -> JourneyDetailContent(s.journey, navigator, Modifier.fillMaxSize(), showHeader = false, bottomPadding = 88.dp)
+                is DetailState.Found -> JourneyDetailContent(s.journey, navigator, Modifier.fillMaxSize(), showHeader = false, bottomPadding = 88.dp, withBike = viewModel.withBike)
             }
         }
     }
@@ -174,13 +177,15 @@ fun JourneyDetailScreen(navigator: Navigator, viewModel: JourneyDetailViewModel 
 
 /**
  * Rich itinerary: header, route map, leg timeline with transfers, then fare information. The times
- * header is left out ([showHeader] false) where the top app bar already shows them.
+ * header is left out ([showHeader] false) where the top app bar already shows them. [withBike]: the search
+ * was for travelling with a bike, so a leg whose bike rule the timetable does not give gets a warning.
  */
 @Composable
-fun JourneyDetailContent(journey: Journey, navigator: Navigator, modifier: Modifier = Modifier, showHeader: Boolean = true, bottomPadding: androidx.compose.ui.unit.Dp = 16.dp) {
+fun JourneyDetailContent(journey: Journey, navigator: Navigator, modifier: Modifier = Modifier, showHeader: Boolean = true, bottomPadding: androidx.compose.ui.unit.Dp = 16.dp, withBike: Boolean = false) {
     val now = rememberNow(10_000)
     val live = hiltViewModel<JourneyLiveViewModel, JourneyLiveViewModel.Factory>(key = "live:" + journey.id) { it.create(journey) }
     val legRuns by live.legRuns.collectAsStateWithLifecycle()
+    val matched by live.matched.collectAsStateWithLifecycle()
     PollWhileVisible(20_000) { live.poll() }
     val map = rememberJourneyMap(journey, legRuns, now)
     val mapState = org.southtyrol.transit.feature.common.rememberExpandableMapState()
@@ -205,7 +210,8 @@ fun JourneyDetailContent(journey: Journey, navigator: Navigator, modifier: Modif
         itemsIndexed(journey.legs) { index, leg ->
             val previous = journey.legs.getOrNull(index - 1)
             if (previous != null && previous.mode.isTransit && leg.mode.isTransit) TransferRow(Duration.between(previous.bestArrival, leg.bestDeparture))
-            if (leg.mode == TransportMode.WALK) WalkLeg(leg, now) else TransitLeg(leg, now, onStop = { gid -> navigator.stop(gid) })
+            if (leg.mode == TransportMode.WALK) WalkLeg(leg, now)
+            else TransitLeg(leg, now, onStop = { gid -> navigator.stop(gid) }, run = legRuns[index], bikeWarning = withBike && matched && legRuns[index]?.trip?.bikes.let { it == null || it == Bikes.UNKNOWN })
         }
         item { FareSection(journey) }
     }
@@ -338,8 +344,12 @@ internal fun WalkLeg(leg: Leg, now: Instant) {
     }
 }
 
+/**
+ * A transit leg's card. [run] is the timetable run it was matched to, if any: it adds the train number,
+ * the leg's distance and the bike rule. [bikeWarning] says the bike rule is not known.
+ */
 @Composable
-internal fun TransitLeg(leg: Leg, now: Instant, onStop: (String) -> Unit) {
+internal fun TransitLeg(leg: Leg, now: Instant, onStop: (String) -> Unit, run: TripDetail? = null, bikeWarning: Boolean = false) {
     var expanded by rememberSaveable(leg.departure.epochSecond, leg.line) { mutableStateOf(false) }
     val status = LocalStatusColors.current
     Card(
@@ -352,8 +362,28 @@ internal fun TransitLeg(leg: Leg, now: Instant, onStop: (String) -> Unit) {
                 LineBadge(leg.line, leg.mode, large = true)
                 Column(Modifier.weight(1f)) {
                     Text(leg.destination.ifBlank { leg.to.name }, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                    val sub = listOf(leg.lineName.takeIf { it != leg.line }.orEmpty(), leg.operator).filter { it.isNotBlank() }.joinToString(" · ")
+                    val trainNumber = run?.trip?.shortName.orEmpty().takeIf { n -> n.isNotBlank() && !leg.lineName.contains(n.substringAfterLast(' ')) }.orEmpty()
+                    val sub = listOf(trainNumber, leg.lineName.takeIf { it != leg.line }.orEmpty(), leg.operator).filter { it.isNotBlank() }.joinToString(" · ")
                     if (sub.isNotBlank()) Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            // From the matched timetable run: how far this leg goes and whether bikes ride along.
+            val distance = run?.let { LegDistance.of(it, leg) }
+            val bikes = run?.trip?.bikes ?: Bikes.UNKNOWN
+            if (distance != null || bikes != Bikes.UNKNOWN) {
+                val pill = MaterialTheme.colorScheme.surfaceContainerHighest
+                androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (distance != null) org.southtyrol.transit.feature.common.InfoPill(Format.distance(distance), pill, icon = Icons.Rounded.Straighten)
+                    org.southtyrol.transit.feature.common.BikesPill(bikes, pill)
+                }
+            }
+            if (bikeWarning) androidx.compose.material3.Surface(
+                shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.tertiaryContainer, contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+            ) {
+                Row(Modifier.padding(12.dp), verticalAlignment = Alignment.Top) {
+                    Icon(Icons.Rounded.Warning, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(12.dp))
+                    Text(stringResource(R.string.journey_bikes_unknown, "${Format.mode(leg.mode)} ${leg.line}".trim()), style = MaterialTheme.typography.bodyMedium)
                 }
             }
             if (leg.cancelled) StatusPill(stringResource(org.southtyrol.transit.design.R.string.ds_cancelled), status.cancelled, Icons.Rounded.Warning)

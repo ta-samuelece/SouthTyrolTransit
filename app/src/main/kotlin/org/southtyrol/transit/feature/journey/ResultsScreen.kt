@@ -32,6 +32,7 @@ import androidx.compose.material.icons.rounded.ArrowUpward
 import androidx.compose.material.icons.rounded.Bookmark
 import androidx.compose.material.icons.rounded.BookmarkBorder
 import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.material.icons.rounded.FilterAlt
 import androidx.compose.material.icons.rounded.Podcasts
 import androidx.compose.material.icons.rounded.SyncAlt
 import androidx.compose.material.icons.rounded.Warning
@@ -118,7 +119,7 @@ fun ResultsScreen(navigator: Navigator, viewModel: ResultsViewModel = hiltViewMo
                     list(Modifier.weight(0.42f).fillMaxHeight())
                     VerticalDivider()
                     val selected = state.journeys.firstOrNull { it.id == state.selectedId } ?: state.sorted.firstOrNull()
-                    if (selected != null) JourneyDetailContent(selected, navigator, Modifier.weight(0.58f).fillMaxHeight())
+                    if (selected != null) JourneyDetailContent(selected, navigator, Modifier.weight(0.58f).fillMaxHeight(), withBike = state.withBike)
                 }
             } else {
                 list(Modifier.fillMaxSize())
@@ -162,6 +163,21 @@ private fun ResultsList(state: ResultsState, viewModel: ResultsViewModel, modifi
                     )
                 }
                 if (state.loading) item { TransitLoading() }
+                // Travelling with a bike: say how many connections were left out, and let them be shown.
+                val hidden = state.hidden.size
+                if (hidden > 0) item {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                        Icon(Icons.Rounded.FilterAlt, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            pluralStringResource(R.plurals.results_hidden_no_bikes, hidden, hidden),
+                            style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f),
+                        )
+                        androidx.compose.material3.TextButton(onClick = viewModel::toggleHidden) {
+                            Text(stringResource(if (state.showHidden) R.string.results_hide_no_bikes else R.string.results_show_hidden))
+                        }
+                    }
+                }
                 if (state.journeys.isNotEmpty()) item {
                     org.southtyrol.transit.feature.common.PageButton(stringResource(R.string.results_later), Icons.Rounded.ArrowDownward, viewModel::later)
                 }

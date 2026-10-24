@@ -71,6 +71,10 @@ data class TripRow(
     val direction: Int,
     val shapeId: String,
     val wheelchair: Int,
+    /** trip_short_name, e.g. a train number; added in version 2 (default for databases migrated from 1). */
+    @ColumnInfo(defaultValue = "''") val shortName: String = "",
+    /** bikes_allowed: 0 unknown, 1 yes, 2 no. */
+    @ColumnInfo(defaultValue = "0") val bikes: Int = 0,
 )
 
 @Entity(tableName = "stop_times", primaryKeys = ["tripIdx", "sequence"], indices = [Index(value = ["stopIdx", "departure"])])
@@ -82,6 +86,8 @@ data class StopTimeRow(
     val departure: Int,
     /** pickup_type in the low nibble, drop_off_type in the next. */
     val flags: Int,
+    /** shape_dist_traveled in whole metres; null when the feed gives none. Added in version 2. */
+    val distance: Int? = null,
 )
 
 @Entity(tableName = "calendar")
@@ -117,6 +123,11 @@ data class BoardRow(
     val agencyId: String,
     val platform: String,
     val lastSequence: Int,
+    val tripShortName: String,
+    val bikes: Int,
+    val distance: Int?,
+    /** The run's distance at its last stop (distances only grow along a run). */
+    val lastDistance: Int?,
 )
 
 data class TripStopRow(
@@ -132,6 +143,7 @@ data class TripStopRow(
     val stationKey: String,
     val platform: String,
     val wheelchair: Int,
+    val distance: Int?,
 )
 
 data class LineRow(val lineKey: String, val shortName: String, val longName: String, val type: Int, val color: String, val textColor: String, val routeIds: String)
@@ -157,7 +169,9 @@ interface ScheduleDao {
         """
         SELECT t.id AS tripId, s.id AS stopId, st.sequence, st.arrival, st.departure, st.flags, t.serviceId, t.headsign,
                r.id AS routeId, r.shortName, r.longName, r.type, r.color, r.textColor, r.agencyId, s.platform,
-               (SELECT MAX(x.sequence) FROM stop_times x WHERE x.tripIdx = st.tripIdx) AS lastSequence
+               (SELECT MAX(x.sequence) FROM stop_times x WHERE x.tripIdx = st.tripIdx) AS lastSequence,
+               t.shortName AS tripShortName, t.bikes, st.distance,
+               (SELECT MAX(x.distance) FROM stop_times x WHERE x.tripIdx = st.tripIdx) AS lastDistance
         FROM stop_times st
         JOIN stops s ON s.idx = st.stopIdx
         JOIN trips t ON t.idx = st.tripIdx
@@ -173,7 +187,9 @@ interface ScheduleDao {
         """
         SELECT t.id AS tripId, s.id AS stopId, st.sequence, st.arrival, st.departure, st.flags, t.serviceId, t.headsign,
                r.id AS routeId, r.shortName, r.longName, r.type, r.color, r.textColor, r.agencyId, s.platform,
-               (SELECT MAX(x.sequence) FROM stop_times x WHERE x.tripIdx = st.tripIdx) AS lastSequence
+               (SELECT MAX(x.sequence) FROM stop_times x WHERE x.tripIdx = st.tripIdx) AS lastSequence,
+               t.shortName AS tripShortName, t.bikes, st.distance,
+               (SELECT MAX(x.distance) FROM stop_times x WHERE x.tripIdx = st.tripIdx) AS lastDistance
         FROM stop_times st
         JOIN stops s ON s.idx = st.stopIdx
         JOIN trips t ON t.idx = st.tripIdx
@@ -258,7 +274,7 @@ interface ScheduleDao {
 
     @Query(
         """
-        SELECT st.sequence, st.arrival, st.departure, st.flags, s.id AS stopId, s.name, s.lat, s.lon, s.code, s.stationKey, s.platform, s.wheelchair
+        SELECT st.sequence, st.arrival, st.departure, st.flags, s.id AS stopId, s.name, s.lat, s.lon, s.code, s.stationKey, s.platform, s.wheelchair, st.distance
         FROM stop_times st JOIN stops s ON s.idx = st.stopIdx WHERE st.tripIdx = :tripIdx ORDER BY st.sequence
         """,
     )
@@ -281,11 +297,25 @@ data class TranslationText(val recordId: String, val text: String)
         AgencyRow::class, StopRow::class, StopSearchRow::class, RouteRow::class, TripRow::class, StopTimeRow::class,
         CalendarRow::class, CalendarDateRow::class, ShapeRow::class, TranslationRow::class, MetaRow::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
 abstract class ScheduleDatabase : RoomDatabase() {
     abstract fun schedule(): ScheduleDao
+
+    companion object {
+        /**
+         * Version 2 added the train number, bikes and distance columns. A database imported before keeps
+         * working with them empty until the next sync re-imports the feed (GtfsImporter.VERSION 2).
+         */
+        val MIGRATION_1_2 = object : androidx.room.migration.Migration(1, 2) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE trips ADD COLUMN shortName TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE trips ADD COLUMN bikes INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE stop_times ADD COLUMN distance INTEGER")
+            }
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------------------------

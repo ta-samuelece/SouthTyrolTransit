@@ -28,6 +28,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccessibleForward
+import androidx.compose.material.icons.rounded.PedalBike
 import androidx.compose.material.icons.rounded.Bookmark
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.History
@@ -365,6 +366,15 @@ private fun TimeAndOptions(state: PlannerState, viewModel: PlannerViewModel) {
                             Text(stringResource(R.string.planner_wheelchair_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         Switch(checked = state.wheelchair, onCheckedChange = viewModel::setWheelchair)
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                        Icon(Icons.Rounded.PedalBike, contentDescription = null)
+                        Spacer(Modifier.size(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(stringResource(R.string.planner_bike), style = MaterialTheme.typography.bodyLarge)
+                            Text(stringResource(R.string.planner_bike_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Switch(checked = state.withBike, onCheckedChange = viewModel::setWithBike)
                     }
                 }
             }

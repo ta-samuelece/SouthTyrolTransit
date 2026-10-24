@@ -93,3 +93,76 @@ object RouteProgress {
         return Point(a.latitude + dy * t, a.longitude + (b.longitude - a.longitude) * t)
     }
 }
+
+/** How far a run has come and how far it still goes, from the timetable's distances along the route. */
+data class RunDistance(
+    /** Metres from the run's first stop to the vehicle. */
+    val travelledMeters: Double,
+    /** Metres the run still has to cover after the vehicle. */
+    val remainingMeters: Double,
+    /** Metres from the vehicle to its next stop. */
+    val toNextStopMeters: Double,
+)
+
+object RouteDistance {
+    /** Metres along the run between calls [from] and [to]; null when either has no distance. */
+    fun between(stops: List<TripStop>, from: Int, to: Int): Double? {
+        val a = stops.getOrNull(from)?.distanceMeters ?: return null
+        val b = stops.getOrNull(to)?.distanceMeters ?: return null
+        return (b - a).takeIf { it >= 0 }
+    }
+
+    /**
+     * Where a live vehicle is along the run, in metres. Only for a GPS fix ([RunPosition.estimated] false)
+     * between two calls: an estimate would claim precision it does not have. The stretch to the next stop
+     * is measured on [line] (the shape, else the stops), then bounded by the timetable's distances so the
+     * figures never contradict the stop list.
+     */
+    fun of(line: List<Point>, stops: List<TripStop>, position: RunPosition?): RunDistance? {
+        if (position == null || position.estimated || position.atStop) return null
+        val next = stops.getOrNull(position.nextIndex) ?: return null
+        val previous = stops.getOrNull(position.nextIndex - 1) ?: return null
+        val start = stops.first().distanceMeters ?: return null
+        val end = stops.last().distanceMeters ?: return null
+        val nextAt = next.distanceMeters ?: return null
+        val previousAt = previous.distanceMeters ?: return null
+        val path = line.takeIf { it.size >= 2 } ?: stops.map { it.stop.point }
+        val ahead = RouteProgress.split(path, position.point, previous.stop.point, next.stop.point).ahead
+        val toNext = alongTo(ahead, next.stop.point).coerceIn(0.0, nextAt - previousAt)
+        val travelled = nextAt - toNext - start
+        return RunDistance(travelled, end - start - travelled, toNext)
+    }
+
+    /** Length of [path] from its start to the vertex nearest [target]. */
+    private fun alongTo(path: List<Point>, target: Point): Double {
+        if (path.size < 2) return 0.0
+        val stop = path.indices.minBy { Geo.distance(path[it], target) }
+        var total = 0.0
+        for (i in 1..stop) total += Geo.distance(path[i - 1], path[i])
+        return total
+    }
+}
+
+/** Distance of a planner leg on the timetable run it was matched to. */
+object LegDistance {
+    /**
+     * Metres from the leg's boarding call to its alighting call on [run]; null when either call is not
+     * found or the timetable gives no distances.
+     */
+    fun of(run: TripDetail, leg: Leg): Double? {
+        val boarding = Approaches.boardingIndex(run.stops, leg.from.stopGlobalId, leg.departure) ?: return null
+        val key = leg.to.stopGlobalId.ifBlank { return null }
+        val alighting = (boarding + 1 until run.stops.size).firstOrNull { run.stops[it].stop.stationKey == key || run.stops[it].stop.id == key } ?: return null
+        return RouteDistance.between(run.stops, boarding, alighting)?.takeIf { it > 0 }
+    }
+}
+
+/** Whether a journey can be made with a bike, from the timetable runs its transit legs were matched to. */
+object JourneyBikes {
+    /** Bike rule per transit leg index: the matched run's, UNKNOWN for a leg without a match. */
+    fun legs(journey: Journey, runs: Map<Int, Bikes>): Map<Int, Bikes> =
+        journey.legs.withIndex().filter { it.value.mode.isTransit }.associate { it.index to (runs[it.index] ?: Bikes.UNKNOWN) }
+
+    /** True when some leg's run is known to take no bikes: such a journey is hidden when travelling with one. */
+    fun excluded(journey: Journey, runs: Map<Int, Bikes>): Boolean = legs(journey, runs).values.any { it == Bikes.NOT_ALLOWED }
+}

@@ -37,6 +37,7 @@
     <string name="ds_age_days">%d giorni fa</string>
     <string name="ds_meters">%d m</string>
     <string name="ds_kilometers">%.1f km</string>
+    <string name="ds_kilometers_whole">%d km</string>
     <string name="ds_retry">Riprova</string>
     <string name="ds_loading">Caricamento</string>
     <string name="ds_has_alert">Avviso di servizio</string>

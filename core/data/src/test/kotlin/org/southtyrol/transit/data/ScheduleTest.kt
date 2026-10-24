@@ -17,6 +17,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.southtyrol.transit.model.AlertSource
+import org.southtyrol.transit.model.Bikes
 import org.southtyrol.transit.model.DataError
 import org.southtyrol.transit.model.DataException
 import org.southtyrol.transit.model.Departure
@@ -77,12 +78,13 @@ object SyntheticGtfs {
                 "it:1:300:0:1","Bressanone, Stazione","46.7099","11.6497","","","",""
                 """.trimIndent() + "\n",
             "routes.txt" to "route_id,agency_id,route_short_name,route_long_name,route_type,route_color\nr201,sta,201,Bolzano - Merano,3,FFEE00\nrR,sta,R,,2,\n",
-            "trips.txt" to "route_id,service_id,trip_id,shape_id,trip_headsign,direction_id\nr201,WK,t1,s1,Merano,0\nr201,WK,t2,s1,Merano,0\nrR,SUN,t3,,Bressanone,1\nr201,WK,t4$variant,s1,Merano,0\n",
+            "trips.txt" to "route_id,service_id,trip_id,shape_id,trip_headsign,direction_id,trip_short_name,bikes_allowed\n" +
+                "r201,WK,t1,s1,Merano,0,,2\nr201,WK,t2,s1,Merano,0,,\nrR,SUN,t3,,Bressanone,1,R 1834,1\nr201,WK,t4$variant,s1,Merano,0,,0\n",
             "stop_times.txt" to buildString {
-                append("trip_id,arrival_time,departure_time,stop_id,stop_sequence,pickup_type,drop_off_type\n")
+                append("trip_id,arrival_time,departure_time,stop_id,stop_sequence,pickup_type,drop_off_type,shape_dist_traveled\n")
                 append("t1,08:00:00,08:00:00,it:1:100:1:1,1,0,0\nt1,08:40:00,08:40:00,it:1:200:0:1,2,0,0\n")
                 append("t2,24:30:00,24:30:00,it:1:100:1:2,1,0,0\nt2,25:10:00,25:10:00,it:1:200:0:1,2,0,0\n")
-                append("t3,09:00:00,09:00:00,it:1:100:1:2,1,0,0\nt3,09:30:00,09:30:00,it:1:300:0:1,2,0,0\n")
+                append("t3,09:00:00,09:00:00,it:1:100:1:2,1,0,0,0.00\nt3,09:30:00,09:30:00,it:1:300:0:1,2,0,0,40112.55\n")
                 append("t4$variant,10:00:00,10:00:00,it:1:100:1:1,1,0,0\nt4$variant,10:40:00,10:40:00,it:1:200:0:1,2,0,0\n")
                 if (brokenStopTimes) repeat(5) { append("ghost,10:00:00,10:00:00,nowhere,$it,0,0\n") }
             },
@@ -164,6 +166,26 @@ class ScheduleTest {
         assertEquals(2, trip.stops.size)
         assertEquals("Bozen, Bahnhof", trip.stops.first().stop.name)
         assertEquals(LocalTime.of(1, 10), trip.stops.last().scheduledArrival.atZone(TransitZone).toLocalTime())
+    }
+
+    @Test fun trainNumbersBikesAndDistancesAreImported() = runTest {
+        assertTrue(store.importFile(SyntheticGtfs.zip(context.cacheDir), mapOf("source" to "test")))
+        val train = schedule.scheduledDepartures(listOf("it:1:100"), at("2026-10-04", "07:00"), at("2026-10-04", "12:00"), false, "it", 50).single()
+        assertEquals("R 1834", train.tripName)
+        assertEquals(Bikes.ALLOWED, train.bikes)
+        assertEquals(40113.0, train.remainingMeters!!, 0.1)
+
+        val buses = schedule.scheduledDepartures(listOf("it:1:100"), at("2026-10-02", "07:00"), at("2026-10-02", "12:00"), false, "it", 50)
+        assertEquals(listOf(Bikes.NOT_ALLOWED, Bikes.UNKNOWN), buses.map { it.bikes })
+        assertEquals(listOf("", ""), buses.map { it.tripName })
+        assertNull(buses.first().remainingMeters)
+
+        val trip = schedule.trip("t3", LocalDate.of(2026, 10, 4), "it")!!
+        assertEquals("R 1834", trip.trip.shortName)
+        assertEquals(Bikes.ALLOWED, trip.trip.bikes)
+        assertEquals(listOf(0.0, 40113.0), trip.stops.map { it.distanceMeters })
+        assertEquals(40113.0, trip.lengthMeters!!, 0.1)
+        assertNull(schedule.trip("t1", LocalDate.of(2026, 10, 2), "it")!!.lengthMeters)
     }
 
     @Test fun directionsArePlatformsLabelledByTheirNextStops() = runTest {

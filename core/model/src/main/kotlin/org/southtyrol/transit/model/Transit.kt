@@ -53,6 +53,15 @@ enum class Accessibility {
     }
 }
 
+/** Whether a run carries bicycles (GTFS `bikes_allowed`). UNKNOWN when the feed says nothing: show nothing then. */
+enum class Bikes {
+    UNKNOWN, ALLOWED, NOT_ALLOWED;
+
+    companion object {
+        fun fromGtfs(value: Int) = when (value) { 1 -> ALLOWED; 2 -> NOT_ALLOWED; else -> UNKNOWN }
+    }
+}
+
 data class Point(val latitude: Double, val longitude: Double) {
     val isValid: Boolean get() = latitude in -90.0..90.0 && longitude in -180.0..180.0 && !(latitude == 0.0 && longitude == 0.0)
 }
@@ -105,7 +114,17 @@ data class Line(
     val textColor: Long? = null,
 )
 
-data class Trip(val id: String, val routeId: String, val serviceId: String, val headsign: String, val direction: Int, val shapeId: String)
+data class Trip(
+    val id: String,
+    val routeId: String,
+    val serviceId: String,
+    val headsign: String,
+    val direction: Int,
+    val shapeId: String,
+    /** The run's public name, e.g. the train number "R 1834" (GTFS `trip_short_name`); empty when not published. */
+    val shortName: String = "",
+    val bikes: Bikes = Bikes.UNKNOWN,
+)
 
 data class TripStop(
     val stop: Stop,
@@ -115,6 +134,8 @@ data class TripStop(
     val predictedArrival: Instant? = null,
     val predictedDeparture: Instant? = null,
     val state: ServiceState = ServiceState.NORMAL,
+    /** Distance along the run from its first stop, in metres (GTFS `shape_dist_traveled`); null when not published. */
+    val distanceMeters: Double? = null,
 )
 
 /**
@@ -152,7 +173,15 @@ data class TripDetail(
     val state: ServiceState = ServiceState.NORMAL,
     val vehicle: Vehicle? = null,
     val observedAt: Instant? = null,
-)
+) {
+    /** Length of the whole run in metres, when the timetable gives distances for its first and last stop. */
+    val lengthMeters: Double?
+        get() {
+            val first = stops.firstOrNull()?.distanceMeters ?: return null
+            val last = stops.lastOrNull()?.distanceMeters ?: return null
+            return (last - first).takeIf { it > 0 }
+        }
+}
 
 data class Departure(
     val tripId: String,
@@ -177,6 +206,11 @@ data class Departure(
     val tripLinked: Boolean = true,
     /** Journey-planner reference to this run (see [TripLiveDataSource]); empty when unknown. */
     val liveRef: String = "",
+    /** The run's public name, e.g. the train number "R 1834"; empty when not published. */
+    val tripName: String = "",
+    val bikes: Bikes = Bikes.UNKNOWN,
+    /** Distance from this stop to the end of the run in metres; null when the timetable gives no distances. */
+    val remainingMeters: Double? = null,
 ) {
     val best: Instant get() = predicted ?: scheduled
     val delaySeconds: Long? get() = predicted?.let { Duration.between(scheduled, it).seconds }
@@ -331,6 +365,11 @@ data class SearchOptions(
     val excludedModes: Set<TransportMode> = emptySet(),
     val wheelchair: Boolean = false,
     val walkingSpeed: WalkingSpeed = WalkingSpeed.NORMAL,
+    /**
+     * Travelling with a bike. Not sent to the planner: results are filtered by the timetable's bike rules
+     * for the runs their legs are matched to (see [JourneyBikes]).
+     */
+    val withBike: Boolean = false,
 )
 
 /** Typed, UI-describable failures. Repositories never leak transport exceptions to ViewModels. */

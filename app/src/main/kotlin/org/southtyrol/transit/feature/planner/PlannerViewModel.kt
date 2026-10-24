@@ -65,6 +65,7 @@ object RequestCodec {
         put("excluded", kotlinx.serialization.json.JsonArray(r.options.excludedModes.map { JsonPrimitive(it.name) }))
         put("wheelchair", r.options.wheelchair)
         put("walking", r.options.walkingSpeed.name)
+        if (r.options.withBike) put("bike", true)
     }.toString()
 
     /** Decodes a request; a missing time means "leave now" relative to [now]. */
@@ -82,6 +83,7 @@ object RequestCodec {
                 excludedModes = (o["excluded"]?.jsonArray?.mapNotNull { e -> runCatching { TransportMode.valueOf(e.jsonPrimitive.content) }.getOrNull() } ?: emptyList()).toSet(),
                 wheelchair = o["wheelchair"]?.jsonPrimitive?.booleanOrNull ?: false,
                 walkingSpeed = o.enum("walking", WalkingSpeed.NORMAL),
+                withBike = o["bike"]?.jsonPrimitive?.booleanOrNull ?: false,
             ),
         )
     }.getOrNull()
@@ -104,6 +106,7 @@ data class PlannerState(
     val excludedModes: Set<TransportMode> = emptySet(),
     val wheelchair: Boolean = false,
     val walkingSpeed: WalkingSpeed = WalkingSpeed.NORMAL,
+    val withBike: Boolean = false,
     val locating: Field? = null,
     val locationError: LocationResult? = null,
 )
@@ -168,7 +171,7 @@ class PlannerViewModel @Inject constructor(
         val leaveNow = RequestCodec.isLeaveNow(text)
         return PlannerState(
             request.from, request.to, if (leaveNow) null else request.options.at, request.options.arriveBy, request.options.preference,
-            request.options.excludedModes, request.options.wheelchair, request.options.walkingSpeed,
+            request.options.excludedModes, request.options.wheelchair, request.options.walkingSpeed, request.options.withBike,
         )
     }
 
@@ -211,6 +214,7 @@ class PlannerViewModel @Inject constructor(
     fun toggleMode(mode: TransportMode) = update { it.copy(excludedModes = if (mode in it.excludedModes) it.excludedModes - mode else it.excludedModes + mode) }
     fun setWheelchair(value: Boolean) = update { it.copy(wheelchair = value) }
     fun setWalkingSpeed(value: WalkingSpeed) = update { it.copy(walkingSpeed = value) }
+    fun setWithBike(value: Boolean) = update { it.copy(withBike = value) }
 
     fun useRoute(from: Place, to: Place) = update { it.copy(from = from, to = to) }
 
@@ -248,7 +252,7 @@ class PlannerViewModel @Inject constructor(
 
     private fun options(s: PlannerState) = SearchOptions(
         at = s.time ?: ZonedDateTime.now(TransitZone), arriveBy = s.arriveBy, preference = s.preference,
-        excludedModes = s.excludedModes, wheelchair = s.wheelchair, walkingSpeed = s.walkingSpeed,
+        excludedModes = s.excludedModes, wheelchair = s.wheelchair, walkingSpeed = s.walkingSpeed, withBike = s.withBike,
     )
 
     suspend fun homePlace(): Place? = saved.saved.first().firstOrNull { it.kind == SavedKind.PLACE && it.id == SavedRepository.HOME }?.place

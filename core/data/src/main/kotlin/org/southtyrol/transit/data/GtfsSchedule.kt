@@ -5,6 +5,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.southtyrol.transit.model.Accessibility
+import org.southtyrol.transit.model.Bikes
 import org.southtyrol.transit.model.BoundingBox
 import org.southtyrol.transit.model.CalendarRule
 import org.southtyrol.transit.model.ColorContrast
@@ -221,6 +222,8 @@ class GtfsSchedule(private val store: ScheduleStore) : TransitScheduleDataSource
             freshness = Freshness.SCHEDULED, platform = platform, serviceDate = day,
             color = color, textColor = color?.let { ColorContrast.readableOn(it, ColorContrast.parseHex(textColor)) },
             operator = agencies[agencyId]?.name.orEmpty(),
+            tripName = tripShortName, bikes = Bikes.fromGtfs(bikes),
+            remainingMeters = if (distance != null && lastDistance != null && lastDistance > distance) (lastDistance - distance).toDouble() else null,
         )
     }
 
@@ -294,13 +297,14 @@ class GtfsSchedule(private val store: ScheduleStore) : TransitScheduleDataSource
         val headsign = headsigns(this, mapOf(tripId to trip.headsign), language)[tripId] ?: trip.headsign
         val shape = if (trip.shapeId.isBlank()) emptyList() else shape(trip.shapeId).flatMap { Polyline.decode(it.polyline) }
         TripDetail(
-            trip = Trip(trip.id, trip.routeId, trip.serviceId, headsign, trip.direction, trip.shapeId),
+            trip = Trip(trip.id, trip.routeId, trip.serviceId, headsign, trip.direction, trip.shapeId, trip.shortName, Bikes.fromGtfs(trip.bikes)),
             route = route.toRoute(),
             serviceDate = serviceDate,
             stops = stops.map {
                 TripStop(
                     Stop(it.stopId, names[it.stopId] ?: it.name, Point(it.lat, it.lon), it.code, it.stationKey, it.platform, Accessibility.fromGtfs(it.wheelchair)),
                     it.sequence, GtfsTime.instant(serviceDate, it.arrival), GtfsTime.instant(serviceDate, it.departure),
+                    distanceMeters = it.distance?.toDouble(),
                 )
             },
             shape = shape.ifEmpty { stops.map { Point(it.lat, it.lon) } },

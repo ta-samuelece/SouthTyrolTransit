@@ -167,6 +167,7 @@ class ScheduleStore(
     private fun open(file: File): ScheduleDatabase =
         Room.databaseBuilder(context, ScheduleDatabase::class.java, file.absolutePath)
             .setJournalMode(RoomDatabase.JournalMode.TRUNCATE)
+            .addMigrations(ScheduleDatabase.MIGRATION_1_2)
             .build()
 
     /**

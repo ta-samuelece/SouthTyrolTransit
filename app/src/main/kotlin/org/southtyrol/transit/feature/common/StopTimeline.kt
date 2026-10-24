@@ -153,12 +153,13 @@ enum class VehicleMarker { NONE, BEFORE_STOP, AT_STOP }
  * when it moved), dot, stop name and delay. [passed] calls and rail are dimmed ([Progress.PASSED_ALPHA]),
  * [next] is emphasised, [note] adds a line under the name ("Next stop", "Get off"). Predictions count as
  * live only while [live]: a prediction from a feed gone stale is shown, but not as a live delay.
+ * [distance] ("23.4 km", the distance along the run) sits at the end of the row.
  */
 @Composable
 fun StopTimelineRow(
     stop: TripStop, first: Boolean, last: Boolean, passed: Boolean, next: Boolean, color: Long,
     vehicle: VehicleMarker, mode: TransportMode, estimated: Boolean, onClick: () -> Unit,
-    note: String? = null, live: Boolean = true,
+    note: String? = null, live: Boolean = true, distance: String? = null,
 ) {
     val lineColor = Color(0xFF000000 or color)
     val skipped = stop.state == ServiceState.SKIPPED || stop.state == ServiceState.CANCELLED
@@ -173,7 +174,7 @@ fun StopTimelineRow(
     Row(
         Modifier.fillMaxWidth().height(IntrinsicSize.Min).clickable(role = Role.Button, onClick = onClick).heightIn(min = 52.dp)
             .semantics(mergeDescendants = true) {
-                contentDescription = listOfNotNull(stop.stop.name, timeText, delayText, note, vehicleText).joinToString(", ")
+                contentDescription = listOfNotNull(stop.stop.name, timeText, delayText, note, vehicleText, distance).joinToString(", ")
                 if (passedText != null) stateDescription = passedText
             },
     ) {
@@ -216,5 +217,9 @@ fun StopTimelineRow(
                 DelayLabel(delaySeconds, stop.state, if (predicted != null && live) Freshness.LIVE else Freshness.SCHEDULED)
             }
         }
+        if (distance != null) Text(
+            distance, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1,
+            modifier = Modifier.padding(start = 8.dp, top = 10.dp),
+        )
     }
 }

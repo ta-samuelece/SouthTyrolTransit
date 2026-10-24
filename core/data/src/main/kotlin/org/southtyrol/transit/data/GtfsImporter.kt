@@ -64,7 +64,7 @@ class GtfsImporter(private val shapeToleranceMeters: Double = 4.0) {
          * Bump whenever a change to the importer changes what ends up in the database: installs then
          * re-import their current feed on the next sync instead of waiting for STA to publish a new one.
          */
-        const val VERSION = 1
+        const val VERSION = 2
     }
 
     suspend fun import(zipFile: File, db: SupportSQLiteDatabase, meta: Map<String, String>, progress: (ImportProgress) -> Unit = {}): ImportSummary {
@@ -187,20 +187,21 @@ class GtfsImporter(private val shapeToleranceMeters: Double = 4.0) {
 
             // trips.txt
             val tripIndex = HashMap<String, Int>(65536)
-            statement("trips", listOf("idx", "id", "routeId", "serviceId", "headsign", "direction", "shapeId", "wheelchair")).use { st ->
+            statement("trips", listOf("idx", "id", "routeId", "serviceId", "headsign", "direction", "shapeId", "wheelchair", "shortName", "bikes")).use { st ->
                 read("trips.txt") { r ->
                     val id = r["trip_id"]
                     if (id.isBlank()) return@read
                     val idx = tripIndex.size + 1
                     tripIndex[id] = idx
-                    st.put(idx, id, r["route_id"], r["service_id"], r["trip_headsign"], r.int("direction_id"), r["shape_id"], r.int("wheelchair_accessible"))
+                    st.put(idx, id, r["route_id"], r["service_id"], r["trip_headsign"], r.int("direction_id"), r["shape_id"], r.int("wheelchair_accessible"), r["trip_short_name"], r.int("bikes_allowed"))
                 }
             }
 
             // stop_times.txt — the bulk of the feed. Missing times are interpolated from the previous stop.
+            // shape_dist_traveled is in metres in the STA feed (the spec leaves the unit to the feed).
             var skipped = 0L
             var lastTrip = ""; var lastTime = 0
-            val stopTimes = statement("stop_times", listOf("tripIdx", "sequence", "stopIdx", "arrival", "departure", "flags")).use { st ->
+            val stopTimes = statement("stop_times", listOf("tripIdx", "sequence", "stopIdx", "arrival", "departure", "flags", "distance")).use { st ->
                 read("stop_times.txt") { r ->
                     val trip = tripIndex[r["trip_id"]]; val stop = stopIndex[r["stop_id"]]
                     if (trip == null || stop == null) { skipped++; return@read }
@@ -210,7 +211,10 @@ class GtfsImporter(private val shapeToleranceMeters: Double = 4.0) {
                     val arrival = if (arrivalText.isBlank()) departureText.takeIf { it.isNotBlank() }?.let(GtfsTime::seconds) ?: lastTime else GtfsTime.seconds(arrivalText)
                     val departure = if (departureText.isBlank()) arrival else GtfsTime.seconds(departureText)
                     lastTime = departure
-                    st.put(trip, r.int("stop_sequence"), stop, arrival, departure, (r.int("pickup_type") and 0xf) or ((r.int("drop_off_type") and 0xf) shl 4))
+                    st.put(
+                        trip, r.int("stop_sequence"), stop, arrival, departure, (r.int("pickup_type") and 0xf) or ((r.int("drop_off_type") and 0xf) shl 4),
+                        r["shape_dist_traveled"].toDoubleOrNull()?.takeIf { it >= 0 && it.isFinite() }?.let { Math.round(it).toInt() },
+                    )
                 }
             }
             if (stopTimes == 0L) throw GtfsValidationException("No stop times")

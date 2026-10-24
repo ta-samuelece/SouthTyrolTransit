@@ -53,7 +53,12 @@ object Format {
 
     @Composable
     @ReadOnlyComposable
-    fun distance(meters: Double): String = if (meters < 1000) stringResource(R.string.ds_meters, ((meters / 10).roundToInt() * 10)) else stringResource(R.string.ds_kilometers, meters / 1000.0)
+    fun distance(meters: Double): String = when {
+        meters < 1000 -> stringResource(R.string.ds_meters, ((meters / 10).roundToInt() * 10))
+        // "112 km", not "112.0 km": a decimal says nothing at that length.
+        meters >= 99_950 -> stringResource(R.string.ds_kilometers_whole, (meters / 1000).roundToInt())
+        else -> stringResource(R.string.ds_kilometers, meters / 1000.0)
+    }
 
     /** Minutes until [target], rounded down; negative values mean "already due". */
     fun minutesUntil(target: Instant, now: Instant): Long = Math.floorDiv(Duration.between(now, target).seconds, 60L)

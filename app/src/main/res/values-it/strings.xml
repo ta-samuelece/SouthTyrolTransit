@@ -494,4 +494,24 @@
         <item quantity="many">%d min</item>
         <item quantity="other">%d min</item>
     </plurals>
+
+    <!-- Train numbers, bikes and distances from the timetable -->
+    <string name="bikes_allowed">Bici ammesse</string>
+    <string name="bikes_not_allowed">Bici non ammesse</string>
+    <plurals name="trip_length">
+        <item quantity="one">%1$s · %2$d fermata</item>
+        <item quantity="other">%1$s · %2$d fermate</item>
+    </plurals>
+    <string name="trip_distance_progress">%1$s percorsi · mancano %2$s</string>
+    <string name="trip_next_stop_in">Prossima fermata tra %s</string>
+    <string name="departure_distance_to">%1$s fino a %2$s</string>
+    <string name="planner_bike">Viaggio con la bici</string>
+    <string name="planner_bike_hint">Nasconde i collegamenti che secondo l\'orario non trasportano bici. Richiede l\'orario scaricato.</string>
+    <string name="journey_bikes_unknown">L\'orario non indica se %s trasporta bici. Verifica prima di partire.</string>
+    <plurals name="results_hidden_no_bikes">
+        <item quantity="one">%d collegamento nascosto: non trasporta bici</item>
+        <item quantity="other">%d collegamenti nascosti: non trasportano bici</item>
+    </plurals>
+    <string name="results_show_hidden">Mostra</string>
+    <string name="results_hide_no_bikes">Nascondi</string>
 </resources>

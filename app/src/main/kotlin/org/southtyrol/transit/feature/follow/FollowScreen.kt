@@ -203,7 +203,7 @@ private fun FollowContent(session: FollowSession, view: FollowView, now: Instant
                         when {
                             !each.mode.isTransit -> WalkLeg(each, now)
                             i == step.legIndex && !done -> CurrentLegCard(view, each, now) { key -> navigator.stop(key) }
-                            else -> TransitLeg(each, now) { key -> navigator.stop(key) }
+                            else -> TransitLeg(each, now, onStop = { key -> navigator.stop(key) })
                         }
                     }
                 }

@@ -121,7 +121,6 @@ fun ChargingSheet(p: MobilityPoint, now: Instant) {
             }
         }
     }
-    Text(stringResource(R.string.charging_source), style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
 }
 
 @Composable
@@ -148,7 +147,7 @@ private fun ChargingGroupRow(g: ChargingGroup, shape: Shape) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(title, style = MaterialTheme.typography.titleMedium)
                 Text(detail, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
-                if (g.hasStatus && g.statuses.size in 2..MAX_STATUS_SQUARES) {
+                if (g.hasStatus && g.statuses.size <= MAX_STATUS_SQUARES) {
                     FlowRow(Modifier.padding(top = 2.dp), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         g.statuses.sortedBy { it.ordinal }.forEach { StatusSquare(it) }
                     }

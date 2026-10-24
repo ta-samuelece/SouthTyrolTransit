@@ -207,7 +207,6 @@
     <string name="charging_private_public">Privat, öffentlich zugänglich</string>
     <string name="charging_rfid">RFID-Karte</string>
     <string name="charging_how_to_pay">Bezahlung</string>
-    <string name="charging_source">Daten: Open Data Hub, vom Betreiber. Preise werden nicht veröffentlicht.</string>
 
     <string name="alerts_title">Betriebsmeldungen</string>
     <string name="alerts_active">Aktuell</string>

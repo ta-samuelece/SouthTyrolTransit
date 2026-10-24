@@ -216,7 +216,6 @@
     <string name="charging_private_public">Private, open to the public</string>
     <string name="charging_rfid">RFID card</string>
     <string name="charging_how_to_pay">How to pay</string>
-    <string name="charging_source">Data: Open Data Hub, from the operator. Prices are not published.</string>
 
     <!-- Alerts -->
     <string name="alerts_title">Service alerts</string>

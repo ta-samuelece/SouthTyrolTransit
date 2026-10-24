@@ -214,7 +214,6 @@
     <string name="charging_private_public">Privato, aperto al pubblico</string>
     <string name="charging_rfid">Tessera RFID</string>
     <string name="charging_how_to_pay">Come pagare</string>
-    <string name="charging_source">Dati: Open Data Hub, dal gestore. I prezzi non sono pubblicati.</string>
 
     <string name="alerts_title">Avvisi di servizio</string>
     <string name="alerts_active">Attuali</string>

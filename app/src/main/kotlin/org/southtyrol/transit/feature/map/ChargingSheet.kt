@@ -14,8 +14,10 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material.icons.rounded.EvStation
 import androidx.compose.material.icons.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.Schedule
@@ -55,6 +57,8 @@ import java.util.Locale
 
 /** mobility-charging: the charging-station tile, the same in every theme (see MarkerImages). */
 private val ChargingColor = Color(0xFFAD1457)
+private val FastBadgeColor = Color(0xFFF2C048)
+private val OnFastBadgeColor = Color(0xFF261900)
 
 /** More points than this in one group read better as the count alone than as a strip of squares. */
 private const val MAX_STATUS_SQUARES = 24
@@ -104,8 +108,10 @@ fun ChargingSheet(p: MobilityPoint, now: Instant) {
         if (c.privateWithPublicAccess) stringResource(R.string.charging_private_public) else null,
         if (c.rfid) stringResource(R.string.charging_rfid) else null,
     )
-    if (pills.isNotEmpty()) {
+    if (c.fast || pills.isNotEmpty()) {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            // Spelled out first: the map's bolt badge alone is easy to miss. Its leading badge repeats that bolt.
+            if (c.fast) InfoPill(stringResource(R.string.charging_fast), colors.surfaceContainerHighest, leading = { FastBadge() })
             pills.forEach { InfoPill(it, colors.surfaceContainerHighest) }
         }
     }
@@ -166,6 +172,14 @@ private fun ChargingGroupRow(g: ChargingGroup, shape: Shape) {
                 }
             }
         }
+    }
+}
+
+/** The map marker's fast-charging badge (mobility-badge with on-mobility-badge), at pill-icon size. */
+@Composable
+private fun FastBadge() {
+    Box(Modifier.size(16.dp).background(FastBadgeColor, CircleShape), contentAlignment = Alignment.Center) {
+        Icon(Icons.Rounded.Bolt, contentDescription = null, tint = OnFastBadgeColor, modifier = Modifier.size(12.dp))
     }
 }
 

@@ -210,6 +210,7 @@
     <string name="charging_type1">Tipo 1</string>
     <string name="charging_domestic">Presa domestica</string>
     <string name="charging_other">Altro connettore</string>
+    <string name="charging_fast">Ricarica rapida</string>
     <string name="charging_open_all_day">Aperto 24 ore su 24</string>
     <string name="charging_private_public">Privato, aperto al pubblico</string>
     <string name="charging_rfid">Tessera RFID</string>

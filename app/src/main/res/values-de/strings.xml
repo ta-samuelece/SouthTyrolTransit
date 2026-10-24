@@ -203,6 +203,7 @@
     <string name="charging_type1">Typ 1</string>
     <string name="charging_domestic">Haushaltssteckdose</string>
     <string name="charging_other">Anderer Stecker</string>
+    <string name="charging_fast">Schnellladen</string>
     <string name="charging_open_all_day">Rund um die Uhr geöffnet</string>
     <string name="charging_private_public">Privat, öffentlich zugänglich</string>
     <string name="charging_rfid">RFID-Karte</string>

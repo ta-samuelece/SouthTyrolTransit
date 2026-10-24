@@ -212,6 +212,7 @@
     <string name="charging_type1">Type 1</string>
     <string name="charging_domestic">Household socket</string>
     <string name="charging_other">Other connector</string>
+    <string name="charging_fast">Fast charging</string>
     <string name="charging_open_all_day">Open 24/7</string>
     <string name="charging_private_public">Private, open to the public</string>
     <string name="charging_rfid">RFID card</string>

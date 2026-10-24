@@ -16,10 +16,12 @@ status: stable
 - Content is one immutable `MapContent`; on every change all five GeoJSON sources are re-set. Click
   lookup is `(content.stops + content.vehicles + content.pois).associateBy { it.id }` - **ids must be
   unique across all three lists**. `MapMarker.color` is the stroke for stops and the fill for vehicles and
-  journey endpoints; mobility points always use their kind's colour.
+  journey endpoints; mobility points use their kind's colour unless `color` overrides it (grey
+  status-stale for a charging station whose points are all out of order).
 - **Marker shapes say the kind**: stops are circle layers; mobility points (parking, bike and car
-  sharing) are rounded-square images with a Material icon and, from zoom 16, a pill with
-  `MapMarker.label` (the live count); vehicles are images of a mode-icon circle plus the line number in a
+  sharing, EV charging) are rounded-square images with a Material icon and, from zoom 16, a pill with
+  `MapMarker.label` (the live count); `MapMarker.badge` adds an amber bolt on the opposite corner (a
+  charging station with a DC point of 50 kW or more); vehicles are images of a mode-icon circle plus the line number in a
   tag of the mode's badge shape, with a separate rotated arrow image. Below zoom 13 vehicles are plain
   dots and mobility points are hidden. A heading between 20 and 160 degrees moves the tag to the left so
   the arrow stays clear; a stale vehicle is grey with the history icon and no arrow. STA's vehicle

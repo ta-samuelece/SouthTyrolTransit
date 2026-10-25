@@ -20,12 +20,11 @@ Open bugs that the user moved to GitHub issues are tracked there (labels `bug` a
 no longer listed here - read the issue before working on one, and reference it in the fixing commit
 (CLAUDE.md rule 3).
 
-1. **A started journey's live times stop updating on the follow screen.** Reported by the user on
-   2026-10-21; seen on the follow screen, unclear whether the notification and the strip freeze too.
-   Not reproduced: a code read of `FollowEngine` and `LiveJourney.applyPlanner` found no cause, and the
-   live EFA stop sequence (`XML_STOPSEQCOORD_REQUEST`) and boards for a running 201 agreed. One
-   contributor fixed the same day: for most city lines the vehicle feed named the run two hours earlier
-   ([vehicle feed run shift](./vehicle-feed-run-shift.md)), so a followed run had no bus position and
-   no GTFS-RT. Next step: on a device, note the line, whether the header says Live or "Not current"
-   and its "updated ... ago", and whether the countdown still moves. Background:
-   [following a journey](./follow-journey-live.md).
+1. **Journey card duration wraps into the arrival time.** In `JourneyCard`
+   (`app/src/main/kotlin/org/southtyrol/transit/feature/journey/ResultsScreen.kt`) the times row is
+   departure, dash, arrival, a weighted spacer and the duration, all in one `Row`. With 12-hour times
+   (en-US) and an hour-long trip ("11:12 PM - 12:14 AM", "1 h 02 min") the row overflows: the
+   duration text squeezes to its minimum width and wraps onto two lines, overlapping the "AM" of the
+   arrival. Seen on a 1080x2400 / 420 dpi emulator on 2026-10-25. Likely fix: keep the duration on one
+   line (`maxLines = 1`, `softWrap = false`) and let it move below the times when the row is too
+   narrow, or shrink the time style for long values.

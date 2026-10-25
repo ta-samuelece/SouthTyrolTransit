@@ -19,6 +19,8 @@ import org.southtyrol.transit.data.MapRepository
 import org.southtyrol.transit.data.MobilityRepository
 import org.southtyrol.transit.data.OdhChargingSource
 import org.southtyrol.transit.data.OdhMobilitySource
+import org.southtyrol.transit.data.OdhParkingForecastSource
+import org.southtyrol.transit.data.ParkingForecastRepository
 import org.southtyrol.transit.data.OdhRealtime
 import org.southtyrol.transit.data.PlacesRepository
 import org.southtyrol.transit.data.RealtimeRepository
@@ -113,6 +115,9 @@ object AppModule {
     fun mobility(http: TransitHttp): MobilityRepository = MobilityRepository(
         listOf(MobilityKind.PARKING, MobilityKind.BIKE_SHARING, MobilityKind.CAR_SHARING).map { OdhMobilitySource(http, it) } + OdhChargingSource(http),
     )
+
+    @Provides @Singleton
+    fun parkingForecasts(http: TransitHttp): ParkingForecastRepository = ParkingForecastRepository(OdhParkingForecastSource(http))
 
     @Provides @Singleton
     fun language(): LanguageProvider = AppLanguage

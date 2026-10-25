@@ -138,6 +138,22 @@ Other behaviour:
 | App policy | Parking is on by default. Bike and car sharing are off by default. Values older than 3 h are shown as "no current availability", and values older than 7 days are dropped (dead sensors). Every layer fails independently (`MobilityRepository`) |
 | Status | Implemented behind toggles |
 
+### Car park forecasts (`OdhParkingForecastSource`)
+
+Fetched only when a car park's sheet is opened, two requests at once:
+
+| Request | Path and `where` |
+|---|---|
+| Forecast | `ParkingStation/*/latest`, `where=scode.eq."<scode>",tname.ire.forecast`, `select=tname,mvalue,mvalidtime` (about 4.5 KB) |
+| History | `ParkingStation/free/<from>/<to>` (UTC, `yyyy-MM-ddTHH:mm`), `where=scode.eq."<scode>"` (7 to 35 KB for 2½ hours); best effort |
+
+- **Data types:** `parking-forecast-30` … `-240` every 30 minutes, plus `-low-` (conservative) and `-high-` (optimistic) for each, and `-rmse-` (last computed October 2025, ignored).
+- **The values are OCCUPIED spaces**, not free ones (checked against the current `occupied` counts of 38 car parks on 25 Oct 2026); the app shows free spaces as capacity minus the forecast, so the low and high ends swap.
+- **`mvalidtime` is the predicted moment**; a value for horizon *h* was issued *h* minutes earlier. Forecasts are issued once an hour at :05, so the newest is up to an hour old; the app hides the chart when it is more than 90 minutes old (`ParkingForecasts.MAX_AGE`).
+- **Coverage (25 Oct 2026):** 71 car parks have forecast data, 38 of them current (Skidata, FAMAS P03–P16, Merano municipal, STA Marlengo); GARDENA's and some Skidata car parks have stopped updating (e.g. Habitat Adriano, last issued two hours earlier).
+- **Placeholders:** some Skidata car parks report capacity −1 and 9999 free; they get no chart.
+- Fixtures: `docs/fixtures/odh_parking_forecast.json`, `odh_parking_free_history.json` (P03 Piazza Walther, 25 Oct 2026 10:03 UTC).
+
 ### EV charging stations (`OdhChargingSource`)
 
 Three requests for the visible area, run together and joined in the app:

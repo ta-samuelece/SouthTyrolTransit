@@ -1,0 +1,198 @@
+{
+ "offset": 0,
+ "limit": -1,
+ "data": [
+  {
+   "_timestamp": "2025-10-15 13:35:00.000+0000",
+   "tname": "parking-forecast-rmse-30",
+   "mvalidtime": "2025-10-15 13:35:00.000+0000",
+   "mvalue": 30.8
+  },
+  {
+   "_timestamp": "2025-10-15 14:05:00.000+0000",
+   "tname": "parking-forecast-rmse-60",
+   "mvalidtime": "2025-10-15 14:05:00.000+0000",
+   "mvalue": 37.6
+  },
+  {
+   "_timestamp": "2025-10-15 14:35:00.000+0000",
+   "tname": "parking-forecast-rmse-90",
+   "mvalidtime": "2025-10-15 14:35:00.000+0000",
+   "mvalue": 44.2
+  },
+  {
+   "_timestamp": "2025-10-15 15:05:00.000+0000",
+   "tname": "parking-forecast-rmse-120",
+   "mvalidtime": "2025-10-15 15:05:00.000+0000",
+   "mvalue": 46.2
+  },
+  {
+   "_timestamp": "2025-10-15 15:35:00.000+0000",
+   "tname": "parking-forecast-rmse-150",
+   "mvalidtime": "2025-10-15 15:35:00.000+0000",
+   "mvalue": 48.1
+  },
+  {
+   "_timestamp": "2025-10-15 16:05:00.000+0000",
+   "tname": "parking-forecast-rmse-180",
+   "mvalidtime": "2025-10-15 16:05:00.000+0000",
+   "mvalue": 43.7
+  },
+  {
+   "_timestamp": "2025-10-15 16:35:00.000+0000",
+   "tname": "parking-forecast-rmse-210",
+   "mvalidtime": "2025-10-15 16:35:00.000+0000",
+   "mvalue": 42.2
+  },
+  {
+   "_timestamp": "2025-10-15 17:05:00.000+0000",
+   "tname": "parking-forecast-rmse-240",
+   "mvalidtime": "2025-10-15 17:05:00.000+0000",
+   "mvalue": 42.1
+  },
+  {
+   "_timestamp": "2026-10-25 09:35:00.000+0000",
+   "tname": "parking-forecast-30",
+   "mvalidtime": "2026-10-25 09:35:00.000+0000",
+   "mvalue": 156.8
+  },
+  {
+   "_timestamp": "2026-10-25 09:35:00.000+0000",
+   "tname": "parking-forecast-high-30",
+   "mvalidtime": "2026-10-25 09:35:00.000+0000",
+   "mvalue": 174
+  },
+  {
+   "_timestamp": "2026-10-25 09:35:00.000+0000",
+   "tname": "parking-forecast-low-30",
+   "mvalidtime": "2026-10-25 09:35:00.000+0000",
+   "mvalue": 136.9
+  },
+  {
+   "_timestamp": "2026-10-25 10:05:00.000+0000",
+   "tname": "parking-forecast-60",
+   "mvalidtime": "2026-10-25 10:05:00.000+0000",
+   "mvalue": 172.7
+  },
+  {
+   "_timestamp": "2026-10-25 10:05:00.000+0000",
+   "tname": "parking-forecast-high-60",
+   "mvalidtime": "2026-10-25 10:05:00.000+0000",
+   "mvalue": 188.2
+  },
+  {
+   "_timestamp": "2026-10-25 10:05:00.000+0000",
+   "tname": "parking-forecast-low-60",
+   "mvalidtime": "2026-10-25 10:05:00.000+0000",
+   "mvalue": 147.8
+  },
+  {
+   "_timestamp": "2026-10-25 10:35:00.000+0000",
+   "tname": "parking-forecast-90",
+   "mvalidtime": "2026-10-25 10:35:00.000+0000",
+   "mvalue": 192.9
+  },
+  {
+   "_timestamp": "2026-10-25 10:35:00.000+0000",
+   "tname": "parking-forecast-high-90",
+   "mvalidtime": "2026-10-25 10:35:00.000+0000",
+   "mvalue": 214
+  },
+  {
+   "_timestamp": "2026-10-25 10:35:00.000+0000",
+   "tname": "parking-forecast-low-90",
+   "mvalidtime": "2026-10-25 10:35:00.000+0000",
+   "mvalue": 148.3
+  },
+  {
+   "_timestamp": "2026-10-25 11:05:00.000+0000",
+   "tname": "parking-forecast-120",
+   "mvalidtime": "2026-10-25 11:05:00.000+0000",
+   "mvalue": 204
+  },
+  {
+   "_timestamp": "2026-10-25 11:05:00.000+0000",
+   "tname": "parking-forecast-high-120",
+   "mvalidtime": "2026-10-25 11:05:00.000+0000",
+   "mvalue": 230
+  },
+  {
+   "_timestamp": "2026-10-25 11:05:00.000+0000",
+   "tname": "parking-forecast-low-120",
+   "mvalidtime": "2026-10-25 11:05:00.000+0000",
+   "mvalue": 154.5
+  },
+  {
+   "_timestamp": "2026-10-25 11:35:00.000+0000",
+   "tname": "parking-forecast-150",
+   "mvalidtime": "2026-10-25 11:35:00.000+0000",
+   "mvalue": 209
+  },
+  {
+   "_timestamp": "2026-10-25 11:35:00.000+0000",
+   "tname": "parking-forecast-high-150",
+   "mvalidtime": "2026-10-25 11:35:00.000+0000",
+   "mvalue": 238.4
+  },
+  {
+   "_timestamp": "2026-10-25 11:35:00.000+0000",
+   "tname": "parking-forecast-low-150",
+   "mvalidtime": "2026-10-25 11:35:00.000+0000",
+   "mvalue": 150
+  },
+  {
+   "_timestamp": "2026-10-25 12:05:00.000+0000",
+   "tname": "parking-forecast-180",
+   "mvalidtime": "2026-10-25 12:05:00.000+0000",
+   "mvalue": 212.2
+  },
+  {
+   "_timestamp": "2026-10-25 12:05:00.000+0000",
+   "tname": "parking-forecast-high-180",
+   "mvalidtime": "2026-10-25 12:05:00.000+0000",
+   "mvalue": 240.3
+  },
+  {
+   "_timestamp": "2026-10-25 12:05:00.000+0000",
+   "tname": "parking-forecast-low-180",
+   "mvalidtime": "2026-10-25 12:05:00.000+0000",
+   "mvalue": 154.1
+  },
+  {
+   "_timestamp": "2026-10-25 12:35:00.000+0000",
+   "tname": "parking-forecast-210",
+   "mvalidtime": "2026-10-25 12:35:00.000+0000",
+   "mvalue": 208.4
+  },
+  {
+   "_timestamp": "2026-10-25 12:35:00.000+0000",
+   "tname": "parking-forecast-high-210",
+   "mvalidtime": "2026-10-25 12:35:00.000+0000",
+   "mvalue": 241.3
+  },
+  {
+   "_timestamp": "2026-10-25 12:35:00.000+0000",
+   "tname": "parking-forecast-low-210",
+   "mvalidtime": "2026-10-25 12:35:00.000+0000",
+   "mvalue": 144.6
+  },
+  {
+   "_timestamp": "2026-10-25 13:05:00.000+0000",
+   "tname": "parking-forecast-240",
+   "mvalidtime": "2026-10-25 13:05:00.000+0000",
+   "mvalue": 203.8
+  },
+  {
+   "_timestamp": "2026-10-25 13:05:00.000+0000",
+   "tname": "parking-forecast-high-240",
+   "mvalidtime": "2026-10-25 13:05:00.000+0000",
+   "mvalue": 239.2
+  },
+  {
+   "_timestamp": "2026-10-25 13:05:00.000+0000",
+   "tname": "parking-forecast-low-240",
+   "mvalidtime": "2026-10-25 13:05:00.000+0000",
+   "mvalue": 143.3
+  }
+ ]
+}

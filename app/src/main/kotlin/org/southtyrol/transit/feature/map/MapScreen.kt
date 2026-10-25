@@ -150,13 +150,15 @@ import javax.inject.Inject
 sealed class MapSelection {
     data class VehicleSel(val vehicle: LiveVehicle, val trip: TripDetail?, val loading: Boolean) : MapSelection()
     data class StopSel(val stop: Stop, val departures: List<org.southtyrol.transit.model.Departure>? = null) : MapSelection()
-    data class MobilitySel(val point: MobilityPoint) : MapSelection()
+    /** [forecast] arrives after the sheet opens, for car parks that publish a fresh one. */
+    data class MobilitySel(val point: MobilityPoint, val forecast: org.southtyrol.transit.model.ParkingForecast? = null) : MapSelection()
 }
 
 @HiltViewModel
 class MapViewModel @Inject constructor(
     private val map: MapRepository,
     private val mobility: MobilityRepository,
+    private val parkingForecasts: org.southtyrol.transit.data.ParkingForecastRepository,
     private val realtime: RealtimeRepository,
     private val trips: TripRepository,
     private val settings: SettingsRepository,
@@ -228,8 +230,17 @@ class MapViewModel @Inject constructor(
                 }
             }
             MarkerKind.STOP -> (_stops.value + savedStops.value).firstOrNull { it.id == marker.id }?.let(::selectStop)
-            MarkerKind.PARKING, MarkerKind.BIKE_SHARING, MarkerKind.CAR_SHARING, MarkerKind.CHARGING -> _mobility.value.firstOrNull { it.id == marker.id }?.let { _selection.value = MapSelection.MobilitySel(it) }
+            MarkerKind.PARKING, MarkerKind.BIKE_SHARING, MarkerKind.CAR_SHARING, MarkerKind.CHARGING -> _mobility.value.firstOrNull { it.id == marker.id }?.let(::selectMobility)
             else -> Unit
+        }
+    }
+
+    private fun selectMobility(point: MobilityPoint) {
+        _selection.value = MapSelection.MobilitySel(point)
+        if (point.kind != MobilityKind.PARKING) return
+        viewModelScope.launch {
+            val forecast = parkingForecasts.forecast(point) ?: return@launch
+            _selection.update { s -> if (s is MapSelection.MobilitySel && s.point.id == point.id) s.copy(forecast = forecast) else s }
         }
     }
 
@@ -505,7 +516,7 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel(), s
                             DirectionsButton(sel.stop.point, compact = true)
                         }
                     }
-                    is MapSelection.MobilitySel -> if (sel.point.charging != null) ChargingSheet(sel.point, now) else MobilitySheet(sel.point, now)
+                    is MapSelection.MobilitySel -> if (sel.point.charging != null) ChargingSheet(sel.point, now) else MobilitySheet(sel.point, sel.forecast, now)
                 }
             }
         }
@@ -617,7 +628,7 @@ private fun VehicleSheet(sel: MapSelection.VehicleSel, now: Instant, onTrip: (St
 private const val STALE_TILE_COLOR = 0x6F7977L
 
 @Composable
-private fun MobilitySheet(p: MobilityPoint, now: Instant) {
+private fun MobilitySheet(p: MobilityPoint, forecast: org.southtyrol.transit.model.ParkingForecast?, now: Instant) {
     Text(p.name, style = MaterialTheme.typography.headlineSmall)
     Text(
         when (p.kind) {
@@ -639,6 +650,7 @@ private fun MobilitySheet(p: MobilityPoint, now: Instant) {
         Text(stringResource(R.string.mobility_no_current), style = MaterialTheme.typography.bodyLarge)
     }
     FreshnessIndicator(p.freshness, p.updatedAt, now)
+    if (forecast != null) ParkingForecastCard(forecast)
     DirectionsButton(p.point)
     Text(stringResource(R.string.mobility_source), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }

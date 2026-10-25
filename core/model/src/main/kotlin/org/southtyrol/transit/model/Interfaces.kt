@@ -77,6 +77,11 @@ interface MobilityDataSource {
     suspend fun points(box: BoundingBox, now: Instant): List<MobilityPoint>
 }
 
+/** The occupancy forecast of one car park; null when none is fresh enough to show. */
+interface ParkingForecastSource {
+    suspend fun forecast(point: MobilityPoint, now: Instant): ParkingForecast?
+}
+
 /**
  * Ticket sales/validation. No public API exists for South Tyrol, so the shipped implementation only
  * links to the official service. A legitimate API could implement purchase flows behind this later.

@@ -335,7 +335,7 @@ data class ServiceAlert(
 }
 
 /** The names are stored in settings (the enabled map layers): never rename one. */
-enum class MobilityKind { PARKING, BIKE_SHARING, CAR_SHARING, CHARGING }
+enum class MobilityKind { PARKING, BIKE_SHARING, CAR_SHARING, CHARGING, BIKE_PARKING, EBIKE_SHARING }
 
 /**
  * The map's base layer. The names are stored in settings: never rename one. AERIAL and TOPOGRAPHIC are
@@ -355,6 +355,63 @@ data class MobilityPoint(
     val freshness: Freshness,
     /** Charging stations only: the points and what the operator says about the station. */
     val charging: ChargingDetails? = null,
+    /** Bike boxes only: the kind of site, its spaces and facilities. */
+    val bikeParking: BikeParkingDetails? = null,
+    /** E-bike sharing only: e-bikes to rent and free docks to return one. */
+    val ebikeSharing: EbikeSharingDetails? = null,
+) {
+    /**
+     * Nothing usable here now, by the operator's own word: every charging point out of order, a bike box
+     * site out of service, an e-bike station closed. Only a current report counts.
+     */
+    val outOfService: Boolean get() = charging?.outOfService == true ||
+        (freshness == Freshness.LIVE && (bikeParking?.outOfService == true || ebikeSharing?.inService == false))
+}
+
+object BikeParking {
+    /** Farther than this, another site is no longer "nearby" for someone standing at a full one. */
+    const val NEAREST_MAX_METERS = 2_000.0
+
+    /**
+     * For a full bike box site: the nearest other site among [candidates] with a current free place, within
+     * [NEAREST_MAX_METERS], with its distance; null when [from] still has space or nothing is near.
+     */
+    fun nearestWithSpace(from: MobilityPoint, candidates: List<MobilityPoint>): Pair<MobilityPoint, Double>? {
+        if (from.kind != MobilityKind.BIKE_PARKING || from.freshness != Freshness.LIVE || from.available != 0) return null
+        return candidates.asSequence()
+            .filter { it.kind == MobilityKind.BIKE_PARKING && it.id != from.id && it.freshness == Freshness.LIVE && !it.outOfService && (it.available ?: 0) > 0 }
+            .map { it to Geo.distance(from.point, it.point) }
+            .filter { it.second <= NEAREST_MAX_METERS }
+            .minByOrNull { it.second }
+    }
+}
+
+/**
+ * STA's lockable bike parking (Bicibox) at a station: a group of individual boxes or a shared depot. The
+ * free counts split into places with and without a socket for charging; [addresses] is keyed by language
+ * (de, it, en, lld) as the feed gives it.
+ */
+data class BikeParkingDetails(
+    val depot: Boolean,
+    val addresses: Map<String, String>,
+    val regularFree: Int?,
+    val electricFree: Int?,
+    /** Places with a socket; the rest have none. */
+    val electricPlaces: Int,
+    val covered: Boolean,
+    val surveillance: Boolean,
+    val bookingRequired: Boolean,
+    val outOfService: Boolean,
+) {
+    fun address(language: String): String? = addresses[language] ?: addresses["en"] ?: addresses["de"] ?: addresses["it"]
+}
+
+/** A dock station of e-bikes to rent; the docks charge them. Stations close for the off season. */
+data class EbikeSharingDetails(
+    val bikes: Int?,
+    val freeDocks: Int?,
+    val docks: Int?,
+    val inService: Boolean,
 )
 
 enum class RoutePreference { FASTEST, FEWEST_CHANGES, LEAST_WALKING }

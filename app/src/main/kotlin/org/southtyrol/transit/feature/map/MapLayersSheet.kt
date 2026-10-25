@@ -66,6 +66,8 @@ internal fun MapLayersButton(onClick: () -> Unit, modifier: Modifier = Modifier)
 @Composable
 internal fun MapLayersSheet(
     prefs: UserSettings,
+    /** Layers silent across the whole region (MobilityRepository.deadLayers): no switch for them. */
+    hidden: Set<MobilityKind>,
     onMapBase: (MapBase) -> Unit,
     onStops: (Boolean) -> Unit,
     onVehicles: (Boolean) -> Unit,
@@ -83,18 +85,31 @@ internal fun MapLayersSheet(
                 }
             }
 
-            SheetHeader(stringResource(R.string.settings_map_layers))
+            // The overlays grouped by how the user travels, so the bike layers sit together.
+            SheetHeader(stringResource(R.string.map_layers_transit))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ToggleChip(stringResource(R.string.map_layer_stops), prefs.showStops, onStops)
                 ToggleChip(stringResource(R.string.map_layer_vehicles), prefs.showVehicles, onVehicles)
-                ToggleChip(stringResource(R.string.map_layer_parking), MobilityKind.PARKING in prefs.mobilityLayers) { onLayer(MobilityKind.PARKING, it) }
-                ToggleChip(stringResource(R.string.map_layer_bikes), MobilityKind.BIKE_SHARING in prefs.mobilityLayers) { onLayer(MobilityKind.BIKE_SHARING, it) }
-                ToggleChip(stringResource(R.string.map_layer_cars), MobilityKind.CAR_SHARING in prefs.mobilityLayers) { onLayer(MobilityKind.CAR_SHARING, it) }
-                ToggleChip(stringResource(R.string.map_layer_charging), MobilityKind.CHARGING in prefs.mobilityLayers) { onLayer(MobilityKind.CHARGING, it) }
+            }
+            SheetHeader(stringResource(R.string.map_layers_car))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                LayerChip(R.string.map_layer_parking, MobilityKind.PARKING, prefs, onLayer)
+                LayerChip(R.string.map_layer_cars, MobilityKind.CAR_SHARING, prefs, onLayer)
+                LayerChip(R.string.map_layer_charging, MobilityKind.CHARGING, prefs, onLayer)
+            }
+            SheetHeader(stringResource(R.string.map_layers_bike))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                LayerChip(R.string.map_layer_bike_boxes, MobilityKind.BIKE_PARKING, prefs, onLayer)
+                LayerChip(R.string.map_layer_ebike_sharing, MobilityKind.EBIKE_SHARING, prefs, onLayer)
+                if (MobilityKind.BIKE_SHARING !in hidden) LayerChip(R.string.map_layer_bikes, MobilityKind.BIKE_SHARING, prefs, onLayer)
             }
         }
     }
 }
+
+@Composable
+private fun LayerChip(label: Int, kind: MobilityKind, prefs: UserSettings, onLayer: (MobilityKind, Boolean) -> Unit) =
+    ToggleChip(stringResource(label), kind in prefs.mobilityLayers) { onLayer(kind, it) }
 
 @Composable
 private fun SheetHeader(text: String) {

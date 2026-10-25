@@ -179,7 +179,42 @@
     <string name="mobility_available">%d disponibili</string>
     <string name="mobility_available_of">%1$d di %2$d disponibili</string>
     <string name="mobility_no_current">Nessuna disponibilità attuale segnalata.</string>
-    <string name="mobility_source">Dati: API mobilità Open Data Hub.</string>
+    <string name="map_layer_bike_boxes">Bicibox</string>
+    <string name="map_layer_ebike_sharing">E-bike sharing</string>
+    <string name="map_layers_transit">Trasporto pubblico</string>
+    <string name="map_layers_car">In auto</string>
+    <string name="map_layers_bike">In bici</string>
+    <string name="bike_boxes_individual">Bicibox individuali</string>
+    <string name="bike_boxes_depot">Bicibox collettivo</string>
+    <plurals name="bike_boxes_free_of">
+        <item quantity="one">Liberi: %1$d su %2$d bicibox</item>
+        <item quantity="other">Liberi: %1$d su %2$d bicibox</item>
+    </plurals>
+    <plurals name="bike_places_free_of">
+        <item quantity="one">Liberi: %1$d su %2$d posto</item>
+        <item quantity="other">Liberi: %1$d su %2$d posti</item>
+    </plurals>
+    <string name="bike_parking_full">Pieno</string>
+    <string name="bike_parking_bikes">Bici</string>
+    <string name="bike_parking_ebikes">E-bike</string>
+    <string name="bike_parking_without_socket">Bicibox senza presa</string>
+    <string name="bike_parking_with_socket">Bicibox con presa per la ricarica</string>
+    <string name="bike_parking_places_without_socket">Posti senza presa</string>
+    <string name="bike_parking_places_with_socket">Posti con presa per la ricarica</string>
+    <string name="bike_parking_covered">Coperto</string>
+    <string name="bike_parking_surveillance">Videosorveglianza</string>
+    <string name="bike_parking_booking">Prenotazione obbligatoria</string>
+    <string name="bike_parking_nearest">Bicibox più vicini con posto: %1$s, %2$d liberi, a %3$s.</string>
+    <string name="map_show_on_map">Mostra sulla mappa</string>
+    <string name="mobility_out_of_service">Al momento fuori servizio.</string>
+    <plurals name="ebike_to_rent">
+        <item quantity="one">%d e-bike da noleggiare</item>
+        <item quantity="other">%d e-bike da noleggiare</item>
+    </plurals>
+    <string name="ebike_rent_row">E-bike da noleggiare</string>
+    <string name="ebike_rent_detail">In ricarica negli stalli</string>
+    <string name="ebike_docks_row">Stalli liberi</string>
+    <string name="ebike_docks_detail">Per restituire una e-bike</string>
     <string name="parking_forecast_title">Prossime ore</string>
     <string name="parking_forecast_filling">Si sta riempiendo: circa %1$d liberi alle %2$s</string>
     <string name="parking_forecast_emptying">Si sta svuotando: circa %1$d liberi alle %2$s</string>

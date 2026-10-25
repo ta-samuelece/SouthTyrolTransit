@@ -185,7 +185,42 @@
     <string name="mobility_available">%d available</string>
     <string name="mobility_available_of">%1$d of %2$d available</string>
     <string name="mobility_no_current">No current availability reported.</string>
-    <string name="mobility_source">Data: Open Data Hub mobility API.</string>
+    <string name="map_layer_bike_boxes">Bike boxes</string>
+    <string name="map_layer_ebike_sharing">E-bike sharing</string>
+    <string name="map_layers_transit">Public transport</string>
+    <string name="map_layers_car">By car</string>
+    <string name="map_layers_bike">By bike</string>
+    <string name="bike_boxes_individual">Individual boxes</string>
+    <string name="bike_boxes_depot">Shared bike depot</string>
+    <plurals name="bike_boxes_free_of">
+        <item quantity="one">%1$d of %2$d box free</item>
+        <item quantity="other">%1$d of %2$d boxes free</item>
+    </plurals>
+    <plurals name="bike_places_free_of">
+        <item quantity="one">%1$d of %2$d place free</item>
+        <item quantity="other">%1$d of %2$d places free</item>
+    </plurals>
+    <string name="bike_parking_full">Full</string>
+    <string name="bike_parking_bikes">Bikes</string>
+    <string name="bike_parking_ebikes">E-bikes</string>
+    <string name="bike_parking_without_socket">Boxes without a socket</string>
+    <string name="bike_parking_with_socket">Boxes with a socket for charging</string>
+    <string name="bike_parking_places_without_socket">Places without a socket</string>
+    <string name="bike_parking_places_with_socket">Places with a socket for charging</string>
+    <string name="bike_parking_covered">Covered</string>
+    <string name="bike_parking_surveillance">Video surveillance</string>
+    <string name="bike_parking_booking">Booking required</string>
+    <string name="bike_parking_nearest">Nearest bike boxes with space: %1$s, %2$d free, %3$s away.</string>
+    <string name="map_show_on_map">Show on map</string>
+    <string name="mobility_out_of_service">Out of service right now.</string>
+    <plurals name="ebike_to_rent">
+        <item quantity="one">%d e-bike to rent</item>
+        <item quantity="other">%d e-bikes to rent</item>
+    </plurals>
+    <string name="ebike_rent_row">E-bikes to rent</string>
+    <string name="ebike_rent_detail">Charging in their docks</string>
+    <string name="ebike_docks_row">Free docks</string>
+    <string name="ebike_docks_detail">To return an e-bike</string>
     <string name="parking_forecast_title">Next hours</string>
     <string name="parking_forecast_filling">Filling up: about %1$d free by %2$s</string>
     <string name="parking_forecast_emptying">Getting emptier: about %1$d free by %2$s</string>

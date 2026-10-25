@@ -136,6 +136,7 @@ import org.southtyrol.transit.map.TransitMap
 import org.southtyrol.transit.model.Freshness
 import org.southtyrol.transit.model.FreshnessPolicy
 import org.southtyrol.transit.model.MapBase
+import org.southtyrol.transit.model.BikeParking
 import org.southtyrol.transit.model.MobilityKind
 import org.southtyrol.transit.model.MobilityPoint
 import org.southtyrol.transit.model.Point
@@ -178,6 +179,9 @@ class MapViewModel @Inject constructor(
     val mobilityPoints: StateFlow<List<MobilityPoint>> = _mobility.asStateFlow()
     private val _mobilityFailed = MutableStateFlow<Set<MobilityKind>>(emptySet())
     val mobilityFailed: StateFlow<Set<MobilityKind>> = _mobilityFailed.asStateFlow()
+    /** Layers silent across the whole region for a week: their switch is hidden and they are not fetched. */
+    private val _deadLayers = MutableStateFlow<Set<MobilityKind>>(emptySet())
+    val deadLayers: StateFlow<Set<MobilityKind>> = _deadLayers.asStateFlow()
     private val _selection = MutableStateFlow<MapSelection?>(null)
     val selection: StateFlow<MapSelection?> = _selection.asStateFlow()
     private val _camera = MutableStateFlow<CameraRequest?>(null)
@@ -194,11 +198,12 @@ class MapViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null to null)
 
     init {
+        viewModelScope.launch { _deadLayers.value = mobility.deadLayers() }
         viewModelScope.launch {
-            combine(viewport.filterNotNull(), prefs) { v, p -> v to p }.debounce(400).collectLatest { (v, p) ->
+            combine(viewport.filterNotNull(), prefs, _deadLayers) { v, p, dead -> Triple(v, p, p.mobilityLayers - dead) }.debounce(400).collectLatest { (v, p, layers) ->
                 _stops.value = if (p.showStops && v.zoom >= 13.5) runCatching { map.stops(v.box, language.current()) }.getOrDefault(emptyList()) else emptyList()
-                if (p.mobilityLayers.isNotEmpty() && v.zoom >= 11) {
-                    val result = mobility.points(v.box, p.mobilityLayers)
+                if (layers.isNotEmpty() && v.zoom >= 11) {
+                    val result = mobility.points(v.box, layers)
                     _mobility.value = result.points
                     _mobilityFailed.value = result.failed
                 } else {
@@ -230,7 +235,8 @@ class MapViewModel @Inject constructor(
                 }
             }
             MarkerKind.STOP -> (_stops.value + savedStops.value).firstOrNull { it.id == marker.id }?.let(::selectStop)
-            MarkerKind.PARKING, MarkerKind.BIKE_SHARING, MarkerKind.CAR_SHARING, MarkerKind.CHARGING -> _mobility.value.firstOrNull { it.id == marker.id }?.let(::selectMobility)
+            MarkerKind.PARKING, MarkerKind.BIKE_SHARING, MarkerKind.CAR_SHARING, MarkerKind.CHARGING,
+            MarkerKind.BIKE_PARKING, MarkerKind.EBIKE_SHARING -> _mobility.value.firstOrNull { it.id == marker.id }?.let(::selectMobility)
             else -> Unit
         }
     }
@@ -256,6 +262,12 @@ class MapViewModel @Inject constructor(
             }.getOrDefault(emptyList())
             _selection.update { s -> if (s is MapSelection.StopSel && s.stop.id == stop.id) s.copy(departures = next) else s }
         }
+    }
+
+    /** From a full bike box site's sheet: fly to the nearest one with space and open its sheet. */
+    fun focusMobility(point: MobilityPoint) {
+        _camera.value = CameraRequest.Center(point.point, 16.0, key = (_camera.value?.key ?: 0) + 1)
+        selectMobility(point)
     }
 
     /** From the locate button's menu: fly to a saved stop and open its sheet. */
@@ -376,10 +388,13 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel(), s
                         MobilityKind.BIKE_SHARING -> MarkerKind.BIKE_SHARING
                         MobilityKind.CAR_SHARING -> MarkerKind.CAR_SHARING
                         MobilityKind.CHARGING -> MarkerKind.CHARGING
+                        MobilityKind.BIKE_PARKING -> MarkerKind.BIKE_PARKING
+                        MobilityKind.EBIKE_SHARING -> MarkerKind.EBIKE_SHARING
                     },
-                    // A charging station with every point out of order turns grey (status-stale) and loses its count.
-                    label = if (p.freshness == Freshness.LIVE && p.charging?.outOfService != true) p.available?.toString().orEmpty() else "",
-                    color = if (p.charging?.outOfService == true) STALE_TILE_COLOR else null,
+                    // Out of service (every charging point out of order, a bike box site or an e-bike station
+                    // closed) turns grey (status-stale) and loses its count.
+                    label = if (p.freshness == Freshness.LIVE && !p.outOfService) p.available?.toString().orEmpty() else "",
+                    color = if (p.outOfService) STALE_TILE_COLOR else null,
                     stale = p.freshness != Freshness.LIVE, selected = p.id == selectedId, badge = p.charging?.fast == true,
                 )
             } + listOfNotNull(user?.let { MapMarker("me", it, MarkerKind.USER) }),
@@ -474,8 +489,9 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel(), s
         }
     }
 
+    val deadLayers by viewModel.deadLayers.collectAsStateWithLifecycle()
     if (layersOpen) MapLayersSheet(
-        prefs,
+        prefs, deadLayers,
         onMapBase = viewModel::mapBase, onStops = viewModel::showStops, onVehicles = viewModel::showVehicles, onLayer = viewModel::layer,
         onDismiss = { layersOpen = false },
     )
@@ -516,7 +532,15 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel(), s
                             DirectionsButton(sel.stop.point, compact = true)
                         }
                     }
-                    is MapSelection.MobilitySel -> if (sel.point.charging != null) ChargingSheet(sel.point, now) else MobilitySheet(sel.point, sel.forecast, now)
+                    is MapSelection.MobilitySel -> when {
+                        sel.point.charging != null -> ChargingSheet(sel.point, now)
+                        sel.point.bikeParking != null -> BikeParkingSheet(
+                            sel.point, now, nearest = BikeParking.nearestWithSpace(sel.point, mobility),
+                            onShow = viewModel::focusMobility,
+                        )
+                        sel.point.ebikeSharing != null -> EbikeSharingSheet(sel.point, now)
+                        else -> MobilitySheet(sel.point, sel.forecast, now)
+                    }
                 }
             }
         }
@@ -636,6 +660,8 @@ private fun MobilitySheet(p: MobilityPoint, forecast: org.southtyrol.transit.mod
             MobilityKind.BIKE_SHARING -> stringResource(R.string.map_layer_bikes)
             MobilityKind.CAR_SHARING -> stringResource(R.string.map_layer_cars)
             MobilityKind.CHARGING -> stringResource(R.string.charging_station)
+            MobilityKind.BIKE_PARKING -> stringResource(R.string.map_layer_bike_boxes)
+            MobilityKind.EBIKE_SHARING -> stringResource(R.string.map_layer_ebike_sharing)
         } + " · " + p.provider,
         style = MaterialTheme.typography.bodyMedium,
     )
@@ -652,7 +678,6 @@ private fun MobilitySheet(p: MobilityPoint, forecast: org.southtyrol.transit.mod
     FreshnessIndicator(p.freshness, p.updatedAt, now)
     if (forecast != null) ParkingForecastCard(forecast)
     DirectionsButton(p.point)
-    Text(stringResource(R.string.mobility_source), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
 /**

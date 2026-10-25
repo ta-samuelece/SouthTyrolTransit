@@ -26,7 +26,7 @@ import org.southtyrol.transit.model.TransportMode
  * in MapLibreTransitMap.kt and can be swapped for another SDK without touching features.
  */
 
-enum class MarkerKind { STOP, VEHICLE, PARKING, BIKE_SHARING, CAR_SHARING, CHARGING, ORIGIN, DESTINATION, USER, ALERT }
+enum class MarkerKind { STOP, VEHICLE, PARKING, BIKE_SHARING, CAR_SHARING, CHARGING, BIKE_PARKING, EBIKE_SHARING, ORIGIN, DESTINATION, USER, ALERT }
 
 @Immutable
 data class MapMarker(

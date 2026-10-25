@@ -109,12 +109,19 @@ class SettingsViewModel @Inject constructor(
     private val settings: SettingsRepository,
     private val timetable: ScheduleRepository,
     private val work: BackgroundWork,
+    private val mobility: org.southtyrol.transit.data.MobilityRepository,
 ) : ViewModel() {
     val prefs: StateFlow<UserSettings> = settings.settings.stateIn(viewModelScope, SharingStarted.Eagerly, UserSettings())
     val schedule = timetable.info
     val status = timetable.status
+    /** Layers silent across the whole region for a week: Settings offers no switch for them, like the map. */
+    private val _deadLayers = kotlinx.coroutines.flow.MutableStateFlow<Set<MobilityKind>>(emptySet())
+    val deadLayers: StateFlow<Set<MobilityKind>> = _deadLayers
 
-    init { viewModelScope.launch { timetable.loadInfo() } }
+    init {
+        viewModelScope.launch { timetable.loadInfo() }
+        viewModelScope.launch { _deadLayers.value = mobility.deadLayers() }
+    }
 
     fun theme(value: ThemeMode) = viewModelScope.launch { settings.setTheme(value) }
     fun dynamic(value: Boolean) = viewModelScope.launch { settings.setDynamicColor(value) }
@@ -158,6 +165,7 @@ private fun SubScreen(title: String, navigator: Navigator, showBack: Boolean = t
 @Composable
 fun SettingsScreen(navigator: Navigator, viewModel: SettingsViewModel = hiltViewModel()) {
     val prefs by viewModel.prefs.collectAsStateWithLifecycle()
+    val deadLayers by viewModel.deadLayers.collectAsStateWithLifecycle()
     val info by viewModel.schedule.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -246,9 +254,11 @@ fun SettingsScreen(navigator: Navigator, viewModel: SettingsViewModel = hiltView
                         ToggleChip(stringResource(R.string.map_layer_stops), prefs.showStops) { viewModel.showStops(it) }
                         ToggleChip(stringResource(R.string.map_layer_vehicles), prefs.showVehicles) { viewModel.showVehicles(it) }
                         ToggleChip(stringResource(R.string.map_layer_parking), MobilityKind.PARKING in prefs.mobilityLayers) { viewModel.layer(MobilityKind.PARKING, it) }
-                        ToggleChip(stringResource(R.string.map_layer_bikes), MobilityKind.BIKE_SHARING in prefs.mobilityLayers) { viewModel.layer(MobilityKind.BIKE_SHARING, it) }
+                        if (MobilityKind.BIKE_SHARING !in deadLayers) ToggleChip(stringResource(R.string.map_layer_bikes), MobilityKind.BIKE_SHARING in prefs.mobilityLayers) { viewModel.layer(MobilityKind.BIKE_SHARING, it) }
                         ToggleChip(stringResource(R.string.map_layer_cars), MobilityKind.CAR_SHARING in prefs.mobilityLayers) { viewModel.layer(MobilityKind.CAR_SHARING, it) }
                         ToggleChip(stringResource(R.string.map_layer_charging), MobilityKind.CHARGING in prefs.mobilityLayers) { viewModel.layer(MobilityKind.CHARGING, it) }
+                        ToggleChip(stringResource(R.string.map_layer_bike_boxes), MobilityKind.BIKE_PARKING in prefs.mobilityLayers) { viewModel.layer(MobilityKind.BIKE_PARKING, it) }
+                        ToggleChip(stringResource(R.string.map_layer_ebike_sharing), MobilityKind.EBIKE_SHARING in prefs.mobilityLayers) { viewModel.layer(MobilityKind.EBIKE_SHARING, it) }
                     }
                 }
                 item { ChoiceRow(stringResource(R.string.settings_search_bar), stringResource(searchBarLabel(prefs.searchBar))) { choice = CHOICE_SEARCH_BAR } }

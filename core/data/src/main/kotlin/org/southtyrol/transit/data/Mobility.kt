@@ -5,6 +5,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -16,6 +18,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.southtyrol.transit.model.BoundingBox
 import org.southtyrol.transit.model.FreshnessPolicy
+import org.southtyrol.transit.model.Geo
 import org.southtyrol.transit.model.MobilityDataSource
 import org.southtyrol.transit.model.MobilityKind
 import org.southtyrol.transit.model.MobilityPoint
@@ -41,6 +44,8 @@ class OdhMobilitySource(
         MobilityKind.BIKE_SHARING -> "BikesharingStation"
         MobilityKind.CAR_SHARING -> "CarsharingStation"
         MobilityKind.CHARGING -> throw IllegalArgumentException("Charging stations come from OdhChargingSource")
+        MobilityKind.BIKE_PARKING -> throw IllegalArgumentException("Bike boxes come from OdhBikeParkingSource")
+        MobilityKind.EBIKE_SHARING -> throw IllegalArgumentException("E-bike sharing comes from OdhEbikeSharingSource")
     }
     private val dataType = when (kind) {
         MobilityKind.PARKING -> "free"
@@ -93,6 +98,42 @@ data class MobilityResult(val points: List<MobilityPoint>, val failed: Set<Mobil
 
 /** Aggregates optional layers; one failing provider never affects the others or core transit. */
 class MobilityRepository(private val sources: List<MobilityDataSource>) {
+    private val regionMutex = Mutex()
+    private var region: Pair<Instant, Set<MobilityKind>>? = null
+
+    /**
+     * The layers in [REGION_CHECKED] with no point anywhere in South Tyrol that reported within the last
+     * week (older values are dropped as dead sensors), so their switch is not worth offering. Checked at
+     * most every [REGION_CHECK_EVERY]; a layer whose check fails counts as alive and the result is not
+     * kept, so an offline start never hides it and the next call asks again.
+     */
+    suspend fun deadLayers(now: Instant = Instant.now()): Set<MobilityKind> = regionMutex.withLock {
+        region?.let { (at, dead) -> if (Duration.between(at, now) < REGION_CHECK_EVERY) return@withLock dead }
+        // Per source: true when silent, false when alive, null when the check failed.
+        val checks = coroutineScope {
+            sources.filter { it.kind in REGION_CHECKED }.map { source ->
+                async {
+                    source.kind to try {
+                        source.points(Geo.SouthTyrol, now).none { it.updatedAt != null }
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (_: Exception) {
+                        null
+                    }
+                }
+            }.awaitAll()
+        }
+        val dead = checks.filter { it.second == true }.map { it.first }.toSet()
+        if (checks.none { it.second == null }) region = now to dead
+        dead
+    }
+
+    companion object {
+        /** Sparse feeds whose switch disappears while the whole region is silent (bike sharing since Sept 2026). */
+        val REGION_CHECKED = setOf(MobilityKind.BIKE_SHARING)
+        val REGION_CHECK_EVERY: Duration = Duration.ofHours(6)
+    }
+
     suspend fun points(box: BoundingBox, enabled: Set<MobilityKind>, now: Instant = Instant.now()): MobilityResult = coroutineScope {
         val results = sources.filter { it.kind in enabled }.map { source ->
             async {

@@ -10,6 +10,7 @@ import android.graphics.Typeface
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material.icons.rounded.DirectionsCar
+import androidx.compose.material.icons.rounded.ElectricBike
 import androidx.compose.material.icons.rounded.EvStation
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.LocalParking
@@ -50,20 +51,26 @@ private const val MAX_TAG_CHARS = 6
 
 internal fun tagText(label: String): String = label.trim().let { if (it.length > MAX_TAG_CHARS) it.take(MAX_TAG_CHARS - 1) + "…" else it }
 
-internal fun MapMarker.isMobility(): Boolean =
-    kind == MarkerKind.PARKING || kind == MarkerKind.BIKE_SHARING || kind == MarkerKind.CAR_SHARING || kind == MarkerKind.CHARGING
+internal fun MapMarker.isMobility(): Boolean = kind in MobilityKinds
 
+private val MobilityKinds = setOf(
+    MarkerKind.PARKING, MarkerKind.BIKE_SHARING, MarkerKind.CAR_SHARING, MarkerKind.CHARGING, MarkerKind.BIKE_PARKING, MarkerKind.EBIKE_SHARING,
+)
+
+/** mobility-* tiles; e-bike sharing shares the charging magenta, its glyph tells it apart from car chargers. */
 internal fun mobilityColor(kind: MarkerKind): Long = when (kind) {
     MarkerKind.PARKING -> 0x1565C0
     MarkerKind.BIKE_SHARING -> 0x2E7D32
-    MarkerKind.CHARGING -> 0xAD1457
+    MarkerKind.CHARGING, MarkerKind.EBIKE_SHARING -> 0xAD1457
+    MarkerKind.BIKE_PARKING -> 0x005662
     else -> 0x6A1B9A
 }
 
 private fun mobilityIcon(kind: MarkerKind): ImageVector = when (kind) {
     MarkerKind.PARKING -> Icons.Rounded.LocalParking
-    MarkerKind.BIKE_SHARING -> Icons.Rounded.PedalBike
+    MarkerKind.BIKE_SHARING, MarkerKind.BIKE_PARKING -> Icons.Rounded.PedalBike
     MarkerKind.CHARGING -> Icons.Rounded.EvStation
+    MarkerKind.EBIKE_SHARING -> Icons.Rounded.ElectricBike
     else -> Icons.Rounded.DirectionsCar
 }
 
@@ -174,7 +181,20 @@ internal class MarkerImages(private val density: Float, private val dark: Boolea
         canvas.drawRoundRect(tile, rad, rad, paint(0xFFFFFF))
         tile.inset(2f * density, 2f * density)
         canvas.drawRoundRect(tile, rad - 2f * density, rad - 2f * density, paint(fill))
-        drawIcon(canvas, mobilityIcon(m.kind), c, c, if (m.selected) 22f else 18f, 0xFFFFFF)
+        if (m.kind == MarkerKind.BIKE_PARKING) {
+            // A bike inside a box: an outline with a heavier lid, the bike smaller inside it.
+            val w = (if (m.selected) 20f else 16f) * density
+            val h = (if (m.selected) 18f else 15f) * density
+            val stroke = (if (m.selected) 2f else 1.5f) * density
+            val lid = (if (m.selected) 3f else 2.5f) * density
+            val box = RectF(c - w / 2f + stroke / 2f, c - h / 2f + stroke / 2f, c + w / 2f - stroke / 2f, c + h / 2f - stroke / 2f)
+            val outline = paint(0xFFFFFF).apply { style = Paint.Style.STROKE; strokeWidth = stroke }
+            canvas.drawRoundRect(box, 2.5f * density, 2.5f * density, outline)
+            canvas.drawRect(c - w / 2f + stroke / 2f, c - h / 2f, c + w / 2f - stroke / 2f, c - h / 2f + lid, paint(0xFFFFFF))
+            drawIcon(canvas, Icons.Rounded.PedalBike, c, c + lid / 4f, if (m.selected) 13f else 11f, 0xFFFFFF)
+        } else {
+            drawIcon(canvas, mobilityIcon(m.kind), c, c, if (m.selected) 22f else 18f, 0xFFFFFF)
+        }
         if (m.badge) {
             val bx = c - badgeAt * density
             canvas.drawCircle(bx, bx, 8f * density, paint(0xFFFFFF))

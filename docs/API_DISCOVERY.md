@@ -129,13 +129,13 @@ Other behaviour:
 | | |
 |---|---|
 | Provider | NOI Techpark Open Data Hub |
-| Endpoint | `https://mobility.api.opendatahub.com/v2/flat,node/{ParkingStation\|BikesharingStation\|CarsharingStation}/{free\|number-available}/latest`; charging stations below |
+| Endpoint | `https://mobility.api.opendatahub.com/v2/flat,node/{ParkingStation\|BikesharingStation\|CarsharingStation}/{free\|number-available}/latest`; charging stations, bike boxes and e-bike sharing below |
 | Filters | `where=sactive.eq.true,scoordinate.bbi.(w,s,e,n,4326)`, `select=scode,sname,scoordinate,sorigin,mvalue,mvalidtime,smetadata.capacity` |
 | Classification | Public open-source infrastructure (production API) |
 | Auth | None for open data |
 | Licence | Per origin; the open records used here are published as open data by ODH |
-| Freshness (4 Oct 2026; car sharing 24 Oct) | Parking (FAMAS / municipalities / skidata): current (minutes old). Bike sharing in South Tyrol: 2 stations, last value Sept 2026 (stale). Car sharing: AlpsGo, 48 of 53 stations updated within 3 h on 24 Oct 2026 |
-| App policy | Parking is on by default. Bike and car sharing are off by default. Values older than 3 h are shown as "no current availability", and values older than 7 days are dropped (dead sensors). Every layer fails independently (`MobilityRepository`) |
+| Freshness (4 Oct 2026; car sharing 24 Oct; bike sharing 25 Oct) | Parking (FAMAS / municipalities / skidata): current (minutes old). Bike sharing: Bolzano (`BIKE_SHARING_BOLZANO`, 15 active stations) last reported `number-available` on 26 Sep 2026, so all are dropped after 7 days; Merano's bikes (`Bicycle`, `BIKE_SHARING_MERANO`) stopped on 31 Dec 2025; Papin Sport's rental points report only an always-1 `availability` and `isClosed`, with no counts, and are not shown. Car sharing: AlpsGo, 48 of 53 stations updated within 3 h on 24 Oct 2026 |
+| App policy | Parking is on by default. Bike and car sharing, EV charging, bike boxes and e-bike sharing are off by default. Values older than 3 h are shown as "no current availability", and values older than 7 days are dropped (dead sensors). Bike sharing's switch is hidden while no station in the whole region has a value within 7 days (`MobilityRepository.deadLayers`, a South Tyrol-wide request at most every 6 h). Every layer fails independently (`MobilityRepository`) |
 | Status | Implemented behind toggles |
 
 ### Car park forecasts (`OdhParkingForecastSource`)
@@ -172,6 +172,38 @@ Three requests for the visible area, run together and joined in the app:
 - **Station names** are often operator codes ("BZ_P_VITTORIA", "IT*BEC*EH000137*1"); the app then shows the address, or "Charging station" when there is none. Neogy cities are upper case ("BOLZANO - BOZEN") and are title-cased.
 - **No prices** are published by any operator.
 - Fixtures: `docs/fixtures/odh_charging_stations.json`, `odh_charging_plugs.json`, `odh_charging_status.json` (central Bolzano, 24 Oct 2026).
+
+### Bike boxes (`OdhBikeParkingSource`)
+
+STA's lockable bike parking at stations (Bicibox). Two requests for the visible area, run together and joined by `scode`:
+
+| Request | Path and `select` |
+|---|---|
+| Sites | `BikeParking`, `select=scode,sname,scoordinate,sorigin,smetadata` |
+| Values | `BikeParking/free,freeSpotsRegularBike,freeSpotsElectricBike,usageState/latest`, `select=scode,tname,mvalue,mvalidtime` |
+
+- **Coverage (25 Oct 2026):** 24 active sites, origins `bicincitta` (21) and `loewenbytes` (3), values every 10 minutes. `smetadata.type` is `bikeBoxGroup` (individual boxes, 4 to 20) or `veloHub` (a shared depot, 12 to 176 places).
+- **Metadata:** `names` and `addresses` in de, it, en and lld; `totalPlaces`; `stationPlaces[]` with a `type` (every place is `withoutRefill` today, so no site has a socket yet); `netex_parking` (`layout` covered, `surveillance`, `reservation` reservationRequired: the same for every site).
+- **`sname`** reads "Bressanone / Bicibox individuali": the Italian place name, then the kind of site; the app keeps the place.
+- **`usageState`** is mostly `unknown`, `in service` for loewenbytes and `out of service` for one site; only the last changes what the app shows (grey, no count).
+- **A test site** ("Comune DEMO / Bicibox individuali demo") is published with the real ones; the app drops names containing "demo".
+- **Not published:** how to book a box, and prices.
+- Fixtures: `docs/fixtures/odh_bikeparking_stations.json`, `odh_bikeparking_values.json` (five sites, 25 Oct 2026).
+
+### E-bike sharing (`OdhEbikeSharingSource`)
+
+Ecospazio's e-bike sharing, published as `BIKE_CHARGER` (stations) and `BIKE_CHARGER_BAY` (their docks). The app reads the stations only:
+
+| Request | Path and `select` |
+|---|---|
+| Stations | `BIKE_CHARGER`, `select=scode,sname,scoordinate,sorigin,smetadata` |
+| Values | `BIKE_CHARGER/availableVehicles,freebay,state/latest`, `select=scode,tname,mvalue,mvalidtime` |
+
+- **Meaning, worked out from the values (25 Oct 2026):** `availableVehicles` is the number of e-bikes docked and ready to rent (it equals the docks whose `usageState` is `NONE`), `freebay` the empty docks (`freebay` + `availableVehicles` = `smetadata.totalBays` at every station). Despite the type's name these are not chargers for one's own bike; the docks charge the shared e-bikes. A dock's `usageState` `RICARICA` marks an empty dock.
+- **`state`:** READY, OFFLINE or OUT_OF_SERVICE; on 25 Oct 2026 one of 29 stations (Völs am Schlern) was READY. The app treats anything but READY as closed: grey, no count.
+- **Coverage:** 29 stations on the Ritten, in Gröden, Eggental, Sarntal, Kastelruth and around, values every 10 minutes. Names read "Italian - German" and one carries a tab.
+- **Docks (`BIKE_CHARGER_BAY`, `pcode` = the station's `scode`)** have `state` READY / OUT_OF_SERVICE / FAULTY and `usageState`; some dock values date from February 2024. Not used.
+- Fixtures: `docs/fixtures/odh_ebike_stations.json`, `odh_ebike_values.json` (three stations: READY, OUT_OF_SERVICE, OFFLINE; 25 Oct 2026).
 
 ---
 

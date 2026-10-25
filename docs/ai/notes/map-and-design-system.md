@@ -17,9 +17,13 @@ status: stable
   lookup is `(content.stops + content.vehicles + content.pois).associateBy { it.id }` - **ids must be
   unique across all three lists**. `MapMarker.color` is the stroke for stops and the fill for vehicles and
   journey endpoints; mobility points use their kind's colour unless `color` overrides it (grey
-  status-stale for a charging station whose points are all out of order).
+  status-stale for anything `MobilityPoint.outOfService` says is closed).
+- **Map sheets carry no data-source line**: no "Data: ..." credit at the bottom of a stop, parking,
+  charger, bike box or e-bike sheet (removed at the user's request on 2026-10-25); sources are credited
+  in the map's attribution and on the About screen.
 - **Marker shapes say the kind**: stops are circle layers; mobility points (parking, bike and car
-  sharing, EV charging) are rounded-square images with a Material icon and, from zoom 16, a pill with
+  sharing, EV charging, bike boxes, e-bike sharing) are rounded-square images with a Material icon (bike
+  boxes draw a bike inside a box) and, from zoom 16, a pill with
   `MapMarker.label` (the live count); `MapMarker.badge` adds an amber bolt on the opposite corner (a
   charging station with a DC point of 50 kW or more); vehicles are images of a mode-icon circle plus the line number in a
   tag of the mode's badge shape, with a separate rotated arrow image. Below zoom 13 vehicles are plain

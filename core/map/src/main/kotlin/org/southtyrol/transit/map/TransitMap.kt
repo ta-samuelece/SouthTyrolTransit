@@ -46,6 +46,13 @@ data class MapMarker(
     val badge: Boolean = false,
 )
 
+/**
+ * The device's own position: a dot over a halo of [accuracyMeters], and a cone towards [heading] (degrees
+ * clockwise from true north) when the compass gives one.
+ */
+@Immutable
+data class UserLocation(val point: Point, val accuracyMeters: Float? = null, val heading: Float? = null)
+
 /** A line on the map; [opacity] below 1 marks a part already travelled (see RouteProgress). */
 @Immutable
 data class MapPolyline(val id: String, val points: List<Point>, val color: Long, val widthDp: Float = 5f, val dashed: Boolean = false, val opacity: Float = 1f)
@@ -131,6 +138,7 @@ val LocalMapPureBlack = staticCompositionLocalOf { false }
  * rotated) below what the caller lays over the top of the map - the status bar of an edge-to-edge map, a
  * search bar, a button in that corner; null keeps the SDK's margin. A caller that
  * places the credit itself (in its own overlay column) passes [attribution] false and shows [MapAttribution].
+ * [user] is drawn above everything else and updates on its own, without touching [content].
  */
 @Composable
 fun TransitMap(
@@ -145,9 +153,10 @@ fun TransitMap(
     attributionPadding: PaddingValues = PaddingValues(6.dp),
     compassTopMargin: Dp? = null,
     attribution: Boolean = true,
+    user: UserLocation? = null,
 ) {
     Box(modifier) {
-        MapLibreTransitMap(content, Modifier.fillMaxSize(), camera, darkTheme, interactive, onMarkerClick, onViewportChanged, compassTopMargin)
+        MapLibreTransitMap(content, Modifier.fillMaxSize(), camera, darkTheme, interactive, onMarkerClick, onViewportChanged, compassTopMargin, user)
         if (attribution) MapAttribution(darkTheme, Modifier.align(attributionAlignment).padding(attributionPadding))
     }
 }

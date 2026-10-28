@@ -157,6 +157,18 @@ internal class MarkerImages(private val density: Float, private val dark: Boolea
         return bitmap
     }
 
+    /** The compass cone behind the user's dot: a wedge pointing north that fades outwards; the layer rotates it. */
+    fun userCone(): Bitmap {
+        val half = 56f
+        val (bitmap, canvas) = canvas(half, half)
+        val c = half * density
+        val reach = (half - 2f) * density
+        val gradient = android.graphics.RadialGradient(c, c, reach, intArrayOf(0x991A73E8.toInt(), 0x001A73E8), null, android.graphics.Shader.TileMode.CLAMP)
+        // 70 degrees wide, about as precise as a phone compass is.
+        canvas.drawArc(RectF(c - reach, c - reach, c + reach, c + reach), -90f - 35f, 70f, true, Paint(Paint.ANTI_ALIAS_FLAG).apply { shader = gradient })
+        return bitmap
+    }
+
     fun mobility(m: MapMarker, withCount: Boolean): Bitmap {
         // A colour on the marker overrides the kind's, e.g. grey for a charging station out of service.
         val fill = m.color ?: mobilityColor(m.kind)

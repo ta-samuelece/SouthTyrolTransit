@@ -28,6 +28,12 @@ object Geo {
         return ((deg + 360.0) % 360.0).toFloat()
     }
 
+    /** Smallest turn between two compass headings, in degrees in [0, 180]. */
+    fun headingDelta(a: Float, b: Float): Float {
+        val d = (((a - b) % 360f) + 360f) % 360f
+        return if (d > 180f) 360f - d else d
+    }
+
     fun around(center: Point, meters: Double): BoundingBox {
         val dLat = meters / 111_320.0
         val dLon = meters / (111_320.0 * cos(Math.toRadians(center.latitude)).coerceAtLeast(0.01))

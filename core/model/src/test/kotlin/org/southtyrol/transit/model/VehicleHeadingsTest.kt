@@ -20,6 +20,13 @@ class VehicleHeadingsTest {
         assertEquals(180f, Geo.bearing(here, south), 0.5f)
     }
 
+    @Test fun headingDeltaTakesTheShortWayRound() {
+        assertEquals(20f, Geo.headingDelta(350f, 10f), 0.01f)
+        assertEquals(20f, Geo.headingDelta(10f, 350f), 0.01f)
+        assertEquals(180f, Geo.headingDelta(0f, 180f), 0.01f)
+        assertEquals(5f, Geo.headingDelta(-2f, 3f), 0.01f)
+    }
+
     @Test fun headsForTheNamedStop() {
         assertEquals(90f, VehicleHeadings.bearing(vehicle("e"), east, null)!!, 0.5f)
     }

@@ -36,7 +36,9 @@ import org.southtyrol.transit.data.TripRepository
 import org.southtyrol.transit.data.UserDao
 import org.southtyrol.transit.data.UserDatabase
 import org.southtyrol.transit.data.VehicleRunResolver
+import org.southtyrol.transit.location.AndroidHeadingProvider
 import org.southtyrol.transit.location.AndroidLocationProvider
+import org.southtyrol.transit.location.HeadingProvider
 import org.southtyrol.transit.location.LocationProvider
 import org.southtyrol.transit.model.MobilityKind
 import org.southtyrol.transit.model.NoPushBackend
@@ -133,4 +135,7 @@ object AppModule {
 
     @Provides @Singleton
     fun location(@ApplicationContext context: Context): LocationProvider = AndroidLocationProvider(context)
+
+    @Provides @Singleton
+    fun heading(@ApplicationContext context: Context): HeadingProvider = AndroidHeadingProvider(context)
 }

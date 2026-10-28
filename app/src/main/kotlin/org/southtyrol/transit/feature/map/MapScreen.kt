@@ -83,7 +83,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.distinctUntilChanged
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -124,6 +127,7 @@ import org.southtyrol.transit.feature.common.rememberLocationPermission
 import org.southtyrol.transit.feature.search.MapSearchBar
 import org.southtyrol.transit.feature.search.MapSearchView
 import org.southtyrol.transit.feature.search.MapSearchViewModel
+import org.southtyrol.transit.location.HeadingProvider
 import org.southtyrol.transit.location.LocationProvider
 import org.southtyrol.transit.location.LocationResult
 import org.southtyrol.transit.map.CameraRequest
@@ -133,6 +137,8 @@ import org.southtyrol.transit.map.MapAttribution
 import org.southtyrol.transit.map.MapViewport
 import org.southtyrol.transit.map.MarkerKind
 import org.southtyrol.transit.map.TransitMap
+import org.southtyrol.transit.map.UserLocation
+import org.southtyrol.transit.model.Geo
 import org.southtyrol.transit.model.Freshness
 import org.southtyrol.transit.model.FreshnessPolicy
 import org.southtyrol.transit.model.MapBase
@@ -164,6 +170,7 @@ class MapViewModel @Inject constructor(
     private val trips: TripRepository,
     private val settings: SettingsRepository,
     private val location: LocationProvider,
+    private val compass: HeadingProvider,
     private val language: LanguageProvider,
     private val departures: org.southtyrol.transit.data.DepartureRepository,
     alerts: org.southtyrol.transit.data.AlertRepository,
@@ -188,8 +195,10 @@ class MapViewModel @Inject constructor(
     val camera: StateFlow<CameraRequest?> = _camera.asStateFlow()
     private val _locationProblem = MutableStateFlow<LocationResult?>(null)
     val locationProblem: StateFlow<LocationResult?> = _locationProblem.asStateFlow()
-    private val _user = MutableStateFlow<Point?>(null)
-    val user: StateFlow<Point?> = _user.asStateFlow()
+    private val _user = MutableStateFlow<UserLocation?>(null)
+    val user: StateFlow<UserLocation?> = _user.asStateFlow()
+    /** Whether the map shows the user: from the start when location is allowed, else once the locate button got a fix. */
+    private val tracking = MutableStateFlow(location.hasPermission())
 
     val prefs: StateFlow<UserSettings> = settings.settings.stateIn(viewModelScope, SharingStarted.Eagerly, UserSettings())
 
@@ -299,8 +308,36 @@ class MapViewModel @Inject constructor(
 
     fun centerOnMe() = viewModelScope.launch {
         when (val r = location.current()) {
-            is LocationResult.Found -> { _user.value = r.point; _camera.value = CameraRequest.Center(r.point, 15.0, key = (_camera.value?.key ?: 0) + 1) }
+            is LocationResult.Found -> {
+                _user.update { UserLocation(r.point, r.accuracyMeters, it?.heading) }
+                tracking.value = true
+                _camera.value = CameraRequest.Center(r.point, 15.0, key = (_camera.value?.key ?: 0) + 1)
+            }
             else -> _locationProblem.value = r
+        }
+    }
+
+    /**
+     * While the map is on screen: moves the user's dot with every fix and turns its cone with the compass.
+     * The camera stays where the user put it; only the locate button moves it.
+     */
+    suspend fun trackUser() {
+        tracking.collectLatest { on ->
+            if (!on) return@collectLatest
+            coroutineScope {
+                launch {
+                    location.updates(USER_FIX_MILLIS, 0f).collect { fix -> _user.update { UserLocation(fix.point, fix.accuracyMeters, it?.heading) } }
+                }
+                launch {
+                    var declination: Float? = null
+                    // Small wobbles would redraw the map many times a second for nothing.
+                    compass.headings().distinctUntilChanged { a, b -> Geo.headingDelta(a, b) < 2f }.collect { magnetic ->
+                        val at = _user.value?.point ?: return@collect
+                        val offset = declination ?: compass.declination(at).also { declination = it }
+                        _user.update { it?.copy(heading = (magnetic + offset + 360f) % 360f) }
+                    }
+                }
+            }
         }
     }
 
@@ -336,6 +373,9 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel(), s
 
     LaunchedEffect(Unit) { viewModel.resumeCamera() }
     PollWhileVisible(20_000) { viewModel.poll() }
+    // GPS and compass only while the map is visible; they stop in the background.
+    val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
+    LaunchedEffect(lifecycle) { lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) { viewModel.trackUser() } }
 
     val deniedText = stringResource(R.string.location_denied)
     val unavailableText = stringResource(R.string.location_unavailable)
@@ -363,7 +403,7 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel(), s
         is MapSelection.MobilitySel -> s.point.id
         null -> null
     }
-    val content = remember(stops, savedStops, showStops, vehicles, mobility, prefs.showVehicles, selectedId, user, now.epochSecond / 30) {
+    val content = remember(stops, savedStops, showStops, vehicles, mobility, prefs.showVehicles, selectedId, now.epochSecond / 30) {
         val savedKeys = savedStops.map { it.id }.toSet()
         // Saved stops are always visible and highlighted, even when zoomed out.
         val stopMarkers = if (!showStops) emptyList() else
@@ -397,7 +437,7 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel(), s
                     color = if (p.outOfService) STALE_TILE_COLOR else null,
                     stale = p.freshness != Freshness.LIVE, selected = p.id == selectedId, badge = p.charging?.fast == true,
                 )
-            } + listOfNotNull(user?.let { MapMarker("me", it, MarkerKind.USER) }),
+            },
         )
     }
 
@@ -418,6 +458,7 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel(), s
                 // The map runs under the status bar: keep the compass below it, and below the search bar
                 // (12 dp margin, 56 dp bar, 8 dp gap) when the bar is at the top.
                 compassTopMargin = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + if (barAtBottom) 12.dp else 76.dp,
+                user = user,
             )
 
             Column(Modifier.statusBarsPadding().padding(12.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -650,6 +691,9 @@ private fun VehicleSheet(sel: MapSelection.VehicleSel, now: Instant, onTrip: (St
 
 /** status-stale: a mobility tile with nothing usable, e.g. a charging station whose points are all out of order. */
 private const val STALE_TILE_COLOR = 0x6F7977L
+
+/** How often the map asks for a new position while it is on screen. */
+private const val USER_FIX_MILLIS = 1_500L
 
 @Composable
 private fun MobilitySheet(p: MobilityPoint, forecast: org.southtyrol.transit.model.ParkingForecast?, now: Instant) {

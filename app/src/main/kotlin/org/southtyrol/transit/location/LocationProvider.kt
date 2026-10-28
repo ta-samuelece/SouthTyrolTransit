@@ -27,8 +27,8 @@ sealed class LocationResult {
 }
 
 /**
- * Foreground location, never logged. One-shot reads, plus [updates], which only a followed journey
- * uses, from its foreground service, while the user has location turned on for it.
+ * Foreground location, never logged. One-shot reads, plus [updates], used by a followed journey (from its
+ * foreground service, while the user has location turned on for it) and by the map while it is on screen.
  */
 interface LocationProvider {
     fun hasPermission(): Boolean

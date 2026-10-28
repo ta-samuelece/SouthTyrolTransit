@@ -71,6 +71,14 @@ private const val L_VEHICLE_CLUSTER = "st-vehicle-cluster"
 private const val L_VEHICLE_ARROW = "st-vehicle-arrow"
 private const val L_VEHICLES = "st-vehicles-layer"
 private const val L_VEHICLE_DOT = "st-vehicles-dot"
+private const val SRC_USER = "st-user"
+private const val L_USER_ACCURACY = "st-user-accuracy"
+private const val L_USER_CONE = "st-user-cone"
+private const val L_USER_DOT = "st-user-dot"
+private const val USER_CONE = "user-cone"
+private const val USER_COLOR = "#1A73E8"
+/** Metres per pixel at the equator at zoom 0 with 512 px tiles. */
+private const val EARTH_PIXEL_METERS = 78271.517
 /** From this zoom vehicles show icon and line number, and mobility points appear. */
 private const val FULL_DETAIL_ZOOM = 13f
 /** From this zoom mobility points carry their availability pill. */
@@ -103,6 +111,7 @@ internal fun MapLibreTransitMap(
     onMarkerClick: (MapMarker) -> Unit,
     onViewportChanged: (MapViewport) -> Unit,
     compassTopMargin: Dp?,
+    user: UserLocation?,
 ) {
     val context = LocalContext.current
     val density = LocalDensity.current.density
@@ -201,7 +210,7 @@ internal fun MapLibreTransitMap(
                 // Above the base style, below every transit layer installLayers adds next.
                 if (raster != null) installRaster(loaded, raster)
                 installLayers(loaded)
-                holder.images = MarkerImages(density, darkTheme)
+                holder.images = MarkerImages(density, darkTheme).also { loaded.addImage(USER_CONE, it.userCone()) }
                 holder.added.clear()
                 holder.style = loaded
                 styleVersion++
@@ -221,6 +230,13 @@ internal fun MapLibreTransitMap(
         val images = holder.images ?: return@LaunchedEffect
         loaded.getSourceAs<GeoJsonSource>(SRC_VEHICLES)?.setGeoJson(FeatureCollection.fromFeatures(content.vehicles.map { it.toVehicleFeature(loaded, images, holder.added) }))
         loaded.getSourceAs<GeoJsonSource>(SRC_POIS)?.setGeoJson(FeatureCollection.fromFeatures(content.pois.map { if (it.isMobility()) it.toMobilityFeature(loaded, images, holder.added) else it.toFeature() }))
+    }
+
+    // Its own source, so a new fix or compass reading moves only the dot, at the rate they arrive.
+    LaunchedEffect(user, styleVersion) {
+        val loaded = holder.style ?: return@LaunchedEffect
+        if (!loaded.isFullyLoaded) return@LaunchedEffect
+        loaded.getSourceAs<GeoJsonSource>(SRC_USER)?.setGeoJson(FeatureCollection.fromFeatures(listOfNotNull(user?.toFeature())))
     }
 
     LaunchedEffect(camera, styleVersion) {
@@ -257,6 +273,15 @@ private fun MapMarker.toFeature(): Feature {
         addProperty("selected", selected)
         addProperty("highlighted", highlighted)
         if (bearing != null) addProperty("bearing", bearing)
+    }
+    return Feature.fromGeometry(GeoPoint.fromLngLat(point.longitude, point.latitude), props)
+}
+
+private fun UserLocation.toFeature(): Feature {
+    val props = JsonObject().apply {
+        // The halo's radius in pixels at zoom 0; the layer doubles it per zoom level (512 px tiles).
+        accuracyMeters?.let { addProperty("accuracy0", it / (EARTH_PIXEL_METERS * kotlin.math.cos(Math.toRadians(point.latitude)))) }
+        heading?.let { addProperty("heading", it) }
     }
     return Feature.fromGeometry(GeoPoint.fromLngLat(point.longitude, point.latitude), props)
 }
@@ -463,5 +488,41 @@ private fun installLayers(style: Style) {
             PropertyFactory.iconAllowOverlap(true),
             PropertyFactory.iconIgnorePlacement(true),
         ).apply { minZoom = FULL_DETAIL_ZOOM },
+    )
+    // The user, above everything: accuracy halo in true metres at every zoom, compass cone, then the dot.
+    style.addSource(GeoJsonSource(SRC_USER))
+    style.addLayer(
+        CircleLayer(L_USER_ACCURACY, SRC_USER).withFilter(has("accuracy0")).withProperties(
+            PropertyFactory.circleRadius(
+                Expression.interpolate(
+                    Expression.exponential(2), Expression.zoom(),
+                    Expression.stop(0, get("accuracy0")),
+                    Expression.stop(22, Expression.product(get("accuracy0"), literal(4_194_304f))),
+                ),
+            ),
+            PropertyFactory.circleColor(USER_COLOR),
+            PropertyFactory.circleOpacity(0.12f),
+            PropertyFactory.circleStrokeColor(USER_COLOR),
+            PropertyFactory.circleStrokeOpacity(0.3f),
+            PropertyFactory.circleStrokeWidth(1f),
+            PropertyFactory.circlePitchAlignment(Property.CIRCLE_PITCH_ALIGNMENT_MAP),
+        ),
+    )
+    style.addLayer(
+        SymbolLayer(L_USER_CONE, SRC_USER).withFilter(has("heading")).withProperties(
+            PropertyFactory.iconImage(USER_CONE),
+            PropertyFactory.iconRotate(toNumber(get("heading"))),
+            PropertyFactory.iconRotationAlignment(Property.ICON_ROTATION_ALIGNMENT_MAP),
+            PropertyFactory.iconAllowOverlap(true),
+            PropertyFactory.iconIgnorePlacement(true),
+        ),
+    )
+    style.addLayer(
+        CircleLayer(L_USER_DOT, SRC_USER).withProperties(
+            PropertyFactory.circleColor(USER_COLOR),
+            PropertyFactory.circleRadius(8f),
+            PropertyFactory.circleStrokeColor("#FFFFFF"),
+            PropertyFactory.circleStrokeWidth(3f),
+        ),
     )
 }

@@ -174,6 +174,14 @@ Settled on 2026-10-13 after a review of every screen against the Expressive guid
 - **Every `SegmentedListItem`** passes `colors = groupedItemColors()` (surfaceContainer) and
   `Modifier.groupGap(index, count)` (`feature/common/Common.kt`): the library's default segmented colours
   are indistinguishable from the page in dark mode, and without the gap the separators disappear.
+- **The user's dot is not a marker** (2026-10-28): `TransitMap(user = UserLocation(...))` draws it in its
+  own source and layers on top of everything (accuracy halo in true metres via a zoom-exponential radius,
+  the `user-cone` image rotated by the heading, then the dot), so a fix or compass reading updates only
+  that source instead of rebuilding `MapContent`. On the main map `MapViewModel.trackUser()` runs while the
+  screen is STARTED: `LocationProvider.updates` every 1.5 s and `HeadingProvider.headings()` (rotation
+  vector, remapped for the display rotation, plus declination for true north), skipping changes under 2°.
+  It starts at once when location is already allowed, otherwise after the locate button's first fix; the
+  camera never follows. Other maps (pickers, the followed journey) still pass a `MarkerKind.USER` marker.
 - **The map's locate button is a FAB menu opened by a long press** (`LocateFabMenu` in
   `feature/map/MapScreen.kt`). A tap still centres on the user, against the spec's tap-to-open; a long press
   lists the saved stops, and picking one flies there and opens its sheet. `ToggleFloatingActionButton` has

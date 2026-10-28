@@ -155,6 +155,11 @@ class ScheduleTest {
 
         val lines = schedule.linesAtStops(listOf("it:1:100"))
         assertEquals(listOf("R", "201"), lines.map { it.name })
+        // Bolzano has the train and bus 201, Merano only the bus; an unknown key is left out.
+        assertEquals(
+            mapOf("it:1:100" to TransportMode.TRAIN, "it:1:200" to TransportMode.BUS, "it:1:300" to TransportMode.TRAIN),
+            schedule.stationModes(listOf("it:1:100", "it:1:200", "it:1:300", "it:9:999")),
+        )
         val line201 = schedule.searchLines("201").single()
         val variants = schedule.lineVariants(line201, "it")
         assertEquals(1, variants.size)

@@ -238,6 +238,11 @@ class GtfsSchedule(private val store: ScheduleStore) : TransitScheduleDataSource
         if (keys.isEmpty()) emptyList() else lines(keys).map { it.toLine() }.sortedWith(lineOrder)
     }
 
+    override suspend fun stationModes(stationKeys: Collection<String>): Map<String, TransportMode> = io {
+        stationKeys.distinct().chunked(500).flatMap { stationRouteTypes(it) }.groupBy({ it.stationKey }, { TransportMode.fromGtfs(it.type) })
+            .mapNotNull { (key, modes) -> TransportMode.dominant(modes)?.let { key to it } }.toMap()
+    }
+
     override suspend fun searchLines(query: String): List<Line> = io { searchLines(query.trim()).map { it.toLine() }.sortedWith(lineOrder) }
 
     override suspend fun line(key: String): Line? = io { lines(listOf(key)).firstOrNull()?.toLine() }

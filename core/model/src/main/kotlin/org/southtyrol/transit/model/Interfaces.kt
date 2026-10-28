@@ -34,6 +34,9 @@ interface TransitScheduleDataSource {
     /** The directions served at a station (2 or more), or empty when there is no meaningful choice. */
     suspend fun stationDirections(stationKey: String, language: String): List<StopDirection> = emptyList()
     suspend fun linesAtStops(stopIds: Collection<String>): List<Line>
+
+    /** For each station key, the [TransportMode.dominant] mode of the lines calling there; unknown keys are left out. */
+    suspend fun stationModes(stationKeys: Collection<String>): Map<String, TransportMode> = emptyMap()
     suspend fun searchLines(query: String): List<Line>
     suspend fun line(key: String): Line?
     suspend fun lineVariants(line: Line, language: String): List<LineVariant>

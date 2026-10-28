@@ -16,6 +16,12 @@ enum class TransportMode {
     val isTransit: Boolean get() = this != WALK
 
     companion object {
+        /** Rank for a stop served by several modes: rail before ropeways before buses. */
+        private val stopRank = listOf(TRAIN, CABLE_CAR, FUNICULAR, TRAM, CITY_BUS, BUS, ON_DEMAND, OTHER)
+
+        /** The mode a stop is drawn as on the map: the highest-ranked one serving it, or null for none. */
+        fun dominant(modes: Collection<TransportMode>): TransportMode? = modes.filter { it in stopRank }.minByOrNull { stopRank.indexOf(it) }
+
         /** GTFS route_type including the extended (Hierarchical Vehicle Type) ranges. */
         fun fromGtfs(routeType: Int): TransportMode = when (routeType) {
             0, in 900..999 -> TRAM

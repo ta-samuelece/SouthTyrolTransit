@@ -39,6 +39,8 @@ data class StopRow(
     val locationType: Int,
 )
 
+data class StationTypeRow(val stationKey: String, val type: Int)
+
 data class NextStopRow(val platformId: String, val nextId: String, val nextName: String, val calls: Int)
 
 /** Full-text index over every stop name variant (all languages, accent-folded). */
@@ -229,6 +231,15 @@ interface ScheduleDao {
         """,
     )
     suspend fun nextStops(platformIds: Collection<String>): List<NextStopRow>
+
+    @Query(
+        """
+        SELECT DISTINCT s.stationKey AS stationKey, r.type AS type
+        FROM stops s JOIN stop_times st ON st.stopIdx = s.idx JOIN trips t ON t.idx = st.tripIdx JOIN routes r ON r.id = t.routeId
+        WHERE s.stationKey IN (:stationKeys)
+        """,
+    )
+    suspend fun stationRouteTypes(stationKeys: Collection<String>): List<StationTypeRow>
 
     @Query("SELECT DISTINCT r.lineKey FROM stop_times st JOIN stops s ON s.idx = st.stopIdx JOIN trips t ON t.idx = st.tripIdx JOIN routes r ON r.id = t.routeId WHERE s.id IN (:stopIds)")
     suspend fun lineKeysAtStops(stopIds: Collection<String>): List<String>

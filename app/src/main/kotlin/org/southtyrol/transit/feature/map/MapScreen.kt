@@ -182,6 +182,10 @@ class MapViewModel @Inject constructor(
     private val viewport = MutableStateFlow<MapViewport?>(null)
     private val _stops = MutableStateFlow<List<Stop>>(emptyList())
     val stops: StateFlow<List<Stop>> = _stops.asStateFlow()
+    /** The mode each shown stop is drawn as, by stop id; empty without the offline timetable. */
+    val stopModes: StateFlow<Map<String, TransportMode>> = combine(_stops, savedStops) { a, b -> a + b }.map { map.stopModes(it) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+    val alerts: StateFlow<List<org.southtyrol.transit.model.ServiceAlert>> = alertState.map { it.alerts }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     private val _mobility = MutableStateFlow<List<MobilityPoint>>(emptyList())
     val mobilityPoints: StateFlow<List<MobilityPoint>> = _mobility.asStateFlow()
     private val _mobilityFailed = MutableStateFlow<Set<MobilityKind>>(emptySet())
@@ -366,6 +370,8 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel(), s
     val problem by viewModel.locationProblem.collectAsStateWithLifecycle()
     val user by viewModel.user.collectAsStateWithLifecycle()
     val savedStops by viewModel.savedStops.collectAsStateWithLifecycle()
+    val stopModes by viewModel.stopModes.collectAsStateWithLifecycle()
+    val alerts by viewModel.alerts.collectAsStateWithLifecycle()
     val now = rememberNow(10_000)
     val dark = LocalDarkTheme.current
     val snackbar = remember { SnackbarHostState() }
@@ -403,12 +409,20 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel(), s
         is MapSelection.MobilitySel -> s.point.id
         null -> null
     }
-    val content = remember(stops, savedStops, showStops, vehicles, mobility, prefs.showVehicles, selectedId, now.epochSecond / 30) {
+    val content = remember(stops, savedStops, stopModes, alerts, showStops, vehicles, mobility, prefs.showVehicles, selectedId, now.epochSecond / 30) {
         val savedKeys = savedStops.map { it.id }.toSet()
+        // A badge only for alerts in force now that name the stop itself: line-wide ones would mark every stop of the line.
+        val active = alerts.filter { it.active(now) }
+        fun marker(s: Stop, saved: Boolean): MapMarker {
+            val mode = stopModes[s.id]
+            return MapMarker(
+                s.id, s.point, MarkerKind.STOP, mode = mode, color = mode?.let(ModeColors::container), selected = s.id == selectedId, highlighted = saved,
+                alert = active.any { org.southtyrol.transit.data.AlertMatcher.affectsStop(it, s.id) },
+            )
+        }
         // Saved stops are always visible and highlighted, even when zoomed out.
         val stopMarkers = if (!showStops) emptyList() else
-            stops.map { MapMarker(it.id, it.point, MarkerKind.STOP, selected = it.id == selectedId, highlighted = it.id in savedKeys) } +
-                savedStops.filter { s -> stops.none { it.id == s.id } }.map { MapMarker(it.id, it.point, MarkerKind.STOP, selected = it.id == selectedId, highlighted = true) }
+            stops.map { marker(it, it.id in savedKeys) } + savedStops.filter { s -> stops.none { it.id == s.id } }.map { marker(it, true) }
         MapContent(
             stops = stopMarkers,
             clusterStops = false,

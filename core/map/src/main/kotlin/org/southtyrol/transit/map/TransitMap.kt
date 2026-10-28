@@ -44,6 +44,8 @@ data class MapMarker(
     val highlighted: Boolean = false,
     /** Mobility points: a small corner badge, e.g. a charging station with fast charging. */
     val badge: Boolean = false,
+    /** Stops: a service alert in force names this stop; draws the red alert badge. */
+    val alert: Boolean = false,
 )
 
 /**

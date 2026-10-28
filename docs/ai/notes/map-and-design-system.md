@@ -21,7 +21,21 @@ status: stable
 - **Map sheets carry no data-source line**: no "Data: ..." credit at the bottom of a stop, parking,
   charger, bike box or e-bike sheet (removed at the user's request on 2026-10-25); sources are credited
   in the map's attribution and on the About screen.
-- **Marker shapes say the kind**: stops are circle layers; mobility points (parking, bike and car
+- **Stop markers carry mode and alerts** (design of 2026-10-28, canvas "Stop Markers"): on the map tab
+  `MapMarker.mode` is the station's `TransportMode.dominant` mode (train, cable car, funicular, tram,
+  city bus, bus, in that order) from `MapRepository.stopModes` - one `stationModes` query over the
+  timetable's stop_times, cached per station key for the session; online stops have none - and
+  `color` is that mode's colour, so bus stops ring teal. Train, cable car and funicular stations are
+  dots with a 3.5 dp ring below zoom 15 and a `stopDisc` image (mode icon on the mode colour, white
+  ring, amber when saved) from 15. `MapMarker.alert` - an alert `active` now whose `stops` name the
+  station (`AlertMatcher.affectsStop`; line-wide alerts would mark every stop) - adds a red badge
+  (`stopAlert`, status-cancelled red, white "!" from zoom 15) on the upper right edge; its `icon-offset`
+  follows the marker's radius by zoom. Selected stops get a white gap and an on-surface ring (a halo
+  circle layer below the dots; the disc image draws its own). `addStopLayers` builds these layers for
+  both stop sources; keep every zoom expression at the top level of its property. The other maps pass
+  no mode and keep their line-coloured dots. GTFS has no city-bus route type, so from the timetable
+  every bus stop is `BUS`.
+- **Marker shapes say the kind**: stops are circle layers (stations also disc images); mobility points (parking, bike and car
   sharing, EV charging, bike boxes, e-bike sharing) are rounded-square images with a Material icon (bike
   boxes draw a bike inside a box) and, from zoom 16, a pill with
   `MapMarker.label` (the live count); `MapMarker.badge` adds an amber bolt on the opposite corner (a

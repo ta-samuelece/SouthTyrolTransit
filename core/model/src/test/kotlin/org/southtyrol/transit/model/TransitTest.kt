@@ -247,4 +247,12 @@ class GeoTest {
         assertEquals(TransportMode.CITY_BUS, TransportMode.fromEfa(5))
         assertEquals(TransportMode.WALK, TransportMode.fromEfa(100))
     }
+
+    @Test fun stopIsDrawnAsItsHighestRankedMode() {
+        assertEquals(TransportMode.TRAIN, TransportMode.dominant(listOf(TransportMode.BUS, TransportMode.TRAIN, TransportMode.CABLE_CAR)))
+        assertEquals(TransportMode.CABLE_CAR, TransportMode.dominant(listOf(TransportMode.BUS, TransportMode.CABLE_CAR)))
+        assertEquals(TransportMode.CITY_BUS, TransportMode.dominant(listOf(TransportMode.BUS, TransportMode.CITY_BUS)))
+        assertNull(TransportMode.dominant(listOf(TransportMode.WALK)))
+        assertNull(TransportMode.dominant(emptyList()))
+    }
 }

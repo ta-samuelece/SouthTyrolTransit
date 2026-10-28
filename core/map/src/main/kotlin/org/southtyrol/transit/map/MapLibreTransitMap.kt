@@ -64,6 +64,10 @@ private const val L_LINES_DASHED = "st-lines-dashed-layer"
 private const val L_STOP_CLUSTER = "st-stop-cluster"
 private const val L_STOP_CLUSTER_COUNT = "st-stop-cluster-count"
 private const val L_STOPS = "st-stops-layer"
+private const val L_STOP_DISC = "st-stops-disc"
+private const val L_STOP_DISC_PLAIN = "st-stops-plain-disc"
+private const val STOP_ALERT_DOT = "stop-alert-dot"
+private const val STOP_ALERT_MARK = "stop-alert-mark"
 private const val L_POIS = "st-pois-layer"
 private const val L_POI_POINTS = "st-pois-points"
 private const val L_POI_LABEL = "st-pois-label"
@@ -197,7 +201,7 @@ internal fun MapLibreTransitMap(
                     if (geometry != null) map.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(geometry.latitude(), geometry.longitude()), map.cameraPosition.zoom + 2))
                     return@addOnMapClickListener true
                 }
-                val hit = map.queryRenderedFeatures(box, L_VEHICLES, L_VEHICLE_DOT, L_POIS, L_POI_POINTS, L_STOPS, L_STOPS_PLAIN).firstNotNullOfOrNull { f -> f.getStringProperty("id")?.let { holder.markers[it] } }
+                val hit = map.queryRenderedFeatures(box, L_VEHICLES, L_VEHICLE_DOT, L_POIS, L_POI_POINTS, L_STOP_DISC, L_STOP_DISC_PLAIN, L_STOPS, L_STOPS_PLAIN).firstNotNullOfOrNull { f -> f.getStringProperty("id")?.let { holder.markers[it] } }
                 if (hit != null) clickHandler(hit)
                 hit != null
             }
@@ -209,8 +213,12 @@ internal fun MapLibreTransitMap(
             map.setStyle(Style.Builder().fromUri(styleUrl)) { loaded ->
                 // Above the base style, below every transit layer installLayers adds next.
                 if (raster != null) installRaster(loaded, raster)
-                installLayers(loaded)
-                holder.images = MarkerImages(density, darkTheme).also { loaded.addImage(USER_CONE, it.userCone()) }
+                installLayers(loaded, darkTheme)
+                holder.images = MarkerImages(density, darkTheme).also {
+                    loaded.addImage(USER_CONE, it.userCone())
+                    loaded.addImage(STOP_ALERT_DOT, it.stopAlert(withMark = false))
+                    loaded.addImage(STOP_ALERT_MARK, it.stopAlert(withMark = true))
+                }
                 holder.added.clear()
                 holder.style = loaded
                 styleVersion++
@@ -224,10 +232,10 @@ internal fun MapLibreTransitMap(
         if (!loaded.isFullyLoaded) return@LaunchedEffect
         holder.markers = (content.stops + content.vehicles + content.pois).associateBy { it.id }
         loaded.getSourceAs<GeoJsonSource>(SRC_LINES)?.setGeoJson(FeatureCollection.fromFeatures(content.lines.map { it.toFeature() }))
-        val stopFeatures = content.stops.map { it.toFeature() }
+        val images = holder.images ?: return@LaunchedEffect
+        val stopFeatures = content.stops.map { it.toStopFeature(loaded, images, holder.added) }
         loaded.getSourceAs<GeoJsonSource>(SRC_STOPS)?.setGeoJson(FeatureCollection.fromFeatures(if (content.clusterStops) stopFeatures else emptyList()))
         loaded.getSourceAs<GeoJsonSource>(SRC_STOPS_PLAIN)?.setGeoJson(FeatureCollection.fromFeatures(if (content.clusterStops) emptyList() else stopFeatures))
-        val images = holder.images ?: return@LaunchedEffect
         loaded.getSourceAs<GeoJsonSource>(SRC_VEHICLES)?.setGeoJson(FeatureCollection.fromFeatures(content.vehicles.map { it.toVehicleFeature(loaded, images, holder.added) }))
         loaded.getSourceAs<GeoJsonSource>(SRC_POIS)?.setGeoJson(FeatureCollection.fromFeatures(content.pois.map { if (it.isMobility()) it.toMobilityFeature(loaded, images, holder.added) else it.toFeature() }))
     }
@@ -275,6 +283,18 @@ private fun MapMarker.toFeature(): Feature {
         if (bearing != null) addProperty("bearing", bearing)
     }
     return Feature.fromGeometry(GeoPoint.fromLngLat(point.longitude, point.latitude), props)
+}
+
+private fun MapMarker.toStopFeature(style: Style, images: MarkerImages, added: MutableSet<String>): Feature {
+    val feature = toFeature()
+    feature.addBooleanProperty("alert", alert)
+    if (isDiscStop()) {
+        val key = images.stopDiscKey(this)
+        style.ensureImage(added, key) { images.stopDisc(this) }
+        feature.addBooleanProperty("disc", true)
+        feature.addStringProperty("discIcon", key)
+    }
+    return feature
 }
 
 private fun UserLocation.toFeature(): Feature {
@@ -351,7 +371,7 @@ private fun installRaster(style: Style, raster: RasterTiles) {
     style.addLayer(RasterLayer(L_BASE_RASTER, SRC_BASE_RASTER))
 }
 
-private fun installLayers(style: Style) {
+private fun installLayers(style: Style, dark: Boolean) {
     style.addSource(GeoJsonSource(SRC_LINES))
     style.addSource(GeoJsonSource(SRC_STOPS, GeoJsonOptions().withCluster(true).withClusterMaxZoom(13).withClusterRadius(42)))
     style.addSource(GeoJsonSource(SRC_STOPS_PLAIN))
@@ -397,26 +417,8 @@ private fun installLayers(style: Style) {
             PropertyFactory.textAllowOverlap(true),
         ),
     )
-    style.addLayer(
-        CircleLayer(L_STOPS, SRC_STOPS).withFilter(not(has("point_count"))).withProperties(
-            PropertyFactory.circleColor(Expression.switchCase(Expression.eq(get("highlighted"), literal(true)), Expression.color(HIGHLIGHT), Expression.color(android.graphics.Color.WHITE))),
-            PropertyFactory.circleRadius(Expression.switchCase(Expression.eq(get("highlighted"), literal(true)), literal(9f), Expression.interpolate(Expression.linear(), Expression.zoom(), Expression.stop(12, 3.5f), Expression.stop(16, 7f)))),
-            PropertyFactory.circleStrokeColor(Expression.toColor(get("color"))),
-            PropertyFactory.circleStrokeWidth(Expression.switchCase(Expression.eq(get("selected"), literal(true)), literal(4f), literal(2.5f))),
-            PropertyFactory.circleOpacity(Expression.switchCase(Expression.eq(get("stale"), literal(true)), literal(PASSED_OPACITY), literal(1f))),
-            PropertyFactory.circleStrokeOpacity(Expression.switchCase(Expression.eq(get("stale"), literal(true)), literal(PASSED_OPACITY), literal(1f))),
-        ),
-    )
-    style.addLayer(
-        CircleLayer(L_STOPS_PLAIN, SRC_STOPS_PLAIN).withProperties(
-            PropertyFactory.circleColor(Expression.switchCase(Expression.eq(get("highlighted"), literal(true)), Expression.color(HIGHLIGHT), Expression.color(android.graphics.Color.WHITE))),
-            PropertyFactory.circleRadius(Expression.switchCase(Expression.eq(get("highlighted"), literal(true)), literal(9f), Expression.interpolate(Expression.linear(), Expression.zoom(), Expression.stop(8, 3f), Expression.stop(16, 7f)))),
-            PropertyFactory.circleStrokeColor(Expression.toColor(get("color"))),
-            PropertyFactory.circleStrokeWidth(2.5f),
-            PropertyFactory.circleOpacity(Expression.switchCase(Expression.eq(get("stale"), literal(true)), literal(PASSED_OPACITY), literal(1f))),
-            PropertyFactory.circleStrokeOpacity(Expression.switchCase(Expression.eq(get("stale"), literal(true)), literal(PASSED_OPACITY), literal(1f))),
-        ),
-    )
+    addStopLayers(style, SRC_STOPS, L_STOPS, L_STOP_DISC, smallestZoom = 12f, smallestRadius = 3.5f, dark = dark)
+    addStopLayers(style, SRC_STOPS_PLAIN, L_STOPS_PLAIN, L_STOP_DISC_PLAIN, smallestZoom = 8f, smallestRadius = 3f, dark = dark)
     // Mobility points (marker images, shown from the town zoom) and journey endpoints (plain circles).
     style.addLayer(
         CircleLayer(L_POI_POINTS, SRC_POIS).withFilter(not(has("icon"))).withProperties(
@@ -523,6 +525,102 @@ private fun installLayers(style: Style) {
             PropertyFactory.circleRadius(8f),
             PropertyFactory.circleStrokeColor("#FFFFFF"),
             PropertyFactory.circleStrokeWidth(3f),
+        ),
+    )
+}
+
+/** Stop dots reach this radius (dp, without the ring) at zoom 16, from smallestRadius at smallestZoom. */
+private const val STOP_RADIUS = 7f
+private const val SAVED_STOP_RADIUS = 9f
+private const val STOP_RING = 2.5f
+/** Train and ropeway stations below [STOP_DISC_ZOOM]: a heavier ring says "station" before the icon can. */
+private const val RAIL_STOP_RING = 3.5f
+/** Outer radius of a station disc image at full size: 11 dp disc plus its 2 dp ring (3 dp when saved). */
+private const val DISC_OUTER = 13f
+private const val SAVED_DISC_OUTER = 14f
+private const val DISC_SIZE_AT_SWITCH = 0.85f
+
+/**
+ * One stop source's layers, bottom to top: the selection halo, the dots (hidden for stations from
+ * [STOP_DISC_ZOOM], where their disc image takes over), the station discs and the alert badge. Every
+ * zoom expression is the top level of its property, with the per-stop choice inside each stop.
+ */
+private fun addStopLayers(style: Style, source: String, dotLayer: String, discLayer: String, smallestZoom: Float, smallestRadius: Float, dark: Boolean) {
+    fun flag(name: String) = Expression.eq(get(name), literal(true))
+    // Plain sources have no clusters; the same filter is harmless there.
+    fun filter(vararg extra: Expression): Expression = Expression.all(not(has("point_count")), *extra)
+    val saved = flag("highlighted")
+    val disc = flag("disc")
+    val base = Expression.switchCase(flag("stale"), literal(PASSED_OPACITY), literal(1f))
+    // Dots of stations vanish where the disc layer starts.
+    val dotOpacity = Expression.step(Expression.zoom(), base, Expression.stop(STOP_DISC_ZOOM, Expression.switchCase(disc, literal(0f), base)))
+    fun radiusAt(zoom: Float) = smallestRadius + (STOP_RADIUS - smallestRadius) * ((zoom - smallestZoom) / (16f - smallestZoom)).coerceIn(0f, 1f)
+    val ring = Expression.switchCase(disc, literal(RAIL_STOP_RING), literal(STOP_RING))
+
+    // Selected: a white gap and an on-surface ring outside the dot (the disc image draws its own).
+    style.addLayer(
+        CircleLayer("$dotLayer-halo", source).withFilter(filter(flag("selected"))).withProperties(
+            PropertyFactory.circleColor(Expression.color(android.graphics.Color.WHITE)),
+            PropertyFactory.circleRadius(
+                Expression.interpolate(
+                    Expression.linear(), Expression.zoom(),
+                    Expression.stop(smallestZoom, Expression.switchCase(saved, literal(SAVED_STOP_RADIUS + STOP_RING + 1.5f), Expression.sum(ring, literal(smallestRadius + 1.5f)))),
+                    Expression.stop(16f, Expression.switchCase(saved, literal(SAVED_STOP_RADIUS + STOP_RING + 1.5f), Expression.sum(ring, literal(STOP_RADIUS + 1.5f)))),
+                ),
+            ),
+            PropertyFactory.circleStrokeColor(Expression.color(if (dark) 0xFFDEE4E1.toInt() else 0xFF171D1B.toInt())),
+            PropertyFactory.circleStrokeWidth(3f),
+            PropertyFactory.circleOpacity(dotOpacity),
+            PropertyFactory.circleStrokeOpacity(dotOpacity),
+        ),
+    )
+    style.addLayer(
+        CircleLayer(dotLayer, source).withFilter(filter()).withProperties(
+            PropertyFactory.circleColor(Expression.switchCase(saved, Expression.color(HIGHLIGHT), Expression.color(android.graphics.Color.WHITE))),
+            PropertyFactory.circleRadius(Expression.switchCase(saved, literal(SAVED_STOP_RADIUS), Expression.interpolate(Expression.linear(), Expression.zoom(), Expression.stop(smallestZoom, smallestRadius), Expression.stop(16, STOP_RADIUS)))),
+            PropertyFactory.circleStrokeColor(Expression.toColor(get("color"))),
+            PropertyFactory.circleStrokeWidth(ring),
+            PropertyFactory.circleOpacity(dotOpacity),
+            PropertyFactory.circleStrokeOpacity(dotOpacity),
+        ),
+    )
+    style.addLayer(
+        SymbolLayer(discLayer, source).withFilter(filter(disc)).withProperties(
+            PropertyFactory.iconImage(get("discIcon")),
+            PropertyFactory.iconSize(Expression.interpolate(Expression.linear(), Expression.zoom(), Expression.stop(STOP_DISC_ZOOM, DISC_SIZE_AT_SWITCH), Expression.stop(16, 1f))),
+            PropertyFactory.iconAllowOverlap(true),
+            PropertyFactory.iconIgnorePlacement(true),
+            PropertyFactory.iconOpacity(base),
+            PropertyFactory.symbolSortKey(Expression.switchCase(flag("selected"), literal(1f), literal(0f))),
+        ).apply { minZoom = STOP_DISC_ZOOM },
+    )
+    // The badge sits on the upper right of the marker's edge, wherever that edge is at this zoom.
+    fun offset(outer: Float): Expression = literal(arrayOf(outer * 0.72f, -outer * 0.72f))
+    fun dotOffset(zoom: Float): Expression = Expression.switchCase(
+        saved, offset(SAVED_STOP_RADIUS + STOP_RING),
+        disc, offset(radiusAt(zoom) + RAIL_STOP_RING),
+        offset(radiusAt(zoom) + STOP_RING),
+    )
+    fun discOffset(size: Float, zoom: Float): Expression = Expression.switchCase(
+        disc, Expression.switchCase(saved, offset(SAVED_DISC_OUTER * size), offset(DISC_OUTER * size)),
+        dotOffset(zoom),
+    )
+    val justBelow = STOP_DISC_ZOOM - 0.01f
+    style.addLayer(
+        SymbolLayer("$dotLayer-alert", source).withFilter(filter(flag("alert"))).withProperties(
+            PropertyFactory.iconImage(Expression.step(Expression.zoom(), literal(STOP_ALERT_DOT), Expression.stop(STOP_DISC_ZOOM, literal(STOP_ALERT_MARK)))),
+            PropertyFactory.iconOffset(
+                Expression.interpolate(
+                    Expression.linear(), Expression.zoom(),
+                    Expression.stop(smallestZoom, dotOffset(smallestZoom)),
+                    Expression.stop(justBelow, dotOffset(justBelow)),
+                    Expression.stop(STOP_DISC_ZOOM, discOffset(DISC_SIZE_AT_SWITCH, STOP_DISC_ZOOM)),
+                    Expression.stop(16f, discOffset(1f, 16f)),
+                ),
+            ),
+            PropertyFactory.iconAllowOverlap(true),
+            PropertyFactory.iconIgnorePlacement(true),
+            PropertyFactory.iconOpacity(base),
         ),
     )
 }

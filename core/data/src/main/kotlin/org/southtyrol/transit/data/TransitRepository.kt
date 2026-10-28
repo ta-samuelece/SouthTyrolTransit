@@ -577,6 +577,28 @@ class MapRepository(
         }
     }
 
+    /**
+     * The mode each stop is drawn as ([TransportMode.dominant] of its lines), by stop id. Needs the offline
+     * timetable; online stops get none and keep the plain marker. Kept for the session: a station's
+     * modes change only with a new timetable, and then rarely.
+     */
+    suspend fun stopModes(stops: Collection<Stop>): Map<String, TransportMode> {
+        val keys = stops.map { it.stationKey.ifBlank { it.id } }.distinct()
+        val missing = modeLock.withLock { keys.filter { it !in stationModes } }
+        if (missing.isNotEmpty() && schedule.isAvailable()) {
+            val found = runCatching { schedule.stationModes(missing) }.getOrNull()
+            if (found != null) modeLock.withLock {
+                if (stationModes.size > CACHE_LIMIT) stationModes.clear()
+                // Keys without a line are remembered too, so they are not asked again.
+                missing.forEach { stationModes[it] = found[it] }
+            }
+        }
+        return modeLock.withLock { stops.mapNotNull { s -> stationModes[s.stationKey.ifBlank { s.id }]?.let { s.id to it } }.toMap() }
+    }
+
+    private val modeLock = Mutex()
+    private val stationModes = HashMap<String, TransportMode?>()
+
     suspend fun vehicles(snapshot: RealtimeSnapshot, now: Instant = clock()): List<LiveVehicle> {
         val missing = snapshot.vehicles.mapNotNull { it.routeId }.filter { it !in routes }.toSet()
         if (missing.isNotEmpty() && schedule.isAvailable()) routes = routes + runCatching { schedule.routes(missing) }.getOrDefault(emptyMap())

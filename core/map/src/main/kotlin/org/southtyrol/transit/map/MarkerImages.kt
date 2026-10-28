@@ -74,6 +74,20 @@ private fun mobilityIcon(kind: MarkerKind): ImageVector = when (kind) {
     else -> Icons.Rounded.DirectionsCar
 }
 
+/** Modes whose stations become a filled disc with the mode icon from [STOP_DISC_ZOOM]; other stops stay dots. */
+private val DiscModes = setOf(TransportMode.TRAIN, TransportMode.CABLE_CAR, TransportMode.FUNICULAR)
+
+internal fun MapMarker.isDiscStop(): Boolean = kind == MarkerKind.STOP && mode in DiscModes
+
+/** From this zoom train and ropeway stations are discs with their icon; below it, dots with a heavier ring. */
+internal const val STOP_DISC_ZOOM = 15f
+
+/** Saved stops: amber, the same as the dot layers' fill. */
+internal const val SAVED_STOP_COLOR = 0xF2B705L
+
+/** The stop alert badge: status-cancelled red with a white ring and mark, the same in every theme. */
+private const val STOP_ALERT_COLOR = 0xBA1A1AL
+
 /** Fill and glyph of the corner badge (tertiary amber with on-tertiary-container), the same in every theme. */
 private const val BADGE_COLOR = 0xF2C048L
 private const val ON_BADGE_COLOR = 0x261900L
@@ -154,6 +168,45 @@ internal class MarkerImages(private val density: Float, private val dark: Boolea
         }
         canvas.drawPath(path, paint(vehicleColor(m)))
         canvas.drawPath(path, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = android.graphics.Color.WHITE; style = Paint.Style.STROKE; strokeWidth = 2f * density; strokeJoin = Paint.Join.ROUND })
+        return bitmap
+    }
+
+    fun stopDiscKey(m: MapMarker): String = "disc|${m.mode}|${m.color ?: ""}|${m.highlighted}|${m.selected}|$dark"
+
+    /** A train or ropeway station: the mode icon on a disc in the mode's colour, ringed white (amber when saved). */
+    fun stopDisc(m: MapMarker): Bitmap {
+        val mode = m.mode ?: TransportMode.TRAIN
+        val fill = m.color ?: ModeColors.container(mode)
+        val r = if (m.selected) 14f else 11f
+        val ringW = if (m.highlighted) 3f else 2f
+        val halo = if (m.selected) 4.5f else 0f
+        val half = r + ringW + halo + 1f
+        val (bitmap, canvas) = canvas(half, half)
+        val c = half * density
+        // Selected: a white gap and an on-surface ring outside, as on vehicles and mobility points.
+        if (m.selected) {
+            canvas.drawCircle(c, c, (r + ringW + halo) * density, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = ring })
+            canvas.drawCircle(c, c, (r + ringW + 1.5f) * density, paint(0xFFFFFF))
+        }
+        canvas.drawCircle(c, c, (r + ringW) * density, paint(if (m.highlighted) SAVED_STOP_COLOR else 0xFFFFFFL))
+        canvas.drawCircle(c, c, r * density, paint(fill))
+        drawIcon(canvas, mode.icon(), c, c, if (m.selected) 20f else 16f, ColorContrast.readableOn(fill, null))
+        return bitmap
+    }
+
+    /** The alert badge on a stop's upper right edge: a red dot, with a white "!" once [withMark]. */
+    fun stopAlert(withMark: Boolean): Bitmap {
+        val r = if (withMark) 6.5f else 3.5f
+        val half = r + 2f
+        val (bitmap, canvas) = canvas(half, half)
+        val c = half * density
+        canvas.drawCircle(c, c, (r + 1.5f) * density, paint(0xFFFFFF))
+        canvas.drawCircle(c, c, r * density, paint(STOP_ALERT_COLOR))
+        if (withMark) {
+            val mark = paint(0xFFFFFF).apply { typeface = bold; textSize = 10f * density; textAlign = Paint.Align.CENTER }
+            val fm = mark.fontMetrics
+            canvas.drawText("!", c, c - (fm.ascent + fm.descent) / 2f, mark)
+        }
         return bitmap
     }
 

@@ -1,11 +1,11 @@
 ---
 type: Reference
 title: Map and design-system conventions - MapContent, styles, attribution, colours, reduced motion
-description: Map content is one immutable value re-pushed in full and marker ids must be unique across stops, vehicles and POIs; without a timetable the map's stops come from the EFA coordinate search; maps inside pages use ExpandableMapPage and enlarge where their small card sits; the one convention for showing progress along a run; the dark style falls back to the light override; four map types from one provider catalogue, Province rasters under the transit layers, credit per style and the font every style must serve; feed route colours are already used; the colour scheme (own palette by default, optional wallpaper colours and pure black); which Material 3 Expressive component to use for a choice, a hero, a grouped list and data freshness; the map's locate button is a FAB menu opened by a long press, with the layers button above it; reduced motion is read once.
+description: Map content is one immutable value pushed layer by layer and marker ids must be unique across stops, vehicles and POIs; without a timetable the map's stops come from the EFA coordinate search; maps inside pages use ExpandableMapPage and enlarge where their small card sits; the one convention for showing progress along a run; the dark style falls back to the light override; four map types from one provider catalogue, Province rasters under the transit layers, credit per style and the font every style must serve; feed route colours are already used; the colour scheme (own palette by default, optional wallpaper colours and pure black); which Material 3 Expressive component to use for a choice, a hero, a grouped list and data freshness; the map's locate button is a FAB menu opened by a long press, with the layers button above it; reduced motion is read once.
 tags: [map, maplibre, design-system, colors, accessibility]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-22T12:00:00Z"
+  at: "2026-10-29T12:00:00Z"
 status: stable
 ---
 
@@ -13,9 +13,11 @@ status: stable
 
 - Features use only the `TransitMap` wrapper (`MapLibreTransitMap` is `internal`); the wrapper also draws
   the credit line.
-- Content is one immutable `MapContent`; on every change all five GeoJSON sources are re-set. Click
-  lookup is `(content.stops + content.vehicles + content.pois).associateBy { it.id }` - **ids must be
-  unique across all three lists**. `MapMarker.color` is the stroke for stops and the fill for vehicles and
+- Content is one immutable `MapContent`, but each layer is pushed by its own effect keyed on that list
+  (lines; stops with `clusterStops`; vehicles; POIs) plus the style, so a vehicle poll re-sets only the
+  vehicle source - building features runs on the main thread. Keep lists stable (same instance when
+  unchanged) or the split buys nothing. Click lookup checks stops, then vehicles, then POIs by id -
+  **ids must be unique across all three lists**, or a stop shadows the vehicle or POI it collides with. `MapMarker.color` is the stroke for stops and the fill for vehicles and
   journey endpoints; mobility points use their kind's colour unless `color` overrides it (grey
   status-stale for anything `MobilityPoint.outOfService` says is closed).
 - **Map sheets carry no data-source line**: no "Data: ..." credit at the bottom of a stop, parking,

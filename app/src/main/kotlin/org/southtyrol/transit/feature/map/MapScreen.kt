@@ -124,6 +124,7 @@ import org.southtyrol.transit.design.TransitLoading
 import org.southtyrol.transit.design.rememberNow
 import org.southtyrol.transit.feature.common.PollWhileVisible
 import org.southtyrol.transit.feature.common.rememberLocationPermission
+import org.southtyrol.transit.feature.common.showLocationDenied
 import org.southtyrol.transit.feature.search.MapSearchBar
 import org.southtyrol.transit.feature.search.MapSearchView
 import org.southtyrol.transit.feature.search.MapSearchViewModel
@@ -385,9 +386,12 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel(), s
 
     val deniedText = stringResource(R.string.location_denied)
     val unavailableText = stringResource(R.string.location_unavailable)
+    val settingsText = stringResource(R.string.location_open_settings)
+    val context = androidx.compose.ui.platform.LocalContext.current
     LaunchedEffect(problem) {
         val p = problem ?: return@LaunchedEffect
-        snackbar.showSnackbar(if (p is LocationResult.PermissionDenied) deniedText else unavailableText)
+        if (p is LocationResult.PermissionDenied) snackbar.showLocationDenied(deniedText, settingsText, context)
+        else snackbar.showSnackbar(unavailableText)
         viewModel.clearLocationProblem()
     }
 

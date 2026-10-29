@@ -73,6 +73,7 @@
     <string name="location_denied">Die Standortberechtigung wurde nicht erteilt.</string>
     <string name="location_denied_hint">Du kannst Haltestellen weiterhin nach Namen suchen. Der Standort kann später in den Systemeinstellungen erlaubt werden.</string>
     <string name="location_unavailable">Dein Standort ist gerade nicht verfügbar.</string>
+    <string name="location_open_settings">Einstellungen öffnen</string>
 
     <string name="results_earlier">Frühere Verbindungen</string>
     <string name="results_later">Spätere Verbindungen</string>

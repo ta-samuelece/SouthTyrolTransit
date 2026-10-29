@@ -110,6 +110,7 @@ import org.southtyrol.transit.design.TransitLoading
 import org.southtyrol.transit.design.icon
 import org.southtyrol.transit.feature.common.TopLevelBar
 import org.southtyrol.transit.feature.common.rememberLocationPermission
+import org.southtyrol.transit.feature.common.showLocationDenied
 import org.southtyrol.transit.location.LocationResult
 import org.southtyrol.transit.model.Place
 import org.southtyrol.transit.model.PlaceType
@@ -142,9 +143,12 @@ fun PlannerScreen(navigator: Navigator, viewModel: PlannerViewModel = hiltViewMo
 
     val deniedText = stringResource(R.string.location_denied)
     val unavailableText = stringResource(R.string.location_unavailable)
+    val settingsText = stringResource(R.string.location_open_settings)
+    val context = androidx.compose.ui.platform.LocalContext.current
     LaunchedEffect(state.locationError) {
         val error = state.locationError ?: return@LaunchedEffect
-        snackbar.showSnackbar(if (error is LocationResult.PermissionDenied) deniedText else unavailableText)
+        if (error is LocationResult.PermissionDenied) snackbar.showLocationDenied(deniedText, settingsText, context)
+        else snackbar.showSnackbar(unavailableText)
         viewModel.clearLocationError()
     }
 

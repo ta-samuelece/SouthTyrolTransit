@@ -339,7 +339,9 @@ class WidgetConfigActivity : ComponentActivity() {
         val appWidgetId = intent?.extras?.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID) ?: AppWidgetManager.INVALID_APPWIDGET_ID
         // Backing out leaves the widget unplaced.
         setResult(RESULT_CANCELED, Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId))
-        if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) { finish(); return }
+        // Exported for the launcher, so any app can start it: only a widget of ours may be configured.
+        val owner = AppWidgetManager.getInstance(this).getAppWidgetInfo(appWidgetId)?.provider?.packageName
+        if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID || owner != packageName) { finish(); return }
         setContent {
             val prefs = settings.settings.collectAsStateWithLifecycle(org.southtyrol.transit.data.UserSettings()).value
             val dark = when (prefs.theme) { ThemeMode.SYSTEM -> isSystemInDarkTheme(); ThemeMode.LIGHT -> false; ThemeMode.DARK -> true }

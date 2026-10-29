@@ -298,7 +298,11 @@ private fun androidx.compose.foundation.lazy.LazyListScope.suggestions(
         }
         NearbyState.Locating -> item { TransitLoading() }
         NearbyState.PermissionDenied -> item {
-            MessageState(stringResource(R.string.location_denied), stringResource(R.string.location_denied_hint), icon = Icons.Rounded.LocationOff)
+            val context = androidx.compose.ui.platform.LocalContext.current
+            MessageState(
+                stringResource(R.string.location_denied), stringResource(R.string.location_denied_hint), icon = Icons.Rounded.LocationOff,
+                action = stringResource(R.string.location_open_settings), onAction = { org.southtyrol.transit.feature.common.openAppSettings(context) },
+            )
         }
         NearbyState.Unavailable -> item { MessageState(stringResource(R.string.location_unavailable), icon = Icons.Rounded.LocationOff, action = stringResource(org.southtyrol.transit.design.R.string.ds_retry), onAction = retry) }
         is NearbyState.Error -> item { StatusBanner(Format.error(nearby.error), kind = BannerKind.ERROR) }

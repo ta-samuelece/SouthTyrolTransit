@@ -322,9 +322,12 @@ fun MapPickerDialog(
     val snackbar = remember { androidx.compose.material3.SnackbarHostState() }
     val deniedText = stringResource(R.string.location_denied)
     val unavailableText = stringResource(R.string.location_unavailable)
+    val settingsText = stringResource(R.string.location_open_settings)
+    val context = androidx.compose.ui.platform.LocalContext.current
     LaunchedEffect(problem) {
         val p = problem ?: return@LaunchedEffect
-        snackbar.showSnackbar(if (p is org.southtyrol.transit.location.LocationResult.PermissionDenied) deniedText else unavailableText)
+        if (p is org.southtyrol.transit.location.LocationResult.PermissionDenied) snackbar.showLocationDenied(deniedText, settingsText, context)
+        else snackbar.showSnackbar(unavailableText)
         viewModel.clearLocationProblem()
     }
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {

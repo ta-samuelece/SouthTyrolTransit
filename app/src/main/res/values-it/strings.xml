@@ -73,6 +73,7 @@
     <string name="location_denied">L\'autorizzazione alla posizione non è stata concessa.</string>
     <string name="location_denied_hint">Puoi comunque cercare le fermate per nome. La posizione può essere consentita più tardi nelle impostazioni di sistema.</string>
     <string name="location_unavailable">La tua posizione non è al momento disponibile.</string>
+    <string name="location_open_settings">Apri impostazioni</string>
 
     <string name="results_earlier">Collegamenti precedenti</string>
     <string name="results_later">Collegamenti successivi</string>

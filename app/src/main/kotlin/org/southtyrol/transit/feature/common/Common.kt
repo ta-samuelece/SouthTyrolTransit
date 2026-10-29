@@ -101,6 +101,22 @@ fun rememberLocationPermission(onResult: (Boolean) -> Unit): () -> Unit {
     return { launcher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)) }
 }
 
+/** Opens this app's page in the system settings, where a permission can be allowed after all. */
+fun openAppSettings(context: android.content.Context) {
+    context.startActivity(
+        android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, android.net.Uri.fromParts("package", context.packageName, null))
+            .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK),
+    )
+}
+
+/**
+ * "Location was not granted", with the way to the app's settings: once location has been refused twice,
+ * Android no longer asks, and the settings are the only place left to allow it.
+ */
+suspend fun androidx.compose.material3.SnackbarHostState.showLocationDenied(text: String, settingsLabel: String, context: android.content.Context) {
+    if (showSnackbar(text, actionLabel = settingsLabel, withDismissAction = true) == androidx.compose.material3.SnackbarResult.ActionPerformed) openAppSettings(context)
+}
+
 /**
  * Top bar of a tab's main view. Settings is not reached from here: it sits in the menu behind the
  * app mark in the map's search bar.

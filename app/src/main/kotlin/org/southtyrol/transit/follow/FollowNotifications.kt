@@ -1,5 +1,6 @@
 package org.southtyrol.transit.follow
 
+import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
@@ -10,6 +11,7 @@ import android.os.Build
 import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.drawable.IconCompat
@@ -18,6 +20,8 @@ import org.southtyrol.transit.R
 import org.southtyrol.transit.design.ModeColors
 import org.southtyrol.transit.model.Journey
 import org.southtyrol.transit.model.JourneyFollow
+import org.southtyrol.transit.model.RideFollow
+import org.southtyrol.transit.model.RideStage
 import org.southtyrol.transit.model.StepKind
 import org.southtyrol.transit.model.TransportMode
 import org.southtyrol.transit.work.Notifications
@@ -33,21 +37,9 @@ object FollowNotifications {
     /** [session] null: the placeholder the service shows while it shuts down. */
     fun build(context: Context, session: FollowSession?, view: FollowView?, now: Instant = Instant.now()): Notification {
         val res = context.resources
-        val builder = NotificationCompat.Builder(context, Notifications.CHANNEL_FOLLOW)
-            // Until there is a step: the route of the app mark, as on the always-on display.
-            .setSmallIcon(R.drawable.ic_app_mark)
-            .setOngoing(true)
-            .setOnlyAlertOnce(true)
-            .setCategory(NotificationCompat.CATEGORY_NAVIGATION)
-            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
-            .setContentIntent(openIntent(context))
-            .setContentTitle(res.getString(R.string.follow_title))
+        val builder = base(context).setContentTitle(res.getString(R.string.follow_title))
         if (session == null) return builder.build()
-        builder.addAction(0, res.getString(R.string.follow_n_stop), stopIntent(context))
-            // Android 14+ lets the user swipe it away (only media, calls and a few system apps can forbid
-            // that): the service posts it again at once, until the journey ends or Stop is tapped.
-            .setDeleteIntent(serviceIntent(context, REQUEST_DISMISSED, FollowJourneyService.ACTION_DISMISSED))
+        withStop(context, builder)
         if (view == null) {
             val journey = session.journey
             return builder
@@ -71,6 +63,81 @@ object FollowNotifications {
         else builder.setStyle(NotificationCompat.BigTextStyle().bigText(text)).setProgress(total, elapsed, false)
         return builder.build()
     }
+
+    /**
+     * The ongoing notification of a followed ride: where the run is (the next stop, the stop it stands at,
+     * its departure), a Stop action, and a tap that opens its trip. On Android 16+ a Live Update with one
+     * segment in the mode's colour, the vehicle riding it, and the chip counting down to the next stop.
+     */
+    fun ride(context: Context, ride: RideSession, view: RideView?, now: Instant = Instant.now()): Notification {
+        val res = context.resources
+        val builder = withStop(context, base(context))
+            .setSmallIcon(if (view?.step?.stage == RideStage.ARRIVED) R.drawable.ic_follow_arrived else modeIcon(ride.mode))
+            .setColor(modeColor(ride.mode))
+            .setContentTitle(FollowText.rideTitle(res, ride, view))
+        if (view == null) return builder.build()
+        val text = FollowText.rideText(res, ride, view, now)
+        val total = RideFollow.totalSeconds(view.detail).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+        val elapsed = RideFollow.elapsedSeconds(view.detail, now).toInt()
+        builder
+            .setContentText(text)
+            .setSubText(FollowText.rideSource(res, view))
+            .setShortCriticalText(FollowText.chip(res, view.step.at, now))
+            .setRequestPromotedOngoing(true)
+        if (Build.VERSION.SDK_INT >= 36) {
+            val style = NotificationCompat.ProgressStyle()
+                .setStyledByProgress(true)
+                .setProgressTrackerIcon(badge(context, modeIcon(ride.mode), modeColor(ride.mode)))
+                .addProgressSegment(NotificationCompat.ProgressStyle.Segment(total).setColor(modeColor(ride.mode)))
+                .setProgress(elapsed)
+            builder.setStyle(style)
+        } else {
+            builder.setStyle(NotificationCompat.BigTextStyle().bigText(text)).setProgress(total, elapsed, false)
+        }
+        return builder.build()
+    }
+
+    /** The notice a ride leaves once following ended by itself: it arrived, or it was cancelled. Dismissable. */
+    @SuppressLint("MissingPermission")
+    fun postRideEnded(context: Context, ride: RideSession, view: RideView) {
+        if (!Notifications.canPost(context)) return
+        val res = context.resources
+        val text = FollowText.rideText(res, ride, view, Instant.now()) + " " + res.getString(R.string.ride_n_ended)
+        val notification = NotificationCompat.Builder(context, Notifications.CHANNEL_FOLLOW)
+            .setSmallIcon(if (view.step.stage == RideStage.ARRIVED) R.drawable.ic_follow_arrived else modeIcon(ride.mode))
+            .setColor(modeColor(ride.mode))
+            .setContentTitle(FollowText.rideTitle(res, ride, view))
+            .setContentText(text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setOnlyAlertOnce(true)
+            .setAutoCancel(true)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setContentIntent(Notifications.openAppIntent(context))
+            .build()
+        try {
+            NotificationManagerCompat.from(context).notify(Notifications.ID_FOLLOW_ENDED, notification)
+        } catch (_: SecurityException) {
+            // Notification permission revoked meanwhile.
+        }
+    }
+
+    /** What every ongoing follow notification shares. Until there is a step: the route of the app mark, as on the always-on display. */
+    private fun base(context: Context): NotificationCompat.Builder = NotificationCompat.Builder(context, Notifications.CHANNEL_FOLLOW)
+        .setSmallIcon(R.drawable.ic_app_mark)
+        .setOngoing(true)
+        .setOnlyAlertOnce(true)
+        .setCategory(NotificationCompat.CATEGORY_NAVIGATION)
+        .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+        .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
+        .setContentIntent(openIntent(context))
+
+    /**
+     * The Stop action. Android 14+ lets the user swipe the notification away (only media, calls and a few
+     * system apps can forbid that): the service posts it again at once, until following ends or Stop is tapped.
+     */
+    private fun withStop(context: Context, builder: NotificationCompat.Builder): NotificationCompat.Builder = builder
+        .addAction(0, context.getString(R.string.follow_n_stop), stopIntent(context))
+        .setDeleteIntent(serviceIntent(context, REQUEST_DISMISSED, FollowJourneyService.ACTION_DISMISSED))
 
     @DrawableRes
     private fun stepIcon(view: FollowView): Int = when {

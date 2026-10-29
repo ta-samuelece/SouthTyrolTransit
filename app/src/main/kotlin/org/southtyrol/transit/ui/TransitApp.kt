@@ -26,7 +26,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import org.southtyrol.transit.feature.follow.FollowViewModel
 import org.southtyrol.transit.feature.follow.JourneyStrip
+import org.southtyrol.transit.feature.follow.RideStrip
 import org.southtyrol.transit.feature.follow.journeyStripColor
+import org.southtyrol.transit.feature.follow.rideStripColor
+import org.southtyrol.transit.follow.FollowSession
+import org.southtyrol.transit.follow.FollowView
+import org.southtyrol.transit.follow.Followed
+import org.southtyrol.transit.follow.RideSession
+import org.southtyrol.transit.follow.RideView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.draw.clip
 import androidx.compose.animation.core.animateDp
@@ -173,11 +180,20 @@ fun TransitApp(
         navigator.stop(key, name)
         onStopOpened()
     }
-    // Opened from the followed journey's notification: show it under the Plan tab, where journeys start.
+    // The followed journey or ride; its strip is drawn below.
+    val follow = hiltViewModel<FollowViewModel>()
+    // Opened from the followed journey's notification: show it under the Plan tab, where journeys start; a
+    // followed ride's notification opens its trip under the Map tab, where vehicles are.
     LaunchedEffect(openFollow) {
         if (!openFollow) return@LaunchedEffect
-        navigator.select(TopLevel.PLAN)
-        navigator.follow()
+        val ride = follow.ride.value
+        if (ride != null) {
+            navigator.select(TopLevel.MAP)
+            navigator.trip(ride.tripId, ride.serviceDate.toString(), ride.liveRef)
+        } else {
+            navigator.select(TopLevel.PLAN)
+            navigator.follow()
+        }
         onFollowOpened()
     }
     val reduced = LocalReducedMotion.current
@@ -220,12 +236,21 @@ fun TransitApp(
     // Offers a newer GitHub release (if any) on start; also shows download progress for manual updates.
     org.southtyrol.transit.update.UpdatePrompt()
 
-    // The followed journey, minimised: a strip under the bar on every screen but its own and the map search.
-    val follow = hiltViewModel<FollowViewModel>()
-    val followed by follow.session.collectAsStateWithLifecycle()
+    // The followed journey or ride, minimised: a strip under the bar on every screen but its own (the
+    // Following screen, the ride's trip) and the map search.
+    val followed by follow.followed.collectAsStateWithLifecycle()
     val followView by follow.view.collectAsStateWithLifecycle()
-    val showStrip = followed != null && !hideBar && entry?.destination?.hasRoute(FollowRoute::class) != true
-    val stripColor = journeyStripColor(followView)
+    val rideView by follow.rideView.collectAsStateWithLifecycle()
+    // The last state stays while the strip slides away after following ended.
+    val strip = remember { mutableStateOf<StripState?>(null) }
+    followed?.let { strip.value = StripState(it, followView, rideView) }
+    val onOwnScreen = when (val f = followed) {
+        is FollowSession -> entry?.destination?.hasRoute(FollowRoute::class) == true
+        is RideSession -> entry?.takeIf { it.destination.hasRoute(TripRoute::class) }?.toRoute<TripRoute>()?.let { f.isRun(it.tripId, it.serviceDate) } == true
+        null -> false
+    }
+    val showStrip = followed != null && !hideBar && !onOwnScreen
+    val stripColor = strip.value.let { if (it?.followed is RideSession) rideStripColor(it.rideView) else journeyStripColor(it?.journeyView) }
     Column(
         // Behind the bar's rounded bottom corners the strip's colour shows: its "lips".
         Modifier.fillMaxSize().then(if (showStrip) Modifier.background(stripColor) else Modifier),
@@ -280,13 +305,17 @@ fun TransitApp(
             enter = if (reduced) EnterTransition.None else expandVertically(tween(250)) + fadeIn(tween(250)),
             exit = if (reduced) ExitTransition.None else shrinkVertically(tween(200)) + fadeOut(tween(200)),
         ) {
-            // The last state stays while it slides away after the journey ended.
-            val last = remember { mutableStateOf(followView) }
-            if (followView != null) last.value = followView
-            JourneyStrip(last.value, onOpen = navigator::follow)
+            val shown = strip.value
+            when (val f = shown?.followed) {
+                is RideSession -> RideStrip(f, shown.rideView, onOpen = { navigator.trip(f.tripId, f.serviceDate.toString(), f.liveRef) })
+                else -> JourneyStrip(shown?.journeyView, onOpen = navigator::follow)
+            }
         }
     }
 }
+
+/** What the follow strip shows: what is followed and its latest view. */
+private data class StripState(val followed: Followed, val journeyView: FollowView?, val rideView: RideView?)
 
 private const val BACK_MS = 350
 

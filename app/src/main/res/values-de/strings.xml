@@ -590,4 +590,30 @@
     </plurals>
     <string name="results_show_hidden">Anzeigen</string>
     <string name="results_hide_no_bikes">Ausblenden</string>
+    <!-- Following a single ride -->
+    <string name="ride_follow">Fahrt verfolgen</string>
+    <string name="ride_follow_this">Diese Fahrt verfolgen</string>
+    <string name="ride_started">%1$s nach %2$s wird verfolgt</string>
+    <string name="ride_undo">Rückgängig</string>
+    <string name="ride_replace_title">Stattdessen %s verfolgen?</string>
+    <string name="ride_replace_journey">Du verfolgst eine Verbindung nach %s. Es kann nur eine Verbindung oder Fahrt gleichzeitig verfolgt werden, daher wird sie beendet.</string>
+    <string name="ride_replace_ride">Du verfolgst %s. Es kann nur eine Verbindung oder Fahrt gleichzeitig verfolgt werden, daher wird sie beendet.</string>
+    <string name="ride_replace_confirm">%s verfolgen</string>
+    <string name="ride_replace_keep">Beibehalten</string>
+    <string name="ride_card_leaves">Wird verfolgt · Abfahrt ab</string>
+    <string name="ride_card_next">Wird verfolgt · nächste Haltestelle</string>
+    <string name="ride_card_at">Wird verfolgt · an der Haltestelle</string>
+    <string name="ride_card_arrived">Wird verfolgt · Endhaltestelle erreicht</string>
+    <string name="ride_last_stop">Endhaltestelle %s</string>
+    <string name="ride_n_next">Nächste Haltestelle %1$s %2$s</string>
+    <string name="ride_n_at">An %1$s, Abfahrt %2$s</string>
+    <string name="ride_n_reached">%1$s hat %2$s erreicht</string>
+    <string name="ride_n_arrived">Angekommen um %s.</string>
+    <string name="ride_n_last_seen">Zuletzt gesehen bei %s</string>
+    <string name="ride_n_ended">Wird nicht mehr verfolgt.</string>
+    <string name="ride_strip_next">Nächste: %s</string>
+    <string name="ride_strip_at">An %s</string>
+    <string name="ride_strip_reached">%s erreicht</string>
+    <string name="ride_strip_last_seen">Zuletzt gesehen bei %s</string>
+    <string name="ride_estimated">geschätzt</string>
 </resources>

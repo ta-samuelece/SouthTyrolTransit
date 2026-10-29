@@ -99,6 +99,9 @@ import javax.inject.Inject
 class FollowViewModel @Inject constructor(active: ActiveJourney, private val controller: FollowController) : ViewModel() {
     val session = active.session
     val view = active.view
+    val followed = active.followed
+    val ride = active.ride
+    val rideView = active.rideView
 
     fun stop() = controller.stop()
 

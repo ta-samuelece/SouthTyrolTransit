@@ -55,6 +55,8 @@ object Notifications {
     const val CHANNEL_FOLLOW = "journey"
     const val ID_SYNC = 1
     const val ID_FOLLOW = 2
+    /** The notice a followed ride leaves when it arrives or is cancelled. */
+    const val ID_FOLLOW_ENDED = 3
 
     fun createChannels(context: Context) {
         val manager = context.getSystemService(NotificationManager::class.java)

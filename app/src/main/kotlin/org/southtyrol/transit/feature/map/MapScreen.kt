@@ -43,6 +43,8 @@ import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.FilledTonalIconToggleButton
+import org.southtyrol.transit.feature.follow.canFollow
+import org.southtyrol.transit.feature.follow.rideSession
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
@@ -560,6 +562,8 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel(), s
         onDismiss = { layersOpen = false },
     )
 
+    // A bus picked on the map can be followed; once it is, the sheet closes and the strip shows it.
+    val follower = org.southtyrol.transit.feature.follow.rememberRideFollower(onStarted = { viewModel.clearSelection() })
     selection?.let { sel ->
         // Fully expanded only: the stop sheet grows when its departures arrive, and a partially expanded
         // anchor that moves under the sheet made it collapse and dismiss itself.
@@ -567,7 +571,10 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel(), s
         ModalBottomSheet(onDismissRequest = viewModel::clearSelection, sheetState = sheetState) {
             Column(Modifier.padding(start = 24.dp, end = 24.dp, bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 when (sel) {
-                    is MapSelection.VehicleSel -> VehicleSheet(sel, now, onTrip = { id, date -> viewModel.clearSelection(); navigator.trip(id, date) })
+                    is MapSelection.VehicleSel -> VehicleSheet(
+                        sel, now, onTrip = { id, date -> viewModel.clearSelection(); navigator.trip(id, date) },
+                        followed = follower.ride, onFollow = follower.request,
+                    )
                     is MapSelection.StopSel -> {
                         Text(sel.stop.name, style = MaterialTheme.typography.headlineSmall)
                         val next = sel.departures
@@ -687,7 +694,13 @@ private fun LocateFabMenu(
 
 /** Compact trip sheet: line, destination, next stop, delay and data freshness. */
 @Composable
-private fun VehicleSheet(sel: MapSelection.VehicleSel, now: Instant, onTrip: (String, String) -> Unit) {
+private fun VehicleSheet(
+    sel: MapSelection.VehicleSel,
+    now: Instant,
+    onTrip: (String, String) -> Unit,
+    followed: org.southtyrol.transit.follow.RideSession?,
+    onFollow: (org.southtyrol.transit.follow.RideSession) -> Unit,
+) {
     val v = sel.vehicle
     val mode = v.route?.mode ?: TransportMode.BUS
     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -706,7 +719,19 @@ private fun VehicleSheet(sel: MapSelection.VehicleSel, now: Instant, onTrip: (St
                 Text(stringResource(R.string.map_next_stop, next.stop.name, Format.time(next.predictedDeparture ?: next.scheduledDeparture)), style = MaterialTheme.typography.bodyLarge)
                 DelayLabel(next.predictedDeparture?.let { java.time.Duration.between(next.scheduledDeparture, it).seconds }, next.state, sel.trip.freshness)
             }
-            OutlinedButton(onClick = { onTrip(sel.trip.trip.id, sel.trip.serviceDate.toString()) }) { Text(stringResource(R.string.map_open_trip)) }
+            androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                val trip = sel.trip
+                val isFollowed = followed?.isRun(trip.trip.id, trip.serviceDate.toString()) == true
+                if (isFollowed || trip.canFollow(now)) androidx.compose.material3.FilledTonalButton(
+                    onClick = { onFollow(trip.rideSession()) }, enabled = !isFollowed,
+                    modifier = Modifier.heightIn(min = 48.dp),
+                ) {
+                    Icon(androidx.compose.material.icons.Icons.Rounded.PushPin, contentDescription = null, modifier = Modifier.size(androidx.compose.material3.ButtonDefaults.IconSize))
+                    Spacer(Modifier.width(androidx.compose.material3.ButtonDefaults.IconSpacing))
+                    Text(stringResource(if (isFollowed) R.string.follow_following else R.string.ride_follow_this))
+                }
+                OutlinedButton(onClick = { onTrip(trip.trip.id, trip.serviceDate.toString()) }, modifier = Modifier.heightIn(min = 48.dp)) { Text(stringResource(R.string.map_open_trip)) }
+            }
         }
         else -> Text(stringResource(R.string.map_trip_unknown), style = MaterialTheme.typography.bodyMedium)
     }

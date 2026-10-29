@@ -604,4 +604,30 @@
     </plurals>
     <string name="results_show_hidden">Show</string>
     <string name="results_hide_no_bikes">Hide</string>
+    <!-- Following a single ride -->
+    <string name="ride_follow">Follow ride</string>
+    <string name="ride_follow_this">Follow this ride</string>
+    <string name="ride_started">Following %1$s until %2$s</string>
+    <string name="ride_undo">Undo</string>
+    <string name="ride_replace_title">Follow %s instead?</string>
+    <string name="ride_replace_journey">You are following a journey to %s. Only one journey or ride can be followed at a time, so it will stop.</string>
+    <string name="ride_replace_ride">You are following %s. Only one journey or ride can be followed at a time, so it will stop.</string>
+    <string name="ride_replace_confirm">Follow %s</string>
+    <string name="ride_replace_keep">Keep current</string>
+    <string name="ride_card_leaves">Following · leaves from</string>
+    <string name="ride_card_next">Following · next stop</string>
+    <string name="ride_card_at">Following · at the stop</string>
+    <string name="ride_card_arrived">Following · reached the last stop</string>
+    <string name="ride_last_stop">Last stop %s</string>
+    <string name="ride_n_next">Next stop %1$s %2$s</string>
+    <string name="ride_n_at">At %1$s, leaves %2$s</string>
+    <string name="ride_n_reached">%1$s reached %2$s</string>
+    <string name="ride_n_arrived">Arrived at %s.</string>
+    <string name="ride_n_last_seen">Last seen near %s</string>
+    <string name="ride_n_ended">No longer followed.</string>
+    <string name="ride_strip_next">Next: %s</string>
+    <string name="ride_strip_at">At %s</string>
+    <string name="ride_strip_reached">Reached %s</string>
+    <string name="ride_strip_last_seen">Last seen near %s</string>
+    <string name="ride_estimated">estimated</string>
 </resources>

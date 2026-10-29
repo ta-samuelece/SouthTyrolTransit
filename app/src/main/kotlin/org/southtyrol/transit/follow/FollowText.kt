@@ -7,22 +7,29 @@ import org.southtyrol.transit.model.Journey
 import org.southtyrol.transit.model.Leg
 import org.southtyrol.transit.model.LineNames
 import org.southtyrol.transit.model.OffPlan
+import org.southtyrol.transit.model.RideStage
 import org.southtyrol.transit.model.StepKind
+import org.southtyrol.transit.model.TransportMode
 import java.time.Instant
 import org.southtyrol.transit.design.R as DesignR
 
 /**
- * The words of a followed journey, shared by the notification and the screen so both always say the
- * same. Plain [Resources], no Compose: the notification is built in the service.
+ * The words of a followed journey or ride, shared by the notification, the strip and the screens so all
+ * always say the same. Plain [Resources], no Compose: the notification is built in the service.
  */
 object FollowText {
     fun time(res: Resources, instant: Instant): String = Format.time(instant, res.configuration.locales[0])
 
     /** "Bus 201", "Train R"; the mode alone when the line has no short name. */
-    fun line(res: Resources, leg: Leg): String {
-        val mode = res.getString(Format.modeName(leg.mode))
-        val name = LineNames.badge(leg.line, leg.mode)
-        return if (name.isBlank()) mode else res.getString(R.string.follow_line, mode, name)
+    fun line(res: Resources, leg: Leg): String = line(res, leg.mode, leg.line)
+
+    /** [line] for a followed ride. */
+    fun line(res: Resources, ride: RideSession): String = line(res, ride.mode, ride.line)
+
+    private fun line(res: Resources, mode: TransportMode, line: String): String {
+        val modeName = res.getString(Format.modeName(mode))
+        val name = LineNames.badge(line, mode)
+        return if (name.isBlank()) modeName else res.getString(R.string.follow_line, modeName, name)
     }
 
     /** "in 6 min", or "now" once due. */
@@ -85,6 +92,52 @@ object FollowText {
             StepKind.ARRIVED -> res.getString(R.string.follow_arrived)
         }
     }
+
+    /** "Bus 201 to Meran/Merano"; "Bus 201 reached Meran/Merano" once there. */
+    fun rideTitle(res: Resources, ride: RideSession, view: RideView?): String {
+        val line = line(res, ride)
+        val end = view?.detail?.stops?.lastOrNull()?.stop?.name
+        if (view?.step?.stage == RideStage.ARRIVED && end != null) return res.getString(R.string.ride_n_reached, line, end)
+        return res.getString(R.string.follow_n_line_to, line, ride.headsign.ifBlank { end.orEmpty() })
+    }
+
+    fun rideText(res: Resources, ride: RideSession, view: RideView, now: Instant): String {
+        val step = view.step
+        val name = view.detail.stops[step.stopIndex].stop.name
+        return when (step.stage) {
+            RideStage.WAITING -> res.getString(R.string.follow_n_leaves, name, inTime(res, step.at, now))
+            RideStage.MOVING -> if (view.stale) res.getString(R.string.ride_n_last_seen, lastSeen(view)) else res.getString(R.string.ride_n_next, name, inTime(res, step.at, now))
+            RideStage.AT_STOP -> res.getString(R.string.ride_n_at, name, inTime(res, step.at, now))
+            RideStage.ARRIVED -> res.getString(R.string.ride_n_arrived, time(res, step.at))
+            RideStage.CANCELLED -> res.getString(R.string.follow_off_cancelled, line(res, ride), time(res, step.at))
+        }
+    }
+
+    /** The in-app strip's one line for a ride, without the countdown it shows beside it. */
+    fun rideStrip(res: Resources, ride: RideSession, view: RideView): String {
+        val step = view.step
+        val name = view.detail.stops[step.stopIndex].stop.name
+        val estimated = if (view.estimated && step.stage == RideStage.MOVING) " · " + res.getString(R.string.ride_estimated) else ""
+        return when (step.stage) {
+            RideStage.WAITING -> res.getString(R.string.follow_strip_leaves, name)
+            RideStage.MOVING -> if (view.stale) res.getString(R.string.ride_strip_last_seen, lastSeen(view)) else res.getString(R.string.ride_strip_next, name) + estimated
+            RideStage.AT_STOP -> res.getString(R.string.ride_strip_at, name)
+            RideStage.ARRIVED -> res.getString(R.string.ride_strip_reached, name)
+            RideStage.CANCELLED -> res.getString(R.string.follow_off_cancelled, line(res, ride), time(res, step.at))
+        }
+    }
+
+    /** "Live", "Scheduled" or "Not current", as the freshness pill says. */
+    fun rideSource(res: Resources, view: RideView): String = res.getString(
+        when {
+            view.stale -> DesignR.string.ds_stale
+            view.live -> DesignR.string.ds_live
+            else -> DesignR.string.ds_scheduled
+        },
+    )
+
+    /** The call a stale fix last placed the vehicle after. */
+    private fun lastSeen(view: RideView): String = view.detail.stops[(view.step.stopIndex - 1).coerceAtLeast(0)].stop.name
 
     fun offPlan(res: Resources, journey: Journey, off: OffPlan): String {
         val leg = journey.legs[off.legIndex]

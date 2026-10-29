@@ -34,6 +34,7 @@ import androidx.compose.material.icons.rounded.LocalParking
 import androidx.compose.material.icons.rounded.MyLocation
 import androidx.compose.material.icons.rounded.PedalBike
 import androidx.compose.material.icons.rounded.Place
+import androidx.compose.material.icons.rounded.PushPin
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -726,7 +727,7 @@ private fun VehicleSheet(
                     onClick = { onFollow(trip.rideSession()) }, enabled = !isFollowed,
                     modifier = Modifier.heightIn(min = 48.dp),
                 ) {
-                    Icon(androidx.compose.material.icons.Icons.Rounded.PushPin, contentDescription = null, modifier = Modifier.size(androidx.compose.material3.ButtonDefaults.IconSize))
+                    Icon(Icons.Rounded.PushPin, contentDescription = null, modifier = Modifier.size(androidx.compose.material3.ButtonDefaults.IconSize))
                     Spacer(Modifier.width(androidx.compose.material3.ButtonDefaults.IconSpacing))
                     Text(stringResource(if (isFollowed) R.string.follow_following else R.string.ride_follow_this))
                 }

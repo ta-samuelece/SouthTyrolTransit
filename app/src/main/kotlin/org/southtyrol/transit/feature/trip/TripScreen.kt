@@ -26,6 +26,17 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.remember
 import org.southtyrol.transit.design.icon
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.PushPin
+import org.southtyrol.transit.feature.follow.FollowRideViewModel
+import org.southtyrol.transit.feature.follow.FollowingRideCard
+import org.southtyrol.transit.feature.follow.canFollow
+import org.southtyrol.transit.feature.follow.rememberRideFollower
+import org.southtyrol.transit.feature.follow.rideSession
+import org.southtyrol.transit.follow.FollowText
+import org.southtyrol.transit.follow.RideSession
+import org.southtyrol.transit.follow.RideView
 import androidx.compose.material.icons.rounded.CloseFullscreen
 import androidx.compose.material.icons.rounded.OpenInFull
 import androidx.compose.material.icons.rounded.ExpandMore
@@ -203,7 +214,50 @@ fun TripScreen(navigator: Navigator, tripId: String, serviceDate: String, liveRe
     val state by viewModel.state.collectAsStateWithLifecycle()
     val headerNow = rememberNow()
     PollWhileVisible(20_000) { viewModel.poll() }
+    // Following this run: a card on top, Stop at the bottom; else a button to start, with Undo after it.
+    val res = androidx.compose.ui.platform.LocalResources.current
+    val snackbar = remember { androidx.compose.material3.SnackbarHostState() }
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    val followModel = hiltViewModel<FollowRideViewModel>()
+    val undo = stringResource(R.string.ride_undo)
+    val follower = rememberRideFollower(
+        onStarted = { ride ->
+            scope.launch {
+                val result = snackbar.showSnackbar(
+                    res.getString(R.string.ride_started, FollowText.line(res, ride), ride.headsign), actionLabel = undo,
+                    duration = androidx.compose.material3.SnackbarDuration.Short,
+                )
+                if (result == androidx.compose.material3.SnackbarResult.ActionPerformed) followModel.stop()
+            }
+        },
+        viewModel = followModel,
+    )
+    val followed = follower.ride?.takeIf { it.isRun(tripId, serviceDate) }
+    val followedView = followModel.rideView.collectAsStateWithLifecycle().value?.takeIf { followed != null }
+    val ready = (state as? TripLoad.Ready)?.detail
     Scaffold(
+        snackbarHost = { androidx.compose.material3.SnackbarHost(snackbar) },
+        floatingActionButton = {
+            if (ready != null && followed == null && ready.canFollow(headerNow)) androidx.compose.material3.ExtendedFloatingActionButton(
+                onClick = { follower.request(ready.rideSession(liveRef)) },
+                icon = { Icon(Icons.Rounded.PushPin, contentDescription = null) },
+                text = { Text(stringResource(R.string.ride_follow)) },
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            )
+        },
+        bottomBar = {
+            if (followed != null) Surface(color = MaterialTheme.colorScheme.surface) {
+                androidx.compose.material3.OutlinedButton(
+                    onClick = follower.stop,
+                    modifier = Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 16.dp, vertical = 12.dp).heightIn(min = 48.dp),
+                ) {
+                    Icon(Icons.Rounded.Close, contentDescription = null, modifier = Modifier.size(androidx.compose.material3.ButtonDefaults.IconSize))
+                    Spacer(Modifier.width(androidx.compose.material3.ButtonDefaults.IconSpacing))
+                    Text(stringResource(R.string.follow_stop))
+                }
+            }
+        },
         topBar = {
             TopAppBar(
                 title = {
@@ -226,14 +280,22 @@ fun TripScreen(navigator: Navigator, tripId: String, serviceDate: String, liveRe
                 TripLoad.Loading -> TransitLoading(contained = true)
                 TripLoad.NotFound -> MessageState(stringResource(R.string.trip_not_found))
                 is TripLoad.Error -> ErrorState(s.error, onRetry = { viewModel.load() })
-                is TripLoad.Ready -> TripContent(s.detail, navigator, viewModel.tripAlerts.collectAsStateWithLifecycle().value)
+                is TripLoad.Ready -> TripContent(
+                    s.detail, navigator, viewModel.tripAlerts.collectAsStateWithLifecycle().value,
+                    following = followed?.let { ride -> followedView?.let { ride to it } },
+                )
             }
         }
     }
 }
 
 @Composable
-private fun TripContent(detail: TripDetail, navigator: Navigator, alerts: List<org.southtyrol.transit.model.ServiceAlert>) {
+private fun TripContent(
+    detail: TripDetail,
+    navigator: Navigator,
+    alerts: List<org.southtyrol.transit.model.ServiceAlert>,
+    following: Pair<RideSession, RideView>? = null,
+) {
     val now = rememberNow()
     val dark = LocalDarkTheme.current
     val color = detail.route.color ?: ModeColors.container(detail.route.mode)
@@ -241,10 +303,7 @@ private fun TripContent(detail: TripDetail, navigator: Navigator, alerts: List<o
     val vehicleFreshness = vehicle?.let { FreshnessPolicy.vehicle(it.timestamp, now) }
     // Where the bus is: its GPS fix placed on the run when the vehicle feed has one, otherwise estimated
     // from the stop times.
-    val position = remember(detail, now.epochSecond / 10) {
-        vehicle?.let { org.southtyrol.transit.model.RunPositions.locate(detail.stops, detail.shape, it.point, now) }
-            ?: org.southtyrol.transit.model.RunPositions.estimate(detail.stops, detail.shape, now)
-    }
+    val position = remember(detail, now.epochSecond / 10) { org.southtyrol.transit.model.RideFollow.position(detail, now) }
     // The next stop: where the GPS fix puts the bus (the stop it stands at counts), otherwise the first
     // one whose (predicted) departure is still ahead.
     val nextIndex = if (position != null && !position.estimated) position.nextIndex - (if (position.atStop) 1 else 0)
@@ -260,7 +319,8 @@ private fun TripContent(detail: TripDetail, navigator: Navigator, alerts: List<o
     val listState = androidx.compose.foundation.lazy.rememberLazyListState()
     // Bring the next stop into view once, below the header (and the compact map).
     androidx.compose.runtime.LaunchedEffect(detail.trip.id) {
-        if (nextIndex > 3) listState.scrollToItem(nextIndex + (if (hasMap) 2 else 1) - 1)
+        // Not while following: the card on top already says where it is.
+        if (nextIndex > 3 && following == null) listState.scrollToItem(nextIndex + (if (hasMap) 2 else 1) - 1)
     }
     val mapContent = remember(detail, position, color, nextIndex) {
         // Same split as the timeline: passed calls and the stretch already travelled are dimmed.
@@ -301,7 +361,12 @@ private fun TripContent(detail: TripDetail, navigator: Navigator, alerts: List<o
             if (alerts.isNotEmpty()) TripNoticesCard(alerts, now, Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp).heightIn(max = 480.dp))
         },
     ) { listModifier ->
-    LazyColumn(state = listState, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(0.dp), modifier = listModifier) {
+    // Room below the last stop for the Follow button, which floats over the list.
+    val bottom = if (following == null && detail.canFollow(now)) 88.dp else 16.dp
+    LazyColumn(state = listState, contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = bottom), verticalArrangement = Arrangement.spacedBy(0.dp), modifier = listModifier) {
+        if (following != null) item(key = "following") {
+            FollowingRideCard(following.first, following.second, Modifier.padding(bottom = 16.dp))
+        }
         item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 12.dp)) {
                 Text(

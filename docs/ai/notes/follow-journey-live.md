@@ -17,7 +17,9 @@ notification. Built on 2026-10-17; not yet confirmed on a device.
 - `ActiveJourney` (`app/.../follow/ActiveJourney.kt`) is an in-memory `@Singleton` with the
   `FollowSession` (journey, the RequestCodec request it was planned from, location on or off) and the
   latest `FollowView`. **Nothing is persisted, by decision**: when Android ends the process the journey is
-  gone, and the service is `START_NOT_STICKY`. Starting another journey replaces the first.
+  gone, and the service is `START_NOT_STICKY`. Starting another journey, or a single ride, replaces the first:
+  since 2026-10-29 the slot is shared with [following a ride](./follow-ride.md), and the service
+  collects `ActiveJourney.followed` (journey or ride) rather than the session.
 - The Start sheet has "Use my location" on by default (user decision, 2026-10-18): Start then asks for
   the location permission if needed, and a refusal simply follows by time.
 - `FollowController` is the UI's only entry: it sets the session and calls `startForegroundService`.

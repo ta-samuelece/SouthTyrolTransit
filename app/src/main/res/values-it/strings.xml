@@ -600,4 +600,30 @@
     </plurals>
     <string name="results_show_hidden">Mostra</string>
     <string name="results_hide_no_bikes">Nascondi</string>
+    <!-- Following a single ride -->
+    <string name="ride_follow">Segui corsa</string>
+    <string name="ride_follow_this">Segui questa corsa</string>
+    <string name="ride_started">Stai seguendo %1$s fino a %2$s</string>
+    <string name="ride_undo">Annulla</string>
+    <string name="ride_replace_title">Seguire invece %s?</string>
+    <string name="ride_replace_journey">Stai seguendo un viaggio per %s. Si può seguire un solo viaggio o una sola corsa alla volta, quindi verrà terminato.</string>
+    <string name="ride_replace_ride">Stai seguendo %s. Si può seguire un solo viaggio o una sola corsa alla volta, quindi verrà terminata.</string>
+    <string name="ride_replace_confirm">Segui %s</string>
+    <string name="ride_replace_keep">Mantieni</string>
+    <string name="ride_card_leaves">Stai seguendo · parte da</string>
+    <string name="ride_card_next">Stai seguendo · prossima fermata</string>
+    <string name="ride_card_at">Stai seguendo · alla fermata</string>
+    <string name="ride_card_arrived">Stai seguendo · capolinea raggiunto</string>
+    <string name="ride_last_stop">Capolinea %s</string>
+    <string name="ride_n_next">Prossima fermata %1$s %2$s</string>
+    <string name="ride_n_at">A %1$s, parte %2$s</string>
+    <string name="ride_n_reached">%1$s ha raggiunto %2$s</string>
+    <string name="ride_n_arrived">Arrivato alle %s.</string>
+    <string name="ride_n_last_seen">Visto l\'ultima volta vicino a %s</string>
+    <string name="ride_n_ended">Non più seguita.</string>
+    <string name="ride_strip_next">Prossima: %s</string>
+    <string name="ride_strip_at">A %s</string>
+    <string name="ride_strip_reached">Arrivato a %s</string>
+    <string name="ride_strip_last_seen">Visto l\'ultima volta vicino a %s</string>
+    <string name="ride_estimated">stimata</string>
 </resources>

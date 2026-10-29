@@ -346,7 +346,7 @@ private fun TripContent(detail: TripDetail, navigator: Navigator, alerts: List<o
         if (hasMap && !mapState.expanded) item {
             org.southtyrol.transit.feature.common.CompactMapCard(mapState, mapContent, camera, Modifier.fillMaxWidth().height(220.dp).padding(bottom = 12.dp))
         }
-        itemsIndexed(detail.stops, key = { _, s -> s.sequence }) { index, stop ->
+        itemsIndexed(detail.stops, key = { _, s -> s.sequence }, contentType = { _, _ -> "stop" }) { index, stop ->
             val marker = when {
                 position == null -> VehicleMarker.NONE
                 position.atStop && index == position.nextIndex - 1 -> VehicleMarker.AT_STOP

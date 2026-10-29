@@ -99,7 +99,11 @@ private class MapHolder {
     var map: MapLibreMap? = null
     var style: Style? = null
     var appliedCamera: CameraRequest? = null
-    var markers: Map<String, MapMarker> = emptyMap()
+    var stopMarkers: Map<String, MapMarker> = emptyMap()
+    var vehicleMarkers: Map<String, MapMarker> = emptyMap()
+    var poiMarkers: Map<String, MapMarker> = emptyMap()
+
+    fun marker(id: String): MapMarker? = stopMarkers[id] ?: vehicleMarkers[id] ?: poiMarkers[id]
     var images: MarkerImages? = null
     /** Marker images the current style already holds; a new style starts empty. */
     val added = HashSet<String>()
@@ -201,7 +205,7 @@ internal fun MapLibreTransitMap(
                     if (geometry != null) map.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(geometry.latitude(), geometry.longitude()), map.cameraPosition.zoom + 2))
                     return@addOnMapClickListener true
                 }
-                val hit = map.queryRenderedFeatures(box, L_VEHICLES, L_VEHICLE_DOT, L_POIS, L_POI_POINTS, L_STOP_DISC, L_STOP_DISC_PLAIN, L_STOPS, L_STOPS_PLAIN).firstNotNullOfOrNull { f -> f.getStringProperty("id")?.let { holder.markers[it] } }
+                val hit = map.queryRenderedFeatures(box, L_VEHICLES, L_VEHICLE_DOT, L_POIS, L_POI_POINTS, L_STOP_DISC, L_STOP_DISC_PLAIN, L_STOPS, L_STOPS_PLAIN).firstNotNullOfOrNull { f -> f.getStringProperty("id")?.let(holder::marker) }
                 if (hit != null) clickHandler(hit)
                 hit != null
             }
@@ -226,17 +230,30 @@ internal fun MapLibreTransitMap(
         }
     }
 
-    // Push data whenever content or style changes; GeoJSON sources diff efficiently on the native side.
-    LaunchedEffect(content, styleVersion) {
-        val loaded = holder.style ?: return@LaunchedEffect
-        if (!loaded.isFullyLoaded) return@LaunchedEffect
-        holder.markers = (content.stops + content.vehicles + content.pois).associateBy { it.id }
+    // Push data whenever a layer or the style changes, one source per effect: building the features runs on
+    // the main thread, and a vehicle poll must not rebuild hundreds of unchanged stops.
+    LaunchedEffect(content.lines, styleVersion) {
+        val loaded = holder.style?.takeIf { it.isFullyLoaded } ?: return@LaunchedEffect
         loaded.getSourceAs<GeoJsonSource>(SRC_LINES)?.setGeoJson(FeatureCollection.fromFeatures(content.lines.map { it.toFeature() }))
+    }
+    LaunchedEffect(content.stops, content.clusterStops, styleVersion) {
+        holder.stopMarkers = content.stops.associateBy { it.id }
+        val loaded = holder.style?.takeIf { it.isFullyLoaded } ?: return@LaunchedEffect
         val images = holder.images ?: return@LaunchedEffect
         val stopFeatures = content.stops.map { it.toStopFeature(loaded, images, holder.added) }
         loaded.getSourceAs<GeoJsonSource>(SRC_STOPS)?.setGeoJson(FeatureCollection.fromFeatures(if (content.clusterStops) stopFeatures else emptyList()))
         loaded.getSourceAs<GeoJsonSource>(SRC_STOPS_PLAIN)?.setGeoJson(FeatureCollection.fromFeatures(if (content.clusterStops) emptyList() else stopFeatures))
+    }
+    LaunchedEffect(content.vehicles, styleVersion) {
+        holder.vehicleMarkers = content.vehicles.associateBy { it.id }
+        val loaded = holder.style?.takeIf { it.isFullyLoaded } ?: return@LaunchedEffect
+        val images = holder.images ?: return@LaunchedEffect
         loaded.getSourceAs<GeoJsonSource>(SRC_VEHICLES)?.setGeoJson(FeatureCollection.fromFeatures(content.vehicles.map { it.toVehicleFeature(loaded, images, holder.added) }))
+    }
+    LaunchedEffect(content.pois, styleVersion) {
+        holder.poiMarkers = content.pois.associateBy { it.id }
+        val loaded = holder.style?.takeIf { it.isFullyLoaded } ?: return@LaunchedEffect
+        val images = holder.images ?: return@LaunchedEffect
         loaded.getSourceAs<GeoJsonSource>(SRC_POIS)?.setGeoJson(FeatureCollection.fromFeatures(content.pois.map { if (it.isMobility()) it.toMobilityFeature(loaded, images, holder.added) else it.toFeature() }))
     }
 

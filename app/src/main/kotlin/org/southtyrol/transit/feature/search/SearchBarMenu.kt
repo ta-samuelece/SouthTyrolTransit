@@ -19,8 +19,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.unit.lerp
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onPlaced
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.background
@@ -110,11 +110,16 @@ class SearchBarMenuViewModel @Inject constructor(private val settings: SettingsR
  */
 @Composable
 fun SearchBarMenuButton(onOpen: (Rect) -> Unit) {
-    var anchor by remember { mutableStateOf(Rect.Zero) }
-    Box(Modifier.onGloballyPositioned { anchor = it.boundsInRoot() }) {
-        MarkButton(progress = 0f, label = stringResource(R.string.map_menu), onClick = { onOpen(anchor) })
+    // Where the mark is, read only when it is tapped: no state, and no callback on every layout pass.
+    val placed = remember { PlacedAt() }
+    Box(Modifier.onPlaced { placed.coordinates = it }) {
+        MarkButton(progress = { 0f }, label = stringResource(R.string.map_menu), onClick = {
+            onOpen(placed.coordinates?.takeIf { it.isAttached }?.boundsInRoot() ?: Rect.Zero)
+        })
     }
 }
+
+private class PlacedAt { var coordinates: LayoutCoordinates? = null }
 
 /**
  * The menu the app mark opens: Saved, the language, the theme and Settings. The mark itself morphs into
@@ -157,7 +162,7 @@ fun SearchBarMenu(navigator: Navigator, opensUp: Boolean, anchor: Rect, onClose:
         onTheme = viewModel::nextTheme,
         onSettings = { leave(navigator::settings) },
     )
-    val closeButton: @Composable () -> Unit = { MarkButton(progress, stringResource(R.string.map_menu_close), onClick = ::dismiss) }
+    val closeButton: @Composable () -> Unit = { MarkButton({ progress }, stringResource(R.string.map_menu_close), onClick = ::dismiss) }
     Box(Modifier.fillMaxSize()) {
         // The rest of the map: a tap there closes the menu instead of reaching the map.
         Box(Modifier.fillMaxSize().pointerInput(Unit) { detectTapGestures { dismiss() } })
@@ -196,21 +201,16 @@ fun SearchBarMenu(navigator: Navigator, opensUp: Boolean, anchor: Rect, onClose:
 
 /**
  * Places [content] so its button lands on the mark ([anchor], in root coordinates, less this layout's
- * own position; nothing is drawn until that is known): Material's menu pads 16 dp beside and below its
- * button, the downward column 16 dp beside it.
+ * own position, known while placing, so the menu is right from its first frame): Material's menu pads
+ * 16 dp beside and below its button, the downward column 16 dp beside it.
  */
 @Composable
 private fun AtAnchor(anchor: Rect, opensUp: Boolean, content: @Composable () -> Unit) {
-    var origin by remember { mutableStateOf<Offset?>(null) }
-    Layout(
-        content,
-        Modifier.fillMaxSize().onGloballyPositioned { origin = it.positionInRoot() }
-            .graphicsLayer { alpha = if (origin == null) 0f else 1f },
-    ) { measurables, constraints ->
+    Layout(content, Modifier.fillMaxSize()) { measurables, constraints ->
         val placeable = measurables.first().measure(constraints.copy(minWidth = 0, minHeight = 0))
         val padding = MENU_PADDING.roundToPx()
-        val at = anchor.translate(-(origin ?: Offset.Zero))
         layout(constraints.maxWidth, constraints.maxHeight) {
+            val at = anchor.translate(-(coordinates?.positionInRoot() ?: Offset.Zero))
             val x = at.right.roundToInt() + padding - placeable.width
             val y = if (opensUp) at.bottom.roundToInt() + padding - placeable.height else at.top.roundToInt()
             placeable.place(x, y)
@@ -290,23 +290,24 @@ private fun MenuIcon(icon: ImageVector?) {
  * mark turns into the X, so opening and closing the menu morphs one into the other in place.
  */
 @Composable
-private fun MarkButton(progress: Float, label: String, onClick: () -> Unit) {
+private fun MarkButton(progress: () -> Float, label: String, onClick: () -> Unit) {
     val primary = MaterialTheme.colorScheme.primary
     val onPrimary = MaterialTheme.colorScheme.onPrimary
+    // [progress] is read only while drawing, so the morph never recomposes the button.
     Box(
         Modifier.size(48.dp).clip(CircleShape).clickable(onClick = onClick).semantics { contentDescription = label },
         contentAlignment = Alignment.Center,
     ) {
-        val ring = 1f - progress.coerceIn(0f, 1f)
-        if (ring > 0f) Box(Modifier.size(40.dp).graphicsLayer { alpha = ring }.border(2.dp, primary, CircleShape))
-        Box(Modifier.size(lerp(32.dp, 48.dp, progress)).background(primary, CircleShape))
+        Box(Modifier.size(40.dp).graphicsLayer { alpha = 1f - progress().coerceIn(0f, 1f) }.border(2.dp, primary, CircleShape))
+        // The disc grows from 32 to 48 dp.
+        Box(Modifier.size(48.dp).graphicsLayer { scaleX = (32f + 16f * progress()) / 48f; scaleY = scaleX }.background(primary, CircleShape))
         Icon(
             painterResource(R.drawable.ic_app_mark), contentDescription = null, tint = onPrimary,
-            modifier = Modifier.size(20.dp).graphicsLayer { alpha = 1f - progress; rotationZ = 90f * progress },
+            modifier = Modifier.size(20.dp).graphicsLayer { alpha = 1f - progress(); rotationZ = 90f * progress() },
         )
         Icon(
             Icons.Rounded.Close, contentDescription = null, tint = onPrimary,
-            modifier = Modifier.size(24.dp).graphicsLayer { alpha = progress; rotationZ = -90f * (1f - progress) },
+            modifier = Modifier.size(24.dp).graphicsLayer { alpha = progress(); rotationZ = -90f * (1f - progress()) },
         )
     }
 }

@@ -314,17 +314,17 @@ fun LineScreen(navigator: Navigator, key: String) {
                         }
                         if (alerts.isNotEmpty()) {
                             item { SectionHeader(stringResource(R.string.line_alerts)) }
-                            itemsIndexed(alerts, key = { _, a -> "a:" + a.id }) { _, alert -> AlertCard(alert, AppLanguage.textLanguages(), now, Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) }
+                            itemsIndexed(alerts, key = { _, a -> "a:" + a.id }, contentType = { _, _ -> "alert" }) { _, alert -> AlertCard(alert, AppLanguage.textLanguages(), now, Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) }
                         }
                         item { SectionHeader(stringResource(R.string.line_next_trips)) }
                         val upcoming = trips.departures.take(12)
                         if (upcoming.isEmpty()) item { Text(stringResource(R.string.line_no_trips), Modifier.padding(horizontal = 16.dp)) }
-                        itemsIndexed(upcoming, key = { _, d -> "t:" + d.key }) { index, d ->
+                        itemsIndexed(upcoming, key = { _, d -> "t:" + d.key }, contentType = { _, _ -> "departure" }) { index, d ->
                             DepartureRow(d, now, index, upcoming.size, onClick = { navigator.trip(d.tripId, d.serviceDate.toString()) }, modifier = Modifier.padding(horizontal = 16.dp))
                         }
                         if (variant != null) {
                             item { SectionHeader(stringResource(R.string.line_stops)) }
-                            itemsIndexed(variant.stops, key = { i, s -> "s:$i:" + s.id }) { index, stop ->
+                            itemsIndexed(variant.stops, key = { i, s -> "s:$i:" + s.id }, contentType = { _, _ -> "stop" }) { index, stop ->
                                 SegmentedListItem(
                                     onClick = { navigator.stop(stop.stationKey, stop.name) },
                                     shapes = ListItemDefaults.segmentedShapes(index, variant.stops.size), colors = groupedItemColors(),

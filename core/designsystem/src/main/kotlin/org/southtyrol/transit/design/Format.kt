@@ -30,19 +30,33 @@ object Format {
     fun time(instant: Instant): String = time(instant, locale())
 
     /** [time] outside Compose (notifications, widgets). */
-    fun time(instant: Instant, locale: Locale): String = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale).format(instant.atZone(TransitZone))
+    fun time(instant: Instant, locale: Locale): String = formatter(Pattern.TIME, locale).format(instant.atZone(TransitZone))
 
     @Composable
     @ReadOnlyComposable
-    fun date(date: LocalDate): String = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale()).format(date)
+    fun date(date: LocalDate): String = formatter(Pattern.DATE, locale()).format(date)
 
     @Composable
     @ReadOnlyComposable
-    fun dateTime(instant: Instant): String = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT).withLocale(locale()).format(instant.atZone(TransitZone))
+    fun dateTime(instant: Instant): String = formatter(Pattern.DATE_TIME, locale()).format(instant.atZone(TransitZone))
 
     @Composable
     @ReadOnlyComposable
-    fun weekdayDate(date: LocalDate): String = DateTimeFormatter.ofPattern("EEE d MMM", locale()).format(date)
+    fun weekdayDate(date: LocalDate): String = formatter(Pattern.WEEKDAY_DATE, locale()).format(date)
+
+    private enum class Pattern { TIME, DATE, DATE_TIME, WEEKDAY_DATE }
+
+    // Every departure row formats several times per clock tick: build each formatter once per locale.
+    private val formatters = java.util.concurrent.ConcurrentHashMap<Pair<Pattern, Locale>, DateTimeFormatter>()
+
+    private fun formatter(pattern: Pattern, locale: Locale): DateTimeFormatter = formatters.getOrPut(pattern to locale) {
+        when (pattern) {
+            Pattern.TIME -> DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale)
+            Pattern.DATE -> DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale)
+            Pattern.DATE_TIME -> DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT).withLocale(locale)
+            Pattern.WEEKDAY_DATE -> DateTimeFormatter.ofPattern("EEE d MMM", locale)
+        }
+    }
 
     @Composable
     @ReadOnlyComposable

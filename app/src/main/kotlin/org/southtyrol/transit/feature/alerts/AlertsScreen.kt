@@ -245,7 +245,7 @@ fun AlertsScreen(navigator: Navigator, viewModel: AlertsViewModel = hiltViewMode
                         icon = Icons.Rounded.CheckCircle,
                     )
                 }
-                itemsIndexed(filtered, key = { _, it -> it.id }) { index, alert ->
+                itemsIndexed(filtered, key = { _, it -> it.id }, contentType = { _, _ -> "alert" }) { index, alert ->
                     val scope = scopes[alert.id]
                     AlertCard(
                         alert, language, now, Modifier.animateItem(),

@@ -409,50 +409,55 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel(), s
         is MapSelection.MobilitySel -> s.point.id
         null -> null
     }
-    val content = remember(stops, savedStops, stopModes, alerts, showStops, vehicles, mobility, prefs.showVehicles, selectedId, now.epochSecond / 30) {
+    // Each layer is rebuilt only when its own inputs change: a vehicle poll or the clock leaves the stops alone.
+    // A badge only for alerts in force now that name the stop itself: line-wide ones would mark every stop of the line.
+    // Compared by value as a key below, so the stops are rebuilt only when an alert starts or ends.
+    val activeAlerts = remember(alerts, now.epochSecond / 30) { alerts.filter { it.active(now) } }
+    val stopMarkers = remember(stops, savedStops, stopModes, activeAlerts, showStops, selectedId) {
         val savedKeys = savedStops.map { it.id }.toSet()
-        // A badge only for alerts in force now that name the stop itself: line-wide ones would mark every stop of the line.
-        val active = alerts.filter { it.active(now) }
         fun marker(s: Stop, saved: Boolean): MapMarker {
             val mode = stopModes[s.id]
             return MapMarker(
                 s.id, s.point, MarkerKind.STOP, mode = mode, color = mode?.let(ModeColors::container), selected = s.id == selectedId, highlighted = saved,
-                alert = active.any { org.southtyrol.transit.data.AlertMatcher.affectsStop(it, s.id) },
+                alert = activeAlerts.any { org.southtyrol.transit.data.AlertMatcher.affectsStop(it, s.id) },
             )
         }
         // Saved stops are always visible and highlighted, even when zoomed out.
-        val stopMarkers = if (!showStops) emptyList() else
+        if (!showStops) emptyList() else
             stops.map { marker(it, it.id in savedKeys) } + savedStops.filter { s -> stops.none { it.id == s.id } }.map { marker(it, true) }
-        MapContent(
-            stops = stopMarkers,
-            clusterStops = false,
-            vehicles = if (!prefs.showVehicles) emptyList() else vehicles.map { v ->
-                val mode = v.route?.mode ?: TransportMode.BUS
-                MapMarker(
-                    "v:" + v.vehicle.id, v.vehicle.point, MarkerKind.VEHICLE, v.route?.shortName ?: v.vehicle.label, mode,
-                    v.route?.color ?: ModeColors.container(mode), v.vehicle.bearing,
-                    stale = FreshnessPolicy.vehicle(v.vehicle.timestamp, now) != Freshness.LIVE, selected = "v:" + v.vehicle.id == selectedId,
-                )
-            },
-            pois = mobility.map { p ->
-                MapMarker(
-                    p.id, p.point,
-                    when (p.kind) {
-                        MobilityKind.PARKING -> MarkerKind.PARKING
-                        MobilityKind.BIKE_SHARING -> MarkerKind.BIKE_SHARING
-                        MobilityKind.CAR_SHARING -> MarkerKind.CAR_SHARING
-                        MobilityKind.CHARGING -> MarkerKind.CHARGING
-                        MobilityKind.BIKE_PARKING -> MarkerKind.BIKE_PARKING
-                        MobilityKind.EBIKE_SHARING -> MarkerKind.EBIKE_SHARING
-                    },
-                    // Out of service (every charging point out of order, a bike box site or an e-bike station
-                    // closed) turns grey (status-stale) and loses its count.
-                    label = if (p.freshness == Freshness.LIVE && !p.outOfService) p.available?.toString().orEmpty() else "",
-                    color = if (p.outOfService) STALE_TILE_COLOR else null,
-                    stale = p.freshness != Freshness.LIVE, selected = p.id == selectedId, badge = p.charging?.fast == true,
-                )
-            },
-        )
+    }
+    val vehicleMarkers = remember(vehicles, prefs.showVehicles, selectedId, now.epochSecond / 30) {
+        if (!prefs.showVehicles) emptyList() else vehicles.map { v ->
+            val mode = v.route?.mode ?: TransportMode.BUS
+            MapMarker(
+                "v:" + v.vehicle.id, v.vehicle.point, MarkerKind.VEHICLE, v.route?.shortName ?: v.vehicle.label, mode,
+                v.route?.color ?: ModeColors.container(mode), v.vehicle.bearing,
+                stale = FreshnessPolicy.vehicle(v.vehicle.timestamp, now) != Freshness.LIVE, selected = "v:" + v.vehicle.id == selectedId,
+            )
+        }
+    }
+    val poiMarkers = remember(mobility, selectedId) {
+        mobility.map { p ->
+            MapMarker(
+                p.id, p.point,
+                when (p.kind) {
+                    MobilityKind.PARKING -> MarkerKind.PARKING
+                    MobilityKind.BIKE_SHARING -> MarkerKind.BIKE_SHARING
+                    MobilityKind.CAR_SHARING -> MarkerKind.CAR_SHARING
+                    MobilityKind.CHARGING -> MarkerKind.CHARGING
+                    MobilityKind.BIKE_PARKING -> MarkerKind.BIKE_PARKING
+                    MobilityKind.EBIKE_SHARING -> MarkerKind.EBIKE_SHARING
+                },
+                // Out of service (every charging point out of order, a bike box site or an e-bike station
+                // closed) turns grey (status-stale) and loses its count.
+                label = if (p.freshness == Freshness.LIVE && !p.outOfService) p.available?.toString().orEmpty() else "",
+                color = if (p.outOfService) STALE_TILE_COLOR else null,
+                stale = p.freshness != Freshness.LIVE, selected = p.id == selectedId, badge = p.charging?.fast == true,
+            )
+        }
+    }
+    val content = remember(stopMarkers, vehicleMarkers, poiMarkers) {
+        MapContent(stops = stopMarkers, clusterStops = false, vehicles = vehicleMarkers, pois = poiMarkers)
     }
 
     Scaffold(snackbarHost = { SnackbarHost(snackbar) }, contentWindowInsets = WindowInsets(0)) { padding ->

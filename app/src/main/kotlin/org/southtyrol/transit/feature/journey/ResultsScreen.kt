@@ -79,6 +79,7 @@ import org.southtyrol.transit.model.Journey
 import org.southtyrol.transit.model.TransportMode
 import org.southtyrol.transit.ui.Navigator
 import java.time.Duration
+import java.time.Instant
 
 @Composable
 fun ResultsScreen(navigator: Navigator, viewModel: ResultsViewModel = hiltViewModel()) {
@@ -156,10 +157,10 @@ private fun ResultsList(state: ResultsState, viewModel: ResultsViewModel, modifi
                 }
                 // The soonest connection that can still be caught is the hero of the list.
                 val next = state.sorted.filter { Format.minutesUntil(it.bestDeparture, now) >= 0 && !it.cancelled }.minByOrNull { it.bestDeparture }
-                items(state.sorted, key = { it.id }) { journey ->
+                items(state.sorted, key = { it.id }, contentType = { "journey" }) { journey ->
                     JourneyCard(
                         journey, selected = journey.id == state.selectedId, onClick = { onOpen(journey) }, modifier = Modifier.animateItem(),
-                        emphasized = journey.id == next?.id,
+                        emphasized = journey.id == next?.id, now = now,
                     )
                 }
                 if (state.loading) item { TransitLoading() }
@@ -200,12 +201,11 @@ private fun sortLabel(sort: ResultSort) = when (sort) {
  * Journey summary. Departure and arrival times are the visual anchors; lines form a compact chain;
  * delay/cancellation/notice state is shown with icon + text. The [emphasized] card (the soonest one that
  * can still be caught) sits in the secondary container with its countdown as a pill; connections that have
- * already left are dimmed and labelled.
+ * already left are dimmed and labelled. A list passes its own [now], so its cards share one clock.
  */
 @Composable
-fun JourneyCard(journey: Journey, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier, emphasized: Boolean = false) {
+fun JourneyCard(journey: Journey, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier, emphasized: Boolean = false, now: Instant = rememberNow()) {
     val status = LocalStatusColors.current
-    val now = rememberNow()
     val minutesAway = Format.minutesUntil(journey.bestDeparture, now)
     val departed = minutesAway < 0
     val changes = pluralStringResource(R.plurals.changes, journey.changes, journey.changes)

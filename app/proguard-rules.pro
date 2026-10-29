@@ -1,6 +1,2 @@
-# GTFS-Realtime bindings rely on protobuf reflection.
--keep class com.google.transit.realtime.** { *; }
--dontwarn com.google.protobuf.**
-# MapLibre uses JNI callbacks into these packages.
--keep class org.maplibre.** { *; }
+# GTFS-Realtime keep rules live in core/data/consumer-rules.pro; MapLibre ships its own consumer rules.
 -dontwarn org.maplibre.**

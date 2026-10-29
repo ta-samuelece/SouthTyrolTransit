@@ -1,0 +1,55 @@
+name: Chore
+description: Maintenance work that is neither a bug nor a feature - audits, store and distribution, build and release, dependencies, repository upkeep
+title: "[Chore] "
+labels: ["chore"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for work that keeps the project healthy without changing what the app does for its users: a compliance or policy audit, preparing a store listing, release tooling, dependency upgrades, repository housekeeping. Something broken in the app is a bug report; new behaviour in the app is a feature request.
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind of chore
+      options:
+        - Audit / policy compliance
+        - Store listing and distribution
+        - Build and release
+        - Dependencies and toolchain
+        - Documentation
+        - Repository maintenance
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What needs doing and why, in a few sentences.
+    validations:
+      required: true
+
+  - type: textarea
+    id: details
+    attributes:
+      label: Details and findings
+      description: Background, audit output, measurements or links. Long reports can go in a collapsed `<details>` block.
+
+  - type: textarea
+    id: tasks
+    attributes:
+      label: Tasks
+      description: The concrete steps, as a checklist.
+      placeholder: |
+        - [ ] ...
+        - [ ] ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      description: How we know this chore is finished.

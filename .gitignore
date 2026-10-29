@@ -31,6 +31,9 @@ captures/
 # Private working notes
 goal.md
 
+# Scratch output of audit and analysis tools (e.g. the Play policy audit)
+.scratch/
+
 # Claude Code personal/local files (see .claude/local/README.md)
 .claude/local/*
 !.claude/local/README.md

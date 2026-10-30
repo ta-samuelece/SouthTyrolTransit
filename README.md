@@ -236,6 +236,7 @@ Place search falls back to timetable stops. Journey planning needs the EFA servi
 
 - `gtfs.api.opendatahub.com` returned **502** for all dataset/realtime paths on 4 Oct 2026. Hence the fallbacks.
 - EFA StopFinder ignores `language=en` (it returns "not identified") and matches names per language. The app queries de and it in parallel and merges the results.
+- When EFA StopFinder "identifies" a query, it returns only that one place and drops other matches ("maia bassa" gives the long-distance bus stop, not the Maia Bassa station). With the timetable downloaded, the planner's place search adds the timetable stations EFA left out.
 - GTFS has no route colours, `feed_info`, transfers or fares. `trip_short_name` (train numbers) and `bikes_allowed` are imported and shown, but were empty in every sampled row (buses only); whether STA fills them for trains is not yet known. Nothing is shown when they are empty. Translations cover German only, and headsigns only partly.
 - Realtime coverage is partial: about 57 trip updates and 135 vehicles at a time. Vehicles not matched to a trip show "trip unknown".
 - The vehicle feed puts many buses (most city lines, some regional ones) on their line's run scheduled two hours earlier, the UTC offset; their trip updates name the same wrong run. With a downloaded timetable the app moves each such bus, and its updates, to the run of its line and direction due at its stop now.

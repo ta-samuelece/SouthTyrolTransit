@@ -361,6 +361,27 @@ class ScheduleTest {
         assertEquals("it:1:100", places.single().stopGlobalId)
     }
 
+    @Test fun onlinePlaceSearchAddsScheduleStopsEfaLeftOut() = runTest {
+        store.importFile(SyntheticGtfs.zip(context.cacheDir), emptyMap())
+        // EFA "identifies" a single, different place and drops the station the timetable knows.
+        val other = Place("66000999", "Bozen, Fernbushaltestelle", PlaceType.STOP, Point(46.5, 11.35), "Bozen", "it:22021:999")
+        val identifying = object : org.southtyrol.transit.model.GeocodingLocationDataSource {
+            override suspend fun search(query: String, language: String): List<Place> = listOf(other)
+            override suspend fun reverse(point: Point, language: String): Place? = null
+        }
+        val (places, error) = PlacesRepository(identifying, schedule).search("Bozen", "de")
+        assertNull(error)
+        assertEquals(listOf("it:22021:999", "it:1:100"), places.map { it.stopGlobalId })
+
+        // A station EFA already returned is not listed twice.
+        val same = other.copy(id = "66000100", stopGlobalId = "it:1:100")
+        val complete = object : org.southtyrol.transit.model.GeocodingLocationDataSource {
+            override suspend fun search(query: String, language: String): List<Place> = listOf(same)
+            override suspend fun reverse(point: Point, language: String): Place? = null
+        }
+        assertEquals(listOf(same), PlacesRepository(complete, schedule).search("Bozen", "de").first)
+    }
+
     @Test fun cachedAlertsSurviveRestartAsStale() = runTest {
         val user = FakeUserDao()
         val now = Instant.parse("2026-10-04T18:00:00Z")

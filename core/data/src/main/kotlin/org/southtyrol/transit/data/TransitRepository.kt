@@ -2,6 +2,8 @@ package org.southtyrol.transit.data
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -344,14 +346,20 @@ class JourneyRepository(private val planner: JourneyPlannerDataSource, private v
 // ---------------------------------------------------------------------------------------------
 
 class PlacesRepository(private val geocoder: GeocodingLocationDataSource, private val schedule: TransitScheduleDataSource) {
-    /** Network place search with an offline fallback to stops from the cached schedule. */
+    /**
+     * Network place search, completed with stops from the cached schedule. EFA answers a query it can
+     * "identify" with that single place only ("maia bassa" gives the long-distance bus stop, not the
+     * station), so timetable stations it did not return are appended. Offline, the schedule alone answers.
+     */
     suspend fun search(query: String, language: String): Pair<List<Place>, DataError?> {
         if (query.isBlank()) return emptyList<Place>() to null
-        return try {
-            geocoder.search(query, language) to null
-        } catch (e: DataException) {
-            val offline = runCatching { schedule.searchStops(query, language, 15) }.getOrDefault(emptyList()).map { it.toPlace() }
-            offline to e.error
+        return coroutineScope {
+            val local = async { runCatching { if (schedule.isAvailable()) schedule.searchStops(query, language, 15) else emptyList() }.getOrDefault(emptyList()).map { it.toPlace() } }
+            try {
+                withSchedule(geocoder.search(query, language), local.await()) to null
+            } catch (e: DataException) {
+                local.await() to e.error
+            }
         }
     }
 
@@ -361,6 +369,12 @@ class PlacesRepository(private val geocoder: GeocodingLocationDataSource, privat
     companion object {
         /** EFA accepts the network-wide stop id as a stop reference. */
         fun Stop.toPlace() = Place(id, name, PlaceType.STOP, point, "", stationKey)
+
+        /** EFA places first, then timetable stops whose station key (EFA's gid) EFA did not return. */
+        internal fun withSchedule(online: List<Place>, local: List<Place>): List<Place> {
+            val known = online.mapNotNullTo(HashSet()) { it.stopGlobalId.ifBlank { null } }
+            return online + local.filter { it.stopGlobalId !in known }
+        }
     }
 }
 

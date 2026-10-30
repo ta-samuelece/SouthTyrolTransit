@@ -38,7 +38,12 @@ status: stable
 - `EfaCodes.NO_ROUTE` exists but is never thrown; `SAME_PLACE` is thrown by `JourneyRepository.plan`.
 - The code strings (`"origin"`, `"destination"`, `"same"`) are duplicated as literals in
   `core/designsystem/.../Format.kt` - change both together.
-- StopFinder states other than `identified`/`list` return an empty list.
+- StopFinder states other than `identified`/`list` return an empty list. `identified` carries **one**
+  element only: EFA picks the best match and drops the rest ("maia bassa" returns the long-distance bus
+  stop, not the Maia Bassa station; `efa_stopfinder_list.xml` is such an answer despite its name). So
+  `PlacesRepository.search` appends timetable stations EFA did not return, matched on station key =
+  EFA `gid`, whenever the timetable is downloaded. Whether a request parameter makes EFA always answer
+  with a list (`odvSugMacro`?) is untested.
 
 # AddInfo (alerts)
 

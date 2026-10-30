@@ -343,6 +343,8 @@ data class SavedRow(
     val payload: String = "",
     val created: Long = System.currentTimeMillis(),
     val position: Int = 0,
+    /** A saved place's chosen icon key (see the app's PlaceIcons); empty for everything else. */
+    @ColumnInfo(defaultValue = "''") val icon: String = "",
 )
 
 @Entity(tableName = "recent", primaryKeys = ["kind", "id"], indices = [Index(value = ["used"])])
@@ -364,12 +366,14 @@ interface UserDao {
     @Query("SELECT COUNT(*) FROM saved WHERE kind = :kind AND id = :id") fun isSaved(kind: String, id: String): Flow<Int>
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun save(row: SavedRow)
     @Query("DELETE FROM saved WHERE kind = :kind AND id = :id") suspend fun unsave(kind: String, id: String)
+    @Query("UPDATE saved SET position = :position WHERE kind = :kind AND id = :id") suspend fun reposition(kind: String, id: String, position: Int)
 
     @Query("SELECT * FROM recent WHERE kind = :kind ORDER BY used DESC LIMIT :limit") fun recent(kind: String, limit: Int): Flow<List<RecentRow>>
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun touch(row: RecentRow)
     @Query("DELETE FROM recent WHERE kind = :kind AND id NOT IN (SELECT id FROM recent WHERE kind = :kind ORDER BY used DESC LIMIT :keep)")
     suspend fun trimRecent(kind: String, keep: Int)
     @Query("DELETE FROM recent") suspend fun clearRecent()
+    @Query("DELETE FROM recent WHERE kind = :kind") suspend fun clearRecentOf(kind: String)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun cache(row: CacheRow)
     @Query("SELECT * FROM cache WHERE `key` = :key") suspend fun cache(key: String): CacheRow?
@@ -380,7 +384,19 @@ interface UserDao {
     @Query("DELETE FROM notified_alerts WHERE notifiedAt < :before") suspend fun pruneNotified(before: Long)
 }
 
-@Database(entities = [SavedRow::class, RecentRow::class, CacheRow::class, NotifiedAlertRow::class], version = 1, exportSchema = true)
+@Database(entities = [SavedRow::class, RecentRow::class, CacheRow::class, NotifiedAlertRow::class], version = 2, exportSchema = true)
 abstract class UserDatabase : RoomDatabase() {
     abstract fun user(): UserDao
+
+    companion object {
+        /**
+         * Version 2 added the icon of a saved place. Also runs on a `user.db` restored from a backup made by
+         * an older version, so it must stay a plain column addition.
+         */
+        val MIGRATION_1_2 = object : androidx.room.migration.Migration(1, 2) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE saved ADD COLUMN icon TEXT NOT NULL DEFAULT ''")
+            }
+        }
+    }
 }

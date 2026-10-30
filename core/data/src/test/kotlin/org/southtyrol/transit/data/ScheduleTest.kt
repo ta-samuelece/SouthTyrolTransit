@@ -48,15 +48,19 @@ class FakeUserDao : UserDao {
     val recentRows = MutableStateFlow<List<RecentRow>>(emptyList())
     val cacheRows = HashMap<String, CacheRow>()
     private val notified = HashMap<String, Long>()
-    override fun saved(): Flow<List<SavedRow>> = savedRows
-    override suspend fun saved(kind: String) = savedRows.value.filter { it.kind == kind }
+    // The DAO's order: kind, then position, newest first among equal positions.
+    private val order = compareBy<SavedRow>({ it.kind }, { it.position }).thenByDescending { it.created }
+    override fun saved(): Flow<List<SavedRow>> = savedRows.map { it.sortedWith(order) }
+    override suspend fun saved(kind: String) = savedRows.value.filter { it.kind == kind }.sortedWith(order)
     override fun isSaved(kind: String, id: String) = savedRows.map { rows -> rows.count { it.kind == kind && it.id == id } }
     override suspend fun save(row: SavedRow) { savedRows.value = savedRows.value.filterNot { it.kind == row.kind && it.id == row.id } + row }
     override suspend fun unsave(kind: String, id: String) { savedRows.value = savedRows.value.filterNot { it.kind == kind && it.id == id } }
+    override suspend fun reposition(kind: String, id: String, position: Int) { savedRows.value = savedRows.value.map { if (it.kind == kind && it.id == id) it.copy(position = position) else it } }
     override fun recent(kind: String, limit: Int) = recentRows.map { rows -> rows.filter { it.kind == kind }.sortedByDescending { it.used }.take(limit) }
     override suspend fun touch(row: RecentRow) { recentRows.value = recentRows.value.filterNot { it.kind == row.kind && it.id == row.id } + row }
     override suspend fun trimRecent(kind: String, keep: Int) { val keepIds = recentRows.value.filter { it.kind == kind }.sortedByDescending { it.used }.take(keep).map { it.id }.toSet(); recentRows.value = recentRows.value.filter { it.kind != kind || it.id in keepIds } }
     override suspend fun clearRecent() { recentRows.value = emptyList() }
+    override suspend fun clearRecentOf(kind: String) { recentRows.value = recentRows.value.filter { it.kind != kind } }
     override suspend fun cache(row: CacheRow) { cacheRows[row.key] = row }
     override suspend fun cache(key: String) = cacheRows[key]
     override suspend fun pruneCache(before: Long) { cacheRows.values.removeIf { it.fetchedAt < before } }
@@ -355,6 +359,27 @@ class ScheduleTest {
         assertEquals(DataError.Offline, error)
         assertEquals(PlaceType.STOP, places.single().type)
         assertEquals("it:1:100", places.single().stopGlobalId)
+    }
+
+    @Test fun onlinePlaceSearchAddsScheduleStopsEfaLeftOut() = runTest {
+        store.importFile(SyntheticGtfs.zip(context.cacheDir), emptyMap())
+        // EFA "identifies" a single, different place and drops the station the timetable knows.
+        val other = Place("66000999", "Bozen, Fernbushaltestelle", PlaceType.STOP, Point(46.5, 11.35), "Bozen", "it:22021:999")
+        val identifying = object : org.southtyrol.transit.model.GeocodingLocationDataSource {
+            override suspend fun search(query: String, language: String): List<Place> = listOf(other)
+            override suspend fun reverse(point: Point, language: String): Place? = null
+        }
+        val (places, error) = PlacesRepository(identifying, schedule).search("Bozen", "de")
+        assertNull(error)
+        assertEquals(listOf("it:22021:999", "it:1:100"), places.map { it.stopGlobalId })
+
+        // A station EFA already returned is not listed twice.
+        val same = other.copy(id = "66000100", stopGlobalId = "it:1:100")
+        val complete = object : org.southtyrol.transit.model.GeocodingLocationDataSource {
+            override suspend fun search(query: String, language: String): List<Place> = listOf(same)
+            override suspend fun reverse(point: Point, language: String): Place? = null
+        }
+        assertEquals(listOf(same), PlacesRepository(complete, schedule).search("Bozen", "de").first)
     }
 
     @Test fun cachedAlertsSurviveRestartAsStale() = runTest {

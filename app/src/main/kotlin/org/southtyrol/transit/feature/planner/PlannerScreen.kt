@@ -14,36 +14,24 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccessibleForward
 import androidx.compose.material.icons.rounded.PedalBike
 import androidx.compose.material.icons.rounded.Bookmark
-import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.History
-import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.LocationOn
-import androidx.compose.material.icons.rounded.Map
-import androidx.compose.material.icons.rounded.MyLocation
-import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Schedule
-import androidx.compose.material.icons.rounded.Signpost
 import androidx.compose.material.icons.rounded.SwapVert
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.TripOrigin
-import androidx.compose.material.icons.rounded.Work
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -55,8 +43,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.SnackbarHost
@@ -68,7 +54,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TimePickerDialog
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -79,8 +64,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
@@ -91,22 +74,36 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.southtyrol.transit.R
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.ui.draw.clip
+import org.southtyrol.transit.data.Codec
+import org.southtyrol.transit.data.SavedItem
+import org.southtyrol.transit.feature.common.PlaceEditorSheet
+import org.southtyrol.transit.feature.common.PlaceGlyph
+import org.southtyrol.transit.feature.common.PlaceSearchSheet
+import org.southtyrol.transit.feature.common.savedPlaceLabel
 import org.southtyrol.transit.feature.common.groupGap
 import org.southtyrol.transit.feature.common.groupedItemColors
-import org.southtyrol.transit.data.SavedRepository
 import org.southtyrol.transit.data.ScheduleStatus
 import org.southtyrol.transit.design.BannerKind
 import org.southtyrol.transit.design.ConnectedToggleGroup
 import org.southtyrol.transit.design.Format
 import org.southtyrol.transit.design.SectionHeader
 import org.southtyrol.transit.design.StatusBanner
-import org.southtyrol.transit.design.TransitLoading
 import org.southtyrol.transit.design.icon
 import org.southtyrol.transit.feature.common.TopLevelBar
 import org.southtyrol.transit.feature.common.rememberLocationPermission
@@ -127,7 +124,7 @@ import java.time.ZonedDateTime
 @Composable
 fun PlannerScreen(navigator: Navigator, viewModel: PlannerViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val search by viewModel.search.collectAsStateWithLifecycle()
+    val searchField by viewModel.searchField.collectAsStateWithLifecycle()
     val recentJourneys by viewModel.recentJourneys.collectAsStateWithLifecycle()
     val savedPlaces by viewModel.savedPlaces.collectAsStateWithLifecycle()
     val savedJourneys by viewModel.savedJourneys.collectAsStateWithLifecycle()
@@ -135,6 +132,9 @@ fun PlannerScreen(navigator: Navigator, viewModel: PlannerViewModel = hiltViewMo
     val scheduleStatus by viewModel.scheduleStatus.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
     var pendingLocationField by rememberSaveable { mutableStateOf<Field?>(null) }
+    var addingPlace by rememberSaveable { mutableStateOf(false) }
+    // The place picked for "Add place", encoded so it survives recreation; its editor is open while set.
+    var newPlace by rememberSaveable { mutableStateOf<String?>(null) }
     val requestLocation = rememberLocationPermission { granted ->
         val field = pendingLocationField ?: return@rememberLocationPermission
         if (granted) viewModel.useCurrentLocation(field) else viewModel.locationDenied()
@@ -195,13 +195,13 @@ fun PlannerScreen(navigator: Navigator, viewModel: PlannerViewModel = hiltViewMo
                     onAction = navigator::settings,
                 )
             }
-            val home = savedPlaces.firstOrNull { it.id == SavedRepository.HOME }?.place
-            val work = savedPlaces.firstOrNull { it.id == SavedRepository.WORK }?.place
-            if (home != null || work != null) item {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    home?.let { p -> QuickChip(stringResource(R.string.place_home), Icons.Rounded.Home) { viewModel.useRoute(state.from ?: p, p) } }
-                    work?.let { p -> QuickChip(stringResource(R.string.place_work), Icons.Rounded.Work) { viewModel.useRoute(state.from ?: p, p) } }
-                }
+            item(key = "places") {
+                YourPlaces(
+                    places = savedPlaces,
+                    onUse = viewModel::useSavedPlace,
+                    onAdd = { addingPlace = true },
+                    onEdit = { navigator.saved() },
+                )
             }
             // Each group is one item: the list's 12 dp spacing belongs between form blocks, not between rows.
             val saved = savedJourneys.mapNotNull { item -> item.route?.let { item.label to it } }
@@ -215,21 +215,23 @@ fun PlannerScreen(navigator: Navigator, viewModel: PlannerViewModel = hiltViewMo
         }
     }
 
-    val pointName = stringResource(R.string.point_on_map)
-    if (search.field != null) {
+    searchField?.let { field ->
         PlaceSearchSheet(
-            state = search,
-            recents = viewModel.recentPlaces.collectAsStateWithLifecycle().value.mapNotNull { it.place },
-            saved = savedPlaces.mapNotNull { item -> item.place?.let { item.label to it } },
-            onQuery = viewModel::query,
+            hint = stringResource(if (field == Field.FROM) R.string.search_from_hint else R.string.search_to_hint),
             onChoose = viewModel::choose,
-            onUseLocation = { useLocation(search.field ?: Field.FROM) },
-            onStop = viewModel::chooseStop,
-            onPoint = { viewModel.choosePoint(it, pointName) },
-            onSaveAs = { id, label, place -> viewModel.saveHomeOrWork(id, label, place) },
             onDismiss = viewModel::closeSearch,
+            onUseLocation = { useLocation(field) },
         )
     }
+    if (addingPlace) {
+        PlaceSearchSheet(
+            hint = stringResource(R.string.place_add_hint),
+            onChoose = { newPlace = Codec.place(it); addingPlace = false },
+            onDismiss = { addingPlace = false },
+            withSaved = false,
+        )
+    }
+    newPlace?.let { Codec.place(it) }?.let { place -> PlaceEditorSheet(place, savedPlaces.firstOrNull { it.isPlace(place) }, onDismiss = { newPlace = null }) }
 }
 
 /** The connected From/To pair: one grouped container whose halves morph their corners when pressed. */
@@ -417,11 +419,6 @@ fun preferenceLabel(p: RoutePreference) = when (p) {
 }
 
 @Composable
-private fun QuickChip(label: String, icon: ImageVector, onClick: () -> Unit) {
-    androidx.compose.material3.AssistChip(onClick = onClick, label = { Text(label) }, leadingIcon = { Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp)) })
-}
-
-@Composable
 private fun RouteGroup(title: String, icon: ImageVector, routes: List<Pair<String, Pair<Place, Place>>>, onClick: (Pair<Place, Place>) -> Unit) {
     Column {
         SectionHeader(title)
@@ -438,123 +435,68 @@ private fun RouteItem(label: String, icon: ImageVector, index: Int, count: Int, 
     ) { Text(label, maxLines = 2, overflow = TextOverflow.Ellipsis) }
 }
 
-/** Contextual bottom sheet for choosing a stop, address, POI or the current location. */
+/** Home, Work and the user's own places as cards: a tap plans there, a long press offers starting from there. */
 @Composable
-private fun PlaceSearchSheet(
-    state: PlaceSearchState,
-    recents: List<Place>,
-    saved: List<Pair<String, Place>>,
-    onQuery: (String) -> Unit,
-    onChoose: (Place) -> Unit,
-    onUseLocation: () -> Unit,
-    onStop: (org.southtyrol.transit.model.Stop) -> Unit,
-    onPoint: (org.southtyrol.transit.model.Point) -> Unit,
-    onSaveAs: (String, String, Place) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    var mapOpen by rememberSaveable { mutableStateOf(false) }
-    if (mapOpen) {
-        org.southtyrol.transit.feature.common.MapPickerDialog(
-            allowPoint = true,
-            onStop = { mapOpen = false; onStop(it) },
-            onPoint = { mapOpen = false; onPoint(it) },
-            onDismiss = { mapOpen = false },
-        )
-    }
-    val sheet = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val focus = remember { FocusRequester() }
-    LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
-    val homeLabel = stringResource(R.string.place_home)
-    val workLabel = stringResource(R.string.place_work)
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheet) {
-        Column(Modifier.padding(horizontal = 16.dp)) {
-            OutlinedTextField(
-                value = state.query,
-                onValueChange = onQuery,
-                modifier = Modifier.fillMaxWidth().focusRequester(focus),
-                placeholder = { Text(stringResource(if (state.field == Field.FROM) R.string.search_from_hint else R.string.search_to_hint)) },
-                leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
-                trailingIcon = {
-                    if (state.query.isNotEmpty()) IconButton(onClick = { onQuery("") }) { Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.action_clear)) }
-                },
-                singleLine = true,
-                shape = RoundedCornerShape(28.dp),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = { state.results.firstOrNull()?.let(onChoose) }),
-            )
-            Spacer(Modifier.height(8.dp))
+private fun YourPlaces(places: List<SavedItem>, onUse: (Place, Boolean) -> Unit, onAdd: () -> Unit, onEdit: () -> Unit) {
+    Column {
+        SectionHeader(stringResource(R.string.planner_saved_places)) {
+            if (places.isNotEmpty()) TextButton(onClick = onEdit) { Text(stringResource(R.string.places_edit)) }
         }
-        LazyColumn(contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(2.dp), modifier = Modifier.fillMaxHeight().imePadding()) {
-            if (state.query.isBlank()) {
-                item {
-                    SheetItem(stringResource(R.string.location_use_current), null, Icons.Rounded.MyLocation, 0, 2) { onUseLocation() }
-                }
-                item {
-                    SheetItem(stringResource(R.string.pick_on_map), null, Icons.Rounded.Map, 1, 2) { mapOpen = true }
-                }
-                if (saved.isNotEmpty()) {
-                    item { SectionHeader(stringResource(R.string.planner_saved_places)) }
-                    itemsIndexed(saved) { index, (label, place) -> SheetItem(label, place.name, Icons.Rounded.Bookmark, index, saved.size) { onChoose(place) } }
-                }
-                if (recents.isNotEmpty()) {
-                    item { SectionHeader(stringResource(R.string.planner_recent_places)) }
-                    itemsIndexed(recents) { index, place -> SheetItem(place.name, place.locality.takeIf { it.isNotBlank() && !place.name.contains(it) }, Icons.Rounded.History, index, recents.size) { onChoose(place) } }
-                }
-            } else {
-                if (state.loading) item { TransitLoading() }
-                state.error?.let { error ->
-                    item { StatusBanner(Format.error(error) + if (state.results.isNotEmpty()) "\n" + stringResource(R.string.search_offline_results) else "", kind = BannerKind.WARNING) }
-                }
-                if (!state.loading && state.results.isEmpty() && state.error == null && state.query.length >= 2) {
-                    item { Text(stringResource(R.string.search_no_results), modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.bodyMedium) }
-                }
-                itemsIndexed(state.results, key = { _, p -> p.id + p.name }) { index, place ->
-                    var menu by remember { mutableStateOf(false) }
-                    Box {
-                        SegmentedListItem(
-                            onClick = { onChoose(place) },
-                            onLongClick = { menu = true },
-                            onLongClickLabel = stringResource(R.string.place_save_as),
-                            shapes = ListItemDefaults.segmentedShapes(index, state.results.size), colors = groupedItemColors(), modifier = Modifier.groupGap(index, state.results.size),
-                            leadingContent = { Icon(placeIcon(place.type), contentDescription = placeTypeLabel(place.type)) },
-                            supportingContent = place.locality.takeIf { it.isNotBlank() && !place.name.contains(it) }?.let { { Text(it) } },
-                        ) { Text(place.name) }
-                        androidx.compose.material3.DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                            androidx.compose.material3.DropdownMenuItem(text = { Text(stringResource(R.string.place_save_home)) }, onClick = { onSaveAs(SavedRepository.HOME, homeLabel, place); menu = false })
-                            androidx.compose.material3.DropdownMenuItem(text = { Text(stringResource(R.string.place_save_work)) }, onClick = { onSaveAs(SavedRepository.WORK, workLabel, place); menu = false })
-                        }
-                    }
-                }
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(places, key = { it.id }) { item ->
+                val place = item.place ?: return@items
+                PlaceCard(item, place, onClick = { onUse(place, false) }, onStartHere = { onUse(place, true) })
+            }
+            item(key = "add") { AddPlaceCard(onAdd) }
+        }
+    }
+}
+
+private val PlaceCardWidth = 120.dp
+
+@Composable
+private fun PlaceCard(item: SavedItem, place: Place, onClick: () -> Unit, onStartHere: () -> Unit) {
+    var menu by remember { mutableStateOf(false) }
+    val label = savedPlaceLabel(item)
+    Box {
+        Column(
+            Modifier.width(PlaceCardWidth)
+                .clip(RoundedCornerShape(20.dp))
+                .background(MaterialTheme.colorScheme.surfaceContainer)
+                .combinedClickable(onClick = onClick, onLongClick = { menu = true }, onLongClickLabel = stringResource(R.string.place_start_here))
+                .padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            PlaceGlyph(item)
+            Column {
+                Text(label, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(place.name, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
+        DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.place_start_here)) },
+                leadingIcon = { Icon(Icons.Rounded.TripOrigin, contentDescription = null) },
+                onClick = { menu = false; onStartHere() },
+            )
+        }
     }
 }
 
 @Composable
-private fun SheetItem(title: String, subtitle: String?, icon: ImageVector, index: Int, count: Int, onClick: () -> Unit) {
-    SegmentedListItem(
+private fun AddPlaceCard(onClick: () -> Unit) {
+    Surface(
         onClick = onClick,
-        shapes = ListItemDefaults.segmentedShapes(index, count), colors = groupedItemColors(), modifier = Modifier.groupGap(index, count),
-        leadingContent = { Icon(icon, contentDescription = null) },
-        supportingContent = subtitle?.let { { Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis) } },
-    ) { Text(title) }
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+        modifier = Modifier.width(PlaceCardWidth),
+    ) {
+        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surfaceContainerHighest, contentColor = MaterialTheme.colorScheme.primary, modifier = Modifier.size(40.dp)) {
+                Box(contentAlignment = Alignment.Center) { Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(22.dp)) }
+            }
+            Text(stringResource(R.string.place_add), style = MaterialTheme.typography.titleMedium, maxLines = 2)
+        }
+    }
 }
-
-fun placeIcon(type: PlaceType): ImageVector = when (type) {
-    PlaceType.STOP -> TransportMode.BUS.icon()
-    PlaceType.POI -> Icons.Rounded.Place
-    PlaceType.ADDRESS, PlaceType.STREET -> Icons.Rounded.Signpost
-    PlaceType.COORDINATE -> Icons.Rounded.MyLocation
-    else -> Icons.Rounded.LocationOn
-}
-
-@Composable
-fun placeTypeLabel(type: PlaceType): String = stringResource(
-    when (type) {
-        PlaceType.STOP -> R.string.place_type_stop
-        PlaceType.POI -> R.string.place_type_poi
-        PlaceType.ADDRESS, PlaceType.STREET -> R.string.place_type_address
-        PlaceType.LOCALITY -> R.string.place_type_locality
-        else -> R.string.place_type_place
-    },
-)

@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.LocationOff
 import androidx.compose.material.icons.rounded.NearMe
 import androidx.compose.material.icons.rounded.Search
@@ -37,6 +38,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -62,6 +64,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -75,6 +78,7 @@ import org.southtyrol.transit.data.LineRepository
 import org.southtyrol.transit.data.SavedItem
 import org.southtyrol.transit.data.SavedKind
 import org.southtyrol.transit.data.SavedRepository
+import org.southtyrol.transit.data.SearchHistoryItem
 import org.southtyrol.transit.design.BannerKind
 import org.southtyrol.transit.design.Format
 import org.southtyrol.transit.design.LineBadge
@@ -114,14 +118,14 @@ data class SearchState(
     val error: DataError? = null,
 )
 
-/** The map's search: stops and lines by name, plus saved and nearby stops while nothing is typed. */
+/** The map's search: stops and lines by name, plus saved stops, recent searches and nearby stops while nothing is typed. */
 @HiltViewModel
 class MapSearchViewModel @Inject constructor(
     private val stopSearch: StopSearchRepository,
     private val lines: LineRepository,
     private val location: LocationProvider,
     private val language: LanguageProvider,
-    saved: SavedRepository,
+    private val saved: SavedRepository,
     private val handle: SavedStateHandle,
 ) : ViewModel() {
     private val _search = MutableStateFlow(SearchState(handle.get<String>("q").orEmpty()))
@@ -133,6 +137,12 @@ class MapSearchViewModel @Inject constructor(
 
     val savedStops: StateFlow<List<SavedItem>> = saved.saved.map { list -> list.filter { it.kind == SavedKind.STOP } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    /** Stops and lines opened from here before; a stop that is saved already shows under saved instead. */
+    val history: StateFlow<List<SearchHistoryItem>> = combine(saved.searchHistory(), savedStops) { history, starred ->
+        val ids = starred.mapTo(HashSet()) { it.id }
+        history.filterNot { it is SearchHistoryItem.OfStop && it.stop.id in ids }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     init {
         viewModelScope.launch {
@@ -193,6 +203,10 @@ class MapSearchViewModel @Inject constructor(
     }
 
     fun denied() { _nearby.value = NearbyState.PermissionDenied }
+
+    fun opened(stop: Stop) { viewModelScope.launch { saved.addSearchedStop(stop) } }
+    fun opened(line: Line) { viewModelScope.launch { saved.addSearchedLine(line) } }
+    fun clearHistory() { viewModelScope.launch { saved.clearSearchHistory() } }
 }
 
 /**
@@ -219,18 +233,21 @@ fun MapSearchBar(onOpen: () -> Unit, onMenu: (androidx.compose.ui.geometry.Rect)
 }
 
 /**
- * The search covering the map: saved and nearby stops while nothing is typed, then matching stops and
- * lines. A stop opens its departure board, a line its line view; going back returns here.
+ * The search covering the map: saved stops, recent searches and nearby stops while nothing is typed,
+ * then matching stops and lines. A stop opens its departure board, a line its line view; going back
+ * returns here. Every stop and line opened from here goes into the recent searches.
  */
 @Composable
 fun MapSearchView(viewModel: MapSearchViewModel, navigator: Navigator, modifier: Modifier = Modifier) {
     val search by viewModel.search.collectAsStateWithLifecycle()
     val nearby by viewModel.nearby.collectAsStateWithLifecycle()
     val saved by viewModel.savedStops.collectAsStateWithLifecycle()
+    val history by viewModel.history.collectAsStateWithLifecycle()
     val requestPermission = rememberLocationPermission { granted -> if (granted) viewModel.locate() else viewModel.denied() }
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { if (viewModel.takeFocus()) focus.requestFocus() }
-    val onStop: (Stop) -> Unit = { navigator.stop(it.id, it.name) }
+    val onStop: (Stop) -> Unit = { viewModel.opened(it); navigator.stop(it.id, it.name) }
+    val onLine: (Line) -> Unit = { viewModel.opened(it); navigator.line(it.key) }
 
     Surface(modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
         Column(Modifier.statusBarsPadding().imePadding()) {
@@ -248,8 +265,8 @@ fun MapSearchView(viewModel: MapSearchViewModel, navigator: Navigator, modifier:
             )
             LazyColumn(contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 // All lines are in the menu behind the app mark in the search bar, not repeated here.
-                if (search.query.isNotBlank()) results(search, onStop, onLine = { navigator.line(it.key) })
-                else suggestions(saved, nearby, onStop, requestPermission, viewModel::locate)
+                if (search.query.isNotBlank()) results(search, onStop, onLine)
+                else suggestions(saved, history, nearby, onStop, onLine, viewModel::clearHistory, requestPermission, viewModel::locate)
             }
         }
     }
@@ -279,7 +296,8 @@ private fun androidx.compose.foundation.lazy.LazyListScope.results(search: Searc
 }
 
 private fun androidx.compose.foundation.lazy.LazyListScope.suggestions(
-    saved: List<SavedItem>, nearby: NearbyState, onStop: (Stop) -> Unit, requestPermission: () -> Unit, retry: () -> Unit,
+    saved: List<SavedItem>, history: List<SearchHistoryItem>, nearby: NearbyState, onStop: (Stop) -> Unit, onLine: (Line) -> Unit,
+    clearHistory: () -> Unit, requestPermission: () -> Unit, retry: () -> Unit,
 ) {
     if (saved.isNotEmpty()) {
         item { SectionHeader(stringResource(R.string.departures_saved)) }
@@ -289,6 +307,22 @@ private fun androidx.compose.foundation.lazy.LazyListScope.suggestions(
                 shapes = ListItemDefaults.segmentedShapes(i, saved.size), colors = groupedItemColors(), modifier = Modifier.groupGap(i, saved.size),
                 leadingContent = { Icon(Icons.Rounded.Star, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
             ) { Text(item.label) }
+        }
+    }
+    if (history.isNotEmpty()) {
+        item { SectionHeader(stringResource(R.string.map_search_recent)) { TextButton(onClick = clearHistory) { Text(stringResource(R.string.action_clear)) } } }
+        itemsIndexed(history, key = { _, h -> "h:" + h.key }) { i, entry ->
+            SegmentedListItem(
+                onClick = { when (entry) { is SearchHistoryItem.OfStop -> onStop(entry.stop); is SearchHistoryItem.OfLine -> onLine(entry.line) } },
+                shapes = ListItemDefaults.segmentedShapes(i, history.size), colors = groupedItemColors(), modifier = Modifier.groupGap(i, history.size),
+                leadingContent = { Icon(Icons.Rounded.History, contentDescription = null) },
+                trailingContent = (entry as? SearchHistoryItem.OfLine)?.line?.let { line -> { LineBadge(line.name, line.mode, color = line.color, textColor = line.textColor) } },
+            ) {
+                when (entry) {
+                    is SearchHistoryItem.OfStop -> Text(entry.stop.name)
+                    is SearchHistoryItem.OfLine -> Text(entry.line.longName.ifBlank { entry.line.name }, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                }
+            }
         }
     }
     item { SectionHeader(stringResource(R.string.departures_nearby)) }

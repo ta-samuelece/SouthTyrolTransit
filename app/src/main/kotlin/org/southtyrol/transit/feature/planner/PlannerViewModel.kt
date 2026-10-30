@@ -4,14 +4,10 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -36,11 +32,11 @@ import org.southtyrol.transit.data.RecentItem
 import org.southtyrol.transit.data.SavedItem
 import org.southtyrol.transit.data.SavedKind
 import org.southtyrol.transit.data.SavedRepository
+import org.southtyrol.transit.feature.common.placesInOrder
 import org.southtyrol.transit.data.ScheduleRepository
 import org.southtyrol.transit.data.SettingsRepository
 import org.southtyrol.transit.location.LocationProvider
 import org.southtyrol.transit.location.LocationResult
-import org.southtyrol.transit.model.DataError
 import org.southtyrol.transit.model.Place
 import org.southtyrol.transit.model.PlaceType
 import org.southtyrol.transit.model.RoutePreference
@@ -111,15 +107,6 @@ data class PlannerState(
     val locationError: LocationResult? = null,
 )
 
-data class PlaceSearchState(
-    val field: Field? = null,
-    val query: String = "",
-    val results: List<Place> = emptyList(),
-    val loading: Boolean = false,
-    val error: DataError? = null,
-)
-
-@OptIn(FlowPreview::class)
 @HiltViewModel
 class PlannerViewModel @Inject constructor(
     private val places: PlacesRepository,
@@ -134,12 +121,12 @@ class PlannerViewModel @Inject constructor(
     private val _state = MutableStateFlow(restore())
     val state: StateFlow<PlannerState> = _state.asStateFlow()
 
-    private val _search = MutableStateFlow(PlaceSearchState())
-    val search: StateFlow<PlaceSearchState> = _search.asStateFlow()
+    /** The endpoint the place search sheet is open for; null while it is closed. */
+    private val _searchField = MutableStateFlow<Field?>(null)
+    val searchField: StateFlow<Field?> = _searchField.asStateFlow()
 
     val recentJourneys: StateFlow<List<RecentItem>> = saved.recentJourneys(5).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-    val recentPlaces: StateFlow<List<RecentItem>> = saved.recentPlaces(8).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-    val savedPlaces: StateFlow<List<SavedItem>> = saved.saved.map { items -> items.filter { it.kind == SavedKind.PLACE } }
+    val savedPlaces: StateFlow<List<SavedItem>> = saved.saved.map { it.placesInOrder() }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val savedJourneys: StateFlow<List<SavedItem>> = saved.saved.map { items -> items.filter { it.kind == SavedKind.JOURNEY } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -151,17 +138,6 @@ class PlannerViewModel @Inject constructor(
             timetable.loadInfo()
             val prefs = settings.current()
             _state.update { if (handle.get<String>(KEY) == null) it.copy(wheelchair = prefs.wheelchair, walkingSpeed = prefs.walkingSpeed) else it }
-        }
-        viewModelScope.launch {
-            _search.map { it.query to it.field }.distinctUntilChanged().debounce(300).collectLatest { (query, field) ->
-                if (field == null || query.trim().length < 2) {
-                    _search.update { it.copy(results = emptyList(), loading = false, error = null) }
-                    return@collectLatest
-                }
-                _search.update { it.copy(loading = true) }
-                val (results, error) = places.search(query.trim(), language.current())
-                _search.update { it.copy(results = results, loading = false, error = error) }
-            }
         }
     }
 
@@ -182,30 +158,17 @@ class PlannerViewModel @Inject constructor(
 
     private fun update(block: (PlannerState) -> PlannerState) { _state.update(block); persist() }
 
-    fun openSearch(field: Field) { _search.value = PlaceSearchState(field = field) }
-    fun closeSearch() { _search.value = PlaceSearchState() }
-    fun query(text: String) { _search.update { it.copy(query = text) } }
+    fun openSearch(field: Field) { _searchField.value = field }
+    fun closeSearch() { _searchField.value = null }
 
     fun choose(place: Place) {
-        val field = _search.value.field ?: return
+        val field = _searchField.value ?: return
         update { if (field == Field.FROM) it.copy(from = place) else it.copy(to = place) }
         closeSearch()
     }
 
-    /** A stop tapped on the map picker; EFA accepts the network stop id (gid) directly. */
-    fun chooseStop(stop: org.southtyrol.transit.model.Stop) =
-        choose(Place(stop.stationKey.ifBlank { stop.id }, stop.name, PlaceType.STOP, stop.point, "", stop.stationKey.ifBlank { stop.id }))
-
-    /** Any point picked on the map; planned as a coordinate, labelled with the nearest address. */
-    fun choosePoint(point: org.southtyrol.transit.model.Point, fallbackName: String) {
-        val field = _search.value.field ?: return
-        closeSearch()
-        viewModelScope.launch {
-            val nearest = places.reverse(point, language.current())
-            val place = Place("", nearest.name.ifBlank { fallbackName }, PlaceType.ADDRESS, point, nearest.locality)
-            update { if (field == Field.FROM) it.copy(from = place) else it.copy(to = place) }
-        }
-    }
+    /** A saved place tapped on the Plan screen: the destination, or with [asStart] the start. */
+    fun useSavedPlace(place: Place, asStart: Boolean) = update { if (asStart) it.copy(from = place) else it.copy(to = place) }
 
     fun swap() = update { it.copy(from = it.to, to = it.from) }
     fun setTime(time: ZonedDateTime?) = update { it.copy(time = time) }
@@ -237,8 +200,6 @@ class PlannerViewModel @Inject constructor(
 
     fun locationDenied() { _state.update { it.copy(locating = null, locationError = LocationResult.PermissionDenied) } }
     fun clearLocationError() { _state.update { it.copy(locationError = null) } }
-
-    fun saveHomeOrWork(id: String, label: String, place: Place) = viewModelScope.launch { saved.savePlace(id, label, place) }
 
     fun canSearch(): Boolean = _state.value.let { it.from != null && it.to != null }
 

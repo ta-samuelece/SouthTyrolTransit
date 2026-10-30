@@ -1,10 +1,9 @@
-@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 
 package org.southtyrol.transit.feature.saved
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,10 +15,7 @@ import androidx.compose.material.icons.rounded.Bookmark
 import androidx.compose.material.icons.rounded.BookmarkBorder
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.History
-import androidx.compose.material.icons.rounded.Home
-import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Star
-import androidx.compose.material.icons.rounded.Work
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -46,6 +42,18 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.southtyrol.transit.R
+import androidx.compose.material.icons.rounded.ArrowDownward
+import androidx.compose.material.icons.rounded.ArrowUpward
+import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.EditLocationAlt
+import androidx.compose.material.icons.rounded.MoreVert
+import org.southtyrol.transit.data.Codec
+import org.southtyrol.transit.feature.common.PlaceEditorSheet
+import org.southtyrol.transit.feature.common.PlaceGlyph
+import org.southtyrol.transit.feature.common.PlaceSearchSheet
+import org.southtyrol.transit.feature.common.PlacesViewModel
+import org.southtyrol.transit.feature.common.placesInOrder
+import org.southtyrol.transit.feature.common.savedPlaceLabel
 import org.southtyrol.transit.feature.common.groupGap
 import org.southtyrol.transit.feature.common.groupedItemColors
 import org.southtyrol.transit.data.RecentItem
@@ -70,13 +78,29 @@ class SavedViewModel @Inject constructor(private val repo: SavedRepository) : Vi
 }
 
 @Composable
-fun SavedScreen(navigator: Navigator, viewModel: SavedViewModel = hiltViewModel()) {
+fun SavedScreen(navigator: Navigator, viewModel: SavedViewModel = hiltViewModel(), places: PlacesViewModel = hiltViewModel()) {
     val saved by viewModel.saved.collectAsStateWithLifecycle()
     val recent by viewModel.recent.collectAsStateWithLifecycle()
+    // Place flows: "Add place" searches then opens the editor; "Change location" searches for the item it names.
+    var addingPlace by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(false) }
+    var newPlace by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf<String?>(null) }
+    var relocating by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf<String?>(null) }
+    var renaming by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf<String?>(null) }
+    val placeItems = saved.orEmpty().placesInOrder()
     var adding by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(false) }
     var addingLine by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(false) }
     if (adding) org.southtyrol.transit.feature.common.StopSearchSheet(onPick = { viewModel.addStop(it); adding = false }, onDismiss = { adding = false })
     if (addingLine) org.southtyrol.transit.feature.common.LineSearchSheet(onPick = { viewModel.addLine(it); addingLine = false }, onDismiss = { addingLine = false })
+    if (addingPlace) {
+        PlaceSearchSheet(stringResource(R.string.place_add_hint), onChoose = { newPlace = Codec.place(it); addingPlace = false }, onDismiss = { addingPlace = false }, withSaved = false, viewModel = places)
+    }
+    newPlace?.let { Codec.place(it) }?.let { place -> PlaceEditorSheet(place, placeItems.firstOrNull { it.isPlace(place) }, onDismiss = { newPlace = null }, viewModel = places) }
+    placeItems.firstOrNull { it.id == relocating }?.let { item ->
+        PlaceSearchSheet(stringResource(R.string.place_add_hint), onChoose = { places.relocate(item, it); relocating = null }, onDismiss = { relocating = null }, withSaved = false, viewModel = places)
+    }
+    placeItems.firstOrNull { it.id == renaming }?.let { item ->
+        item.place?.let { place -> PlaceEditorSheet(place, item, onDismiss = { renaming = null }, viewModel = places) }
+    }
     Scaffold(
         topBar = {
             androidx.compose.material3.TopAppBar(
@@ -90,29 +114,40 @@ fun SavedScreen(navigator: Navigator, viewModel: SavedViewModel = hiltViewModel(
         },
     ) { padding ->
         val items = saved ?: return@Scaffold
-        val places = items.filter { it.kind == SavedKind.PLACE }
         val stops = items.filter { it.kind == SavedKind.STOP }
         val lines = items.filter { it.kind == SavedKind.LINE }
         val journeys = items.filter { it.kind == SavedKind.JOURNEY }
         LazyColumn(Modifier.padding(padding).fillMaxSize(), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp)) {
             item {
                 // Saved stops and lines drive the "My stops and lines" alert filter and notifications.
-                Row(Modifier.padding(vertical = 8.dp), horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
+                androidx.compose.foundation.layout.FlowRow(Modifier.padding(vertical = 8.dp), horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
                     androidx.compose.material3.FilledTonalButton(onClick = { adding = true }) {
                         Icon(Icons.Rounded.Add, contentDescription = null); androidx.compose.foundation.layout.Spacer(Modifier.width(8.dp)); Text(stringResource(R.string.saved_add_stop))
                     }
                     androidx.compose.material3.FilledTonalButton(onClick = { addingLine = true }) {
                         Icon(Icons.Rounded.Add, contentDescription = null); androidx.compose.foundation.layout.Spacer(Modifier.width(8.dp)); Text(stringResource(R.string.saved_add_line))
                     }
+                    androidx.compose.material3.FilledTonalButton(onClick = { addingPlace = true }) {
+                        Icon(Icons.Rounded.Add, contentDescription = null); androidx.compose.foundation.layout.Spacer(Modifier.width(8.dp)); Text(stringResource(R.string.place_add))
+                    }
                 }
             }
             if (items.isEmpty() && recent.isEmpty()) item {
                 MessageState(stringResource(R.string.saved_empty), stringResource(R.string.saved_empty_hint), icon = Icons.Rounded.BookmarkBorder)
             }
-            section(R.string.saved_places, places) { item, index ->
-                SavedRow(item, index, places.size, when (item.id) { SavedRepository.HOME -> Icons.Rounded.Home; SavedRepository.WORK -> Icons.Rounded.Work; else -> Icons.Rounded.Place }, onRemove = { viewModel.remove(item) }) {
-                    navigator.plan()
-                }
+            // Home and Work first, then the user's own places, which alone can be renamed and reordered.
+            val own = placeItems.filterNot { it.isHomeOrWork }
+            section(R.string.saved_places, placeItems) { item, index ->
+                val position = own.indexOf(item)
+                SavedPlaceRow(
+                    item, index, placeItems.size,
+                    onRename = if (item.isHomeOrWork) null else { { renaming = item.id } },
+                    onRelocate = { relocating = item.id },
+                    onMoveUp = if (position > 0) { { places.move(item, up = true) } } else null,
+                    onMoveDown = if (position in 0 until own.size - 1) { { places.move(item, up = false) } } else null,
+                    onRemove = { places.remove(item) },
+                    onClick = { navigator.plan() },
+                )
             }
             section(R.string.saved_stops, stops) { item, index ->
                 SavedRow(item, index, stops.size, Icons.Rounded.Star, onRemove = { viewModel.remove(item) }) { navigator.stop(item.id, item.label) }
@@ -166,4 +201,40 @@ private fun SavedRow(item: SavedItem, index: Int, count: Int, icon: androidx.com
         supportingContent = item.subtitle.takeIf { it.isNotBlank() && item.kind == SavedKind.PLACE }?.let { { Text(it) } },
         trailingContent = { IconButton(onClick = onRemove) { Icon(Icons.Rounded.Delete, contentDescription = stringResource(R.string.action_remove)) } },
     ) { Text(item.label) }
+}
+
+@Composable
+private fun SavedPlaceRow(
+    item: SavedItem, index: Int, count: Int,
+    onRename: (() -> Unit)?, onRelocate: () -> Unit, onMoveUp: (() -> Unit)?, onMoveDown: (() -> Unit)?, onRemove: () -> Unit, onClick: () -> Unit,
+) {
+    var menu by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    val label = savedPlaceLabel(item)
+    SegmentedListItem(
+        onClick = onClick,
+        shapes = ListItemDefaults.segmentedShapes(index, count), colors = groupedItemColors(), modifier = Modifier.groupGap(index, count),
+        leadingContent = { PlaceGlyph(item) },
+        supportingContent = item.subtitle.takeIf { it.isNotBlank() }?.let { { Text(it) } },
+        trailingContent = {
+            androidx.compose.foundation.layout.Box {
+                IconButton(onClick = { menu = true }) { Icon(Icons.Rounded.MoreVert, contentDescription = stringResource(R.string.place_options, label)) }
+                androidx.compose.material3.DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                    val entries = listOfNotNull(
+                        onRename?.let { Triple(R.string.place_rename, Icons.Rounded.Edit, it) },
+                        Triple(R.string.place_change_location, Icons.Rounded.EditLocationAlt, onRelocate),
+                        onMoveUp?.let { Triple(R.string.place_move_up, Icons.Rounded.ArrowUpward, it) },
+                        onMoveDown?.let { Triple(R.string.place_move_down, Icons.Rounded.ArrowDownward, it) },
+                        Triple(R.string.action_remove, Icons.Rounded.Delete, onRemove),
+                    )
+                    entries.forEach { (text, icon, action) ->
+                        androidx.compose.material3.DropdownMenuItem(
+                            text = { Text(stringResource(text)) },
+                            leadingIcon = { Icon(icon, contentDescription = null) },
+                            onClick = { menu = false; action() },
+                        )
+                    }
+                }
+            }
+        },
+    ) { Text(label) }
 }

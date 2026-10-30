@@ -5,7 +5,7 @@ description: How the first-run screens are gated before the app, how a route is 
 tags: [compose, navigation, viewmodel, hilt, search, workmanager, onboarding]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-21T12:00:00Z"
+  at: "2026-10-30T12:00:00Z"
 status: stable
 ---
 
@@ -46,7 +46,10 @@ opened from it comes back to it. While it is open, `MapScreen` sets `Navigator.s
 `TransitApp` hides the bottom bar through the `NavigationSuiteScaffold` state, but only while the current
 destination is `MapRoute`; a `DisposableEffect` clears the flag when the map leaves the screen. Closing the
 search clears its text; the field takes focus once per opening (`takeFocus`), not on coming back from a
-board.
+board. Every stop and line opened from the search is recorded in the `recent` table under kind `search`
+(`SavedRepository.addSearchedStop` / `addSearchedLine`, ids prefixed `stop:` / `line:`, 30 kept) and
+listed as recent searches while nothing is typed; a stop that is also saved shows only under saved. The
+line payload is `Codec.line`, which drops `routeIds` - open the line by its key, never by its routes.
 
 # First-run screens
 

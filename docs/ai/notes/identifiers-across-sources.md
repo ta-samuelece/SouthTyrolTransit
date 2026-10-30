@@ -5,7 +5,7 @@ description: The station key (it:22021:468) is the only join between GTFS and EF
 tags: [identifiers, gtfs, efa, saved-items, data-model]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-09T15:00:00Z"
+  at: "2026-10-30T12:00:00Z"
 verified:
   by: claude-code/claude-opus-5-5
   at: "2026-10-09T15:00:00Z"
@@ -41,7 +41,13 @@ Rules:
 
 - saved stop: `id = stop.id`, the **station key**;
 - saved line: `id = line.key` = `GtfsFiles.lineKey` = `"<TransportMode name>:<short name | long name |
-  route_id>"`, e.g. `BUS:201` - **not** `route_id`.
+  route_id>"`, e.g. `BUS:201` - **not** `route_id`;
+- saved place: `id` is `home`, `work` (`SavedRepository.HOME`/`WORK`, one slot each) or
+  `place:<random UUID>` for a place of the user's own; the place itself is JSON in `payload`. Its `icon`
+  column holds a `PlaceIcon.key` (`heart`, `sport`, ...) - renaming a key drops that icon to the default
+  pin. Home and Work are shown with the current language's name, not the stored `label`. Own places are
+  ordered by `position` (new ones at the end); rows from before positions were written all hold 0 and
+  are renumbered by the first "Move up/down".
 
 So saved lines survive feed swaps while STA keeps the short name. They break if `TransportMode.fromGtfs`
 is remapped, an enum constant is renamed, or STA renames a line; saved stops break if STA changes its

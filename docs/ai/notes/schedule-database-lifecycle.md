@@ -1,7 +1,7 @@
 ---
 type: Finding
 title: The schedule and user databases - versioning, swaps, migrations and the importer
-description: Importer changes reach existing installs only when GtfsImporter.VERSION is bumped; the schedule database has one migration (1 to 2, added columns) and the user database none; the importer writes raw SQL with hard-coded column lists; caches must key on ScheduleStore.version; queries go through ScheduleStore.withDatabase, which keeps a replaced database open until its users finish; how stop search is built.
+description: Importer changes reach existing installs only when GtfsImporter.VERSION is bumped; each database has one migration (1 to 2, added columns), and the user database's must also open restored backups; the importer writes raw SQL with hard-coded column lists; caches must key on ScheduleStore.version; queries go through ScheduleStore.withDatabase, which keeps a replaced database open until its users finish; how stop search is built.
 tags: [room, database, gtfs, importer, search, migrations]
 generated:
   by: claude-code/claude-opus-5-5
@@ -32,17 +32,19 @@ it waits until STA publishes a new feed (issue #7, fixed 2026-10-09). The bump a
 start-up timetable prompt (`ui/TimetablePrompt.kt`, via `ScheduleStore.updateAvailable`) offer every
 user a ~150 MB download on their next app open, so bump only when the re-import matters.
 
-# Migrations: one in the schedule database, none in the user database
+# Migrations: one in each database
 
 Schemas are exported by KSP to `core/data/schemas/` - commit the new `N.json` with any schema change
 (the build writes it; `2.json` of the schedule database was not generated on the machine that wrote
 the 1-to-2 migration, so the first build afterwards must add it). Neither builder adds
 `fallbackToDestructiveMigration`.
 
-- **User DB** (`version = 1`, `AppModule`): no migrations. A schema change without a hand-written
-  `Migration` crashes on first access and can lose saved items. Always write the migration and bump the
-  version. The migration must also handle files restored from the phone's backup, which can come from any
-  older version ([backup and restore](./backup-and-restore.md)).
+- **User DB** (`version = 2`, `AppModule`): `UserDatabase.MIGRATION_1_2` adds `saved.icon` (a saved
+  place's icon key) with `ALTER TABLE ... ADD COLUMN ... DEFAULT ''`. A schema change without a
+  hand-written `Migration` crashes on first access and can lose saved items. Always write the migration
+  and bump the version. The migration must also handle files restored from the phone's backup, which can
+  come from any older version ([backup and restore](./backup-and-restore.md)). `SavedPlacesTest` builds a
+  version-1 file from `1.json` and opens it through the migration; copy that test for the next one.
 - **Schedule DB** (`version = 2`, `ScheduleStore.open`): `ScheduleDatabase.MIGRATION_1_2` adds
   `trips.shortName`, `trips.bikes` and `stop_times.distance` with `ALTER TABLE ... ADD COLUMN`, so an
   installed timetable keeps working, with those columns empty, until the importer-version bump (to 2)

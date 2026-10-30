@@ -2,6 +2,8 @@ package org.southtyrol.transit.data
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -97,6 +99,17 @@ object Codec {
         val o = json.parseToJsonElement(text).jsonObject
         place(o.getValue("from").jsonObject) to place(o.getValue("to").jsonObject)
     }.getOrNull()
+
+    /** A line as the search history keeps it: enough to draw its badge and open it, without its routes. */
+    fun line(l: Line): String = buildJsonObject {
+        put("key", l.key); put("name", l.name); put("mode", l.mode.name); put("long", l.longName)
+        l.color?.let { put("color", it) }; l.textColor?.let { put("text", it) }
+    }.toString()
+
+    fun line(text: String): Line? = runCatching {
+        val o = json.parseToJsonElement(text).jsonObject
+        Line(o.str("key"), o.str("name"), TransportMode.valueOf(o.str("mode")), emptyList(), o.str("long"), o["color"]?.jsonPrimitive?.longOrNull, o["text"]?.jsonPrimitive?.longOrNull)
+    }.getOrNull()?.takeIf { it.key.isNotBlank() }
 
     fun alerts(list: List<ServiceAlert>): String = buildJsonArray {
         for (a in list) add(buildJsonObject {
@@ -334,14 +347,20 @@ class JourneyRepository(private val planner: JourneyPlannerDataSource, private v
 // ---------------------------------------------------------------------------------------------
 
 class PlacesRepository(private val geocoder: GeocodingLocationDataSource, private val schedule: TransitScheduleDataSource) {
-    /** Network place search with an offline fallback to stops from the cached schedule. */
+    /**
+     * Network place search, completed with stops from the cached schedule. EFA answers a query it can
+     * "identify" with that single place only ("maia bassa" gives the long-distance bus stop, not the
+     * station), so timetable stations it did not return are appended. Offline, the schedule alone answers.
+     */
     suspend fun search(query: String, language: String): Pair<List<Place>, DataError?> {
         if (query.isBlank()) return emptyList<Place>() to null
-        return try {
-            geocoder.search(query, language) to null
-        } catch (e: DataException) {
-            val offline = runCatching { schedule.searchStops(query, language, 15) }.getOrDefault(emptyList()).map { it.toPlace() }
-            offline to e.error
+        return coroutineScope {
+            val local = async { runCatching { if (schedule.isAvailable()) schedule.searchStops(query, language, 15) else emptyList() }.getOrDefault(emptyList()).map { it.toPlace() } }
+            try {
+                withSchedule(geocoder.search(query, language), local.await()) to null
+            } catch (e: DataException) {
+                local.await() to e.error
+            }
         }
     }
 
@@ -351,6 +370,12 @@ class PlacesRepository(private val geocoder: GeocodingLocationDataSource, privat
     companion object {
         /** EFA accepts the network-wide stop id as a stop reference. */
         fun Stop.toPlace() = Place(id, name, PlaceType.STOP, point, "", stationKey)
+
+        /** EFA places first, then timetable stops whose station key (EFA's gid) EFA did not return. */
+        internal fun withSchedule(online: List<Place>, local: List<Place>): List<Place> {
+            val known = online.mapNotNullTo(HashSet()) { it.stopGlobalId.ifBlank { null } }
+            return online + local.filter { it.stopGlobalId !in known }
+        }
     }
 }
 
@@ -400,9 +425,33 @@ class ScheduleRepository(private val store: ScheduleStore) {
 
 enum class SavedKind { STOP, LINE, PLACE, JOURNEY }
 
-data class SavedItem(val kind: SavedKind, val id: String, val label: String, val subtitle: String, val payload: String) {
+data class SavedItem(val kind: SavedKind, val id: String, val label: String, val subtitle: String, val payload: String, val icon: String = "") {
     val place: Place? get() = if (kind == SavedKind.PLACE || kind == SavedKind.STOP) Codec.place(payload) else null
     val route: Pair<Place, Place>? get() = if (kind == SavedKind.JOURNEY) Codec.route(payload) else null
+    /** Home or Work: one fixed slot each, always listed before the user's own places. */
+    val isHomeOrWork: Boolean get() = kind == SavedKind.PLACE && (id == SavedRepository.HOME || id == SavedRepository.WORK)
+
+    /** Whether this saved place is [other]: the same planner id, or for places without one the same name and point. */
+    fun isPlace(other: Place): Boolean {
+        val mine = place ?: return false
+        return if (mine.id.isNotBlank() || other.id.isNotBlank()) mine.id == other.id else mine.name == other.name && mine.point == other.point
+    }
+}
+
+/** One entry of the map search's history: a stop or a line opened from the search. */
+sealed interface SearchHistoryItem {
+    val key: String
+    data class OfStop(val stop: Stop) : SearchHistoryItem { override val key get() = SavedRepository.HISTORY_STOP + stop.id }
+    data class OfLine(val line: Line) : SearchHistoryItem { override val key get() = SavedRepository.HISTORY_LINE + line.key }
+
+    companion object {
+        internal fun from(row: RecentRow): SearchHistoryItem? = when {
+            row.id.startsWith(SavedRepository.HISTORY_STOP) -> Codec.place(row.payload)?.takeIf { it.id.isNotBlank() }
+                ?.let { OfStop(Stop(it.id, it.name, it.point ?: Point(0.0, 0.0), stationKey = it.stopGlobalId)) }
+            row.id.startsWith(SavedRepository.HISTORY_LINE) -> Codec.line(row.payload)?.let { OfLine(it) }
+            else -> null
+        }
+    }
 }
 
 data class RecentItem(val id: String, val label: String, val subtitle: String, val payload: String, val used: Instant) {
@@ -412,14 +461,42 @@ data class RecentItem(val id: String, val label: String, val subtitle: String, v
 
 class SavedRepository(private val user: UserDao, private val clock: () -> Instant = Instant::now) {
     val saved: Flow<List<SavedItem>> = user.saved().map { rows ->
-        rows.mapNotNull { r -> runCatching { SavedKind.valueOf(r.kind) }.getOrNull()?.let { SavedItem(it, r.id, r.label, r.subtitle, r.payload) } }
+        rows.mapNotNull { r -> runCatching { SavedKind.valueOf(r.kind) }.getOrNull()?.let { SavedItem(it, r.id, r.label, r.subtitle, r.payload, r.icon) } }
     }
 
     fun isSaved(kind: SavedKind, id: String): Flow<Boolean> = user.isSaved(kind.name, id).map { it > 0 }
 
     suspend fun saveStop(stop: Stop) = user.save(SavedRow(SavedKind.STOP.name, stop.id, stop.name, "", Codec.place(PlacesRepository.run { stop.toPlace() }), clock().toEpochMilli()))
     suspend fun saveLine(line: Line) = user.save(SavedRow(SavedKind.LINE.name, line.key, line.name, line.mode.name + "|" + line.longName, "", clock().toEpochMilli()))
-    suspend fun savePlace(id: String, label: String, place: Place) = user.save(SavedRow(SavedKind.PLACE.name, id, label, place.name, Codec.place(place), clock().toEpochMilli()))
+    /**
+     * Saves [place] under [id] ([HOME], [WORK] or a custom id from [addPlace]). Replacing a saved place keeps
+     * its position and creation time; a new one goes to the end of the list.
+     */
+    suspend fun savePlace(id: String, label: String, place: Place, icon: String = "") {
+        val rows = user.saved(SavedKind.PLACE.name)
+        val old = rows.firstOrNull { it.id == id }
+        val position = old?.position ?: ((rows.maxOfOrNull { it.position } ?: -1) + 1)
+        user.save(SavedRow(SavedKind.PLACE.name, id, label, place.name, Codec.place(place), old?.created ?: clock().toEpochMilli(), position, icon))
+    }
+
+    /** Saves [place] as a new place of the user's own, named [label]. */
+    suspend fun addPlace(label: String, icon: String, place: Place) = savePlace(CUSTOM_PREFIX + java.util.UUID.randomUUID(), label, place, icon)
+
+    /**
+     * Moves the user's own place [id] one step up or down. Home and Work are not part of that order. Rows saved
+     * before positions were used all share 0, so the whole list is renumbered in its current order.
+     */
+    suspend fun movePlace(id: String, up: Boolean) {
+        val own = user.saved(SavedKind.PLACE.name)
+            .filter { it.id != HOME && it.id != WORK }
+            .sortedWith(compareBy<SavedRow> { it.position }.thenByDescending { it.created })
+            .toMutableList()
+        val from = own.indexOfFirst { it.id == id }
+        val to = if (up) from - 1 else from + 1
+        if (from < 0 || to !in own.indices) return
+        own.add(to, own.removeAt(from))
+        own.forEachIndexed { position, row -> if (row.position != position) user.reposition(row.kind, row.id, position) }
+    }
     suspend fun saveJourney(from: Place, to: Place) = user.save(SavedRow(SavedKind.JOURNEY.name, "${from.id}|${from.name}->${to.id}|${to.name}", "${from.name} → ${to.name}", "", Codec.route(from, to), clock().toEpochMilli()))
     suspend fun remove(kind: SavedKind, id: String) = user.unsave(kind.name, id)
 
@@ -440,11 +517,32 @@ class SavedRepository(private val user: UserDao, private val clock: () -> Instan
 
     suspend fun clearRecents() = user.clearRecent()
 
+    /** Stops and lines opened from the map search, most recent first. */
+    fun searchHistory(limit: Int = 6): Flow<List<SearchHistoryItem>> = user.recent(KIND_SEARCH, limit).map { rows -> rows.mapNotNull { SearchHistoryItem.from(it) } }
+
+    suspend fun addSearchedStop(stop: Stop) {
+        if (stop.id.isBlank()) return
+        user.touch(RecentRow(KIND_SEARCH, HISTORY_STOP + stop.id, stop.name, "", Codec.place(PlacesRepository.run { stop.toPlace() }), clock().toEpochMilli()))
+        user.trimRecent(KIND_SEARCH, 30)
+    }
+
+    suspend fun addSearchedLine(line: Line) {
+        user.touch(RecentRow(KIND_SEARCH, HISTORY_LINE + line.key, line.name, line.longName, Codec.line(line), clock().toEpochMilli()))
+        user.trimRecent(KIND_SEARCH, 30)
+    }
+
+    suspend fun clearSearchHistory() = user.clearRecentOf(KIND_SEARCH)
+
     companion object {
         const val KIND_PLACE = "place"
         const val KIND_JOURNEY = "journey"
+        const val KIND_SEARCH = "search"
+        internal const val HISTORY_STOP = "stop:"
+        internal const val HISTORY_LINE = "line:"
         const val HOME = "home"
         const val WORK = "work"
+        /** Prefix of the ids of the user's own places, so they never collide with [HOME] or [WORK]. */
+        const val CUSTOM_PREFIX = "place:"
     }
 }
 

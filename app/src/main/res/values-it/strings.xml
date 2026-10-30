@@ -190,6 +190,7 @@
     <string name="map_layer_cars">Car sharing</string>
     <string name="map_layer_charging">Ricarica elettrica</string>
     <string name="map_search_hint">Cerca fermate e linee</string>
+    <string name="map_search_recent">Ricerche recenti</string>
     <string name="map_menu">Menu</string>
     <string name="map_menu_close">Chiudi menu</string>
     <string name="map_menu_language">Lingua: %1$s</string>

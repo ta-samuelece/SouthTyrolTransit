@@ -187,6 +187,7 @@
     <string name="map_layer_cars">Carsharing</string>
     <string name="map_layer_charging">E-Ladestationen</string>
     <string name="map_search_hint">Haltestellen und Linien suchen</string>
+    <string name="map_search_recent">Letzte Suchen</string>
     <string name="map_menu">Menü</string>
     <string name="map_menu_close">Menü schließen</string>
     <string name="map_menu_language">Sprache: %1$s</string>

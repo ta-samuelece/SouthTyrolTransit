@@ -60,6 +60,7 @@ class FakeUserDao : UserDao {
     override suspend fun touch(row: RecentRow) { recentRows.value = recentRows.value.filterNot { it.kind == row.kind && it.id == row.id } + row }
     override suspend fun trimRecent(kind: String, keep: Int) { val keepIds = recentRows.value.filter { it.kind == kind }.sortedByDescending { it.used }.take(keep).map { it.id }.toSet(); recentRows.value = recentRows.value.filter { it.kind != kind || it.id in keepIds } }
     override suspend fun clearRecent() { recentRows.value = emptyList() }
+    override suspend fun clearRecentOf(kind: String) { recentRows.value = recentRows.value.filter { it.kind != kind } }
     override suspend fun cache(row: CacheRow) { cacheRows[row.key] = row }
     override suspend fun cache(key: String) = cacheRows[key]
     override suspend fun pruneCache(before: Long) { cacheRows.values.removeIf { it.fetchedAt < before } }

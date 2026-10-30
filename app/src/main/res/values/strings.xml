@@ -196,6 +196,7 @@
     <string name="map_layer_cars">Car sharing</string>
     <string name="map_layer_charging">EV charging</string>
     <string name="map_search_hint">Search stops and lines</string>
+    <string name="map_search_recent">Recent searches</string>
     <string name="map_menu">Menu</string>
     <string name="map_menu_close">Close menu</string>
     <string name="map_menu_language">Language: %1$s</string>

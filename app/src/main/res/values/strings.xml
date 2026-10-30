@@ -333,6 +333,13 @@
     <string name="timetable_up_to_date">The timetable is up to date.</string>
     <string name="timetable_size_note">Source: STA timetable (GTFS) via Open Data Hub. About 150 MB download, about 100 MB on the device.</string>
     <string name="timetable_open_settings">Settings</string>
+    <string name="timetable_prompt_missing_title">Download the offline timetable?</string>
+    <string name="timetable_prompt_missing_body">The offline timetable is not on this phone. Departures and planning still work online, but lines, schedules and offline search need it.</string>
+    <string name="timetable_prompt_expired_title">The offline timetable has expired</string>
+    <string name="timetable_prompt_expired_body">The timetable on this phone ran until %s. Download the current one so schedules stay right.</string>
+    <string name="timetable_prompt_update_title">Timetable update available</string>
+    <string name="timetable_prompt_update_body">STA has published a newer timetable than the one on this phone.</string>
+    <string name="timetable_prompt_size">About 150 MB. The download starts right away, also over mobile data.</string>
 
     <!-- Background work -->
     <string name="channel_alerts">Service notices</string>

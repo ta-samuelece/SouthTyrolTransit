@@ -36,6 +36,7 @@ import org.southtyrol.transit.model.DepartureBoardDataSource
 import org.southtyrol.transit.model.Freshness
 import org.southtyrol.transit.model.FreshnessPolicy
 import org.southtyrol.transit.model.Geo
+import org.southtyrol.transit.model.GtfsTime
 import org.southtyrol.transit.model.TransitZone
 import org.southtyrol.transit.model.VehicleHeadings
 import org.southtyrol.transit.model.GeocodingLocationDataSource
@@ -389,6 +390,12 @@ class ScheduleRepository(private val store: ScheduleStore) {
 
     /** False until a timetable has been downloaded once. */
     fun downloaded(): Boolean = store.activeName() != null
+
+    /** What the timetable needs from the user right now, if anything; asks the server only when one is installed. */
+    suspend fun need(today: Int = GtfsTime.dateKey(LocalDate.now(TransitZone))): TimetableNeed? {
+        val info = (if (downloaded()) store.loadInfo() else null) ?: return TimetableNeed.MISSING
+        return TimetableCheck.need(info, today, store.updateAvailable())
+    }
 }
 
 enum class SavedKind { STOP, LINE, PLACE, JOURNEY }

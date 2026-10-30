@@ -167,6 +167,7 @@ fun TransitApp(
     onStopOpened: () -> Unit = {},
     openFollow: Boolean = false,
     onFollowOpened: () -> Unit = {},
+    checkTimetable: Boolean = true,
 ) {
     val nav = rememberNavController()
     val start = remember { TopLevel.of(startTab) }
@@ -234,7 +235,13 @@ fun TransitApp(
     }
 
     // Offers a newer GitHub release (if any) on start; also shows download progress for manual updates.
-    org.southtyrol.transit.update.UpdatePrompt()
+    val updates: org.southtyrol.transit.update.UpdateViewModel = hiltViewModel()
+    org.southtyrol.transit.update.UpdatePrompt(updates)
+    // Offers to download the offline timetable when it is missing or outdated, after any update offer.
+    if (checkTimetable) {
+        val updatePrompt by updates.prompt.collectAsStateWithLifecycle()
+        TimetablePrompt(blocked = updatePrompt)
+    }
 
     // The followed journey or ride, minimised: a strip under the bar on every screen but its own (the
     // Following screen, the ride's trip) and the map search.

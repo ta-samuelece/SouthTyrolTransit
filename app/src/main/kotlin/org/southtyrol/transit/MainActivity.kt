@@ -118,11 +118,13 @@ class MainActivity : AppCompatActivity() {
                     LocalDarkTheme provides dark,
                 ) {
                     // The start tab is read once, when the app first shows: after the first-run screens that is
-                    // the tab just chosen there.
+                    // the tab just chosen there. Right after them the timetable is not checked: its download
+                    // was set up there a moment ago.
                     if (settings.onboardingDone) TransitApp(
                         startTab = settings.startTab,
                         openStop = openStop.value, onStopOpened = { openStop.value = null },
                         openFollow = openFollow.value, onFollowOpened = { openFollow.value = false },
+                        checkTimetable = start.onboardingDone,
                     )
                     else OnboardingScreen()
                 }

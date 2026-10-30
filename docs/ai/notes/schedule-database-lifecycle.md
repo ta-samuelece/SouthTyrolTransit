@@ -5,7 +5,7 @@ description: Importer changes reach existing installs only when GtfsImporter.VER
 tags: [room, database, gtfs, importer, search, migrations]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-30T12:00:00Z"
+  at: "2026-10-30T17:30:00Z"
 verified:
   by: claude-code/claude-opus-5-5
   at: "2026-10-11T12:00:00Z"
@@ -28,7 +28,9 @@ built by the current `GtfsImporter.VERSION` (meta key `importerVersion`; databas
 read as 0). A change to import logic - search normalisation, shape tolerance, `stationKey`/`lineKey`
 derivation, a new meta key - therefore reaches phones only if you **bump `GtfsImporter.VERSION`** in the
 same change: the next sync then downloads unconditionally and re-imports the same feed. Without the bump
-it waits until STA publishes a new feed (issue #7, fixed 2026-10-09).
+it waits until STA publishes a new feed (issue #7, fixed 2026-10-09). The bump also makes the
+start-up timetable prompt (`ui/TimetablePrompt.kt`, via `ScheduleStore.updateAvailable`) offer every
+user a ~150 MB download on their next app open, so bump only when the re-import matters.
 
 # Migrations: one in each database
 
@@ -50,9 +52,10 @@ the 1-to-2 migration, so the first build afterwards must add it). Neither builde
   `ALTER TABLE` (or be nullable without one), or Room's schema check rejects the migrated file. Without a
   migration, opening the old file fails Room's identity check; `GtfsSchedule.isAvailable()` only checks
   that the pointer exists, so every offline query fails (as `DataError.Parse`) until the next successful
-  import - which happens only when the sync worker next runs under its constraints (inferred). So a
-  schema change needs a migration that keeps old files readable, plus an importer-version bump to fill
-  them.
+  import. `ScheduleRepository.need` does read the file (`loadInfo`), so the start-up timetable prompt
+  treats an unreadable file as missing and offers a download - but only if the user accepts it, or the
+  sync worker next runs under its constraints. So a schema change needs a migration that keeps old
+  files readable, plus an importer-version bump to fill them.
 
 # The importer bypasses Room
 

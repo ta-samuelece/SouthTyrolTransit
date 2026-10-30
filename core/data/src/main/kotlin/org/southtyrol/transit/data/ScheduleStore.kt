@@ -43,6 +43,24 @@ sealed class ScheduleStatus {
     data object UpToDate : ScheduleStatus()
 }
 
+/** Why the offline timetable needs the user's attention, as checked when the app opens. */
+enum class TimetableNeed { MISSING, EXPIRED, UPDATE_AVAILABLE }
+
+object TimetableCheck {
+    /**
+     * [info] is null both when nothing was downloaded and when the timetable can no longer be read:
+     * either way it is missing. [updateAvailable] is [ScheduleStore.updateAvailable]: an expired
+     * timetable is reported unless the server confirmed there is nothing newer, since downloading again
+     * would not help then. [today] is a `GtfsTime.dateKey`.
+     */
+    fun need(info: ScheduleInfo?, today: Int, updateAvailable: Boolean?): TimetableNeed? = when {
+        info == null -> TimetableNeed.MISSING
+        info.lastDate in 1 until today && updateAvailable != false -> TimetableNeed.EXPIRED
+        updateAvailable == true -> TimetableNeed.UPDATE_AVAILABLE
+        else -> null
+    }
+}
+
 /** A static GTFS source. HTTPS sources are preferred; see docs/API_DISCOVERY.md. */
 data class GtfsSource(val name: String, val url: String)
 
@@ -169,6 +187,43 @@ class ScheduleStore(
             .setJournalMode(RoomDatabase.JournalMode.TRUNCATE)
             .addMigrations(ScheduleDatabase.MIGRATION_1_2)
             .build()
+
+    /**
+     * Asks the preferred HTTPS source whether a newer feed exists, reading only the response headers:
+     * true when one does (or the importer changed since the active feed was built), false when the
+     * active feed is current, null when it cannot tell - no timetable, a feed that came from FTP, no
+     * validators to compare, or no connection.
+     */
+    suspend fun updateAvailable(): Boolean? = withContext(Dispatchers.IO) {
+        val info = loadInfo() ?: return@withContext null
+        if (info.importerVersion < GtfsImporter.VERSION) return@withContext true
+        val source = sources.firstOrNull { !it.url.startsWith("ftp:") }?.takeIf { it.name == info.source } ?: return@withContext null
+        val (etag, modified) = runCatching { withDatabase { db -> db.schedule().let { it.meta("etag").orEmpty() to it.meta("lastModified").orEmpty() } } }
+            .getOrNull() ?: return@withContext null
+        if (etag.isBlank() && modified.isBlank()) return@withContext null
+        val headers = buildMap {
+            if (etag.isNotBlank()) put("If-None-Match", etag)
+            if (modified.isNotBlank()) put("If-Modified-Since", modified)
+        }
+        try {
+            // The body is never read: closing the response drops the connection instead.
+            http.response(source.url, "application/zip, application/octet-stream", headers).use { response ->
+                val newEtag = response.header("ETag").orEmpty()
+                val newModified = response.header("Last-Modified").orEmpty()
+                when {
+                    response.code == 304 -> false
+                    // A server that ignores the conditions still names the feed it would send.
+                    etag.isNotBlank() && newEtag.isNotBlank() -> newEtag != etag
+                    modified.isNotBlank() && newModified.isNotBlank() -> newModified != modified
+                    else -> null
+                }
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            null
+        }
+    }
 
     /**
      * Downloads the static feed if it changed and imports it. Returns true when a new schedule was

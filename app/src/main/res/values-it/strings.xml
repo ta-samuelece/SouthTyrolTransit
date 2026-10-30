@@ -359,6 +359,13 @@
     <string name="timetable_up_to_date">L\'orario è aggiornato.</string>
     <string name="timetable_size_note">Fonte: orario STA (GTFS) tramite Open Data Hub. Circa 150 MB da scaricare, circa 100 MB sul dispositivo.</string>
     <string name="timetable_open_settings">Impostazioni</string>
+    <string name="timetable_prompt_missing_title">Scaricare l\'orario offline?</string>
+    <string name="timetable_prompt_missing_body">L\'orario offline non è su questo telefono. Partenze e calcolo percorso funzionano comunque online, ma linee, orari e ricerca offline ne hanno bisogno.</string>
+    <string name="timetable_prompt_expired_title">L\'orario offline è scaduto</string>
+    <string name="timetable_prompt_expired_body">L\'orario su questo telefono era valido fino al %s. Scarica quello attuale perché gli orari restino corretti.</string>
+    <string name="timetable_prompt_update_title">Aggiornamento dell\'orario disponibile</string>
+    <string name="timetable_prompt_update_body">STA ha pubblicato un orario più recente di quello su questo telefono.</string>
+    <string name="timetable_prompt_size">Circa 150 MB. Il download parte subito, anche con i dati mobili.</string>
 
     <string name="channel_alerts">Avvisi di servizio</string>
     <string name="channel_alerts_description">Nuovi disservizi sulle fermate e linee salvate</string>

@@ -352,6 +352,13 @@
     <string name="timetable_up_to_date">Der Fahrplan ist aktuell.</string>
     <string name="timetable_size_note">Quelle: STA-Fahrplan (GTFS) über Open Data Hub. Etwa 150 MB Download, etwa 100 MB auf dem Gerät.</string>
     <string name="timetable_open_settings">Einstellungen</string>
+    <string name="timetable_prompt_missing_title">Offline-Fahrplan herunterladen?</string>
+    <string name="timetable_prompt_missing_body">Der Offline-Fahrplan ist nicht auf diesem Telefon. Abfahrten und Auskunft funktionieren weiterhin online, Linien, Fahrpläne und die Offline-Suche brauchen ihn aber.</string>
+    <string name="timetable_prompt_expired_title">Der Offline-Fahrplan ist abgelaufen</string>
+    <string name="timetable_prompt_expired_body">Der Fahrplan auf diesem Telefon galt bis %s. Lade den aktuellen herunter, damit die Fahrpläne stimmen.</string>
+    <string name="timetable_prompt_update_title">Fahrplan-Update verfügbar</string>
+    <string name="timetable_prompt_update_body">Die STA hat einen neueren Fahrplan veröffentlicht als den auf diesem Telefon.</string>
+    <string name="timetable_prompt_size">Etwa 150 MB. Der Download startet sofort, auch über mobile Daten.</string>
 
     <string name="channel_alerts">Betriebsmeldungen</string>
     <string name="channel_alerts_description">Neue Störungen auf deinen gespeicherten Haltestellen und Linien</string>

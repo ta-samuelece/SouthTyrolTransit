@@ -191,8 +191,8 @@ the system default zone for transit times. Turn a GTFS time into an `Instant` on
 after midnight. Details: [GTFS time](docs/ai/notes/gtfs-time-and-service-days.md).
 
 **Database and importer changes need extra steps, or they break users' data.** A schema change needs a
-Room migration: `UserDatabase` has none yet (a change without one loses saved items), `ScheduleDatabase`
-has `MIGRATION_1_2`. An importer change reaches existing installs only when `GtfsImporter.VERSION` is
+Room migration: each database has one so far (`UserDatabase.MIGRATION_1_2`, `ScheduleDatabase.MIGRATION_1_2`),
+and a change without one loses saved items or the timetable. An importer change reaches existing installs only when `GtfsImporter.VERSION` is
 bumped. Details: [schedule database](docs/ai/notes/schedule-database-lifecycle.md).
 
 **Saved stops and lines are keyed by derived keys** (station key `it:22021:468`, line key `BUS:201`), and

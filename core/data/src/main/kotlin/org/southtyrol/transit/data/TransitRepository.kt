@@ -393,9 +393,17 @@ class ScheduleRepository(private val store: ScheduleStore) {
 
 enum class SavedKind { STOP, LINE, PLACE, JOURNEY }
 
-data class SavedItem(val kind: SavedKind, val id: String, val label: String, val subtitle: String, val payload: String) {
+data class SavedItem(val kind: SavedKind, val id: String, val label: String, val subtitle: String, val payload: String, val icon: String = "") {
     val place: Place? get() = if (kind == SavedKind.PLACE || kind == SavedKind.STOP) Codec.place(payload) else null
     val route: Pair<Place, Place>? get() = if (kind == SavedKind.JOURNEY) Codec.route(payload) else null
+    /** Home or Work: one fixed slot each, always listed before the user's own places. */
+    val isHomeOrWork: Boolean get() = kind == SavedKind.PLACE && (id == SavedRepository.HOME || id == SavedRepository.WORK)
+
+    /** Whether this saved place is [other]: the same planner id, or for places without one the same name and point. */
+    fun isPlace(other: Place): Boolean {
+        val mine = place ?: return false
+        return if (mine.id.isNotBlank() || other.id.isNotBlank()) mine.id == other.id else mine.name == other.name && mine.point == other.point
+    }
 }
 
 data class RecentItem(val id: String, val label: String, val subtitle: String, val payload: String, val used: Instant) {
@@ -405,14 +413,42 @@ data class RecentItem(val id: String, val label: String, val subtitle: String, v
 
 class SavedRepository(private val user: UserDao, private val clock: () -> Instant = Instant::now) {
     val saved: Flow<List<SavedItem>> = user.saved().map { rows ->
-        rows.mapNotNull { r -> runCatching { SavedKind.valueOf(r.kind) }.getOrNull()?.let { SavedItem(it, r.id, r.label, r.subtitle, r.payload) } }
+        rows.mapNotNull { r -> runCatching { SavedKind.valueOf(r.kind) }.getOrNull()?.let { SavedItem(it, r.id, r.label, r.subtitle, r.payload, r.icon) } }
     }
 
     fun isSaved(kind: SavedKind, id: String): Flow<Boolean> = user.isSaved(kind.name, id).map { it > 0 }
 
     suspend fun saveStop(stop: Stop) = user.save(SavedRow(SavedKind.STOP.name, stop.id, stop.name, "", Codec.place(PlacesRepository.run { stop.toPlace() }), clock().toEpochMilli()))
     suspend fun saveLine(line: Line) = user.save(SavedRow(SavedKind.LINE.name, line.key, line.name, line.mode.name + "|" + line.longName, "", clock().toEpochMilli()))
-    suspend fun savePlace(id: String, label: String, place: Place) = user.save(SavedRow(SavedKind.PLACE.name, id, label, place.name, Codec.place(place), clock().toEpochMilli()))
+    /**
+     * Saves [place] under [id] ([HOME], [WORK] or a custom id from [addPlace]). Replacing a saved place keeps
+     * its position and creation time; a new one goes to the end of the list.
+     */
+    suspend fun savePlace(id: String, label: String, place: Place, icon: String = "") {
+        val rows = user.saved(SavedKind.PLACE.name)
+        val old = rows.firstOrNull { it.id == id }
+        val position = old?.position ?: ((rows.maxOfOrNull { it.position } ?: -1) + 1)
+        user.save(SavedRow(SavedKind.PLACE.name, id, label, place.name, Codec.place(place), old?.created ?: clock().toEpochMilli(), position, icon))
+    }
+
+    /** Saves [place] as a new place of the user's own, named [label]. */
+    suspend fun addPlace(label: String, icon: String, place: Place) = savePlace(CUSTOM_PREFIX + java.util.UUID.randomUUID(), label, place, icon)
+
+    /**
+     * Moves the user's own place [id] one step up or down. Home and Work are not part of that order. Rows saved
+     * before positions were used all share 0, so the whole list is renumbered in its current order.
+     */
+    suspend fun movePlace(id: String, up: Boolean) {
+        val own = user.saved(SavedKind.PLACE.name)
+            .filter { it.id != HOME && it.id != WORK }
+            .sortedWith(compareBy<SavedRow> { it.position }.thenByDescending { it.created })
+            .toMutableList()
+        val from = own.indexOfFirst { it.id == id }
+        val to = if (up) from - 1 else from + 1
+        if (from < 0 || to !in own.indices) return
+        own.add(to, own.removeAt(from))
+        own.forEachIndexed { position, row -> if (row.position != position) user.reposition(row.kind, row.id, position) }
+    }
     suspend fun saveJourney(from: Place, to: Place) = user.save(SavedRow(SavedKind.JOURNEY.name, "${from.id}|${from.name}->${to.id}|${to.name}", "${from.name} → ${to.name}", "", Codec.route(from, to), clock().toEpochMilli()))
     suspend fun remove(kind: SavedKind, id: String) = user.unsave(kind.name, id)
 
@@ -438,6 +474,8 @@ class SavedRepository(private val user: UserDao, private val clock: () -> Instan
         const val KIND_JOURNEY = "journey"
         const val HOME = "home"
         const val WORK = "work"
+        /** Prefix of the ids of the user's own places, so they never collide with [HOME] or [WORK]. */
+        const val CUSTOM_PREFIX = "place:"
     }
 }
 

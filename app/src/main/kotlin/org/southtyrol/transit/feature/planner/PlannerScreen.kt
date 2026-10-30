@@ -113,6 +113,7 @@ import org.southtyrol.transit.location.LocationResult
 import org.southtyrol.transit.model.Place
 import org.southtyrol.transit.model.PlaceType
 import org.southtyrol.transit.model.RoutePreference
+import org.southtyrol.transit.model.SearchOptions
 import org.southtyrol.transit.model.TransitZone
 import org.southtyrol.transit.model.TransportMode
 import org.southtyrol.transit.model.WalkingSpeed
@@ -369,6 +370,14 @@ private fun TimeAndOptions(state: PlannerState, viewModel: PlannerViewModel) {
                     ConnectedToggleGroup(
                         options = WalkingSpeed.entries.toList(), selected = state.walkingSpeed, onSelect = viewModel::setWalkingSpeed,
                         label = { stringResource(when (it) { WalkingSpeed.SLOW -> R.string.walking_slow; WalkingSpeed.NORMAL -> R.string.walking_normal; WalkingSpeed.FAST -> R.string.walking_fast }) },
+                        modifier = Modifier.fillMaxWidth(),
+                        // The card is surfaceContainer, the toggles' default: lift them one tone.
+                        uncheckedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    )
+                    Text(stringResource(R.string.planner_max_walk), style = MaterialTheme.typography.labelLarge)
+                    ConnectedToggleGroup(
+                        options = SearchOptions.MAX_WALK_CHOICES, selected = state.maxWalkMinutes, onSelect = viewModel::setMaxWalk,
+                        label = { Format.duration(java.time.Duration.ofMinutes(it.toLong())) },
                         modifier = Modifier.fillMaxWidth(),
                         // The card is surfaceContainer, the toggles' default: lift them one tone.
                         uncheckedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,

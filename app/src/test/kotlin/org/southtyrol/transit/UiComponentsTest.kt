@@ -54,13 +54,14 @@ class UiComponentsTest {
 
     @Test fun journeySearchRequestSurvivesNavigation() {
         val at = ZonedDateTime.of(2026, 10, 5, 8, 15, 0, 0, TransitZone)
-        val request = JourneyRequest(bozen, meran, SearchOptions(at = at, arriveBy = true, preference = RoutePreference.FEWEST_CHANGES, excludedModes = setOf(TransportMode.CABLE_CAR), wheelchair = true))
+        val request = JourneyRequest(bozen, meran, SearchOptions(at = at, arriveBy = true, preference = RoutePreference.FASTEST, excludedModes = setOf(TransportMode.CABLE_CAR), wheelchair = true, maxWalkMinutes = 30))
         val decoded = RequestCodec.decode(RequestCodec.encode(request, leaveNow = false))!!
         assertEquals(request.from, decoded.from)
         assertEquals(request.to, decoded.to)
         assertEquals(at.toInstant(), decoded.options.at.toInstant())
         assertTrue(decoded.options.arriveBy && decoded.options.wheelchair)
-        assertEquals(RoutePreference.FEWEST_CHANGES, decoded.options.preference)
+        assertEquals(RoutePreference.FASTEST, decoded.options.preference)
+        assertEquals(30, decoded.options.maxWalkMinutes)
         assertEquals(setOf(TransportMode.CABLE_CAR), decoded.options.excludedModes)
         // "Leave now" requests are re-evaluated at decode time.
         val later = Instant.parse("2026-10-06T10:00:00Z")

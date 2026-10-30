@@ -100,6 +100,32 @@ class EfaXmlTest {
         assertEquals("11.350000:46.500000:WGS84[DD.DDDDD]", params["name_destination"])
         assertEquals("1", params["exclMOT_8"])
         assertEquals("on", params["wheelchair"])
+        // EFA's own 10-minute footpath cap would drop "walk further to a direct bus" connections.
+        assertEquals("100", params["trITMOT"])
+        assertEquals("20", params["trITMOTvalue100"])
+        assertEquals("LEASTINTERCHANGE", params["routeType"])
+    }
+
+    @Test fun connectionsOutsideTheRequestedTimeAreDropped() {
+        val journeys = EfaXml.journeys(fixture("efa_trip_ok.xml"))
+        val second = journeys.sortedBy { it.bestDeparture }[1]
+        val departAt = second.bestDeparture.atZone(TransitZone)
+        val leaving = EfaClient.inWindow(journeys, org.southtyrol.transit.model.SearchOptions(at = departAt))
+        assertTrue(leaving.isNotEmpty())
+        assertTrue(leaving.all { !it.bestDeparture.isBefore(second.bestDeparture.minusSeconds(60)) })
+        assertTrue(leaving.size < journeys.size)
+        val arriveAt = second.bestArrival.atZone(TransitZone)
+        val arriving = EfaClient.inWindow(journeys, org.southtyrol.transit.model.SearchOptions(at = arriveAt, arriveBy = true))
+        assertTrue(arriving.isNotEmpty())
+        assertTrue(arriving.all { !it.bestArrival.isAfter(second.bestArrival.plusSeconds(60)) })
+    }
+
+    @Test fun stopListedUnderTwoNamesKeepsTheBetterMatch() {
+        // Live answer to "Maia Bassa": one stop id under the long-distance bus name (listed first, 397)
+        // and the station name (401). Keeping the first hid the station from the planner's search.
+        val places = EfaXml.places(fixture("efa_stopfinder_aliases.xml"))
+        assertEquals(1, places.count { it.id == "66000301" })
+        assertEquals("Stazione di Merano Maia Bassa", places.first { it.id == "66000301" }.name)
     }
 
     @Test fun parsesEveningResponseWithRealtimeBlocks() {

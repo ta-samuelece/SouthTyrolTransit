@@ -108,7 +108,7 @@ class EfaClient(
 
     override suspend fun plan(from: Place, to: Place, options: SearchOptions, language: String): List<Journey> = guarded {
         val bytes = get("XML_TRIP_REQUEST2", tripParams(from, to, options, language))
-        val journeys = withContext(Dispatchers.Default) { EfaXml.journeys(bytes) }
+        val journeys = withContext(Dispatchers.Default) { EfaXml.journeys(bytes) }.let { inWindow(it, options) }
         when (options.preference) {
             RoutePreference.FASTEST -> journeys.sortedWith(compareBy<Journey> { if (options.arriveBy) -it.bestDeparture.epochSecond else it.bestArrival.epochSecond }.thenBy { it.duration })
             RoutePreference.FEWEST_CHANGES -> journeys.sortedWith(compareBy<Journey> { it.changes }.thenBy { it.bestArrival })
@@ -147,7 +147,18 @@ class EfaClient(
     }
 
     companion object {
-        fun coordinate(p: Point) = "%.6f:%.6f:WGS84[DD.DDDDD]".format(java.util.Locale.ROOT, p.longitude, p.latitude)
+        /**
+         * Drops connections on the wrong side of the requested time. LEASTINTERCHANGE in particular answers a
+         * departure search with trips that left earlier ("dep 22:30" gives a 20:56 trip); an arrive-by
+         * search likewise must not offer trips arriving later.
+         */
+        internal fun inWindow(journeys: List<Journey>, options: SearchOptions): List<Journey> {
+            val at = options.at.toInstant()
+            return if (options.arriveBy) journeys.filter { !it.bestArrival.isAfter(at.plusSeconds(60)) }
+            else journeys.filter { !it.bestDeparture.isBefore(at.minusSeconds(60)) }
+        }
+
+        fun coordinate(p: Point) ="%.6f:%.6f:WGS84[DD.DDDDD]".format(java.util.Locale.ROOT, p.longitude, p.latitude)
 
         /** EFA motType ids used by excludedMeans, grouped by the app's modes. */
         fun efaMeans(mode: TransportMode): List<Int> = when (mode) {
@@ -168,6 +179,8 @@ class EfaClient(
                 "itdTripDateTimeDepArr" to if (options.arriveBy) "arr" else "dep", "ptOptionsActive" to "1", "itOptionsActive" to "1",
                 "routeType" to when (options.preference) { RoutePreference.FASTEST -> "LEASTTIME"; RoutePreference.FEWEST_CHANGES -> "LEASTINTERCHANGE"; RoutePreference.LEAST_WALKING -> "LEASTWALKING" },
                 "changeSpeed" to when (options.walkingSpeed) { WalkingSpeed.SLOW -> "slow"; WalkingSpeed.NORMAL -> "normal"; WalkingSpeed.FAST -> "fast" },
+                // Footpath (mot 100) to and from stops, in minutes; EFA caps it at 10 when absent.
+                "trITMOT" to "100", "trITMOTvalue100" to options.maxWalkMinutes.toString(),
             )
             for ((key, place) in listOf("origin" to from, "destination" to to)) {
                 val point = place.point
@@ -265,7 +278,11 @@ object EfaXml {
         return best.values.sortedByDescending { it.second }.map { it.first }
     }
 
-    /** Places with EFA's matchQuality (a unique identification scores highest). */
+    /**
+     * Places with EFA's matchQuality (a unique identification scores highest). EFA lists one stop under
+     * each of its names with the same id ("Fermata autobus a lunga percorrenza Merano Maia Bassa" and
+     * "Stazione di Merano Maia Bassa"): the name that matches the query best is kept.
+     */
     fun rankedPlaces(bytes: ByteArray): List<Pair<Place, Int>> {
         val root = root(bytes)
         val odv = root.all("itdOdv").firstOrNull { it.a("usage") == "sf" } ?: root
@@ -283,7 +300,7 @@ object EfaXml {
                 else -> objectName
             }
             Place(id, display, type, point(e.a("x"), e.a("y")), locality, e.a("gid")) to (e.a("matchQuality").toIntOrNull() ?: 0)
-        }.distinctBy { it.first.id }.sortedByDescending { it.second }
+        }.sortedByDescending { it.second }.distinctBy { it.first.id }
     }
 
     fun coordStops(bytes: ByteArray): List<Place> = root(bytes).all("coordInfoItem").filter { it.a("type") == "STOP" }.mapNotNull { e ->

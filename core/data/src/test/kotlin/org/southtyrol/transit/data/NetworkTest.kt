@@ -83,13 +83,14 @@ class NetworkTest {
         val journeys = efa.plan(
             org.southtyrol.transit.model.Place("66000468", "Bozen", org.southtyrol.transit.model.PlaceType.STOP),
             org.southtyrol.transit.model.Place("x", "Meran"),
-            org.southtyrol.transit.model.SearchOptions(), "de",
+            // The fixture's trips leave from 08:01 on 2026-10-05; earlier ones than the request are dropped.
+            org.southtyrol.transit.model.SearchOptions(at = java.time.ZonedDateTime.of(2026, 10, 5, 7, 55, 0, 0, org.southtyrol.transit.model.TransitZone)), "de",
         )
         assertEquals(4, journeys.size)
         val request = server.takeRequest()
         assertEquals("/apb/XML_TRIP_REQUEST2", request.url.encodedPath)
         assertEquals("stop", request.url.queryParameter("type_origin"))
-        assertEquals("LEASTTIME", request.url.queryParameter("routeType"))
+        assertEquals("LEASTINTERCHANGE", request.url.queryParameter("routeType"))
     }
 
     @Test fun mapStopsWithoutTimetableComeFromTheCoordinateSearch() = runTest {

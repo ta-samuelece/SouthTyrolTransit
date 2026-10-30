@@ -39,6 +39,7 @@
     <string name="planner_preference">Preferisci</string>
     <string name="planner_modes">Mezzi di trasporto</string>
     <string name="planner_walking_speed">Velocità a piedi</string>
+    <string name="planner_max_walk">Tratto a piedi più lungo fino alla fermata</string>
     <string name="planner_wheelchair">Percorsi accessibili in sedia a rotelle</string>
     <string name="planner_wheelchair_hint">Utilizza i dati di accessibilità forniti al calcolo percorso.</string>
     <string name="planner_search">Cerca collegamenti</string>

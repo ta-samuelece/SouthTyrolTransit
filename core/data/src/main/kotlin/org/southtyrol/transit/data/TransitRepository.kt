@@ -97,6 +97,17 @@ object Codec {
         place(o.getValue("from").jsonObject) to place(o.getValue("to").jsonObject)
     }.getOrNull()
 
+    /** A line as the search history keeps it: enough to draw its badge and open it, without its routes. */
+    fun line(l: Line): String = buildJsonObject {
+        put("key", l.key); put("name", l.name); put("mode", l.mode.name); put("long", l.longName)
+        l.color?.let { put("color", it) }; l.textColor?.let { put("text", it) }
+    }.toString()
+
+    fun line(text: String): Line? = runCatching {
+        val o = json.parseToJsonElement(text).jsonObject
+        Line(o.str("key"), o.str("name"), TransportMode.valueOf(o.str("mode")), emptyList(), o.str("long"), o["color"]?.jsonPrimitive?.longOrNull, o["text"]?.jsonPrimitive?.longOrNull)
+    }.getOrNull()?.takeIf { it.key.isNotBlank() }
+
     fun alerts(list: List<ServiceAlert>): String = buildJsonArray {
         for (a in list) add(buildJsonObject {
             put("id", a.id); put("source", a.source.name); put("effect", a.effect); put("cause", a.cause); put("severity", a.severity)
@@ -398,6 +409,22 @@ data class SavedItem(val kind: SavedKind, val id: String, val label: String, val
     val route: Pair<Place, Place>? get() = if (kind == SavedKind.JOURNEY) Codec.route(payload) else null
 }
 
+/** One entry of the map search's history: a stop or a line opened from the search. */
+sealed interface SearchHistoryItem {
+    val key: String
+    data class OfStop(val stop: Stop) : SearchHistoryItem { override val key get() = SavedRepository.HISTORY_STOP + stop.id }
+    data class OfLine(val line: Line) : SearchHistoryItem { override val key get() = SavedRepository.HISTORY_LINE + line.key }
+
+    companion object {
+        internal fun from(row: RecentRow): SearchHistoryItem? = when {
+            row.id.startsWith(SavedRepository.HISTORY_STOP) -> Codec.place(row.payload)?.takeIf { it.id.isNotBlank() }
+                ?.let { OfStop(Stop(it.id, it.name, it.point ?: Point(0.0, 0.0), stationKey = it.stopGlobalId)) }
+            row.id.startsWith(SavedRepository.HISTORY_LINE) -> Codec.line(row.payload)?.let { OfLine(it) }
+            else -> null
+        }
+    }
+}
+
 data class RecentItem(val id: String, val label: String, val subtitle: String, val payload: String, val used: Instant) {
     val place: Place? get() = Codec.place(payload)
     val route: Pair<Place, Place>? get() = Codec.route(payload)
@@ -433,9 +460,28 @@ class SavedRepository(private val user: UserDao, private val clock: () -> Instan
 
     suspend fun clearRecents() = user.clearRecent()
 
+    /** Stops and lines opened from the map search, most recent first. */
+    fun searchHistory(limit: Int = 6): Flow<List<SearchHistoryItem>> = user.recent(KIND_SEARCH, limit).map { rows -> rows.mapNotNull { SearchHistoryItem.from(it) } }
+
+    suspend fun addSearchedStop(stop: Stop) {
+        if (stop.id.isBlank()) return
+        user.touch(RecentRow(KIND_SEARCH, HISTORY_STOP + stop.id, stop.name, "", Codec.place(PlacesRepository.run { stop.toPlace() }), clock().toEpochMilli()))
+        user.trimRecent(KIND_SEARCH, 30)
+    }
+
+    suspend fun addSearchedLine(line: Line) {
+        user.touch(RecentRow(KIND_SEARCH, HISTORY_LINE + line.key, line.name, line.longName, Codec.line(line), clock().toEpochMilli()))
+        user.trimRecent(KIND_SEARCH, 30)
+    }
+
+    suspend fun clearSearchHistory() = user.clearRecentOf(KIND_SEARCH)
+
     companion object {
         const val KIND_PLACE = "place"
         const val KIND_JOURNEY = "journey"
+        const val KIND_SEARCH = "search"
+        internal const val HISTORY_STOP = "stop:"
+        internal const val HISTORY_LINE = "line:"
         const val HOME = "home"
         const val WORK = "work"
     }

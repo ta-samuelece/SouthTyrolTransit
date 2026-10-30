@@ -370,6 +370,7 @@ interface UserDao {
     @Query("DELETE FROM recent WHERE kind = :kind AND id NOT IN (SELECT id FROM recent WHERE kind = :kind ORDER BY used DESC LIMIT :keep)")
     suspend fun trimRecent(kind: String, keep: Int)
     @Query("DELETE FROM recent") suspend fun clearRecent()
+    @Query("DELETE FROM recent WHERE kind = :kind") suspend fun clearRecentOf(kind: String)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun cache(row: CacheRow)
     @Query("SELECT * FROM cache WHERE `key` = :key") suspend fun cache(key: String): CacheRow?

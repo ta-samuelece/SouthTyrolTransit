@@ -48,11 +48,14 @@ class FakeUserDao : UserDao {
     val recentRows = MutableStateFlow<List<RecentRow>>(emptyList())
     val cacheRows = HashMap<String, CacheRow>()
     private val notified = HashMap<String, Long>()
-    override fun saved(): Flow<List<SavedRow>> = savedRows
-    override suspend fun saved(kind: String) = savedRows.value.filter { it.kind == kind }
+    // The DAO's order: kind, then position, newest first among equal positions.
+    private val order = compareBy<SavedRow>({ it.kind }, { it.position }).thenByDescending { it.created }
+    override fun saved(): Flow<List<SavedRow>> = savedRows.map { it.sortedWith(order) }
+    override suspend fun saved(kind: String) = savedRows.value.filter { it.kind == kind }.sortedWith(order)
     override fun isSaved(kind: String, id: String) = savedRows.map { rows -> rows.count { it.kind == kind && it.id == id } }
     override suspend fun save(row: SavedRow) { savedRows.value = savedRows.value.filterNot { it.kind == row.kind && it.id == row.id } + row }
     override suspend fun unsave(kind: String, id: String) { savedRows.value = savedRows.value.filterNot { it.kind == kind && it.id == id } }
+    override suspend fun reposition(kind: String, id: String, position: Int) { savedRows.value = savedRows.value.map { if (it.kind == kind && it.id == id) it.copy(position = position) else it } }
     override fun recent(kind: String, limit: Int) = recentRows.map { rows -> rows.filter { it.kind == kind }.sortedByDescending { it.used }.take(limit) }
     override suspend fun touch(row: RecentRow) { recentRows.value = recentRows.value.filterNot { it.kind == row.kind && it.id == row.id } + row }
     override suspend fun trimRecent(kind: String, keep: Int) { val keepIds = recentRows.value.filter { it.kind == kind }.sortedByDescending { it.used }.take(keep).map { it.id }.toSet(); recentRows.value = recentRows.value.filter { it.kind != kind || it.id in keepIds } }

@@ -64,7 +64,7 @@ object AppModule {
 
     @Provides @Singleton
     fun userDatabase(@ApplicationContext context: Context): UserDatabase =
-        Room.databaseBuilder(context, UserDatabase::class.java, "user.db").build()
+        Room.databaseBuilder(context, UserDatabase::class.java, "user.db").addMigrations(UserDatabase.MIGRATION_1_2).build()
 
     @Provides
     fun userDao(db: UserDatabase): UserDao = db.user()

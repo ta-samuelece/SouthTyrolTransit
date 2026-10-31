@@ -56,7 +56,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -77,6 +79,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import org.southtyrol.transit.model.DataError
 import org.southtyrol.transit.model.Freshness
 import org.southtyrol.transit.model.LineNames
@@ -94,12 +97,18 @@ fun TransportMode.icon(): ImageVector = when (this) {
     else -> Icons.Rounded.DirectionsBus
 }
 
-/** A ticking clock for countdowns; updates every [periodMillis] while composed. */
+/**
+ * A ticking clock for countdowns; updates every [periodMillis] while composed. A tick recomposes every
+ * reader, so while [holdWhile] is true (a list scrolling: `{ listState.isScrollInProgress }`) it waits
+ * and lands as soon as that ends, never in the middle of a fling.
+ */
 @Composable
-fun rememberNow(periodMillis: Long = 15_000): Instant {
+fun rememberNow(periodMillis: Long = 15_000, holdWhile: () -> Boolean = { false }): Instant {
     var now by remember { mutableStateOf(Instant.now()) }
+    val hold by rememberUpdatedState(holdWhile)
     LaunchedEffect(periodMillis) {
         while (true) {
+            snapshotFlow { hold() }.first { !it }
             now = Instant.now()
             delay(periodMillis - System.currentTimeMillis() % periodMillis)
         }

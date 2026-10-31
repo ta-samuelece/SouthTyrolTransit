@@ -126,7 +126,9 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
     val state by viewModel.state.collectAsStateWithLifecycle()
     val board by viewModel.board.collectAsStateWithLifecycle()
     val visible by viewModel.visible.collectAsStateWithLifecycle()
-    val now = rememberNow()
+    // The board's countdowns tick only between flings: a tick recomposes every visible row.
+    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+    val now = rememberNow(holdWhile = { listState.isScrollInProgress })
     val mapState = org.southtyrol.transit.feature.common.rememberExpandableMapState()
     val scope = rememberCoroutineScope()
     var refreshing by remember { mutableStateOf(false) }
@@ -159,7 +161,7 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
             mapState, points.isNotEmpty(), mapContent, camera, Modifier.fillMaxSize(),
             placement = org.southtyrol.transit.feature.common.MapPlacement.BOTTOM,
         ) { listModifier ->
-        LazyColumn(contentPadding = PaddingValues(bottom = 24.dp), modifier = listModifier) {
+        LazyColumn(state = listState, contentPadding = PaddingValues(bottom = 24.dp), modifier = listModifier) {
             item {
                 Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     // Large stations serve dozens of lines: one row that scrolls sideways keeps the live board in view.

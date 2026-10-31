@@ -254,7 +254,9 @@ fun LineScreen(navigator: Navigator, key: String) {
     val live by viewModel.live.collectAsStateWithLifecycle()
     val alerts by viewModel.lineAlerts.collectAsStateWithLifecycle()
     val saved by viewModel.isSaved.collectAsStateWithLifecycle()
-    val now = rememberNow()
+    // Ticks only between flings: a tick recomposes the departures, the stops and the map.
+    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+    val now = rememberNow(holdWhile = { listState.isScrollInProgress })
     val dark = LocalDarkTheme.current
     PollWhileVisible(30_000) { viewModel.poll() }
     Scaffold(
@@ -301,7 +303,7 @@ fun LineScreen(navigator: Navigator, key: String) {
                     }
                     val camera = remember(variant, state.selected) { CameraRequest.Fit(variant?.shape.orEmpty(), key = state.selected) }
                     org.southtyrol.transit.feature.common.ExpandableMapPage(mapState, hasMap, mapContent, camera) { listModifier ->
-                    LazyColumn(listModifier, contentPadding = PaddingValues(bottom = 24.dp)) {
+                    LazyColumn(listModifier, state = listState, contentPadding = PaddingValues(bottom = 24.dp)) {
                         if (state.variants.size > 1) item {
                             Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 state.variants.forEachIndexed { index, v ->

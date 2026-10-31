@@ -16,6 +16,7 @@ import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -23,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.LocalPinnableContainer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
@@ -101,6 +103,14 @@ enum class MapPlacement { TOP, BOTTOM }
 /** The small, static map card for use inside the list; shows nothing while the map is enlarged. */
 @Composable
 fun CompactMapCard(state: ExpandableMapState, content: MapContent, camera: CameraRequest, modifier: Modifier = Modifier) {
+    // Pins its list item while the page is shown. Unpinned, scrolling the card out of view disposed the
+    // map - its onDestroy waits 20-50 ms on the main thread for MapLibre's render thread - and scrolling
+    // back built a new one, style and tiles included (Perfetto, 2026-10-31).
+    val pinnable = LocalPinnableContainer.current
+    DisposableEffect(pinnable) {
+        val handle = pinnable?.pin()
+        onDispose { handle?.release() }
+    }
     if (!state.expanded) MapCard(content, camera, expanded = false, onToggle = { state.expanded = true }, modifier = modifier)
 }
 

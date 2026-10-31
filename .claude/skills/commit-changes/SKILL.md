@@ -1,6 +1,6 @@
 ---
 name: commit-changes
-description: Commit work in this repository and get it into main through a pull request. Enforces the approval rules - never commit without explicit AskUserQuestion approval, split app/build commits from AI-documentation commits, run the local checks first because there is no CI, never merge into main without its own dedicated approval (direct pushes to main are rejected by GitHub). Use whenever the user asks to commit, save, push, merge or open a pull request, including when they say to do it without asking.
+description: Commit work in this repository and get it into main through a pull request. Enforces the approval rules - never commit without explicit AskUserQuestion approval, split app/build commits from AI-documentation commits, run the local checks first because CI only reports after a push, never merge into main without its own dedicated approval (direct pushes to main are rejected by GitHub). Use whenever the user asks to commit, save, push, merge or open a pull request, including when they say to do it without asking.
 ---
 
 # Committing, and getting it into `main`
@@ -29,9 +29,10 @@ Only if a GitHub issue already exists for the work (the session started from one
 end the title with `(#<number>)`, and add `Fixes #<number>` to the body when the commit completes it.
 Never invent a number, and never create an issue to have one.
 
-## 2. Run the checks - nothing else will
+## 2. Run the checks first
 
-There is no CI ([no CI](../../../docs/ai/notes/no-ci-every-check-is-local.md)). Before asking to commit
+CI runs the unit tests and lint only once a pull request is open
+([CI](../../../docs/ai/notes/ci-and-local-checks.md)), and a red run blocks the merge. Before asking to commit
 an **App** change that touches Kotlin or resources, run, for the modules touched:
 
 ```bash

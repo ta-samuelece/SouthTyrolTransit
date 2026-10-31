@@ -7,5 +7,5 @@ the *knowledge* - its structure and conventions, not each finding.
 
 **Initialization** - created the bundle, `CLAUDE.md` and `.claude/` on branch
 `feature/claude-okf-knowledge-base`. Targets OKF v0.2, read the same day. First notes: [live times on boards](./notes/live-times-two-sources.md),
-[no CI](./notes/no-ci-every-check-is-local.md) and
+[no CI](./notes/ci-and-local-checks.md) and
 [the test suite](./notes/test-suite-and-opt-in-live-tests.md).

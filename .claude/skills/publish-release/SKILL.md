@@ -7,7 +7,8 @@ description: Publish a new version of the app - bump versionCode/versionName, bu
 
 A GitHub release **is** the deploy: the in-app updater offers it to every phone on the matching channel
 on its next start. A stable release reaches every user; a preview reaches everyone who opted into the
-Preview channel. There is no CI and no staging, so this procedure is the only gate. The human-facing
+Preview channel. CI checks the unit tests and lint of what is merged, but nothing builds, tests or
+stages the release itself, so this procedure is the only gate. The human-facing
 version of it is the "In-app updates and publishing a release" section of `README.md`; this is the agent
 procedure on top.
 

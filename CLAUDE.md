@@ -14,8 +14,9 @@ blocker. Full procedure: the `commit-changes` skill.
 **2. Never merge into `main`, create a tag, or publish a release without a dedicated approval dialog.**
 `main` is protected on GitHub: a direct push is rejected for everyone, the owner included, so every change
 reaches it through a pull request ([branch protection](docs/ai/notes/github-main-and-tag-protection.md)).
-There is no CI (see [no CI](docs/ai/notes/no-ci-every-check-is-local.md)), so nothing checks what a
-merge brings into the commit every release is cut from. A GitHub release is the deploy: the app's in-app
+CI runs the unit tests and lint on each pull request and must pass before a merge
+([CI](docs/ai/notes/ci-and-local-checks.md)), but it cannot judge whether a change is right for the commit
+every release is cut from. A GitHub release is the deploy: the app's in-app
 updater offers it to every phone on the matching channel - stable releases to everyone, `-preview.N`
 pre-releases to the Preview channel. You may work out and show the exact `gh pr merge`, `git tag` or
 `python tools/release.py` command you intend to run, but you must never run it until the user has approved
@@ -114,8 +115,8 @@ date and flags a review once it is over 90 days old. When a newer version exists
 silently**: read the new `SPEC.md`, work out what genuinely affects this bundle, and propose the changes
 and any reorganisation to the user before touching anything.
 
-**9. Nothing checks your work but you - run the checks before calling it done.** There is no CI. For any
-change under `app/` or `core/`, run the unit tests of the modules you touched and `./gradlew lintDebug`
+**9. Run the checks before calling it done.** CI runs the same checks on every pull request, but only
+after a push ([CI](docs/ai/notes/ci-and-local-checks.md)). For any change under `app/` or `core/`, run the unit tests of the modules you touched and `./gradlew lintDebug`
 (`abortOnError = true`) before reporting the work as finished, and say which ones you ran. A UI string
 added to `values/strings.xml` must be added to `values-de/` and `values-it/` in the same change -
 `TranslationsTest` fails on a missing *or* a stale key. Details and the opt-in network tests:

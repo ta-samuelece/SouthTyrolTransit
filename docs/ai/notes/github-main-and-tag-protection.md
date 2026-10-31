@@ -34,9 +34,8 @@ In practice:
   their own pull request without an approval; anyone else's needs one.
 - **Only an admin can publish a release.** A GitHub release creates its `v*` tag, which the tag ruleset
   refuses to anyone else - write access alone used to be enough to reach every phone through the updater.
-- No status check is required, because there is no CI ([no CI](./no-ci-every-check-is-local.md)). The
-  pull request is a gate on *who* merges, not on whether the code works - the local checks of CLAUDE.md
-  rule 9 still are the only test.
+- The **Tests and lint** job of the CI workflow is a required status check
+  ([CI](./ci-and-local-checks.md)): a pull request merges only when the unit tests and lint pass on it.
 
 `tools/release.py` adds the matching local check: the commit must be an ancestor of `origin/main`, so a
 release can no longer be cut from a pushed but unmerged branch.

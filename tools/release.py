@@ -4,12 +4,12 @@
     python tools/release.py --preview --notes notes.md  # preview release  (tag vX.Y.Z-preview.N)
     python tools/release.py --preview --dry-run         # check everything, publish nothing
 
-Before running: bump versionCode/versionName in app/build.gradle.kts, commit and push, then build
-the signed APK with `gradlew assembleRelease`. The script checks that
+Before running: bump versionCode/versionName in app/build.gradle.kts, merge it into main through a
+pull request, then build the signed APK from main with `gradlew assembleRelease`. The script checks that
 
   * versionName matches the channel (stable: "1.2.0"; preview: "1.2.0-preview.1"),
   * the APK is signed and has exactly this versionName and versionCode,
-  * the current commit is on GitHub and the tag does not exist yet,
+  * the current commit is on origin/main and the tag does not exist yet,
 
 then creates the tag and release on that commit and uploads the APK. Previews are published as
 pre-releases (never marked "latest"), so only apps on the Preview update channel see them.
@@ -148,8 +148,9 @@ def main():
         fail('uncommitted changes: commit them first, so the release matches the tagged code')
     head = git('rev-parse', 'HEAD')
     git('fetch', '-q', 'origin')
-    if not git('branch', '-r', '--contains', head):
-        fail('the current commit is not on GitHub yet: git push first')
+    # main is protected: releases come only from merged work, never from a pushed feature branch.
+    if subprocess.run(['git', 'merge-base', '--is-ancestor', head, 'origin/main'], cwd=ROOT).returncode != 0:
+        fail('the current commit is not on origin/main yet: merge its pull request first')
 
     slug = repo_slug()
     tok = token()

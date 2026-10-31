@@ -327,7 +327,7 @@ release.keyPassword=...
      `versionCode` is not higher than the installed one.
    - `versionName`: stable `0.2.0`; preview `0.2.0-preview.1`, then `0.2.0-preview.2`, … and finally `0.2.0` for the
      finished release.
-2. **Commit and push** the change (`git push`). The release is tagged on the pushed commit.
+2. **Merge** the change into `main` through a pull request, then check out `main` and pull. `main` is protected: direct pushes are rejected, and only a repository admin can create the `v*` tags a release needs. The release is tagged on the merged commit.
 3. **Build** the signed APK: `gradlew assembleRelease` (output `app/build/outputs/apk/release/app-release.apk`).
 4. **Write the notes** in a Markdown file (headings, bullets, **bold** and links are shown formatted in the app).
 5. **Publish** with the script (needs Python 3 and `JAVA_HOME` set, e.g. to Android Studio's `jbr`):
@@ -336,12 +336,11 @@ release.keyPassword=...
    python tools/release.py --preview --notes notes.md             # publishes the preview
    python tools/release.py --notes notes.md                       # a stable release
    ```
-   It checks that the version matches the channel, that the APK is signed and has exactly that version, that everything
-   is committed and pushed, and that the tag is new. Then it creates the tag and the GitHub release on that commit
+   It checks that the version matches the channel, that the APK is signed and has exactly that version, that everything is committed and the commit is on `origin/main`, and that the tag is new. Then it creates the tag and the GitHub release on that commit
    (previews as **pre-release**, never marked "latest"), adds a "Preview build" note to previews and uploads the APK as
    `SouthTyrolTransit-<version>.apk` (previews) or `SouthTyrolTransit-<version>-release.apk`. It uses the GitHub login git already has.
 
-   Without the script, the same on github.com: *Releases → Draft a new release*, tag `vX.Y.Z-preview.N` on the pushed
+   Without the script, the same on github.com: *Releases → Draft a new release*, tag `vX.Y.Z-preview.N` on the merged
    commit, attach the APK, tick **Set as a pre-release** (for a preview) and publish.
 
 Apps on the matching channel offer the update on their next start. To promote a preview, publish the finished version

@@ -7,7 +7,8 @@ description: Publish a new version of the app - bump versionCode/versionName, bu
 
 A GitHub release **is** the deploy: the in-app updater offers it to every phone on the matching channel
 on its next start. A stable release reaches every user; a preview reaches everyone who opted into the
-Preview channel. There is no CI and no staging, so this procedure is the only gate. The human-facing
+Preview channel. CI checks the unit tests and lint of what is merged, but nothing builds, tests or
+stages the release itself, so this procedure is the only gate. The human-facing
 version of it is the "In-app updates and publishing a release" section of `README.md`; this is the agent
 procedure on top.
 
@@ -26,14 +27,16 @@ if they have not said. The rules:
 - A preview ranks below its finished version (`0.2.0-preview.2` < `0.2.0`), so promoting a preview means
   publishing `0.2.0` as stable with a new `versionCode`.
 
-## 2. Bump, check, commit, push
+## 2. Bump, check, commit, merge
 
-1. Edit only `versionCode` and `versionName` in `app/build.gradle.kts`.
+1. Edit only `versionCode` and `versionName` in `app/build.gradle.kts`, on a branch.
 2. Run the unit tests and `./gradlew lintDebug` (CLAUDE.md rule 9). Do not release red.
 3. Commit through the `commit-changes` skill. A version-only commit is titled
    `Release v0.2.0 (versionCode 7)`; when the bump rides on a feature commit, the version ends the title.
-4. Push. If the branch is `main`, that push needs its own approval (CLAUDE.md rule 2).
-   `tools/release.py` refuses to run - even with `--dry-run` - until the commit is on GitHub.
+4. Get it into `main` through a pull request - `main` rejects direct pushes, and the merge needs its own
+   approval (CLAUDE.md rule 2). Then switch to `main` and pull, so the release is built from the merged
+   commit. `tools/release.py` refuses to run - even with `--dry-run` - until the commit is on
+   `origin/main`.
 
 ## 3. Build the signed APK
 
@@ -62,12 +65,13 @@ python tools/release.py --notes .claude/local/release-notes-<version>.md --dry-r
 
 The dry run checks that `versionName` matches the channel, that the APK is signed and carries exactly
 this version (needs `JAVA_HOME`, e.g. Android Studio's `jbr`, for `apksigner`), that the working tree is
-clean and pushed, and that the tag is new. Fix anything it reports.
+clean and its commit is on `origin/main`, and that the tag is new. Fix anything it reports.
 
 Then open a **dedicated** `AskUserQuestion` - never bundled with a commit or push question - showing:
 the channel, tag, `versionCode`, commit hash, asset name and the notes. Only after an approving answer,
 run the same command without `--dry-run`. The script creates the tag and the release through the GitHub
-API; do not create or push the tag yourself.
+API; do not create or push the tag yourself. Only a repository admin may create `v*` tags, so the
+release fails with a 422 if the GitHub credential belongs to anyone else.
 
 ## 6. After publishing
 

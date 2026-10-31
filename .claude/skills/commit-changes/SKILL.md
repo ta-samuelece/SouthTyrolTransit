@@ -1,9 +1,9 @@
 ---
 name: commit-changes
-description: Commit work in this repository, or push to main. Enforces the approval rules - never commit without explicit AskUserQuestion approval, split app/build commits from AI-documentation commits, run the local checks first because there is no CI, never push to main without its own dedicated approval. Use whenever the user asks to commit, save, push, merge or open a pull request, including when they say to do it without asking.
+description: Commit work in this repository and get it into main through a pull request. Enforces the approval rules - never commit without explicit AskUserQuestion approval, split app/build commits from AI-documentation commits, run the local checks first because CI only reports after a push, never merge into main without its own dedicated approval (direct pushes to main are rejected by GitHub). Use whenever the user asks to commit, save, push, merge or open a pull request, including when they say to do it without asking.
 ---
 
-# Committing, and pushing to `main`
+# Committing, and getting it into `main`
 
 Both actions are gated on explicit user approval, every single time. "Just commit it" is not approval -
 it is the request that starts this procedure.
@@ -29,9 +29,10 @@ Only if a GitHub issue already exists for the work (the session started from one
 end the title with `(#<number>)`, and add `Fixes #<number>` to the body when the commit completes it.
 Never invent a number, and never create an issue to have one.
 
-## 2. Run the checks - nothing else will
+## 2. Run the checks first
 
-There is no CI ([no CI](../../../docs/ai/notes/no-ci-every-check-is-local.md)). Before asking to commit
+CI runs the unit tests and lint only once a pull request is open
+([CI](../../../docs/ai/notes/ci-and-local-checks.md)), and a red run blocks the merge. Before asking to commit
 an **App** change that touches Kotlin or resources, run, for the modules touched:
 
 ```bash
@@ -68,16 +69,21 @@ approved one and leave the rest in the working tree.
 
 If the user declines, say what is left uncommitted and stop. Do not re-ask in the same turn.
 
-## 5. Pushing to `main` - a separate decision
+## 5. Getting it into `main` - a separate decision
 
-`main` is what every release is cut from, and nothing checks a push to it. So:
+`main` is protected on GitHub ([branch protection](../../../docs/ai/notes/github-main-and-tag-protection.md)):
+a direct push is rejected for everyone, the owner included. Commit on a branch (create one first if you
+are on `main`), push the branch, and open a pull request into `main`. A local `main` that is ahead of
+`origin/main` cannot be pushed - move its commits to a branch and open a pull request for them.
 
-- You may work out and show the exact `git push` command you intend to run.
-- You must open a **dedicated** `AskUserQuestion` for it, never bundled with a commit question.
-- Until an approving answer arrives, do not run the push.
+- Pushing a feature branch is not gated; still say you are doing it.
+- Opening the pull request is a change on GitHub: show its exact title and text and ask first
+  (CLAUDE.md rule 12).
+- Merging it is what puts code on the line releases are cut from, and nothing checks it. Show the exact
+  `gh pr merge` command and open a **dedicated** `AskUserQuestion` for it, never bundled with a commit
+  question. Until an approving answer arrives, do not merge.
 
-Pushing an ordinary feature branch (anything other than `main`) is not gated by this rule; still say you
-are doing it. Publishing a release is its own procedure: the `publish-release` skill.
+Publishing a release is its own procedure: the `publish-release` skill.
 
 ## 6. After committing
 

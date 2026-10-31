@@ -3,12 +3,10 @@ package org.southtyrol.transit.feature.common
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -24,8 +22,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
+import kotlin.math.roundToInt
 import org.southtyrol.transit.LocalDarkTheme
 import org.southtyrol.transit.R
 import org.southtyrol.transit.map.CameraRequest
@@ -62,16 +63,35 @@ fun ExpandableMapPage(
     list: @Composable (Modifier) -> Unit,
 ) {
     BackHandler(enabled = hasMap && state.expanded) { state.expanded = false }
-    BoxWithConstraints(modifier) {
-        val expandedHeight = maxHeight * 0.6f
-        val expandedMap: @Composable (Modifier) -> Unit = { m ->
-            if (hasMap && state.expanded) MapCard(content, camera, expanded = true, onToggle = { state.expanded = false }, modifier = m.fillMaxWidth().height(expandedHeight))
-        }
-        Column(Modifier.fillMaxSize()) {
-            header()
-            if (placement == MapPlacement.TOP) expandedMap(Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp))
-            list(Modifier.weight(1f))
-            if (placement == MapPlacement.BOTTOM) expandedMap(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp))
+    // One measure pass, no subcomposition of the whole page: the header, the enlarged map at 60% of the
+    // page's height (8 dp from the list, 16 dp from the sides), the list in the rest.
+    Layout(
+        contents = listOf(
+            { Column(Modifier.fillMaxWidth(), content = header) },
+            { if (hasMap && state.expanded) MapCard(content, camera, expanded = true, onToggle = { state.expanded = false }) },
+            { list(Modifier) },
+        ),
+        modifier = modifier,
+    ) { (headers, maps, lists), constraints ->
+        val width = constraints.maxWidth
+        val height = constraints.maxHeight
+        val side = 16.dp.roundToPx()
+        val gap = 8.dp.roundToPx()
+        val headerPlaceables = headers.map { it.measure(Constraints(maxWidth = width, maxHeight = height)) }
+        val mapHeight = (height * 0.6f).roundToInt()
+        val mapPlaceables = maps.map { it.measure(Constraints.fixed((width - 2 * side).coerceAtLeast(0), mapHeight)) }
+        val mapSpace = if (mapPlaceables.isEmpty()) 0 else mapHeight + gap
+        val listHeight = (height - headerPlaceables.sumOf { it.height } - mapSpace).coerceAtLeast(0)
+        val listPlaceables = lists.map { it.measure(Constraints.fixed(width, listHeight)) }
+        layout(width, height) {
+            var y = 0
+            headerPlaceables.forEach { it.placeRelative(0, y); y += it.height }
+            if (placement == MapPlacement.TOP) {
+                mapPlaceables.forEach { it.placeRelative(side, y + gap) }
+                y += mapSpace
+            }
+            listPlaceables.forEach { it.placeRelative(0, y); y += it.height }
+            if (placement == MapPlacement.BOTTOM) mapPlaceables.forEach { it.placeRelative(side, y) }
         }
     }
 }

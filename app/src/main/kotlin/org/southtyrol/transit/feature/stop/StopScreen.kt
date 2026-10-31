@@ -141,13 +141,19 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
         onRefresh = { scope.launch { refreshing = true; viewModel.refresh(force = true); refreshing = false } },
         modifier = modifier,
     ) {
-        val points = state.platforms.map { it.point }.filter { it.isValid }
+        // Built once per platforms and direction: the board's clock and polls must not hand the map a new
+        // content instance, which it compares marker by marker.
+        val platforms = state.platforms
+        val direction = state.direction
+        val points = remember(platforms) { platforms.map { it.point }.filter { it.isValid } }
         // The chosen direction's platforms are highlighted on the map.
-        val mapContent = MapContent(
-            stops = state.platforms.map { MapMarker(it.id, it.point, MarkerKind.STOP, it.platform, selected = state.direction?.platformIds?.contains(it.id) ?: true) },
-            clusterStops = false,
-        )
-        val camera = CameraRequest.Fit(points + points.take(1))
+        val mapContent = remember(platforms, direction) {
+            MapContent(
+                stops = platforms.map { MapMarker(it.id, it.point, MarkerKind.STOP, it.platform, selected = direction?.platformIds?.contains(it.id) ?: true) },
+                clusterStops = false,
+            )
+        }
+        val camera = remember(points) { CameraRequest.Fit(points + points.take(1)) }
         // The small map is the last thing on the page, so the enlarged one stays at the bottom too.
         org.southtyrol.transit.feature.common.ExpandableMapPage(
             mapState, points.isNotEmpty(), mapContent, camera, Modifier.fillMaxSize(),

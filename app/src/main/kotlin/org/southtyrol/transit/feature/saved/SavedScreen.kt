@@ -170,7 +170,7 @@ fun SavedScreen(navigator: Navigator, viewModel: SavedViewModel = hiltViewModel(
                 item {
                     SectionHeader(stringResource(R.string.saved_recent)) { TextButton(onClick = { viewModel.clearRecents() }) { Text(stringResource(R.string.action_clear)) } }
                 }
-                itemsIndexed(recent, key = { _, r -> "r:" + r.id }) { index, r ->
+                itemsIndexed(recent, key = { _, r -> "r:" + r.id }, contentType = { _, _ -> "recent" }) { index, r ->
                     SegmentedListItem(
                         onClick = { r.route?.let { (from, to) -> navigator.results(leaveNow(from, to)) } },
                         shapes = ListItemDefaults.segmentedShapes(index, recent.size), colors = groupedItemColors(), modifier = Modifier.groupGap(index, recent.size),
@@ -188,8 +188,8 @@ private fun leaveNow(from: org.southtyrol.transit.model.Place, to: org.southtyro
 
 private fun androidx.compose.foundation.lazy.LazyListScope.section(title: Int, items: List<SavedItem>, row: @Composable (SavedItem, Int) -> Unit) {
     if (items.isEmpty()) return
-    item { SectionHeader(stringResource(title)) }
-    itemsIndexed(items, key = { _, i -> i.kind.name + i.id }) { index, item -> row(item, index) }
+    item(contentType = "header") { SectionHeader(stringResource(title)) }
+    itemsIndexed(items, key = { _, i -> i.kind.name + i.id }, contentType = { _, i -> i.kind.name }) { index, item -> row(item, index) }
 }
 
 @Composable

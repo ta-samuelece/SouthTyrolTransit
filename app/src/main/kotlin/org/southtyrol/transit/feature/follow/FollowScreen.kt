@@ -128,7 +128,6 @@ class FollowViewModel @Inject constructor(active: ActiveJourney, private val con
 fun FollowScreen(navigator: Navigator, viewModel: FollowViewModel = hiltViewModel()) {
     val session by viewModel.session.collectAsStateWithLifecycle()
     val view by viewModel.view.collectAsStateWithLifecycle()
-    val now = rememberNow(1_000)
     val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
         modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
@@ -140,7 +139,8 @@ fun FollowScreen(navigator: Navigator, viewModel: FollowViewModel = hiltViewMode
                 },
                 navigationIcon = { IconButton(onClick = navigator::back) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.action_back)) } },
                 actions = {
-                    view?.let { FreshnessIndicator(it.freshness, it.updatedAt, now, Modifier.padding(end = 12.dp), compact = true) }
+                    // The second clock ticks only here and in the step's countdown, not for the whole screen.
+                    view?.let { FreshnessIndicator(it.freshness, it.updatedAt, rememberNow(1_000), Modifier.padding(end = 12.dp), compact = true) }
                 },
                 scrollBehavior = scroll,
             )
@@ -155,21 +155,22 @@ fun FollowScreen(navigator: Navigator, viewModel: FollowViewModel = hiltViewMode
                     icon = Icons.Rounded.Navigation, action = stringResource(R.string.action_back), onAction = navigator::back,
                 )
                 shown == null -> TransitLoading(contained = true)
-                else -> FollowContent(current, shown, now, navigator, viewModel)
+                else -> FollowContent(current, shown, navigator, viewModel)
             }
         }
     }
 }
 
 @Composable
-private fun FollowContent(session: FollowSession, view: FollowView, now: Instant, navigator: Navigator, viewModel: FollowViewModel) {
+private fun FollowContent(session: FollowSession, view: FollowView, navigator: Navigator, viewModel: FollowViewModel) {
     val res = LocalResources.current
     val step = view.step
     val leg = view.journey.legs[step.legIndex]
+    // The map and the itinerary move with the engine's pace; only StepHero counts down every second.
+    val now = rememberNow(15_000)
     val user = remember(view.fix) { listOfNotNull(view.fix?.let { MapMarker("user", it, MarkerKind.USER) }) }
-    // The map moves with the engine's pace, not with the countdown's every second.
     // Zoomed on the current step: the leg being walked, waited for or ridden.
-    val map = rememberJourneyMap(view.journey, view.runs, rememberNow(15_000), user, focus = step.legIndex)
+    val map = rememberJourneyMap(view.journey, view.runs, now, user, focus = step.legIndex)
     val mapState = rememberExpandableMapState()
     ExpandableMapPage(mapState, map.hasLines, map.content, map.camera, Modifier.fillMaxSize()) { listModifier ->
         LazyColumn(listModifier, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -191,7 +192,7 @@ private fun FollowContent(session: FollowSession, view: FollowView, now: Instant
                 if (step.kind == StepKind.ARRIVED) {
                     MessageState(stringResource(R.string.follow_arrived), FollowText.text(res, view, now), icon = Icons.Rounded.Flag)
                 } else {
-                    StepHero(view, leg, now)
+                    StepHero(view, leg)
                 }
             }
             // Every step of the itinerary: done ones dimmed, the current one open with its stops.
@@ -227,7 +228,8 @@ private fun FollowContent(session: FollowSession, view: FollowView, now: Instant
 
 /** What to do now, with the countdown to it: live green only when a current live time backs it. */
 @Composable
-private fun StepHero(view: FollowView, leg: Leg, now: Instant) {
+private fun StepHero(view: FollowView, leg: Leg) {
+    val now = rememberNow(1_000)
     val step = view.step
     val label = when (step.kind) {
         StepKind.RIDE -> if (step.change) R.string.follow_change_at else R.string.follow_get_off_at

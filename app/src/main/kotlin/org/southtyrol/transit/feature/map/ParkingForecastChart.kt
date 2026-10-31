@@ -2,7 +2,6 @@
 
 package org.southtyrol.transit.feature.map
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -31,6 +30,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.res.stringResource
@@ -111,14 +111,15 @@ fun ParkingForecastCard(f: ParkingForecast, modifier: Modifier = Modifier) {
                 Text(detail, style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceVariant)
             }
 
-            Box(Modifier.fillMaxWidth().height(BarHeight + 12.dp)) {
-                val line = colors.outline
-                Canvas(Modifier.fillMaxWidth().height(2.dp).offset(y = 11.dp)) {
-                    drawLine(
-                        line, Offset(0f, size.height / 2), Offset(size.width, size.height / 2),
-                        strokeWidth = 1.5.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 3.dp.toPx())),
-                    )
-                }
+            val line = colors.outline
+            // The dashed "Full" line, drawn behind the bars (no node of its own), its dash built once per size.
+            Box(
+                Modifier.fillMaxWidth().height(BarHeight + 12.dp).drawWithCache {
+                    val dash = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 3.dp.toPx()))
+                    val y = 12.dp.toPx()
+                    onDrawBehind { drawLine(line, Offset(0f, y), Offset(size.width, y), strokeWidth = 1.5.dp.toPx(), pathEffect = dash) }
+                },
+            ) {
                 Text(
                     stringResource(R.string.parking_forecast_full_line, f.capacity),
                     style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant,

@@ -207,7 +207,7 @@ fun JourneyDetailContent(journey: Journey, navigator: Navigator, modifier: Modif
         if (map.hasLines && !mapState.expanded) item {
             org.southtyrol.transit.feature.common.CompactMapCard(mapState, map.content, map.camera, Modifier.fillMaxWidth().height(220.dp))
         }
-        itemsIndexed(journey.legs) { index, leg ->
+        itemsIndexed(journey.legs, contentType = { _, leg -> if (leg.mode == TransportMode.WALK) "walk" else "transit" }) { index, leg ->
             val previous = journey.legs.getOrNull(index - 1)
             if (previous != null && previous.mode.isTransit && leg.mode.isTransit) TransferRow(Duration.between(previous.bestArrival, leg.bestDeparture))
             if (leg.mode == TransportMode.WALK) WalkLeg(leg, now)

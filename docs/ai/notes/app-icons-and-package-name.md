@@ -43,8 +43,10 @@ else `AppIcon.DEFAULT`. So:
   `windowSplashScreenAnimatedIcon` (`values/styles.xml`) and the widget's `previewImage`;
 - changing the default to a **new** alias leaves users who had chosen an icon with two launcher entries
   (their choice, plus the new alias enabled by the manifest), because their earlier `set` never disabled
-  an alias that did not exist. `AppIcons.reconcile`, at every start in `TransitApplication.onCreate`,
-  disables the default when another icon is explicitly chosen; until the app is first opened after the
+  an alias that did not exist. `AppIcons.reconcile`, at every start (first in `TransitApplication.onCreate`'s
+  IO coroutine: every `AppIcons` call is a synchronous call into the package manager, so none runs on
+  the main thread - the Settings picker reads and switches icons on IO in `SettingsViewModel`), disables
+  the default when another icon is explicitly chosen; until the app is first opened after the
   update, both entries show. Users who never chose follow the manifest and switch to the new default;
   a home-screen shortcut to the old alias may disappear;
 - renaming or removing an alias a user has selected most likely leaves the app with **no launcher entry**

@@ -93,7 +93,10 @@ status: stable
   (`app/.../feature/common/ExpandableMap.kt`): a static card in the list, enlarged to 60% of the page's
   height outside the list so its gestures never fight the list's scrolling; back shrinks it. The page is
   one custom `Layout` (header, enlarged map, list in the rest), not a `BoxWithConstraints`, so the whole
-  page is not subcomposed during measurement. `placement` puts
+  page is not subcomposed during measurement. `CompactMapCard` pins its list item
+  (`LocalPinnableContainer`) while the page is shown: unpinned, scrolling it out of view disposed the
+  `MapView`, whose `onDestroy` blocks the main thread 20-50 ms on MapLibre's render thread, and scrolling
+  back built a new map (Perfetto, 2026-10-31). `placement` puts
   the enlarged map where the small card is - `BOTTOM` on the stop page, whose map is the last item, `TOP`
   elsewhere. A new page with a map should use these rather than an interactive `TransitMap` in a list.
   The enlarge button sits in the top end corner, where MapLibre puts its compass once the map is

@@ -111,6 +111,9 @@ Both live in `TransitRepository.kt` and are provided in `AppModule`.
   as the display needs. Screens tick every 15 s; a one-second clock lives only in the composable that
   counts down (`StepHero` and the top-bar freshness on the Following screen, `FollowingRideCard`, the
   follow strips), never at a screen's root, or the whole page recomposes every second while following.
+  A screen whose list scrolls passes `holdWhile = { listState.isScrollInProgress }` (stop board, trip,
+  line): the tick waits for the fling to end. Perfetto on 2026-10-31 showed the tick, aligned to
+  15 s wall-clock boundaries, recomposing the whole board mid-fling and missing frames (up to 28 ms).
 - `PollWhileVisible(period, key)` restarts when `key` changes. `StopViewModel.refresh` reloads the
   timetable part only when it is older than a minute, so a 30 s poll refreshes realtime every tick and the
   timetable every other. Loads can overlap (a poll and a "later" tap); `refresh` applies a result only

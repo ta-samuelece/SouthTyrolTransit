@@ -90,6 +90,7 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.layout
 import org.southtyrol.transit.data.Codec
 import org.southtyrol.transit.data.SavedItem
 import org.southtyrol.transit.feature.common.PlaceEditorSheet
@@ -135,11 +136,19 @@ fun PlannerScreen(navigator: Navigator, viewModel: PlannerViewModel = hiltViewMo
     var addingPlace by rememberSaveable { mutableStateOf(false) }
     // The place picked for "Add place", encoded so it survives recreation; its editor is open while set.
     var newPlace by rememberSaveable { mutableStateOf<String?>(null) }
+    // A tapped saved place waiting for the location permission, encoded like newPlace.
+    var pendingPlace by rememberSaveable { mutableStateOf<String?>(null) }
     val requestLocation = rememberLocationPermission { granted ->
+        val place = pendingPlace?.let { Codec.place(it) }
+        if (place != null) {
+            pendingPlace = null
+            if (granted) viewModel.planFromHere(place) { viewModel.request()?.let(navigator::results) } else viewModel.locationDenied()
+            return@rememberLocationPermission
+        }
         val field = pendingLocationField ?: return@rememberLocationPermission
         if (granted) viewModel.useCurrentLocation(field) else viewModel.locationDenied()
     }
-    val useLocation: (Field) -> Unit = { field -> pendingLocationField = field; requestLocation() }
+    val useLocation: (Field) -> Unit = { field -> pendingPlace = null; pendingLocationField = field; requestLocation() }
 
     val deniedText = stringResource(R.string.location_denied)
     val unavailableText = stringResource(R.string.location_unavailable)
@@ -198,9 +207,9 @@ fun PlannerScreen(navigator: Navigator, viewModel: PlannerViewModel = hiltViewMo
             item(key = "places") {
                 YourPlaces(
                     places = savedPlaces,
-                    onUse = viewModel::useSavedPlace,
+                    onGo = { place -> pendingPlace = Codec.place(place); requestLocation() },
+                    onStartHere = viewModel::startFrom,
                     onAdd = { addingPlace = true },
-                    onEdit = { navigator.saved() },
                 )
             }
             // Each group is one item: the list's 12 dp spacing belongs between form blocks, not between rows.
@@ -435,17 +444,23 @@ private fun RouteItem(label: String, icon: ImageVector, index: Int, count: Int, 
     ) { Text(label, maxLines = 2, overflow = TextOverflow.Ellipsis) }
 }
 
-/** Home, Work and the user's own places as cards: a tap plans there, a long press offers starting from there. */
+/**
+ * Home, Work and the user's own places as cards in one sideways-scrolling row: a tap finds connections from
+ * the current location, a long press offers starting from there.
+ */
 @Composable
-private fun YourPlaces(places: List<SavedItem>, onUse: (Place, Boolean) -> Unit, onAdd: () -> Unit, onEdit: () -> Unit) {
+private fun YourPlaces(places: List<SavedItem>, onGo: (Place) -> Unit, onStartHere: (Place) -> Unit, onAdd: () -> Unit) {
     Column {
-        SectionHeader(stringResource(R.string.planner_saved_places)) {
-            if (places.isNotEmpty()) TextButton(onClick = onEdit) { Text(stringResource(R.string.places_edit)) }
-        }
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        SectionHeader(stringResource(R.string.planner_saved_places))
+        // Edge to edge, so the next card peeks out at the screen's edge and the row reads as scrollable.
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(horizontal = ScreenGutter),
+            modifier = Modifier.fillMaxWidth().ignoreHorizontalPadding(ScreenGutter),
+        ) {
             items(places, key = { it.id }) { item ->
                 val place = item.place ?: return@items
-                PlaceCard(item, place, onClick = { onUse(place, false) }, onStartHere = { onUse(place, true) })
+                PlaceCard(item, place, onClick = { onGo(place) }, onStartHere = { onStartHere(place) })
             }
             item(key = "add") { AddPlaceCard(onAdd) }
         }
@@ -453,6 +468,16 @@ private fun YourPlaces(places: List<SavedItem>, onUse: (Place, Boolean) -> Unit,
 }
 
 private val PlaceCardWidth = 120.dp
+
+/** The Plan list's side padding, which the places row reaches past. */
+private val ScreenGutter = 16.dp
+
+/** Lays the element out [gutter] wider on each side than its parent allows, cancelling the parent's padding. */
+private fun Modifier.ignoreHorizontalPadding(gutter: androidx.compose.ui.unit.Dp) = layout { measurable, constraints ->
+    val extra = (gutter * 2).roundToPx()
+    val placeable = measurable.measure(constraints.copy(minWidth = constraints.minWidth + extra, maxWidth = constraints.maxWidth + extra))
+    layout(constraints.maxWidth, placeable.height) { placeable.place(-extra / 2, 0) }
+}
 
 @Composable
 private fun PlaceCard(item: SavedItem, place: Place, onClick: () -> Unit, onStartHere: () -> Unit) {
@@ -463,7 +488,10 @@ private fun PlaceCard(item: SavedItem, place: Place, onClick: () -> Unit, onStar
             Modifier.width(PlaceCardWidth)
                 .clip(RoundedCornerShape(20.dp))
                 .background(MaterialTheme.colorScheme.surfaceContainer)
-                .combinedClickable(onClick = onClick, onLongClick = { menu = true }, onLongClickLabel = stringResource(R.string.place_start_here))
+                .combinedClickable(
+                    onClick = onClick, onClickLabel = stringResource(R.string.place_go_from_here),
+                    onLongClick = { menu = true }, onLongClickLabel = stringResource(R.string.place_start_here),
+                )
                 .padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {

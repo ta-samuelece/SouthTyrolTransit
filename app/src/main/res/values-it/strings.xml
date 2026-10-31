@@ -125,6 +125,37 @@
         <item quantity="many">%d fermate</item>
         <item quantity="other">%d fermate</item>
     </plurals>
+    <string name="earlier_board_here">Sali qui</string>
+    <string name="earlier_at_your_stop">%s è alla tua fermata</string>
+    <string name="earlier_next_is_yours">%s sta arrivando alla tua fermata</string>
+    <plurals name="earlier_stops_away">
+        <item quantity="one">%1$s è a %2$d fermata</item>
+        <item quantity="many">%1$s è a %2$d fermate</item>
+        <item quantity="other">%1$s è a %2$d fermate</item>
+    </plurals>
+    <plurals name="earlier_stops_away_about">
+        <item quantity="one">%1$s è a circa %2$d fermata</item>
+        <item quantity="many">%1$s è a circa %2$d fermate</item>
+        <item quantity="other">%1$s è a circa %2$d fermate</item>
+    </plurals>
+    <string name="earlier_starts_at">Parte da %1$s alle %2$s</string>
+    <plurals name="earlier_stops_before">
+        <item quantity="one">%d fermata prima di salire</item>
+        <item quantity="many">%d fermate prima di salire</item>
+        <item quantity="other">%d fermate prima di salire</item>
+    </plurals>
+    <string name="earlier_no_position">I treni non segnalano la posizione</string>
+    <string name="earlier_not_current">Posizione non aggiornata</string>
+    <string name="earlier_estimated">Stimata dall\'orario</string>
+    <string name="earlier_live_at">Live · a %s</string>
+    <string name="earlier_live_left">Live · partito da %1$s alle %2$s</string>
+    <string name="earlier_show">Mostra fermate precedenti</string>
+    <string name="earlier_hide">Nascondi fermate precedenti</string>
+    <plurals name="earlier_show_more">
+        <item quantity="one">Mostra %1$d fermata precedente, da %2$s</item>
+        <item quantity="many">Mostra %1$d fermate precedenti, da %2$s</item>
+        <item quantity="other">Mostra %1$d fermate precedenti, da %2$s</item>
+    </plurals>
     <string name="journey_card_a11y">Partenza %1$s, arrivo %2$s, %3$s, %4$s</string>
     <string name="journey_leaves_in">Partenza: %s</string>
     <string name="journey_walk_minutes">%d min a piedi</string>

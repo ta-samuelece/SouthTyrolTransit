@@ -37,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -161,7 +162,7 @@ fun LinesScreen(navigator: Navigator, viewModel: LinesViewModel = hiltViewModel(
                 state.error != null -> item { ErrorState(state.error!!) }
                 state.loading && state.lines.isEmpty() -> item { TransitLoading() }
                 state.lines.isEmpty() -> item { MessageState(stringResource(R.string.search_no_results)) }
-                else -> itemsIndexed(state.lines, key = { _, l -> l.key }) { index, line ->
+                else -> itemsIndexed(state.lines, key = { _, l -> l.key }, contentType = { _, _ -> "line" }) { index, line ->
                     SegmentedListItem(
                         onClick = { navigator.line(line.key) },
                         shapes = ListItemDefaults.segmentedShapes(index, state.lines.size), colors = groupedItemColors(), modifier = Modifier.groupGap(index, state.lines.size),
@@ -253,7 +254,9 @@ fun LineScreen(navigator: Navigator, key: String) {
     val live by viewModel.live.collectAsStateWithLifecycle()
     val alerts by viewModel.lineAlerts.collectAsStateWithLifecycle()
     val saved by viewModel.isSaved.collectAsStateWithLifecycle()
-    val now = rememberNow()
+    // Ticks only between flings: a tick recomposes the departures, the stops and the map.
+    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+    val now = rememberNow(holdWhile = { listState.isScrollInProgress })
     val dark = LocalDarkTheme.current
     PollWhileVisible(30_000) { viewModel.poll() }
     Scaffold(
@@ -287,15 +290,20 @@ fun LineScreen(navigator: Navigator, key: String) {
                     val (trips, vehicles, vehiclesAt) = live ?: Triple(org.southtyrol.transit.data.Board(emptyList(), BoardSource.SCHEDULE, Freshness.UNAVAILABLE, null), emptyList<org.southtyrol.transit.model.Vehicle>(), null as Instant?)
                     val mapState = org.southtyrol.transit.feature.common.rememberExpandableMapState()
                     val hasMap = variant != null && variant.shape.size >= 2
-                    val mapContent = MapContent(
-                        stops = variant?.stops.orEmpty().map { MapMarker(it.id, it.point, MarkerKind.STOP, color = color) },
-                        vehicles = vehicles.map { v -> MapMarker("v:" + v.id, v.point, MarkerKind.VEHICLE, line.name, line.mode, color, v.bearing, stale = FreshnessPolicy.vehicle(v.timestamp, now) == Freshness.STALE) },
-                        lines = listOfNotNull(variant?.let { MapPolyline("line", it.shape, color) }),
-                        clusterStops = false,
-                    )
-                    val camera = CameraRequest.Fit(variant?.shape.orEmpty(), key = state.selected)
+                    // Rebuilt only when what it shows changes, not on every recomposition of the page.
+                    val stopMarkers = remember(variant, color) { variant?.stops.orEmpty().map { MapMarker(it.id, it.point, MarkerKind.STOP, color = color) } }
+                    val shapeLines = remember(variant, color) { listOfNotNull(variant?.let { MapPolyline("line", it.shape, color) }) }
+                    val mapContent = remember(stopMarkers, shapeLines, vehicles, line, color, now) {
+                        MapContent(
+                            stops = stopMarkers,
+                            vehicles = vehicles.map { v -> MapMarker("v:" + v.id, v.point, MarkerKind.VEHICLE, line.name, line.mode, color, v.bearing, stale = FreshnessPolicy.vehicle(v.timestamp, now) == Freshness.STALE) },
+                            lines = shapeLines,
+                            clusterStops = false,
+                        )
+                    }
+                    val camera = remember(variant, state.selected) { CameraRequest.Fit(variant?.shape.orEmpty(), key = state.selected) }
                     org.southtyrol.transit.feature.common.ExpandableMapPage(mapState, hasMap, mapContent, camera) { listModifier ->
-                    LazyColumn(listModifier, contentPadding = PaddingValues(bottom = 24.dp)) {
+                    LazyColumn(listModifier, state = listState, contentPadding = PaddingValues(bottom = 24.dp)) {
                         if (state.variants.size > 1) item {
                             Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 state.variants.forEachIndexed { index, v ->

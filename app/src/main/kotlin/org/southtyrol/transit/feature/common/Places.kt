@@ -287,17 +287,17 @@ fun PlaceSearchSheet(
                     onUseLocation?.let { Triple(R.string.location_use_current, Icons.Rounded.MyLocation, it) },
                     Triple(R.string.pick_on_map, Icons.Rounded.Map, { mapOpen = true }),
                 )
-                itemsIndexed(actions) { index, (label, icon, action) -> SheetItem(stringResource(label), null, icon, index, actions.size, onClick = action) }
+                itemsIndexed(actions, key = { _, a -> "a:" + a.first }, contentType = { _, _ -> "sheet" }) { index, (label, icon, action) -> SheetItem(stringResource(label), null, icon, index, actions.size, onClick = action) }
                 if (withSaved && savedPlaces.isNotEmpty()) {
-                    item { SectionHeader(stringResource(R.string.planner_saved_places)) }
-                    itemsIndexed(savedPlaces, key = { _, s -> "s:" + s.id }) { index, item ->
+                    item(contentType = "header") { SectionHeader(stringResource(R.string.planner_saved_places)) }
+                    itemsIndexed(savedPlaces, key = { _, s -> "s:" + s.id }, contentType = { _, _ -> "sheet" }) { index, item ->
                         val place = item.place ?: return@itemsIndexed
                         SheetItem(savedPlaceLabel(item), place.name, savedPlaceIcon(item), index, savedPlaces.size) { onChoose(place) }
                     }
                 }
                 if (withSaved && recents.isNotEmpty()) {
-                    item { SectionHeader(stringResource(R.string.planner_recent_places)) }
-                    itemsIndexed(recents) { index, place -> SheetItem(place.name, locality(place), Icons.Rounded.History, index, recents.size) { onChoose(place) } }
+                    item(contentType = "header") { SectionHeader(stringResource(R.string.planner_recent_places)) }
+                    itemsIndexed(recents, contentType = { _, _ -> "sheet" }) { index, place -> SheetItem(place.name, locality(place), Icons.Rounded.History, index, recents.size) { onChoose(place) } }
                 }
             } else {
                 if (state.loading) item { TransitLoading() }
@@ -307,7 +307,7 @@ fun PlaceSearchSheet(
                 if (!state.loading && state.results.isEmpty() && state.error == null && state.query.trim().length >= 2) {
                     item { Text(stringResource(R.string.search_no_results), modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.bodyMedium) }
                 }
-                itemsIndexed(state.results, key = { _, p -> p.id + p.name }) { index, place ->
+                itemsIndexed(state.results, key = { _, p -> p.id + p.name }, contentType = { _, _ -> "result" }) { index, place ->
                     val savedAs = if (withSaved) savedPlaces.firstOrNull { it.isPlace(place) } else null
                     SegmentedListItem(
                         onClick = { onChoose(place) },

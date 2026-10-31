@@ -169,7 +169,7 @@ fun StopSearchSheet(onPick: (Stop) -> Unit, onDismiss: () -> Unit, viewModel: St
             }
             if (state.loading) item { TransitLoading() }
             state.error?.let { item { StatusBanner(Format.error(it), kind = BannerKind.ERROR) } }
-            itemsIndexed(state.results, key = { _, s -> s.id }) { i, stop ->
+            itemsIndexed(state.results, key = { _, s -> s.id }, contentType = { _, _ -> "stop" }) { i, stop ->
                 SegmentedListItem(
                     onClick = { onPick(stop) }, shapes = ListItemDefaults.segmentedShapes(i, state.results.size), colors = groupedItemColors(),
                     leadingContent = { ModeGlyph(TransportMode.BUS) },
@@ -227,7 +227,7 @@ fun LineSearchSheet(onPick: (org.southtyrol.transit.model.Line) -> Unit, onDismi
                 state.loading && state.results.isEmpty() -> item { TransitLoading() }
                 !state.available -> item { StatusBanner(stringResource(R.string.saved_lines_need_timetable), kind = BannerKind.INFO) }
             }
-            itemsIndexed(state.results, key = { _, l -> l.key }) { i, line ->
+            itemsIndexed(state.results, key = { _, l -> l.key }, contentType = { _, _ -> "line" }) { i, line ->
                 SegmentedListItem(
                     onClick = { onPick(line) }, shapes = ListItemDefaults.segmentedShapes(i, state.results.size), colors = groupedItemColors(), modifier = Modifier.groupGap(i, state.results.size),
                     leadingContent = { org.southtyrol.transit.design.LineBadge(line.name, line.mode, color = line.color, textColor = line.textColor) },

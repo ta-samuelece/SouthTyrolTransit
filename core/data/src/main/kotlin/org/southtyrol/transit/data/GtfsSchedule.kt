@@ -43,7 +43,7 @@ class GtfsSchedule(private val store: ScheduleStore) : TransitScheduleDataSource
     private val services = LinkedHashMap<LocalDate, Set<String>>()
     private var agencies: Map<String, Operator> = emptyMap()
 
-    override suspend fun isAvailable(): Boolean = store.activeName() != null
+    override suspend fun isAvailable(): Boolean = store.loadActiveName() != null
 
     private suspend fun <T> io(block: suspend ScheduleDao.() -> T): T = withContext(Dispatchers.IO) { guarded { store.withDatabase { it.schedule().block() } } }
 

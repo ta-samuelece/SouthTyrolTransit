@@ -106,6 +106,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context,
     private val settings: SettingsRepository,
     private val timetable: ScheduleRepository,
     private val work: BackgroundWork,
@@ -118,16 +119,31 @@ class SettingsViewModel @Inject constructor(
     private val _deadLayers = kotlinx.coroutines.flow.MutableStateFlow<Set<MobilityKind>>(emptySet())
     val deadLayers: StateFlow<Set<MobilityKind>> = _deadLayers
 
+    /**
+     * The launcher icon enabled now; null until read. Reading and changing it are calls into the package
+     * manager (one per variant), so both run on IO, never on the main thread.
+     */
+    private val _icon = kotlinx.coroutines.flow.MutableStateFlow<org.southtyrol.transit.ui.AppIcon?>(null)
+    val icon: StateFlow<org.southtyrol.transit.ui.AppIcon?> = _icon
+
     init {
         viewModelScope.launch { timetable.loadInfo() }
         viewModelScope.launch { _deadLayers.value = mobility.deadLayers() }
+        viewModelScope.launch { _icon.value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { org.southtyrol.transit.ui.AppIcons.current(context) } }
     }
 
     fun theme(value: ThemeMode) = viewModelScope.launch { settings.setTheme(value) }
     fun dynamic(value: Boolean) = viewModelScope.launch { settings.setDynamicColor(value) }
     fun amoled(value: Boolean) = viewModelScope.launch { settings.setAmoledDark(value) }
-    /** Mirrors the launcher icon into the settings so the phone's backup carries it. */
-    fun appIcon(icon: org.southtyrol.transit.ui.AppIcon) = viewModelScope.launch { settings.setAppIcon(icon.name) }
+    /**
+     * Switches the launcher icon, then mirrors it into the settings so the phone's backup carries it. In
+     * the ViewModel's scope, so closing the sheet right after a pick cannot cancel the switch.
+     */
+    fun appIcon(icon: org.southtyrol.transit.ui.AppIcon) = viewModelScope.launch {
+        _icon.value = icon
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { org.southtyrol.transit.ui.AppIcons.set(context, icon) }
+        settings.setAppIcon(icon.name)
+    }
     fun wheelchair(value: Boolean) = viewModelScope.launch { settings.setWheelchair(value) }
     fun ftp(value: Boolean) = viewModelScope.launch { settings.setFtpFallback(value) }
     fun metered(value: Boolean) = viewModelScope.launch { settings.setScheduleOnMetered(value); work.scheduleTimetableRefresh(value) }
@@ -168,6 +184,7 @@ fun SettingsScreen(navigator: Navigator, viewModel: SettingsViewModel = hiltView
     val deadLayers by viewModel.deadLayers.collectAsStateWithLifecycle()
     val info by viewModel.schedule.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
+    val icon by viewModel.icon.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var language by remember { mutableStateOf(AppLanguage.selected()) }
     val updates: org.southtyrol.transit.update.UpdateViewModel = hiltViewModel()
@@ -199,7 +216,7 @@ fun SettingsScreen(navigator: Navigator, viewModel: SettingsViewModel = hiltView
         CHOICE_ICON -> androidx.compose.material3.ModalBottomSheet(onDismissRequest = dismiss) {
             Column(Modifier.padding(start = 24.dp, end = 24.dp, bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(stringResource(R.string.settings_app_icon), style = MaterialTheme.typography.titleLarge)
-                AppIconPicker(onPicked = viewModel::appIcon)
+                AppIconPicker(icon, onPicked = viewModel::appIcon)
                 Text(stringResource(R.string.settings_app_icon_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
@@ -241,7 +258,8 @@ fun SettingsScreen(navigator: Navigator, viewModel: SettingsViewModel = hiltView
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) item { SwitchRow(stringResource(R.string.settings_dynamic_color), null, prefs.dynamicColor) { viewModel.dynamic(it) } }
                 // Only meaningful when dark mode can apply.
                 if (prefs.theme != ThemeMode.LIGHT) item { SwitchRow(stringResource(R.string.settings_amoled_dark), stringResource(R.string.settings_amoled_dark_hint), prefs.amoledDark) { viewModel.amoled(it) } }
-                item { AppIconRow(prefs.appIcon) { choice = CHOICE_ICON } }
+                // Until the package manager has answered, the stored choice stands in for the enabled icon.
+                item { AppIconRow(icon ?: org.southtyrol.transit.ui.AppIcon.entries.firstOrNull { it.name == prefs.appIcon } ?: org.southtyrol.transit.ui.AppIcon.DEFAULT) { choice = CHOICE_ICON } }
             }
         }
 
@@ -449,9 +467,7 @@ private fun <T> ChoiceDialog(title: String, options: List<T>, selected: T, label
  * stored choice: it changes when one is picked, which refreshes the preview.
  */
 @Composable
-private fun AppIconRow(chosen: String, onClick: () -> Unit) {
-    val context = LocalContext.current
-    val current = remember(chosen) { org.southtyrol.transit.ui.AppIcons.current(context) }
+private fun AppIconRow(current: org.southtyrol.transit.ui.AppIcon, onClick: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().heightIn(min = 56.dp).clickable(role = Role.Button, onClick = onClick).padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -598,9 +614,7 @@ class TicketsViewModel @Inject constructor(val ticketing: TicketingProvider) : V
 
 /** The launcher icon variants as round previews; the selected one is outlined and checked. */
 @Composable
-private fun AppIconPicker(onPicked: (org.southtyrol.transit.ui.AppIcon) -> Unit) {
-    val context = LocalContext.current
-    var selected by remember { mutableStateOf(org.southtyrol.transit.ui.AppIcons.current(context)) }
+private fun AppIconPicker(selected: org.southtyrol.transit.ui.AppIcon?, onPicked: (org.southtyrol.transit.ui.AppIcon) -> Unit) {
     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.selectableGroup()) {
         org.southtyrol.transit.ui.AppIcon.entries.forEach { icon ->
             val isSelected = icon == selected
@@ -610,11 +624,7 @@ private fun AppIconPicker(onPicked: (org.southtyrol.transit.ui.AppIcon) -> Unit)
                 modifier = Modifier
                     .width(76.dp)
                     .selectable(selected = isSelected, role = Role.RadioButton) {
-                        if (!isSelected) {
-                            org.southtyrol.transit.ui.AppIcons.set(context, icon)
-                            selected = icon
-                            onPicked(icon)
-                        }
+                        if (!isSelected) onPicked(icon)
                     },
             ) {
                 Box(contentAlignment = Alignment.BottomEnd) {

@@ -40,7 +40,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
@@ -284,8 +284,10 @@ private fun ColumnScope.RailSegment(color: Color, dashed: Boolean) {
     val modifier = Modifier.width(4.dp).weight(1f)
     if (!dashed) Box(modifier.background(color))
     else Box(
-        modifier.drawBehind {
-            drawLine(color, Offset(size.width / 2, 0f), Offset(size.width / 2, size.height), size.width, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 5.dp.toPx())))
+        // The dash pattern is built once per size, not on every frame the list scrolls.
+        modifier.drawWithCache {
+            val dash = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 5.dp.toPx()))
+            onDrawBehind { drawLine(color, Offset(size.width / 2, 0f), Offset(size.width / 2, size.height), size.width, pathEffect = dash) }
         },
     )
 }

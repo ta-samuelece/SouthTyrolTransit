@@ -279,12 +279,12 @@ private fun androidx.compose.foundation.lazy.LazyListScope.results(search: Searc
         Text(stringResource(R.string.search_no_results), Modifier.padding(16.dp))
     }
     if (search.stops.isNotEmpty()) {
-        item { SectionHeader(stringResource(R.string.departures_results)) }
-        itemsIndexed(search.stops, key = { _, s -> "r:" + s.id }) { i, stop -> StopItem(stop, i, search.stops.size, onStop) }
+        item(contentType = "header") { SectionHeader(stringResource(R.string.departures_results)) }
+        itemsIndexed(search.stops, key = { _, s -> "r:" + s.id }, contentType = { _, _ -> "stop" }) { i, stop -> StopItem(stop, i, search.stops.size, onStop) }
     }
     if (search.lines.isNotEmpty()) {
-        item { SectionHeader(stringResource(R.string.lines_title)) }
-        itemsIndexed(search.lines, key = { _, l -> "l:" + l.key }) { i, line ->
+        item(contentType = "header") { SectionHeader(stringResource(R.string.lines_title)) }
+        itemsIndexed(search.lines, key = { _, l -> "l:" + l.key }, contentType = { _, _ -> "line" }) { i, line ->
             SegmentedListItem(
                 onClick = { onLine(line) },
                 shapes = ListItemDefaults.segmentedShapes(i, search.lines.size), colors = groupedItemColors(), modifier = Modifier.groupGap(i, search.lines.size),
@@ -300,8 +300,8 @@ private fun androidx.compose.foundation.lazy.LazyListScope.suggestions(
     clearHistory: () -> Unit, requestPermission: () -> Unit, retry: () -> Unit,
 ) {
     if (saved.isNotEmpty()) {
-        item { SectionHeader(stringResource(R.string.departures_saved)) }
-        itemsIndexed(saved, key = { _, s -> "s:" + s.id }) { i, item ->
+        item(contentType = "header") { SectionHeader(stringResource(R.string.departures_saved)) }
+        itemsIndexed(saved, key = { _, s -> "s:" + s.id }, contentType = { _, _ -> "saved" }) { i, item ->
             SegmentedListItem(
                 onClick = { onStop(Stop(item.id, item.label, item.place?.point ?: Point(0.0, 0.0), stationKey = item.id)) },
                 shapes = ListItemDefaults.segmentedShapes(i, saved.size), colors = groupedItemColors(), modifier = Modifier.groupGap(i, saved.size),
@@ -310,8 +310,8 @@ private fun androidx.compose.foundation.lazy.LazyListScope.suggestions(
         }
     }
     if (history.isNotEmpty()) {
-        item { SectionHeader(stringResource(R.string.map_search_recent)) { TextButton(onClick = clearHistory) { Text(stringResource(R.string.action_clear)) } } }
-        itemsIndexed(history, key = { _, h -> "h:" + h.key }) { i, entry ->
+        item(contentType = "header") { SectionHeader(stringResource(R.string.map_search_recent)) { TextButton(onClick = clearHistory) { Text(stringResource(R.string.action_clear)) } } }
+        itemsIndexed(history, key = { _, h -> "h:" + h.key }, contentType = { _, _ -> "history" }) { i, entry ->
             SegmentedListItem(
                 onClick = { when (entry) { is SearchHistoryItem.OfStop -> onStop(entry.stop); is SearchHistoryItem.OfLine -> onLine(entry.line) } },
                 shapes = ListItemDefaults.segmentedShapes(i, history.size), colors = groupedItemColors(), modifier = Modifier.groupGap(i, history.size),
@@ -325,7 +325,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.suggestions(
             }
         }
     }
-    item { SectionHeader(stringResource(R.string.departures_nearby)) }
+    item(contentType = "header") { SectionHeader(stringResource(R.string.departures_nearby)) }
     when (nearby) {
         NearbyState.Idle -> item {
             MessageState(stringResource(R.string.departures_nearby_prompt), stringResource(R.string.departures_nearby_privacy), icon = Icons.Rounded.NearMe, action = stringResource(R.string.departures_use_location), onAction = requestPermission)
@@ -343,7 +343,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.suggestions(
         is NearbyState.Found -> if (nearby.stops.isEmpty()) item {
             Text(stringResource(if (nearby.outsideRegion) R.string.departures_outside_region else R.string.departures_nearby_none), Modifier.padding(16.dp))
         } else {
-            itemsIndexed(nearby.stops, key = { _, s -> "n:" + s.id }) { i, stop -> StopItem(stop, i, nearby.stops.size, onStop) }
+            itemsIndexed(nearby.stops, key = { _, s -> "n:" + s.id }, contentType = { _, _ -> "stop" }) { i, stop -> StopItem(stop, i, nearby.stops.size, onStop) }
         }
     }
 }

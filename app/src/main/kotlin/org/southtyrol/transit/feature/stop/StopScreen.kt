@@ -126,7 +126,9 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
     val state by viewModel.state.collectAsStateWithLifecycle()
     val board by viewModel.board.collectAsStateWithLifecycle()
     val visible by viewModel.visible.collectAsStateWithLifecycle()
-    val now = rememberNow()
+    // The board's countdowns tick only between flings: a tick recomposes every visible row.
+    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+    val now = rememberNow(holdWhile = { listState.isScrollInProgress })
     val mapState = org.southtyrol.transit.feature.common.rememberExpandableMapState()
     val scope = rememberCoroutineScope()
     var refreshing by remember { mutableStateOf(false) }
@@ -141,19 +143,25 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
         onRefresh = { scope.launch { refreshing = true; viewModel.refresh(force = true); refreshing = false } },
         modifier = modifier,
     ) {
-        val points = state.platforms.map { it.point }.filter { it.isValid }
+        // Built once per platforms and direction: the board's clock and polls must not hand the map a new
+        // content instance, which it compares marker by marker.
+        val platforms = state.platforms
+        val direction = state.direction
+        val points = remember(platforms) { platforms.map { it.point }.filter { it.isValid } }
         // The chosen direction's platforms are highlighted on the map.
-        val mapContent = MapContent(
-            stops = state.platforms.map { MapMarker(it.id, it.point, MarkerKind.STOP, it.platform, selected = state.direction?.platformIds?.contains(it.id) ?: true) },
-            clusterStops = false,
-        )
-        val camera = CameraRequest.Fit(points + points.take(1))
+        val mapContent = remember(platforms, direction) {
+            MapContent(
+                stops = platforms.map { MapMarker(it.id, it.point, MarkerKind.STOP, it.platform, selected = direction?.platformIds?.contains(it.id) ?: true) },
+                clusterStops = false,
+            )
+        }
+        val camera = remember(points) { CameraRequest.Fit(points + points.take(1)) }
         // The small map is the last thing on the page, so the enlarged one stays at the bottom too.
         org.southtyrol.transit.feature.common.ExpandableMapPage(
             mapState, points.isNotEmpty(), mapContent, camera, Modifier.fillMaxSize(),
             placement = org.southtyrol.transit.feature.common.MapPlacement.BOTTOM,
         ) { listModifier ->
-        LazyColumn(contentPadding = PaddingValues(bottom = 24.dp), modifier = listModifier) {
+        LazyColumn(state = listState, contentPadding = PaddingValues(bottom = 24.dp), modifier = listModifier) {
             item {
                 Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     // Large stations serve dozens of lines: one row that scrolls sideways keeps the live board in view.

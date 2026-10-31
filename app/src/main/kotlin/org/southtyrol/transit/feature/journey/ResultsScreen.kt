@@ -6,7 +6,9 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
+import androidx.window.core.layout.WindowSizeClass
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -108,8 +110,9 @@ fun ResultsScreen(navigator: Navigator, viewModel: ResultsViewModel = hiltViewMo
             )
         },
     ) { padding ->
-        BoxWithConstraints(Modifier.padding(padding).fillMaxSize()) {
-            val twoPane = maxWidth >= 840.dp
+        // Two panes on an expanded window, from the window size class: no subcomposition of the whole screen.
+        val twoPane = currentWindowAdaptiveInfo().windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
+        Box(Modifier.padding(padding).fillMaxSize()) {
             val list = @Composable { modifier: Modifier ->
                 ResultsList(state, viewModel, modifier) { journey ->
                     if (twoPane) viewModel.select(journey.id) else navigator.journey(viewModel.encoded, journey.id)

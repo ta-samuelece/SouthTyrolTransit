@@ -296,7 +296,9 @@ private fun TripContent(
     alerts: List<org.southtyrol.transit.model.ServiceAlert>,
     following: Pair<RideSession, RideView>? = null,
 ) {
-    val now = rememberNow()
+    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+    // Ticks only between flings: a tick recomposes the timeline and the map.
+    val now = rememberNow(holdWhile = { listState.isScrollInProgress })
     val dark = LocalDarkTheme.current
     val color = detail.route.color ?: ModeColors.container(detail.route.mode)
     val vehicle = detail.vehicle
@@ -316,7 +318,6 @@ private fun TripContent(
     val mapState = org.southtyrol.transit.feature.common.rememberExpandableMapState()
     val routeLine = detail.shape.takeIf { it.size >= 2 } ?: detail.stops.map { it.stop.point }.filter { it.isValid }
     val hasMap = routeLine.size >= 2
-    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
     // Bring the next stop into view once, below the header (and the compact map).
     androidx.compose.runtime.LaunchedEffect(detail.trip.id) {
         // Not while following: the card on top already says where it is.

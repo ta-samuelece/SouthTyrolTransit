@@ -414,7 +414,7 @@ class ScheduleRepository(private val store: ScheduleStore) {
     suspend fun loadInfo(): ScheduleInfo? = store.loadInfo()
 
     /** False until a timetable has been downloaded once. */
-    fun downloaded(): Boolean = store.activeName() != null
+    suspend fun downloaded(): Boolean = store.loadActiveName() != null
 
     /** What the timetable needs from the user right now, if anything; asks the server only when one is installed. */
     suspend fun need(today: Int = GtfsTime.dateKey(LocalDate.now(TransitZone))): TimetableNeed? {

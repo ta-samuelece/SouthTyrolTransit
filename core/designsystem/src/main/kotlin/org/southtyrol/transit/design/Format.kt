@@ -46,17 +46,20 @@ object Format {
 
     private enum class Pattern { TIME, DATE, DATE_TIME, WEEKDAY_DATE }
 
-    // Every departure row formats several times per clock tick: build each formatter once per locale.
-    private val formatters = java.util.concurrent.ConcurrentHashMap<Pair<Pattern, Locale>, DateTimeFormatter>()
+    // Every departure row formats several times per clock tick: build each formatter once per locale, and
+    // look it up by locale alone, so a call allocates no key.
+    private val formatters = java.util.concurrent.ConcurrentHashMap<Locale, Array<DateTimeFormatter>>()
 
-    private fun formatter(pattern: Pattern, locale: Locale): DateTimeFormatter = formatters.getOrPut(pattern to locale) {
-        when (pattern) {
-            Pattern.TIME -> DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale)
-            Pattern.DATE -> DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale)
-            Pattern.DATE_TIME -> DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT).withLocale(locale)
-            Pattern.WEEKDAY_DATE -> DateTimeFormatter.ofPattern("EEE d MMM", locale)
+    private fun formatter(pattern: Pattern, locale: Locale): DateTimeFormatter = formatters.getOrPut(locale) {
+        Array(Pattern.entries.size) { i ->
+            when (Pattern.entries[i]) {
+                Pattern.TIME -> DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale)
+                Pattern.DATE -> DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale)
+                Pattern.DATE_TIME -> DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT).withLocale(locale)
+                Pattern.WEEKDAY_DATE -> DateTimeFormatter.ofPattern("EEE d MMM", locale)
+            }
         }
-    }
+    }[pattern.ordinal]
 
     @Composable
     @ReadOnlyComposable

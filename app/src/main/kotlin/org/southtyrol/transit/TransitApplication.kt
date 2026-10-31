@@ -24,12 +24,13 @@ class TransitApplication : Application(), Configuration.Provider {
         super.onCreate()
         Notifications.createChannels(this)
         org.southtyrol.transit.di.AppLanguage.dropLadin()
-        // Before anything else, so an update never leaves two launcher entries for longer than needed.
-        org.southtyrol.transit.ui.AppIcons.reconcile(this)
         // Registering the periodic sync replaces its constraints, so it must use the saved mobile-data
         // choice; reading settings is a suspend call, hence off the main thread. The one-off initial sync
         // is only for installs that have no timetable yet.
         kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO).launch {
+            // First, so an update never leaves two launcher entries for longer than needed; off the main
+            // thread, since every icon check is a call into the package manager.
+            org.southtyrol.transit.ui.AppIcons.reconcile(this@TransitApplication)
             syncBackupState()
             backgroundWork.scheduleTimetableRefresh(
                 allowMetered = settings.current().scheduleOnMetered,

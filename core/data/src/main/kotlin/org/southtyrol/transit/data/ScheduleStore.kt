@@ -121,6 +121,9 @@ class ScheduleStore(
         return activeCache
     }
 
+    /** [activeName] for callers on any thread, the main one included: the first read of the pointer file runs on IO. */
+    suspend fun loadActiveName(): String? = if (activeLoaded) activeCache else withContext(Dispatchers.IO) { activeName() }
+
     /**
      * Runs [block] on the active database; throws [DataError.NoSchedule] when none has been imported.
      * The database stays open until [block] returns, even when a new schedule is activated meanwhile:

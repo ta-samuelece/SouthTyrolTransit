@@ -107,6 +107,10 @@ Both live in `TransitRepository.kt` and are provided in `AppModule`.
 
 # Polling and workers
 
+- **Clocks**: `rememberNow(period)` recomposes everything that reads it, so read it as low in the tree
+  as the display needs. Screens tick every 15 s; a one-second clock lives only in the composable that
+  counts down (`StepHero` and the top-bar freshness on the Following screen, `FollowingRideCard`, the
+  follow strips), never at a screen's root, or the whole page recomposes every second while following.
 - `PollWhileVisible(period, key)` restarts when `key` changes. `StopViewModel.refresh` reloads the
   timetable part only when it is older than a minute, so a 30 s poll refreshes realtime every tick and the
   timetable every other. Loads can overlap (a poll and a "later" tap); `refresh` applies a result only

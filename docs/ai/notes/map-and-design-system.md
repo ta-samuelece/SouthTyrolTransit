@@ -16,7 +16,10 @@ status: stable
 - Content is one immutable `MapContent`, but each layer is pushed by its own effect keyed on that list
   (lines; stops with `clusterStops`; vehicles; POIs) plus the style, so a vehicle poll re-sets only the
   vehicle source - building features runs on the main thread. Keep lists stable (same instance when
-  unchanged) or the split buys nothing. Click lookup checks stops, then vehicles, then POIs by id -
+  unchanged) or the split buys nothing: build each page's `MapContent` (and `CameraRequest`) inside
+  `remember` keyed on its inputs, as every map screen does. `MapContent` is `@Immutable`, so a fresh
+  instance on each recomposition (a clock tick, a poll) is compared marker by marker, in the map and
+  again in each layer's effect keys. Click lookup checks stops, then vehicles, then POIs by id -
   **ids must be unique across all three lists**, or a stop shadows the vehicle or POI it collides with. `MapMarker.color` is the stroke for stops and the fill for vehicles and
   journey endpoints; mobility points use their kind's colour unless `color` overrides it (grey
   status-stale for anything `MobilityPoint.outOfService` says is closed).
@@ -87,8 +90,10 @@ status: stable
   EFA global id as `id` and `stationKey`, the same key as timetable stations, so saved-stop highlighting
   and the stop page work for both. The map screen and the map picker both go through it.
 - **Maps inside pages** (trip, journey, line, stop) use `ExpandableMapPage` + `CompactMapCard`
-  (`app/.../feature/common/ExpandableMap.kt`): a static card in the list, enlarged to 60% of the height
-  outside the list so its gestures never fight the list's scrolling; back shrinks it. `placement` puts
+  (`app/.../feature/common/ExpandableMap.kt`): a static card in the list, enlarged to 60% of the page's
+  height outside the list so its gestures never fight the list's scrolling; back shrinks it. The page is
+  one custom `Layout` (header, enlarged map, list in the rest), not a `BoxWithConstraints`, so the whole
+  page is not subcomposed during measurement. `placement` puts
   the enlarged map where the small card is - `BOTTOM` on the stop page, whose map is the last item, `TOP`
   elsewhere. A new page with a map should use these rather than an interactive `TransitMap` in a list.
   The enlarge button sits in the top end corner, where MapLibre puts its compass once the map is

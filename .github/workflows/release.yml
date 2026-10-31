@@ -1,0 +1,95 @@
+# Publishes a preview or stable release from main: builds the signed APK and runs tools/release.py.
+# Started by hand (Actions -> Release -> Run workflow). The job runs in the "release" environment, which
+# waits for the owner's approval and alone holds the signing secrets. A GitHub release is the deploy:
+# the in-app updater offers it to every phone on the matching channel.
+#
+# Before running: versionCode/versionName bumped in app/build.gradle.kts and the notes written to
+# docs/release-notes/<versionName>.md, both merged into main.
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: Preview (Preview update channel only) or stable (everyone)
+        type: choice
+        options: [preview, stable]
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Publish release
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: release
+    # The release is created with the owner's token (TRANSIT_RELEASE_GITHUB_TOKEN), not GITHUB_TOKEN: the
+    # "Protect release tags" ruleset lets only admins create v* tags, and a personal repository cannot
+    # exempt the GitHub Actions app.
+    permissions:
+      contents: read
+    env:
+      CHANNEL: ${{ inputs.channel }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      # Fail in seconds, not after a 15-minute build: channel, version and notes must agree.
+      - name: Check version and notes
+        run: |
+          name=$(sed -n 's/.*versionName *= *"\([^"]*\)".*/\1/p' app/build.gradle.kts | head -1)
+          case "$CHANNEL:$name" in
+            preview:*-preview.*) ;;
+            stable:*-*) echo "::error::versionName $name is a preview, not a stable version"; exit 1 ;;
+            stable:*) ;;
+            *) echo "::error::versionName $name is not a preview version"; exit 1 ;;
+          esac
+          notes="docs/release-notes/$name.md"
+          [ -s "$notes" ] || { echo "::error::$notes is missing or empty"; exit 1; }
+          echo "VERSION_NAME=$name" >> "$GITHUB_ENV"
+          echo "NOTES=$notes" >> "$GITHUB_ENV"
+
+      - name: Install Android platform 37.1
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.1" > /dev/null
+
+      - name: Restore signing key
+        env:
+          STORE_BASE64: ${{ secrets.TRANSIT_RELEASE_STORE_BASE64 }}
+          HAS_TOKEN: ${{ secrets.TRANSIT_RELEASE_GITHUB_TOKEN != '' }}
+        run: |
+          [ -n "$STORE_BASE64" ] || { echo "::error::the release environment has no signing secrets"; exit 1; }
+          # Checked before the build, so a missing token does not cost 15 minutes.
+          [ "$HAS_TOKEN" = true ] || { echo "::error::the release environment has no TRANSIT_RELEASE_GITHUB_TOKEN"; exit 1; }
+          echo "$STORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+
+      - name: Build signed APK
+        env:
+          TRANSIT_RELEASE_STORE_PASSWORD: ${{ secrets.TRANSIT_RELEASE_STORE_PASSWORD }}
+          TRANSIT_RELEASE_KEY_ALIAS: ${{ secrets.TRANSIT_RELEASE_KEY_ALIAS }}
+          TRANSIT_RELEASE_KEY_PASSWORD: ${{ secrets.TRANSIT_RELEASE_KEY_PASSWORD }}
+        run: TRANSIT_RELEASE_STORE_FILE="$RUNNER_TEMP/release.jks" bash ./gradlew assembleRelease
+
+      - name: Publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.TRANSIT_RELEASE_GITHUB_TOKEN }}
+        run: |
+          flag=""
+          [ "$CHANNEL" = preview ] && flag="--preview"
+          python3 tools/release.py $flag --notes "$NOTES"
+
+      - name: Remove signing key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/release.jks"

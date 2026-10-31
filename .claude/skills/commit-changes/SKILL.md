@@ -14,7 +14,7 @@ Run `git status --short` and `git diff --stat`. Sort the changes into two groups
 
 | Group | Contents |
 | --- | --- |
-| **App** | `app/`, `core/`, `gradle/`, `*.gradle.kts`, `gradle.properties`, `tools/`, `icons/`, `docs/` outside `docs/ai/`, `README.md`, `.gitignore`/`.gitattributes` lines that are not about `.claude/` |
+| **App** | `app/`, `core/`, `gradle/`, `*.gradle.kts`, `gradle.properties`, `tools/`, `icons/`, `.github/`, `docs/` outside `docs/ai/`, `README.md`, `.gitignore`/`.gitattributes` lines that are not about `.claude/` |
 | **AI material** | `CLAUDE.md`, `docs/ai/`, `.claude/`, the `.claude/` lines in `.gitignore` |
 
 They are separate commits. Never mix them.

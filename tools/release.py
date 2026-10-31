@@ -4,6 +4,9 @@
     python tools/release.py --preview --notes notes.md  # preview release  (tag vX.Y.Z-preview.N)
     python tools/release.py --preview --dry-run         # check everything, publish nothing
 
+The Release workflow (.github/workflows/release.yml) runs this same script on GitHub, with the notes
+from docs/release-notes/<versionName>.md.
+
 Before running: bump versionCode/versionName in app/build.gradle.kts, merge it into main through a
 pull request, then build the signed APK from main with `gradlew assembleRelease`. The script checks that
 
@@ -81,22 +84,33 @@ def api(tok, url, data=None, method='GET', content_type='application/json'):
         fail(f'GitHub API {method} {url.split("?")[0]} failed: HTTP {e.code} {e.read()[:300]!r}')
 
 
-def sdk_tool(name):
-    """aapt2/apksigner from the newest build-tools of the SDK named in local.properties (optional)."""
+def sdk_dir():
     props = os.path.join(ROOT, 'local.properties')
-    if not os.path.exists(props):
-        return None
-    m = re.search(r'^sdk\.dir=(.+)$', open(props, encoding='utf-8').read(), re.M)
-    if not m:
-        return None
-    bt = os.path.join(m.group(1).replace('\\:', ':').replace('\\\\', '\\').strip(), 'build-tools')
-    if not os.path.isdir(bt):
+    if os.path.exists(props):
+        m = re.search(r'^sdk\.dir=(.+)$', open(props, encoding='utf-8').read(), re.M)
+        if m:
+            return m.group(1).replace('\\:', ':').replace('\\\\', '\\').strip()
+    return os.environ.get('ANDROID_HOME') or os.environ.get('ANDROID_SDK_ROOT')
+
+
+def sdk_tool(name):
+    """aapt2/apksigner from the newest build-tools of the SDK in local.properties or ANDROID_HOME.
+
+    Optional on a workstation; on CI (the release workflow) a missing tool is an error, since nobody
+    would read the "skipped" line."""
+    sdk = sdk_dir()
+    bt = os.path.join(sdk, 'build-tools') if sdk else None
+    if not bt or not os.path.isdir(bt):
+        if os.environ.get('CI'):
+            fail(f'{name} not found: no Android SDK build-tools on this runner')
         return None
     for version in sorted(os.listdir(bt), reverse=True):
         for candidate in (name + '.exe', name + '.bat', name):
             path = os.path.join(bt, version, candidate)
             if os.path.exists(path):
                 return path
+    if os.environ.get('CI'):
+        fail(f'{name} not found in {bt}')
     return None
 
 

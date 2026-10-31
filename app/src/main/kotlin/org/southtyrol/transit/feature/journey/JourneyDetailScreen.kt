@@ -387,8 +387,13 @@ internal fun TransitLeg(leg: Leg, now: Instant, onStop: (String) -> Unit, run: T
                 }
             }
             if (leg.cancelled) StatusPill(stringResource(org.southtyrol.transit.design.R.string.ds_cancelled), status.cancelled, Icons.Rounded.Warning)
-            // The stops as the trip screen draws a run: rail, dots, passed ones dimmed.
-            LegStops(leg, now, expanded, onToggle = { expanded = !expanded }, onStop = onStop)
+            // The stops as the trip screen draws a run: rail, dots, passed ones dimmed. Above them, the matched
+            // run before the boarding stop; trains report no position, so they get its times only.
+            val before = remember(leg, run, now) {
+                run?.let { Approaches.beforeBoarding(leg, it.stops, it.shape, it.vehicle?.point, now, placeVehicle = leg.mode != TransportMode.TRAIN) }
+            }
+            val stale = run?.vehicle?.let { FreshnessPolicy.vehicle(it.timestamp, now) == Freshness.STALE } ?: false
+            LegStops(leg, now, expanded, onToggle = { expanded = !expanded }, onStop = onStop, before = before, beforeStale = stale)
             leg.notices.forEach { notice ->
                 Row(verticalAlignment = Alignment.Top) {
                     Icon(Icons.Rounded.Warning, contentDescription = null, tint = status.delayed, modifier = Modifier.size(18.dp))

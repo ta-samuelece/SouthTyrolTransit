@@ -123,6 +123,33 @@
         <item quantity="one">%d Halt</item>
         <item quantity="other">%d Halte</item>
     </plurals>
+    <string name="earlier_board_here">Hier steigst du ein</string>
+    <string name="earlier_at_your_stop">%s steht an deiner Haltestelle</string>
+    <string name="earlier_next_is_yours">%s ist auf dem Weg zu deiner Haltestelle</string>
+    <plurals name="earlier_stops_away">
+        <item quantity="one">%1$s ist %2$d Haltestelle entfernt</item>
+        <item quantity="other">%1$s ist %2$d Haltestellen entfernt</item>
+    </plurals>
+    <plurals name="earlier_stops_away_about">
+        <item quantity="one">%1$s ist etwa %2$d Haltestelle entfernt</item>
+        <item quantity="other">%1$s ist etwa %2$d Haltestellen entfernt</item>
+    </plurals>
+    <string name="earlier_starts_at">Startet in %1$s um %2$s</string>
+    <plurals name="earlier_stops_before">
+        <item quantity="one">%d Haltestelle vor deinem Einstieg</item>
+        <item quantity="other">%d Haltestellen vor deinem Einstieg</item>
+    </plurals>
+    <string name="earlier_no_position">Züge melden keine Position</string>
+    <string name="earlier_not_current">Position nicht aktuell</string>
+    <string name="earlier_estimated">Aus dem Fahrplan geschätzt</string>
+    <string name="earlier_live_at">Live · bei %s</string>
+    <string name="earlier_live_left">Live · %2$s ab %1$s</string>
+    <string name="earlier_show">Frühere Haltestellen zeigen</string>
+    <string name="earlier_hide">Frühere Haltestellen ausblenden</string>
+    <plurals name="earlier_show_more">
+        <item quantity="one">%1$d frühere Haltestelle zeigen, ab %2$s</item>
+        <item quantity="other">%1$d frühere Haltestellen zeigen, ab %2$s</item>
+    </plurals>
     <string name="journey_card_a11y">Abfahrt %1$s, Ankunft %2$s, %3$s, %4$s</string>
     <string name="journey_leaves_in">Abfahrt: %s</string>
     <string name="journey_walk_minutes">%d Min. Fußweg</string>

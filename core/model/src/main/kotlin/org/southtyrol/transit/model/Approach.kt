@@ -40,6 +40,51 @@ data class Approach(
     val atBoarding: Boolean = false,
 )
 
+/**
+ * A leg's run up to the boarding stop: the calls the vehicle makes before the user gets on and, when it
+ * can be placed, where it is now ([approach]).
+ */
+data class RunBeforeBoarding(
+    /** The whole run, the planner's boarding delay applied to calls without a prediction of their own. */
+    val stops: List<TripStop>,
+    val boardingIndex: Int,
+    /** Null when the vehicle is not under way yet, or is not placed at all (trains). */
+    val approach: Approach?,
+    /** The run has left its first stop. */
+    val started: Boolean,
+) {
+    /** The call the vehicle stands at or has just left; null when it is not placed. */
+    val reached: Int? get() = approach?.position?.nextIndex?.minus(1)?.takeIf { it >= 0 }
+
+    /** Calls before the boarding stop. */
+    val stopsBefore: Int get() = boardingIndex
+
+    /**
+     * The first call shown when the earlier stops open: one before the vehicle, or the last few before the
+     * boarding stop when it is not placed. A single call left above is shown rather than offered.
+     */
+    val firstShown: Int
+        get() {
+            val position = approach?.position
+            val first = when {
+                position == null -> boardingIndex - UNPLACED_SHOWN
+                position.atStop -> position.nextIndex - 2
+                else -> position.nextIndex - 1
+            }.coerceIn(0, boardingIndex - 1)
+            return if (first == 1) 0 else first
+        }
+
+    /** The vehicle has passed call [index]: by its position when placed, otherwise by the times. */
+    fun passed(index: Int, now: Instant): Boolean {
+        val position = approach?.position ?: return !(stops[index].predictedDeparture ?: stops[index].scheduledDeparture).isAfter(now)
+        return index < if (position.atStop) position.nextIndex - 1 else position.nextIndex
+    }
+
+    private companion object {
+        const val UNPLACED_SHOWN = 4
+    }
+}
+
 object Approaches {
     /**
      * Index of the user's boarding call in [stops]: a platform of [stationKey] (or the stop itself)
@@ -83,6 +128,23 @@ object Approaches {
             nextStop = stops[position.nextIndex].stop,
             boardingIndex = boardingIndex,
         )
+    }
+
+    /**
+     * The run a planner [leg] rides, before its boarding stop, at [now]: what the leg card shows as earlier
+     * stops. [placeVehicle] false (trains, which report no position) gives the times only. Null when the
+     * leg boards at the run's first stop, the boarding call is not found, or the vehicle has left it.
+     */
+    fun beforeBoarding(leg: Leg, stops: List<TripStop>, shape: List<Point>, gps: Point?, now: Instant, placeVehicle: Boolean): RunBeforeBoarding? {
+        val boarding = boardingIndex(stops, leg.from.stopGlobalId, leg.departure)?.takeIf { it > 0 } ?: return null
+        val run = withBoardingDelay(stops, boarding, leg.departureDelaySeconds)
+        fun leaves(s: TripStop) = s.predictedDeparture ?: s.scheduledDeparture
+        val started = !now.isBefore(leaves(run.first()))
+        if (!now.isBefore(leaves(run[boarding])) && !(placeVehicle && started)) return null
+        val approach = if (placeVehicle) of(run, shape, boarding, gps, now) else null
+        // Under way but not before the boarding stop any more: the leg is the user's ride now.
+        if (placeVehicle && started && approach == null) return null
+        return RunBeforeBoarding(run, boarding, approach, started)
     }
 
     /**

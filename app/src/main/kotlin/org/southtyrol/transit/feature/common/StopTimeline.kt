@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -22,17 +23,27 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ExpandLess
 import androidx.compose.material.icons.rounded.ExpandMore
+import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.Podcasts
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -45,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import org.southtyrol.transit.R
 import org.southtyrol.transit.design.DelayLabel
 import org.southtyrol.transit.design.Format
+import org.southtyrol.transit.design.LocalStatusColors
 import org.southtyrol.transit.design.Progress
 import org.southtyrol.transit.design.TimeStyles
 import org.southtyrol.transit.design.delayDescription
@@ -54,6 +66,7 @@ import org.southtyrol.transit.model.Freshness
 import org.southtyrol.transit.model.Leg
 import org.southtyrol.transit.model.Place
 import org.southtyrol.transit.model.Point
+import org.southtyrol.transit.model.RunBeforeBoarding
 import org.southtyrol.transit.model.ServiceState
 import org.southtyrol.transit.model.Stop
 import org.southtyrol.transit.model.TransportMode
@@ -88,12 +101,15 @@ fun legCalls(leg: Leg): List<TripStop> {
  * The stops of a planner [leg] as the trip screen draws a run: times, rail and dots in the line's colour,
  * passed stops dimmed and, while the leg is under way, its vehicle before the next stop (estimated from
  * the times). Collapsed, only the first and last calls show, with a pill on the rail that opens the rest.
- * [nextNote] and [lastNote] add a line under the next and the last stop.
+ * [nextNote] and [lastNote] add a line under the next and the last stop. [before] is the run up to the
+ * boarding stop: a row above it says where the vehicle is and opens the earlier stops, on a dashed rail
+ * like the map's approach; [beforeStale] says its GPS fix is no longer current.
  */
 @Composable
 fun LegStops(
     leg: Leg, now: Instant, expanded: Boolean, onToggle: (() -> Unit)?, onStop: (String) -> Unit,
     nextNote: String? = null, lastNote: String? = null, live: Boolean = true,
+    before: RunBeforeBoarding? = null, beforeStale: Boolean = false,
 ) {
     val calls = remember(leg) { legCalls(leg) }
     // The first call still ahead; calls before it are passed. Under way only between the first and the last.
@@ -101,20 +117,36 @@ fun LegStops(
     val underWay = nextIndex in 1..calls.lastIndex
     val color = ModeColors.container(leg.mode)
     val shown = if (expanded || calls.size <= 2) calls.indices.toList() else listOf(0, calls.lastIndex)
+    var earlierOpen by rememberSaveable(leg.departure.epochSecond, leg.line) { mutableStateOf(false) }
+    // The vehicle on the boarding row: standing there, or (with the earlier stops open) on its way to it.
+    val boardingVehicle = before?.approach?.let { a ->
+        when {
+            a.atBoarding -> VehicleMarker.AT_STOP
+            earlierOpen && !a.position.atStop && a.position.nextIndex == before.boardingIndex -> VehicleMarker.BEFORE_STOP
+            else -> null
+        }
+    }
     Column {
+        if (before != null) EarlierStops(before, leg, now, earlierOpen, { earlierOpen = !earlierOpen }, beforeStale, live, onStop)
         shown.forEach { i ->
             val call = calls[i]
             StopTimelineRow(
-                call, first = i == 0, last = i == calls.lastIndex, passed = i < nextIndex, next = underWay && i == nextIndex, color = color,
-                vehicle = if (underWay && i == nextIndex && i in shown) VehicleMarker.BEFORE_STOP else VehicleMarker.NONE,
-                mode = leg.mode, estimated = true,
+                call, first = i == 0 && before == null, last = i == calls.lastIndex, passed = i < nextIndex, next = underWay && i == nextIndex, color = color,
+                vehicle = when {
+                    i == 0 && boardingVehicle != null -> boardingVehicle
+                    underWay && i == nextIndex && i in shown -> VehicleMarker.BEFORE_STOP
+                    else -> VehicleMarker.NONE
+                },
+                mode = leg.mode, estimated = if (i == 0 && boardingVehicle != null) before?.approach?.position?.estimated ?: true else true,
                 onClick = { if (call.stop.stationKey.isNotBlank()) onStop(call.stop.stationKey) },
                 note = when {
                     i == calls.lastIndex -> lastNote
                     underWay && i == nextIndex -> nextNote
+                    i == 0 && before != null -> stringResource(R.string.earlier_board_here)
                     else -> null
                 },
                 live = live,
+                dashedAbove = i == 0 && before != null,
             )
             if (i == 0 && calls.size > 2 && onToggle != null) {
                 StopsPill(calls.size - 2, Duration.between(leg.departure, leg.arrival), expanded, Color(0xFF000000 or color).copy(alpha = if (nextIndex > 1) Progress.PASSED_ALPHA else 1f), onToggle)
@@ -145,6 +177,119 @@ private fun StopsPill(count: Int, duration: Duration, expanded: Boolean, rail: C
     }
 }
 
+/**
+ * The run before the boarding stop: a row saying where the vehicle is that opens the earlier stops (from
+ * one before the vehicle, the rest behind a "Show N earlier stops" button), all on a dashed rail.
+ */
+@Composable
+private fun EarlierStops(
+    before: RunBeforeBoarding, leg: Leg, now: Instant, open: Boolean, onToggle: () -> Unit, stale: Boolean, live: Boolean, onStop: (String) -> Unit,
+) {
+    var showAll by rememberSaveable(leg.departure.epochSecond, leg.line) { mutableStateOf(false) }
+    val color = ModeColors.container(leg.mode)
+    val lineColor = Color(0xFF000000 or color)
+    val status = LocalStatusColors.current
+    val approach = before.approach
+    val placed = approach != null && !approach.atBoarding
+    val estimated = approach == null || approach.position.estimated || stale
+    val vehicle = "${Format.mode(leg.mode)} ${leg.line}".trim()
+    val title = when {
+        approach?.atBoarding == true -> stringResource(R.string.earlier_at_your_stop, vehicle)
+        approach != null && approach.stopsBefore == 0 -> stringResource(R.string.earlier_next_is_yours, vehicle)
+        approach != null && estimated -> pluralStringResource(R.plurals.earlier_stops_away_about, approach.stopsBefore, vehicle, approach.stopsBefore)
+        approach != null -> pluralStringResource(R.plurals.earlier_stops_away, approach.stopsBefore, vehicle, approach.stopsBefore)
+        !before.started -> stringResource(R.string.earlier_starts_at, before.stops.first().stop.name, Format.time(before.stops.first().let { it.predictedDeparture ?: it.scheduledDeparture }))
+        else -> pluralStringResource(R.plurals.earlier_stops_before, before.stopsBefore, before.stopsBefore)
+    }
+    val reached = before.reached?.let { before.stops[it] }
+    val subtitle = when {
+        approach == null && !before.started -> pluralStringResource(R.plurals.earlier_stops_before, before.stopsBefore, before.stopsBefore)
+        approach == null -> stringResource(R.string.earlier_no_position)
+        stale -> stringResource(R.string.earlier_not_current)
+        approach.position.estimated -> stringResource(R.string.earlier_estimated)
+        approach.atBoarding || reached == null -> stringResource(DesignR.string.ds_live)
+        approach.position.atStop -> stringResource(R.string.earlier_live_at, reached.stop.name)
+        else -> stringResource(R.string.earlier_live_left, reached.stop.name, Format.time(reached.predictedDeparture ?: reached.scheduledDeparture))
+    }
+    val liveNow = approach != null && !estimated
+    val toggleLabel = stringResource(if (open) R.string.earlier_hide else R.string.earlier_show)
+    Row(
+        Modifier.fillMaxWidth().height(IntrinsicSize.Min).heightIn(min = 56.dp)
+            .clickable(role = Role.Button, onClickLabel = toggleLabel, onClick = onToggle)
+            .semantics(mergeDescendants = true) { stateDescription = toggleLabel },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Spacer(Modifier.width(88.dp))
+        Box(Modifier.width(28.dp).fillMaxHeight(), contentAlignment = Alignment.Center) {
+            // Closed, the dashed approach runs through this row with the vehicle on it; open, the rows below draw both.
+            if (!open) {
+                Column(Modifier.fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
+                    RailSegment(lineColor.copy(alpha = if (placed) Progress.PASSED_ALPHA else 1f), dashed = true)
+                    RailSegment(lineColor, dashed = true)
+                }
+                if (placed) Surface(
+                    shape = CircleShape, color = if (estimated) status.stale else lineColor, contentColor = Color.White,
+                    shadowElevation = 2.dp, modifier = Modifier.size(24.dp),
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(if (estimated) Icons.Rounded.History else leg.mode.icon(), contentDescription = null, modifier = Modifier.size(16.dp))
+                    }
+                }
+            }
+        }
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f).padding(vertical = 8.dp)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                if (liveNow) Icon(Icons.Rounded.Podcasts, contentDescription = null, tint = status.live, modifier = Modifier.size(14.dp))
+                Text(subtitle, style = MaterialTheme.typography.labelMedium, color = if (liveNow) status.live else MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+        Icon(if (open) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+    if (!open) return
+    val first = if (showAll) 0 else before.firstShown
+    if (first > 0) Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
+        Spacer(Modifier.width(88.dp))
+        Column(Modifier.width(28.dp).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
+            RailSegment(lineColor.copy(alpha = Progress.PASSED_ALPHA), dashed = true)
+        }
+        Spacer(Modifier.width(4.dp))
+        TextButton(onClick = { showAll = true }, modifier = Modifier.heightIn(min = 48.dp)) {
+            Text(pluralStringResource(R.plurals.earlier_show_more, first, first, before.stops.first().stop.name))
+        }
+    }
+    val position = approach?.position
+    for (i in first until before.boardingIndex) {
+        val call = before.stops[i]
+        StopTimelineRow(
+            call, first = i == 0, last = false, passed = before.passed(i, now), next = false, color = color,
+            vehicle = when {
+                approach == null || position == null || approach.atBoarding -> VehicleMarker.NONE
+                position.atStop && i == position.nextIndex - 1 -> VehicleMarker.AT_STOP
+                !position.atStop && i == position.nextIndex -> VehicleMarker.BEFORE_STOP
+                else -> VehicleMarker.NONE
+            },
+            mode = leg.mode, estimated = estimated,
+            onClick = { if (call.stop.stationKey.isNotBlank()) onStop(call.stop.stationKey) },
+            live = live && !estimated,
+            dashedAbove = true, dashedBelow = true,
+        )
+    }
+}
+
+/** One stretch of a stop timeline's rail: solid, or dashed where the user is not on board yet. */
+@Composable
+private fun ColumnScope.RailSegment(color: Color, dashed: Boolean) {
+    val modifier = Modifier.width(4.dp).weight(1f)
+    if (!dashed) Box(modifier.background(color))
+    else Box(
+        modifier.drawBehind {
+            drawLine(color, Offset(size.width / 2, 0f), Offset(size.width / 2, size.height), size.width, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 5.dp.toPx())))
+        },
+    )
+}
+
 /** Where the vehicle is drawn on a stop timeline: between the previous stop and this one, or at this stop. */
 enum class VehicleMarker { NONE, BEFORE_STOP, AT_STOP }
 
@@ -153,13 +298,15 @@ enum class VehicleMarker { NONE, BEFORE_STOP, AT_STOP }
  * when it moved), dot, stop name and delay. [passed] calls and rail are dimmed ([Progress.PASSED_ALPHA]),
  * [next] is emphasised, [note] adds a line under the name ("Next stop", "Get off"). Predictions count as
  * live only while [live]: a prediction from a feed gone stale is shown, but not as a live delay.
- * [distance] ("23.4 km", the distance along the run) sits at the end of the row.
+ * [distance] ("23.4 km", the distance along the run) sits at the end of the row. [dashedAbove] and
+ * [dashedBelow] dash the rail on either side of the dot, for the run before the user boards.
  */
 @Composable
 fun StopTimelineRow(
     stop: TripStop, first: Boolean, last: Boolean, passed: Boolean, next: Boolean, color: Long,
     vehicle: VehicleMarker, mode: TransportMode, estimated: Boolean, onClick: () -> Unit,
     note: String? = null, live: Boolean = true, distance: String? = null,
+    dashedAbove: Boolean = false, dashedBelow: Boolean = false,
 ) {
     val lineColor = Color(0xFF000000 or color)
     val skipped = stop.state == ServiceState.SKIPPED || stop.state == ServiceState.CANCELLED
@@ -184,13 +331,13 @@ fun StopTimelineRow(
         }
         Box(Modifier.width(28.dp).fillMaxHeight(), contentAlignment = Alignment.Center) {
             Column(Modifier.fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
-                Box(Modifier.width(4.dp).weight(1f).background(if (first) Color.Transparent else lineColor.copy(alpha = railAlpha)))
+                RailSegment(if (first) Color.Transparent else lineColor.copy(alpha = railAlpha), dashedAbove)
                 Box(
                     Modifier.size(if (next) 18.dp else 12.dp).clip(CircleShape)
                         .background(if (next) lineColor else MaterialTheme.colorScheme.surface)
                         .border(3.dp, lineColor.copy(alpha = railAlpha), CircleShape),
                 )
-                Box(Modifier.width(4.dp).weight(1f).background(if (last) Color.Transparent else lineColor.copy(alpha = railAlpha)))
+                RailSegment(if (last) Color.Transparent else lineColor.copy(alpha = railAlpha), dashedBelow)
             }
             // The vehicle itself: on the line just before this stop (on its way) or on this stop (dwelling).
             if (vehicle != VehicleMarker.NONE) {

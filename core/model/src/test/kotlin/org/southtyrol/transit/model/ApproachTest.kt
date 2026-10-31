@@ -102,4 +102,48 @@ class ApproachTest {
         assertEquals(t0.plusSeconds(23 * 60), shifted[2].predictedDeparture)
         assertNull(shifted[3].predictedArrival)
     }
+
+    private fun at(minute: Long) = t0.plusSeconds(minute * 60)
+
+    @Test fun beforeBoardingPlacesTheVehicleAmongTheEarlierStops() {
+        val before = Approaches.beforeBoarding(leg("201", 20), run, shape, gps = null, now = at(5), placeVehicle = true)!!
+        assertEquals(2, before.boardingIndex)
+        assertEquals(2, before.stopsBefore)
+        assertEquals(0, before.reached) // left a, on its way to b
+        assertTrue(before.passed(0, at(5)))
+        assertEquals(false, before.passed(1, at(5)))
+    }
+
+    @Test fun beforeBoardingIsNothingAtTheFirstStopOrOnceTheVehicleHasLeft() {
+        assertNull(Approaches.beforeBoarding(leg("201", 0).copy(from = Place("a", "A", stopGlobalId = "it:a"), departure = at(0)), run, shape, null, at(-5), placeVehicle = true))
+        assertNull(Approaches.beforeBoarding(leg("201", 20), run, shape, null, at(25), placeVehicle = true))
+        assertNull(Approaches.beforeBoarding(leg("201", 20, mode = TransportMode.TRAIN), run, shape, null, at(25), placeVehicle = false))
+    }
+
+    @Test fun beforeTheRunStartsTheTimesAreShownWithoutAVehicle() {
+        val before = Approaches.beforeBoarding(leg("201", 20), run, shape, null, at(-5), placeVehicle = true)!!
+        assertEquals(false, before.started)
+        assertNull(before.approach)
+        assertEquals(false, before.passed(0, at(-5)))
+    }
+
+    @Test fun trainsGetTheTimesOnlyPassedByTheClock() {
+        val before = Approaches.beforeBoarding(leg("R", 20, mode = TransportMode.TRAIN), run, shape, null, at(15), placeVehicle = false)!!
+        assertTrue(before.started)
+        assertNull(before.approach)
+        assertTrue(before.passed(1, at(15))) // b left at 12
+    }
+
+    @Test fun earlierStopsOpenOneStopBeforeTheVehicle() {
+        val long = (0..7).map { stop("it:s$it", 46.0 + it * 0.04, it * 5L) }
+        val boardAt7 = Leg(TransportMode.BUS, "201", "Merano", Place("s7", "S7", stopGlobalId = "it:s7"), Place("x", "X"), at(35), at(45))
+        // Between s4 (20) and s5 (25): opens at s4, the stop it has just left.
+        assertEquals(4, Approaches.beforeBoarding(boardAt7, long, emptyList(), null, at(22), placeVehicle = true)!!.firstShown)
+        // Standing at s4 (GPS): one stop before it.
+        assertEquals(3, Approaches.beforeBoarding(boardAt7, long, emptyList(), long[4].stop.point, at(20), placeVehicle = true)!!.firstShown)
+        // Not placed: the last four before the boarding stop.
+        assertEquals(3, Approaches.beforeBoarding(boardAt7, long, emptyList(), null, at(22), placeVehicle = false)!!.firstShown)
+        // Between s1 and s2: a single stop above would be left, so all are shown.
+        assertEquals(0, Approaches.beforeBoarding(boardAt7, long, emptyList(), null, at(7), placeVehicle = true)!!.firstShown)
+    }
 }

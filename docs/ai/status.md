@@ -5,7 +5,7 @@ description: What is in flight on the working branch right now and recorded nowh
 tags: [handover, status]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-30T12:00:00Z"
+  at: "2026-10-31T10:00:00Z"
 status: stable
 ---
 
@@ -14,10 +14,12 @@ what is durable belongs in [notes](./notes/index.md) and [decisions](./decisions
 along the way goes into [known defects](./notes/known-defects.md), not into this file. Empty is the normal state, and the
 file has a 60-line budget that `check_docs_sync.py` enforces.
 
-# Branch `ccr-20ab2d5c-tm26ov`: saved places (Home, Work, own places with icons)
+# Saved places: on `main` (PR #32) but never built
 
-Written in a cloud session without the Android SDK, so it has **never been built, tested or linted**.
-Before merging: build once, which writes the user database's `2.json` schema next to `1.json`
-(commit it), then run the unit tests (`SavedPlacesTest` is new) and `./gradlew lintDebug`, and try the
-Plan row, the search sheet's star, the save sheet and the Saved screen's menu on a device. Clear this
-section once that is done.
+Saved places (Home, Work, own places with icons) and the follow-up on branch `ccr-20ab2d5c-tm26ov` (a
+tap on a place card plans from the current location; the row runs edge to edge) were written in cloud
+sessions without the Android SDK, so they have **never been built, tested or linted**. Build once, which
+writes the user database's `2.json` schema next to `1.json` (commit it - `main` lacks it), then run the
+unit tests (`SavedPlacesTest` is new) and `./gradlew lintDebug`, and try the Plan row (tap, long press,
+sideways scroll), the search sheet's star, the save sheet and the Saved screen's menu on a device. Clear
+this section once that is done.

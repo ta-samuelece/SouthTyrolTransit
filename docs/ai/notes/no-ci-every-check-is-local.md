@@ -27,7 +27,9 @@ Consequences for agents (CLAUDE.md rules 2 and 9):
 
 - Run the module tests and `./gradlew lintDebug` yourself before reporting a change as done, and say
   which ones you ran. Lint has `abortOnError = true`, so a lint error is a real failure.
-- A push to `main` is unchecked, and `main` is what releases are cut from - hence its own approval.
+- `main` only changes through a pull request ([branch protection](./github-main-and-tag-protection.md)),
+  but no status check runs on it, and `main` is what releases are cut from - hence the merge's own
+  approval.
 
 # The workflow that was removed
 

@@ -32,8 +32,8 @@ publishing a release, regenerating icons after adding one. One-off explanations 
 
 ## Existing
 
-- `commit-changes` - the approval-gated commit procedure, the code/AI-material split, and what makes
-  pushing to `main` different from an ordinary feature-branch push. The rules in `CLAUDE.md` are
-  mandatory, this is the how.
+- `commit-changes` - the approval-gated commit procedure, the code/AI-material split, and how work
+  reaches the protected `main` (a pull request whose merge has its own approval). The rules in
+  `CLAUDE.md` are mandatory, this is the how.
 - `publish-release` - bumping the version, building the signed APK and publishing a stable or preview
   GitHub release with `tools/release.py`, with an approval gate before anything reaches users' phones.

@@ -11,15 +11,16 @@ These are not suggestions. They apply to every user of this repository, in every
 reply that they would rather batch more work into a later commit - that is a normal outcome, not a
 blocker. Full procedure: the `commit-changes` skill.
 
-**2. Never push to `main`, create a tag, or publish a release without a dedicated approval dialog.** There
-is no CI (see [no CI](docs/ai/notes/no-ci-every-check-is-local.md)), so nothing stands between a push to
-`main` and the commit every release is cut from. A GitHub release is the deploy: the app's in-app updater
-offers it to every phone on the matching channel - stable releases to everyone, `-preview.N`
-pre-releases to the Preview channel. You may work out and show the exact `git push`, `git tag` or
+**2. Never merge into `main`, create a tag, or publish a release without a dedicated approval dialog.**
+`main` is protected on GitHub: a direct push is rejected for everyone, the owner included, so every change
+reaches it through a pull request ([branch protection](docs/ai/notes/github-main-and-tag-protection.md)).
+There is no CI (see [no CI](docs/ai/notes/no-ci-every-check-is-local.md)), so nothing checks what a
+merge brings into the commit every release is cut from. A GitHub release is the deploy: the app's in-app
+updater offers it to every phone on the matching channel - stable releases to everyone, `-preview.N`
+pre-releases to the Preview channel. You may work out and show the exact `gh pr merge`, `git tag` or
 `python tools/release.py` command you intend to run, but you must never run it until the user has approved
 it in its own `AskUserQuestion`. `python tools/release.py --dry-run` publishes nothing and is not gated.
-Ordinary feature-branch pushes (anything other than `main`) are not gated by this rule. Full procedure:
-the `publish-release` skill.
+Pushing a feature branch is not gated by this rule. Full procedure: the `publish-release` skill.
 
 **3. Split commits by subject.** App and build changes (`app/`, `core/`, `gradle/`, `*.gradle.kts`,
 `tools/`, `icons/`, `docs/` outside `docs/ai/`, `README.md`) go in one commit. Updates to AI-facing material

@@ -23,6 +23,18 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
+      # Branch names are type/short-description (CLAUDE.md rule 2). A personal repository cannot enforce
+      # this with a ruleset, so the required check does: a badly named branch cannot be merged.
+      - name: Branch name
+        if: github.event_name == 'pull_request'
+        env:
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          if ! printf '%s' "$BRANCH" | grep -Eq '^(fix|chore|feature|docs)/[a-z0-9]+(-[a-z0-9]+)*$'; then
+            echo "::error::Branch \"$BRANCH\" must be fix/, chore/, feature/ or docs/ followed by lowercase words joined by dashes, e.g. feature/places-cards. Rename the branch and open a new pull request."
+            exit 1
+          fi
+
       - uses: actions/checkout@v5
 
       - uses: actions/setup-java@v5

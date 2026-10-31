@@ -79,16 +79,31 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.southtyrol.transit.R
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.scaleIn
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.runtime.key
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupPositionProvider
+import androidx.compose.ui.window.PopupProperties
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.layout
 import org.southtyrol.transit.data.Codec
@@ -209,6 +224,7 @@ fun PlannerScreen(navigator: Navigator, viewModel: PlannerViewModel = hiltViewMo
                 YourPlaces(
                     places = savedPlaces,
                     onGo = { place -> pendingPlace = Codec.place(place); requestLocation() },
+                    onArrive = viewModel::arriveAt,
                     onStartHere = viewModel::startFrom,
                     onAdd = { addingPlace = true },
                 )
@@ -454,24 +470,27 @@ private fun RouteItem(label: String, icon: ImageVector, index: Int, count: Int, 
 }
 
 /**
- * Home, Work and the user's own places as cards in one sideways-scrolling row: a tap finds connections from
- * the current location, a long press offers starting from there.
+ * Home, Work and the user's own places as cards of one height, "Add place" included, in one sideways-scrolling
+ * row: a tap finds connections from the current location, a long press opens a small FAB-style menu to arrive
+ * there or start from there.
  */
 @Composable
-private fun YourPlaces(places: List<SavedItem>, onGo: (Place) -> Unit, onStartHere: (Place) -> Unit, onAdd: () -> Unit) {
+private fun YourPlaces(places: List<SavedItem>, onGo: (Place) -> Unit, onArrive: (Place) -> Unit, onStartHere: (Place) -> Unit, onAdd: () -> Unit) {
     Column {
         SectionHeader(stringResource(R.string.planner_saved_places))
-        // Edge to edge, so the next card peeks out at the screen's edge and the row reads as scrollable.
-        LazyRow(
+        // Edge to edge, so the next card peeks out at the screen's edge and the row reads as scrollable. A plain
+        // scrolling row, not a lazy one: a handful of cards, and only a row measured as a whole can give the add
+        // card the height of the place cards.
+        Row(
+            Modifier.fillMaxWidth().ignoreHorizontalPadding(ScreenGutter).horizontalScroll(rememberScrollState())
+                .height(IntrinsicSize.Max).padding(horizontal = ScreenGutter),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(horizontal = ScreenGutter),
-            modifier = Modifier.fillMaxWidth().ignoreHorizontalPadding(ScreenGutter),
         ) {
-            items(places, key = { it.id }) { item ->
-                val place = item.place ?: return@items
-                PlaceCard(item, place, onClick = { onGo(place) }, onStartHere = { onStartHere(place) })
+            places.forEach { item ->
+                val place = item.place ?: return@forEach
+                key(item.id) { PlaceCard(item, place, onClick = { onGo(place) }, onArrive = { onArrive(place) }, onStartHere = { onStartHere(place) }) }
             }
-            item(key = "add") { AddPlaceCard(onAdd) }
+            AddPlaceCard(onAdd)
         }
     }
 }
@@ -489,17 +508,21 @@ private fun Modifier.ignoreHorizontalPadding(gutter: androidx.compose.ui.unit.Dp
 }
 
 @Composable
-private fun PlaceCard(item: SavedItem, place: Place, onClick: () -> Unit, onStartHere: () -> Unit) {
+private fun PlaceCard(item: SavedItem, place: Place, onClick: () -> Unit, onArrive: () -> Unit, onStartHere: () -> Unit) {
     var menu by remember { mutableStateOf(false) }
     val label = savedPlaceLabel(item)
-    Box {
+    // Toggled like a FAB while its menu is open.
+    val container by animateColorAsState(
+        if (menu) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainer, label = "placeCard",
+    )
+    Box(Modifier.fillMaxHeight()) {
         Column(
-            Modifier.width(PlaceCardWidth)
+            Modifier.width(PlaceCardWidth).fillMaxHeight()
                 .clip(RoundedCornerShape(20.dp))
-                .background(MaterialTheme.colorScheme.surfaceContainer)
+                .background(container)
                 .combinedClickable(
                     onClick = onClick, onClickLabel = stringResource(R.string.place_go_from_here),
-                    onLongClick = { menu = true }, onLongClickLabel = stringResource(R.string.place_start_here),
+                    onLongClick = { menu = true }, onLongClickLabel = stringResource(R.string.place_options, label),
                 )
                 .padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -510,13 +533,62 @@ private fun PlaceCard(item: SavedItem, place: Place, onClick: () -> Unit, onStar
                 Text(place.name, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
-        DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.place_start_here)) },
-                leadingIcon = { Icon(Icons.Rounded.TripOrigin, contentDescription = null) },
-                onClick = { menu = false; onStartHere() },
+        if (menu) {
+            PlaceMenu(
+                listOf(
+                    stringResource(R.string.place_arrive_here) to Icons.Rounded.LocationOn,
+                    stringResource(R.string.place_start_here) to Icons.Rounded.TripOrigin,
+                ),
+                onPick = { index -> menu = false; if (index == 0) onArrive() else onStartHere() },
+                onDismiss = { menu = false },
             )
         }
+    }
+}
+
+/**
+ * A place card's menu: FAB menu pills dropping in one after another just below the card, or above it
+ * where the screen ends; a tap elsewhere closes it.
+ */
+@Composable
+private fun PlaceMenu(items: List<Pair<String, ImageVector>>, onPick: (Int) -> Unit, onDismiss: () -> Unit) {
+    val gap = with(LocalDensity.current) { 8.dp.roundToPx() }
+    val position = remember(gap) { BelowOrAbove(gap) }
+    // Hidden for the first frame, so the pills animate in.
+    val shown = remember { MutableTransitionState(false).apply { targetState = true } }
+    Popup(popupPositionProvider = position, onDismissRequest = onDismiss, properties = PopupProperties(focusable = true)) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            items.forEachIndexed { index, (label, icon) ->
+                AnimatedVisibility(
+                    shown,
+                    enter = fadeIn(tween(120, delayMillis = index * 40)) +
+                        scaleIn(tween(180, delayMillis = index * 40), initialScale = 0.6f, transformOrigin = TransformOrigin(0f, 0f)),
+                ) {
+                    Surface(
+                        onClick = { onPick(index) }, shape = RoundedCornerShape(28.dp),
+                        color = MaterialTheme.colorScheme.secondaryContainer, contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                        shadowElevation = 3.dp,
+                    ) {
+                        Row(Modifier.height(56.dp).padding(start = 16.dp, end = 24.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(icon, contentDescription = null)
+                            Spacer(Modifier.width(12.dp))
+                            Text(label, style = MaterialTheme.typography.titleMedium)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** Below the anchor, aligned with its start; above it when it does not fit below; always inside the window. */
+private class BelowOrAbove(private val gap: Int) : PopupPositionProvider {
+    override fun calculatePosition(anchorBounds: IntRect, windowSize: IntSize, layoutDirection: LayoutDirection, popupContentSize: IntSize): IntOffset {
+        val x = (if (layoutDirection == LayoutDirection.Ltr) anchorBounds.left else anchorBounds.right - popupContentSize.width)
+            .coerceIn(0, (windowSize.width - popupContentSize.width).coerceAtLeast(0))
+        val below = anchorBounds.bottom + gap
+        val y = if (below + popupContentSize.height <= windowSize.height) below else (anchorBounds.top - gap - popupContentSize.height).coerceAtLeast(0)
+        return IntOffset(x, y)
     }
 }
 
@@ -527,7 +599,7 @@ private fun AddPlaceCard(onClick: () -> Unit) {
         shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surface,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-        modifier = Modifier.width(PlaceCardWidth),
+        modifier = Modifier.width(PlaceCardWidth).fillMaxHeight(),
     ) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surfaceContainerHighest, contentColor = MaterialTheme.colorScheme.primary, modifier = Modifier.size(40.dp)) {

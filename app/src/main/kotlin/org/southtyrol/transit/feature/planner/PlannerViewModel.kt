@@ -182,6 +182,7 @@ class PlannerViewModel @Inject constructor(
 
     /** "Start from here" in a saved place's long-press menu. */
     fun startFrom(place: Place) = update { it.copy(from = place) }
+    fun arriveAt(place: Place) = update { it.copy(to = place) }
 
     fun swap() = update { it.copy(from = it.to, to = it.from) }
     fun setTime(time: ZonedDateTime?) = update { it.copy(time = time) }

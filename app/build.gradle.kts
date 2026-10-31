@@ -60,6 +60,9 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            // Phones are ARM. The x86/x86_64 copies of MapLibre's native library (~22 MB) only serve emulators
+            // and x86 Chromebooks; debug builds keep them for the emulator.
+            ndk { abiFilters += setOf("arm64-v8a", "armeabi-v7a") }
         }
     }
 

@@ -149,6 +149,8 @@ Steps:
 ./gradlew lintDebug                # Android Lint (abortOnError)
 ```
 
+The release APK carries native code (MapLibre) only for ARM (`arm64-v8a`, `armeabi-v7a`), which is every phone; leaving out x86/x86_64 saves about 22 MB. Debug builds keep all four, so they still run on an x86_64 emulator. To try a release build on an emulator, use an ARM64 system image or one with ARM translation.
+
 ## 11. Tests
 
 ```bash
@@ -295,6 +297,7 @@ chosen in Settings → App updates:
   signed with the **same certificate** as the installed app.
 - It then opens Android's package installer. The first time, Android asks to allow "install unknown apps" for this app,
   and every install needs the user's confirmation. Nothing installs silently.
+- The downloaded APK is deleted on the next app start once it is installed (any file in the download folder that is not newer than the running version goes).
 - The repository is set by `update.repo` in `local.properties` (or `TRANSIT_UPDATE_REPO`). Set it to `none` to build
   without updates (e.g. for an app-store build).
 

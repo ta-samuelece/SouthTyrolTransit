@@ -5,7 +5,7 @@ description: The register of open bugs and documentation errors, raised with the
 tags: [defects, bugs, backlog]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-09T22:00:00Z"
+  at: "2026-10-31T10:00:00Z"
 status: stable
 ---
 

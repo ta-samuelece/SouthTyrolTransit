@@ -30,8 +30,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     environment: release
+    # The release is created with the owner's token (TRANSIT_RELEASE_GITHUB_TOKEN), not GITHUB_TOKEN: the
+    # "Protect release tags" ruleset lets only admins create v* tags, and a personal repository cannot
+    # exempt the GitHub Actions app.
     permissions:
-      contents: write
+      contents: read
     env:
       CHANNEL: ${{ inputs.channel }}
     steps:
@@ -65,8 +68,11 @@ jobs:
       - name: Restore signing key
         env:
           STORE_BASE64: ${{ secrets.TRANSIT_RELEASE_STORE_BASE64 }}
+          HAS_TOKEN: ${{ secrets.TRANSIT_RELEASE_GITHUB_TOKEN != '' }}
         run: |
           [ -n "$STORE_BASE64" ] || { echo "::error::the release environment has no signing secrets"; exit 1; }
+          # Checked before the build, so a missing token does not cost 15 minutes.
+          [ "$HAS_TOKEN" = true ] || { echo "::error::the release environment has no TRANSIT_RELEASE_GITHUB_TOKEN"; exit 1; }
           echo "$STORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
 
       - name: Build signed APK
@@ -78,7 +84,7 @@ jobs:
 
       - name: Publish
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.TRANSIT_RELEASE_GITHUB_TOKEN }}
         run: |
           flag=""
           [ "$CHANNEL" = preview ] && flag="--preview"

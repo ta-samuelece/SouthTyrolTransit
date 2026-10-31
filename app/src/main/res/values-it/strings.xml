@@ -74,6 +74,7 @@
     <string name="place_replaces_work">Sostituisce il tuo Lavoro attuale, %1$s.</string>
     <string name="place_saved_as">Salvato come %1$s</string>
     <string name="place_start_here">Parti da qui</string>
+    <string name="place_arrive_here">Arriva qui</string>
     <string name="place_go_from_here">Cerca collegamenti dalla tua posizione</string>
     <string name="place_rename">Rinomina o cambia icona</string>
     <string name="place_change_location">Cambia posizione</string>

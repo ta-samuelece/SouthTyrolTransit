@@ -167,8 +167,17 @@ class PlannerViewModel @Inject constructor(
         closeSearch()
     }
 
-    /** A saved place tapped on the Plan screen: the destination, or with [asStart] the start. */
-    fun useSavedPlace(place: Place, asStart: Boolean) = update { if (asStart) it.copy(from = place) else it.copy(to = place) }
+    /**
+     * A saved place tapped on the Plan screen: plans from the current location to [to], leaving now. [onReady]
+     * runs once the location is found (to open the results); a failure shows the usual location snackbar.
+     */
+    fun planFromHere(to: Place, onReady: () -> Unit) {
+        update { it.copy(to = to, time = null) }
+        useCurrentLocation(Field.FROM, then = onReady)
+    }
+
+    /** "Start from here" in a saved place's long-press menu. */
+    fun startFrom(place: Place) = update { it.copy(from = place) }
 
     fun swap() = update { it.copy(from = it.to, to = it.from) }
     fun setTime(time: ZonedDateTime?) = update { it.copy(time = time) }
@@ -182,7 +191,7 @@ class PlannerViewModel @Inject constructor(
     fun useRoute(from: Place, to: Place) = update { it.copy(from = from, to = to) }
 
     /** Fills [field] with the device location (only called after the user granted permission). */
-    fun useCurrentLocation(field: Field) {
+    fun useCurrentLocation(field: Field, then: (() -> Unit)? = null) {
         _state.update { it.copy(locating = field, locationError = null) }
         closeSearch()
         viewModelScope.launch {
@@ -192,6 +201,7 @@ class PlannerViewModel @Inject constructor(
                     val nearest = places.reverse(result.point, language.current())
                     val place = Place("", nearest.name, PlaceType.COORDINATE, result.point, nearest.locality)
                     update { if (field == Field.FROM) it.copy(from = place, locating = null) else it.copy(to = place, locating = null) }
+                    then?.invoke()
                 }
                 else -> _state.update { it.copy(locating = null, locationError = result) }
             }

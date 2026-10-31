@@ -64,7 +64,6 @@
     <string name="place_home">Home</string>
     <string name="place_work">Work</string>
     <string name="place_save_as">Save as</string>
-    <string name="places_edit">Edit</string>
     <string name="place_add">Add place</string>
     <string name="place_add_hint">Search for the place to save</string>
     <string name="place_save_title">Save place</string>
@@ -78,6 +77,7 @@
     <string name="place_replaces_work">This replaces your current Work, %1$s.</string>
     <string name="place_saved_as">Saved as %1$s</string>
     <string name="place_start_here">Start from here</string>
+    <string name="place_go_from_here">Find connections from your location</string>
     <string name="place_rename">Rename or change icon</string>
     <string name="place_change_location">Change location</string>
     <string name="place_move_up">Move up</string>

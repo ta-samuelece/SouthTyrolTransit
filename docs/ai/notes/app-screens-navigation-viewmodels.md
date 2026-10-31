@@ -5,7 +5,7 @@ description: How the first-run screens are gated before the app, how a route is 
 tags: [compose, navigation, viewmodel, hilt, search, workmanager, onboarding]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-30T12:00:00Z"
+  at: "2026-10-31T10:00:00Z"
 status: stable
 ---
 
@@ -95,8 +95,9 @@ first:
 _state.map { it.query.trim() }.distinctUntilChanged().debounce(200).collectLatest { query -> ... }
 ```
 
-Used by `MapSearchViewModel` (stops and lines from one query), `LinesViewModel`, `StopSearchViewModel`, `LineSearchViewModel`;
-`PlannerViewModel` does the same with `query to field`. Set `loading` only when the trimmed query
+Used by `MapSearchViewModel` (stops and lines from one query), `LinesViewModel`, `StopSearchViewModel`, `LineSearchViewModel`
+and `PlacesViewModel` (`feature/common/Places.kt`: the place search sheet shared by Plan and Saved, which
+also saves, moves and removes saved places; the planner only keeps which endpoint the sheet is open for). Set `loading` only when the trimmed query
 changed, so typing a space does not flash a spinner.
 
 Screens never take `EfaClient` or `ScheduleStore`. Stop search by name or nearby goes through

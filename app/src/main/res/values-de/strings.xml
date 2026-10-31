@@ -60,7 +60,6 @@
     <string name="place_home">Zuhause</string>
     <string name="place_work">Arbeit</string>
     <string name="place_save_as">Speichern als</string>
-    <string name="places_edit">Bearbeiten</string>
     <string name="place_add">Ort hinzufügen</string>
     <string name="place_add_hint">Ort zum Speichern suchen</string>
     <string name="place_save_title">Ort speichern</string>
@@ -74,6 +73,7 @@
     <string name="place_replaces_work">Das ersetzt deine bisherige Arbeit, %1$s.</string>
     <string name="place_saved_as">Gespeichert als %1$s</string>
     <string name="place_start_here">Von hier starten</string>
+    <string name="place_go_from_here">Verbindungen ab deinem Standort suchen</string>
     <string name="place_rename">Umbenennen oder Symbol ändern</string>
     <string name="place_change_location">Ort ändern</string>
     <string name="place_move_up">Nach oben</string>

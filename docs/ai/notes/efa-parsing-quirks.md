@@ -5,7 +5,11 @@ description: Which EFA fields count as realtime or cancelled, the different dela
 tags: [efa, parsing, xml, realtime, alerts, security]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-09T23:00:00Z"
+  at: "2026-10-30T12:00:00Z"
+verified:
+  by: claude-code/claude-opus-5-5
+  at: "2026-10-30T12:00:00Z"
+  what: stop-finder aliases, trITMOTvalue100 cap and LEASTINTERCHANGE past trips against the live EFA API
 status: stable
 ---
 
@@ -39,11 +43,26 @@ status: stable
 - The code strings (`"origin"`, `"destination"`, `"same"`) are duplicated as literals in
   `core/designsystem/.../Format.kt` - change both together.
 - StopFinder states other than `identified`/`list` return an empty list. `identified` carries **one**
-  element only: EFA picks the best match and drops the rest ("maia bassa" returns the long-distance bus
-  stop, not the Maia Bassa station; `efa_stopfinder_list.xml` is such an answer despite its name). So
-  `PlacesRepository.search` appends timetable stations EFA did not return, matched on station key =
-  EFA `gid`, whenever the timetable is downloaded. Whether a request parameter makes EFA always answer
-  with a list (`odvSugMacro`?) is untested.
+  element only: EFA picks the best match and drops the rest (`efa_stopfinder_list.xml` is such an
+  answer despite its name). So `PlacesRepository.search` appends timetable stations EFA did not return,
+  matched on station key = EFA `gid`, whenever the timetable is downloaded. Whether a request parameter
+  makes EFA always answer with a list (`odvSugMacro`?) is untested.
+- **One stop, several names, one id.** A list can name the same stop twice with the same `stateless`
+  and `gid` ("Maia Bassa": the long-distance bus alias at 397 listed first, "Stazione di Merano Maia
+  Bassa" at 401 second - `efa_stopfinder_aliases.xml`). `rankedPlaces` sorts by `matchQuality` before
+  de-duplicating by id, so the better-matching name survives. Until 2026-10-30 it kept the first listed,
+  and because the station's `gid` then counted as returned, the timetable merge dropped the station too:
+  that was why map-search stops were missing from the planner.
+
+# Trip request
+
+- `trITMOT=100` + `trITMOTvalue100` is the longest walk to and from stops in minutes; without it EFA caps
+  it at 10, which hides "walk 18-24 min to a direct bus" trips. The planner sends
+  `SearchOptions.maxWalkMinutes` (10/20/30, default 20). At 30, `LEASTINTERCHANGE` readily swaps a short
+  bus ride for a 28-minute walk, which is why it is a choice rather than a fixed high value.
+- `LEASTINTERCHANGE` answers a departure search with trips that already left (asked 22:30, got 20:56).
+  `EfaClient.inWindow` drops departures over a minute before the requested time and, for arrive-by,
+  arrivals over a minute after it. The default preference is `FEWEST_CHANGES`, so this matters.
 
 # AddInfo (alerts)
 
@@ -66,4 +85,6 @@ behind a 10 KB comment. The parser's 15 MB cap sits behind a
 # What was checked
 
 The `trainType` label and its test assertion re-read on 2026-10-09; the rest from a code read of `Efa.kt`,
-`ParserTest` and the fixtures the same day, not re-verified line by line.
+`ParserTest` and the fixtures the same day, not re-verified line by line. The stop-name aliases, the
+footpath cap and the `LEASTINTERCHANGE` past trips were reproduced against the live API on 2026-10-30
+(Via Piero Agostini 2, Bolzano -> Via Guglielmo Marconi 58, Laives, at 14:00 and 22:30).

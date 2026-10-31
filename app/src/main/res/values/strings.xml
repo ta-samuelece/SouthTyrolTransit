@@ -42,6 +42,7 @@
     <string name="planner_preference">Prefer</string>
     <string name="planner_modes">Transport modes</string>
     <string name="planner_walking_speed">Walking speed</string>
+    <string name="planner_max_walk">Longest walk to a stop</string>
     <string name="planner_wheelchair">Wheelchair-accessible routes</string>
     <string name="planner_wheelchair_hint">Uses the accessibility data supplied to the journey planner.</string>
     <string name="planner_search">Find connections</string>

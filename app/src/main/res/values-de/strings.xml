@@ -39,6 +39,7 @@
     <string name="planner_preference">Bevorzugen</string>
     <string name="planner_modes">Verkehrsmittel</string>
     <string name="planner_walking_speed">Gehgeschwindigkeit</string>
+    <string name="planner_max_walk">Längster Fußweg zur Haltestelle</string>
     <string name="planner_wheelchair">Rollstuhlgerechte Verbindungen</string>
     <string name="planner_wheelchair_hint">Nutzt die Barrierefreiheitsdaten der Fahrplanauskunft.</string>
     <string name="planner_search">Verbindungen suchen</string>

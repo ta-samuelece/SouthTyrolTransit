@@ -349,8 +349,8 @@ class JourneyRepository(private val planner: JourneyPlannerDataSource, private v
 class PlacesRepository(private val geocoder: GeocodingLocationDataSource, private val schedule: TransitScheduleDataSource) {
     /**
      * Network place search, completed with stops from the cached schedule. EFA answers a query it can
-     * "identify" with that single place only ("maia bassa" gives the long-distance bus stop, not the
-     * station), so timetable stations it did not return are appended. Offline, the schedule alone answers.
+     * "identify" with that single place only, so timetable stations it did not return are appended.
+     * Offline, the schedule alone answers.
      */
     suspend fun search(query: String, language: String): Pair<List<Place>, DataError?> {
         if (query.isBlank()) return emptyList<Place>() to null

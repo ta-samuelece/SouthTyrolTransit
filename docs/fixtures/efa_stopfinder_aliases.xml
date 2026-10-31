@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<itdRequest version="10.6.33.48" language="it" lengthUnit="METER" sessionID="0" client="curl/8.7.1" clientIP="" serverID="" virtDir="apb" calcTime="16.959" now="2026-10-30T21:24:53" nowWD="6" logRequestId="339c45f399199c3d">
+  <itdVersionInfo>
+    <ptKernel>
+      <appVersion>10.6.33.24 build 12.10.2026 01:01:12</appVersion>
+      <dataFormat>EFA10_06_01</dataFormat>
+      <dataBuild>2026-10-29T00:05:07</dataBuild>
+    </ptKernel>
+  </itdVersionInfo>
+  <itdStopFinderRequest requestID="0">
+    <itdOdv type="any" usage="sf" anyObjFilter="0">
+      <itdOdvPlace state="empty">
+        <odvPlaceElem></odvPlaceElem>
+      </itdOdvPlace>
+      <itdOdvName state="list">
+        <itdMessage type="error" module="BROKER" code="-8011"></itdMessage>
+        <odvNameElem listIndex="0" selected="0" matchQuality="397" x="11.148211" y="46.656341" mapName="WGS84[DD.DDDDD]" id="66000301" omc="22021051" placeID="1" anyType="stop" anyTypeSort="2" locality="Merano" objectName="Fermata autobus a lunga percorrenza Merano Maia Bassa" buildingName="" buildingNumber="" postCode="" streetName="" nameKey="" mainLocality="Merano" stateless="66000301" gid="it:22021:301" value="0:1">Merano, Fermata autobus a lunga percorrenza Merano Maia Bassa</odvNameElem>
+        <odvNameElem listIndex="1" selected="1" matchQuality="401" x="11.148211" y="46.656341" mapName="WGS84[DD.DDDDD]" id="66000301" omc="22021051" placeID="1" anyType="stop" anyTypeSort="2" locality="Merano" objectName="Stazione di Merano Maia Bassa" buildingName="" buildingNumber="" postCode="" streetName="" nameKey="" mainLocality="Merano" stateless="66000301" gid="it:22021:301" value="1:2">Merano, Stazione di Merano Maia Bassa</odvNameElem>
+        <odvNameInput>Maia Bassa</odvNameInput>
+      </itdOdvName>
+    </itdOdv>
+    <itdDateTime ttpFrom="20260501" ttpTo="20270612">
+      <itdDate weekday="6" year="2026" month="10" day="30"/>
+      <itdTime hour="21" minute="24"/>
+    </itdDateTime>
+  </itdStopFinderRequest>
+</itdRequest>

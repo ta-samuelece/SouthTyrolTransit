@@ -14,7 +14,7 @@ Statuses:
 
 | Feature | Status | Notes |
 |---|---|---|
-| A-to-B journey planning | Implemented | STA EFA trip request. Depart-at/arrive-by, earlier/later, preferences (fastest, fewer changes, less walking), mode exclusion, walking speed, wheelchair option |
+| A-to-B journey planning | Implemented | STA EFA trip request. Depart-at/arrive-by, earlier/later, preferences (fewer changes by default, fastest, less walking), mode exclusion, walking speed, longest walk to a stop, wheelchair option |
 | Door-to-door walking portions | Implemented | EFA footpath legs with duration, distance and geometry. Start from current location (coordinates) or any address/POI |
 | Address / POI / stop search | Implemented | EFA StopFinder online. Offline fallback to stops from the cached GTFS |
 | Nearby stops | Implemented | Location requested only on tap. GTFS spatial query, or EFA coordinate search when no timetable is cached |

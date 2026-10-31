@@ -427,16 +427,27 @@ enum class WalkingSpeed { SLOW, NORMAL, FAST }
 data class SearchOptions(
     val at: ZonedDateTime = ZonedDateTime.now(TransitZone),
     val arriveBy: Boolean = false,
-    val preference: RoutePreference = RoutePreference.FASTEST,
+    val preference: RoutePreference = RoutePreference.FEWEST_CHANGES,
     val excludedModes: Set<TransportMode> = emptySet(),
     val wheelchair: Boolean = false,
     val walkingSpeed: WalkingSpeed = WalkingSpeed.NORMAL,
+    /**
+     * Longest walk in minutes between the start or destination and a stop. EFA's own default is 10, which
+     * drops "walk a bit further to a direct bus" connections; a higher limit makes them candidates.
+     */
+    val maxWalkMinutes: Int = DEFAULT_MAX_WALK_MINUTES,
     /**
      * Travelling with a bike. Not sent to the planner: results are filtered by the timetable's bike rules
      * for the runs their legs are matched to (see [JourneyBikes]).
      */
     val withBike: Boolean = false,
-)
+) {
+    companion object {
+        /** The walking limits the planner offers. */
+        val MAX_WALK_CHOICES = listOf(10, 20, 30)
+        const val DEFAULT_MAX_WALK_MINUTES = 20
+    }
+}
 
 /** Typed, UI-describable failures. Repositories never leak transport exceptions to ViewModels. */
 sealed class DataError {

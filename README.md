@@ -189,6 +189,10 @@ The release APK carries native code (MapLibre) only for ARM (`arm64-v8a`, `armea
 
 Fixtures live in `docs/fixtures`.
 
+### Branches and pull requests
+
+`main` only changes through pull requests, and CI ("Tests and lint") must pass before one can be merged. Name your branch `<type>/<short-description>`: the type is `feature/`, `fix/`, `chore/` (build, tooling, CI, releases) or `docs/`, followed by a few lowercase words describing the change, joined by dashes, e.g. `feature/places-cards` or `fix/search-reload-loop`. CI fails a pull request from any other branch name; rename the branch (`git branch -m <new-name>`) and open a new pull request.
+
 ## 12. Static GTFS update strategy
 
 1. **Schedule.** `ScheduleSyncWorker` (WorkManager) runs weekly, plus once as soon as possible on installs that have no timetable yet, with battery not low and storage not low, and on unmetered network unless "Download over mobile data" is on. The user can "Download now" over any network. A downloaded feed that fails validation is not retried; network failures are retried up to three times. Each time the app opens (except right after the first-run screens), it also checks the timetable itself: when it is missing or cannot be read, when its last service day has passed, or when the HTTPS source reports a newer feed than the installed one (a conditional request whose body is never read, compared by ETag or Last-Modified) or the importer changed since it was built, a dialog offers "Download now" (any network) or "Later" (until the next app start). An expired timetable is not offered again when the server confirms there is nothing newer, nor while a download is running; the dialog waits for the app-update offer, if one is showing.

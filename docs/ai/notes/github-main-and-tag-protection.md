@@ -1,7 +1,7 @@
 ---
 type: Reference
 title: main and the release tags are protected by GitHub rulesets
-description: Since 2026-10-31 two repository rulesets make main reachable only through a merged pull request (one approval, admins may merge their own) and let only admins create, move or delete v* tags, so only the owner can publish a release; release.py also refuses a commit that is not on origin/main.
+description: Since 2026-10-31 two repository rulesets make main reachable only through a merged pull request (one approval, admins may merge their own) and let only admins, or the Release workflow after the owner approves its release environment, create, move or delete v* tags; release.py also refuses a commit that is not on origin/main.
 tags: [github, release, git, workflow]
 generated:
   by: claude-code/claude-opus-5-5
@@ -32,8 +32,19 @@ In practice:
 - **Nobody pushes to `main` directly**, the owner included: GitHub rejects the push. Every change, a
   version bump or a docs-only commit too, goes through a branch and a pull request. The owner may merge
   their own pull request without an approval; anyone else's needs one.
-- **Only an admin can publish a release.** A GitHub release creates its `v*` tag, which the tag ruleset
-  refuses to anyone else - write access alone used to be enough to reach every phone through the updater.
+- **Only the owner can publish a release.** A GitHub release creates its `v*` tag, which the tag ruleset
+  refuses to anyone but an admin and the GitHub Actions app - write access alone used to be enough to
+  reach every phone through the updater. The Actions bypass is safe only because of the `release`
+  environment below.
+
+# The release environment
+
+`.github/workflows/release.yml` publishes from GitHub. Its job runs in the `release` environment, which
+only deploys from `main` and has the owner as its required reviewer: anyone with write access can start
+the workflow, but nothing builds or publishes until the owner approves. The signing key is stored only
+as that environment's secrets (`TRANSIT_RELEASE_STORE_BASE64`, `TRANSIT_RELEASE_STORE_PASSWORD`,
+`TRANSIT_RELEASE_KEY_ALIAS`, `TRANSIT_RELEASE_KEY_PASSWORD`), which the owner sets by hand and no other
+job can read. Secrets cannot be read back, so they are not a backup of the keystore.
 - The **Tests and lint** job of the CI workflow is a required status check
   ([CI](./ci-and-local-checks.md)): a pull request merges only when the unit tests and lint pass on it.
 
@@ -44,8 +55,8 @@ release can no longer be cut from a pushed but unmerged branch.
 
 The rulesets live in the GitHub settings, not in the repository; read them with
 `gh api repos/ta-samuelece/SouthTyrolTransit/rulesets`. Any change is a change on GitHub and needs the
-user's approval (CLAUDE.md rule 12). If CI is ever added, its job should become a required status check
-in "Protect main".
+user's approval (CLAUDE.md rule 12). Renaming the CI job breaks its required check unless the ruleset
+is updated with it. The environment is read with `gh api repos/ta-samuelece/SouthTyrolTransit/environments/release`.
 
 # What was checked
 

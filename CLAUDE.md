@@ -18,13 +18,13 @@ CI runs the unit tests and lint on each pull request and must pass before a merg
 ([CI](docs/ai/notes/ci-and-local-checks.md)), but it cannot judge whether a change is right for the commit
 every release is cut from. A GitHub release is the deploy: the app's in-app
 updater offers it to every phone on the matching channel - stable releases to everyone, `-preview.N`
-pre-releases to the Preview channel. You may work out and show the exact `gh pr merge`, `git tag` or
+pre-releases to the Preview channel. You may work out and show the exact `gh pr merge`, `gh workflow run release.yml`, `git tag` or
 `python tools/release.py` command you intend to run, but you must never run it until the user has approved
 it in its own `AskUserQuestion`. `python tools/release.py --dry-run` publishes nothing and is not gated.
 Pushing a feature branch is not gated by this rule. Full procedure: the `publish-release` skill.
 
 **3. Split commits by subject.** App and build changes (`app/`, `core/`, `gradle/`, `*.gradle.kts`,
-`tools/`, `icons/`, `docs/` outside `docs/ai/`, `README.md`) go in one commit. Updates to AI-facing material
+`tools/`, `icons/`, `.github/`, `docs/` outside `docs/ai/`, `README.md`) go in one commit. Updates to AI-facing material
 (`CLAUDE.md`, `docs/ai/`, `.claude/`) go in a separate commit. Two commits means two questions in the same
 approval dialog - one per commit. Bugs are tracked in
 [known defects](docs/ai/notes/known-defects.md), not in GitHub issues (rule 12): a commit that fixes one
@@ -126,7 +126,9 @@ added to `values/strings.xml` must be added to `values-de/` and `values-it/` in 
 same key - a lost or leaked keystore strands every installed copy. Never read, print, copy or commit a
 keystore, its passwords, `local.properties` or the `TRANSIT_RELEASE_*` variables. If a build needs them and
 they are missing, stop and tell the user. `.gitignore` already excludes `*.jks`, `*.keystore` and
-`local.properties`; never weaken that.
+`local.properties`; never weaken that. The same key also lives in the `TRANSIT_RELEASE_*` secrets of the
+GitHub `release` environment: only the user sets or rotates them; never set, list values of, or echo them
+in a workflow, and never approve a `release` deployment yourself.
 
 **11. Never hard-wrap prose in a README.** One line per paragraph, one line per list item, however long it
 runs - a newline means a new paragraph and nothing else. Reflowing a sentence rewrites every line after it,
@@ -214,8 +216,10 @@ EFA uses different stop ids from GTFS. Changing `GtfsFiles.stationKey`, `GtfsFil
 - `tools/release.py` publishes a release (plain Python 3); `tools/generate_icons.py` regenerates launcher
   icons from `icons/` (needs Pillow and numpy, and is only one of five steps - see
   [app icons](docs/ai/notes/app-icons-and-package-name.md)).
-- `docs/` - human documentation, screenshots, and `docs/fixtures/` (captured real API payloads the tests
-  use).
+- `docs/` - human documentation, screenshots, `docs/fixtures/` (captured real API payloads the tests
+  use) and `docs/release-notes/` (one file per published version, read by the Release workflow).
+- `.github/workflows/` - `ci.yml` (tests and lint, a required check) and `release.yml` (publishes a
+  release after the owner's approval).
 - `docs/ai/` - the AI knowledge base, an OKF v0.2 bundle (see "AI workspace" below).
 
 ## Workflow

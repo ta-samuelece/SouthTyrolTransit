@@ -31,9 +31,10 @@ What CI does **not** do:
 - The opt-in network tests (`-PliveTests=true`, `-PgtfsReal`) never run there
   ([test suite](./test-suite-and-opt-in-live-tests.md)).
 - No release build: R8 and the release signing are only exercised by a local `assembleRelease`.
-- No release, ever. `tools/release.py`, run by hand, is still the only way to publish, and it checks the
-  version, signature, clean tree, that the commit is on `origin/main`, and the tag - not whether the code
-  works.
+- No release. Publishing is the separate, manually started Release workflow (or `tools/release.py` on
+  the owner's machine), gated by the owner's approval
+  ([branch protection](./github-main-and-tag-protection.md)). `release.py` checks the version, signature,
+  clean tree, that the commit is on `origin/main`, and the tag - not whether the code works.
 
 Consequences for agents (CLAUDE.md rules 2 and 9): CI only reports after a push, so still run the module
 tests and `./gradlew lintDebug` yourself before reporting a change as done, and say which ones you ran.

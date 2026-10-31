@@ -327,21 +327,22 @@ release.keyPassword=...
      `versionCode` is not higher than the installed one.
    - `versionName`: stable `0.2.0`; preview `0.2.0-preview.1`, then `0.2.0-preview.2`, … and finally `0.2.0` for the
      finished release.
-2. **Merge** the change into `main` through a pull request, then check out `main` and pull. `main` is protected: direct pushes are rejected, and only a repository admin can create the `v*` tags a release needs. The release is tagged on the merged commit.
-3. **Build** the signed APK: `gradlew assembleRelease` (output `app/build/outputs/apk/release/app-release.apk`).
-4. **Write the notes** in a Markdown file (headings, bullets, **bold** and links are shown formatted in the app).
-5. **Publish** with the script (needs Python 3 and `JAVA_HOME` set, e.g. to Android Studio's `jbr`):
-   ```bash
-   python tools/release.py --preview --notes notes.md --dry-run   # checks only
-   python tools/release.py --preview --notes notes.md             # publishes the preview
-   python tools/release.py --notes notes.md                       # a stable release
-   ```
-   It checks that the version matches the channel, that the APK is signed and has exactly that version, that everything is committed and the commit is on `origin/main`, and that the tag is new. Then it creates the tag and the GitHub release on that commit
-   (previews as **pre-release**, never marked "latest"), adds a "Preview build" note to previews and uploads the APK as
-   `SouthTyrolTransit-<version>.apk` (previews) or `SouthTyrolTransit-<version>-release.apk`. It uses the GitHub login git already has.
+2. **Write the notes** in `docs/release-notes/<versionName>.md`, e.g. `0.2.0-preview.1.md` (headings, bullets, **bold** and links are shown formatted in the app).
+3. **Merge** both into `main` through a pull request. `main` is protected: direct pushes are rejected, and only a repository admin (or the Release workflow, after the owner's approval) can create the `v*` tags a release needs. The release is tagged on the merged commit.
+4. **Publish from GitHub**: *Actions → Release → Run workflow*, pick `preview` or `stable`, then approve the waiting deployment. The workflow checks that the channel, `versionName` and notes file agree, builds the signed APK with the signing key stored as secrets of the `release` environment, and runs `tools/release.py`, which publishes it.
 
-   Without the script, the same on github.com: *Releases → Draft a new release*, tag `vX.Y.Z-preview.N` on the merged
-   commit, attach the APK, tick **Set as a pre-release** (for a preview) and publish.
+Or publish from your own machine instead of step 4: check out `main` and pull, build the signed APK with `gradlew assembleRelease` (output `app/build/outputs/apk/release/app-release.apk`), and run the script (needs Python 3 and `JAVA_HOME` set, e.g. to Android Studio's `jbr`):
+   ```bash
+```bash
+python tools/release.py --preview --notes docs/release-notes/<versionName>.md --dry-run   # checks only
+python tools/release.py --preview --notes docs/release-notes/<versionName>.md             # publishes the preview
+python tools/release.py --notes docs/release-notes/<versionName>.md                       # a stable release
+```
+The script checks that the version matches the channel, that the APK is signed and has exactly that version, that everything is committed and the commit is on `origin/main`, and that the tag is new. Then it creates the tag and the GitHub release on that commit (previews as **pre-release**, never marked "latest"), adds a "Preview build" note to previews and uploads the APK as `SouthTyrolTransit-<version>.apk` (previews) or `SouthTyrolTransit-<version>-release.apk`. Locally it uses the GitHub login git already has; in the workflow, the workflow's own token.
+
+#### Signing secrets for the Release workflow
+
+The workflow signs with the same key as local builds, stored as four secrets of the `release` environment (*Settings → Environments → release*): `TRANSIT_RELEASE_STORE_BASE64` (the keystore file, base64-encoded), `TRANSIT_RELEASE_STORE_PASSWORD`, `TRANSIT_RELEASE_KEY_ALIAS` and `TRANSIT_RELEASE_KEY_PASSWORD`. Only the repository owner sets them, by hand. GitHub secrets cannot be read back, so they are not a backup: keep the keystore safe elsewhere too. The `release` environment only runs from `main` and waits for the owner's approval, so a run started by anyone else publishes nothing until approved.
 
 Apps on the matching channel offer the update on their next start. To promote a preview, publish the finished version
 (`0.2.0`, higher `versionCode`) as a normal release; both channels then get it.

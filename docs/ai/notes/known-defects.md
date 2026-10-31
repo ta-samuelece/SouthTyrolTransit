@@ -19,11 +19,3 @@ user. Background for each lives in the linked note.
 Open bugs that the user moved to GitHub issues are tracked there (labels `bug` and `documentation`) and
 no longer listed here - read the issue before working on one, and reference it in the fixing commit
 (CLAUDE.md rule 3).
-
-# Open defects
-
-1. **An installed in-app update leaves its APK in the cache.** `UpdateManager.download` writes the APK
-   to `cacheDir/updates` and only clears that folder when the *next* download starts, so after Android
-   installs the update the file (~48 MB for 0.1.6) stays on the phone until the following update. Fix:
-   delete, at startup, every file there that is not a download newer than the running version. See
-   [in-app updater internals](./in-app-updater-internals.md).

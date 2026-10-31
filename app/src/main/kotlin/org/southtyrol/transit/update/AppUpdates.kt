@@ -129,6 +129,15 @@ object ReleaseParser {
     }
 }
 
+/** Name prefix of downloaded update APKs in `cacheDir/updates`, followed by the version and `.apk`. */
+private const val APK_PREFIX = "SouthTyrolTransit-"
+
+/** True for a file in `cacheDir/updates` that is not a download newer than [installed]: already installed, or unknown. */
+internal fun isStaleUpdateFile(name: String, installed: String): Boolean {
+    val version = name.takeIf { it.startsWith(APK_PREFIX) && it.endsWith(".apk") }?.removePrefix(APK_PREFIX)?.removeSuffix(".apk")
+    return version == null || !Versions.isNewer(version, installed)
+}
+
 /**
  * In-app updates from GitHub Releases: checks the latest release, downloads its APK, verifies that it is
  * a newer build of this app signed with the same key, and hands it to the system installer. Android always
@@ -151,6 +160,15 @@ class UpdateManager @Inject constructor(
     // Downloads outlive any single screen (e.g. leaving Settings mid-download).
     private val scope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + Dispatchers.Default)
     private var downloadJob: kotlinx.coroutines.Job? = null
+
+    init {
+        scope.launch(Dispatchers.IO) { removeInstalledDownloads() }
+    }
+
+    /** An installed update's APK is dead weight (tens of MB); keep only a download newer than this build. */
+    private fun removeInstalledDownloads() {
+        File(context.cacheDir, "updates").listFiles()?.filter { isStaleUpdateFile(it.name, currentVersion) }?.forEach { it.delete() }
+    }
 
     fun startDownload(release: AppRelease) {
         if (downloadJob?.isActive == true) return
@@ -204,7 +222,7 @@ class UpdateManager @Inject constructor(
         _state.value = UpdateState.Downloading(release, 0, release.apkSize)
         val dir = File(context.cacheDir, "updates").apply { mkdirs() }
         dir.listFiles()?.forEach { it.delete() }
-        val file = File(dir, "SouthTyrolTransit-${release.version}.apk")
+        val file = File(dir, "$APK_PREFIX${release.version}.apk")
         _state.value = try {
             withContext(Dispatchers.IO) {
                 http.newCall(Request.Builder().url(release.apkUrl).build()).execute().use { response ->

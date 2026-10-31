@@ -80,4 +80,13 @@ class AppUpdatesTest {
         )
         assertEquals("0.2.0", ReleaseParser.parseList(body, allowPreview = true).first!!.version)
     }
+
+    @Test fun installedUpdateDownloadsAreStale() {
+        assertTrue(isStaleUpdateFile("SouthTyrolTransit-0.1.7.apk", "0.1.7"))
+        assertTrue(isStaleUpdateFile("SouthTyrolTransit-0.1.7-preview.4.apk", "0.1.7"))
+        assertTrue(isStaleUpdateFile("SouthTyrolTransit-0.1.6.apk", "0.1.7-preview.4"))
+        assertTrue(isStaleUpdateFile("leftover.tmp", "0.1.7"))
+        assertFalse(isStaleUpdateFile("SouthTyrolTransit-0.1.8.apk", "0.1.7"))
+        assertFalse(isStaleUpdateFile("SouthTyrolTransit-0.1.7.apk", "0.1.7-preview.4"))
+    }
 }

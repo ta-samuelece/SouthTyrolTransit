@@ -76,6 +76,20 @@ a direct push is rejected for everyone, the owner included. Commit on a branch (
 are on `main`), push the branch, and open a pull request into `main`. A local `main` that is ahead of
 `origin/main` cannot be pushed - move its commits to a branch and open a pull request for them.
 
+Name the branch `<type>/<short-description>` (CLAUDE.md rule 2):
+
+| Type | For |
+| --- | --- |
+| `feature/` | something new or changed for the user of the app |
+| `fix/` | a bug fix |
+| `chore/` | build, tooling, CI, dependencies, release bumps |
+| `docs/` | documentation only, including the AI material |
+
+The description is a few lowercase words naming the change, joined by single dashes: digits allowed,
+nothing else (`feature/places-cards`, `fix/search-reload-loop`, `docs/branch-naming`). The first step of
+the required CI check rejects any other name, and a rejected branch has to be renamed and get a new pull
+request. When work mixes types, name it after the main one.
+
 - Pushing a feature branch is not gated; still say you are doing it.
 - Opening the pull request is a change on GitHub: show its exact title and text and ask first
   (CLAUDE.md rule 12).

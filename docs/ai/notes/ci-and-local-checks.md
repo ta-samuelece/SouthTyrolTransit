@@ -16,7 +16,11 @@ sources:
 # The state today
 
 `.github/workflows/ci.yml` runs one job, **Tests and lint**, on every pull request into `main` and every
-push to `main`: JDK 21 (Temurin), the Android platform 37.1 installed with `sdkmanager`, then
+push to `main`. On a pull request it first checks the branch name against
+`^(fix|chore|feature|docs)/[a-z0-9]+(-[a-z0-9]+)*$` and fails at once otherwise - a ruleset would reject
+the push instead, but GitHub refuses the `branch_name_pattern` rule for this personal repository (422
+"Invalid rule", tried 2026-10-31). Cloud-session branches (`ccr-...`) fail it too, by the owner's choice.
+Then: JDK 21 (Temurin), the Android platform 37.1 installed with `sdkmanager`, then
 `:core:model:test :core:data:testDebugUnitTest :app:testDebugUnitTest` and `lintDebug`. On failure it
 uploads the test and lint reports as an artifact for seven days. It has read-only permissions and no
 secrets.

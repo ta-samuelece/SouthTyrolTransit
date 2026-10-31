@@ -22,6 +22,9 @@ pre-releases to the Preview channel. You may work out and show the exact `gh pr 
 `python tools/release.py` command you intend to run, but you must never run it until the user has approved
 it in its own `AskUserQuestion`. `python tools/release.py --dry-run` publishes nothing and is not gated.
 Pushing a feature branch is not gated by this rule. Full procedure: the `publish-release` skill.
+**Branch names are `<type>/<short-description>`**: type `feature/`, `fix/`, `chore/` or `docs/`, then a
+few lowercase words for the change, joined by dashes - `feature/places-cards`, `fix/search-reload-loop`.
+CI fails a pull request from any other name, so it cannot be merged.
 
 **3. Split commits by subject.** App and build changes (`app/`, `core/`, `gradle/`, `*.gradle.kts`,
 `tools/`, `icons/`, `.github/`, `docs/` outside `docs/ai/`, `README.md`) go in one commit. Updates to AI-facing material

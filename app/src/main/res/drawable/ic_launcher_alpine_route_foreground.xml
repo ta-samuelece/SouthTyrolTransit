@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Alpine Route, converted by hand from icons/Alpine Route.svg (1254px art; not generated): the solid
+     background fills the whole layer, the art is scaled so its farthest point stays about 30dp from the
+     centre, inside the 33dp safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#FF003F3B" android:pathData="M0,0 H108 V108 H0 Z" />
+    <group android:scaleX="0.0625" android:scaleY="0.0625" android:translateX="14.34" android:translateY="12.72">
+        <path android:fillColor="#FF82D5CA"
+            android:pathData="M187,727 L491,318 Q509,295 527,317 L688,566 Q696,586 680,575 L553,457 Q542,445 532,458 L464,532 Q454,543 445,533 L439,527 Q429,519 421,532 L226,752 Q212,773 194,764 Q176,755 187,727 Z" />
+        <path android:fillColor="#FF82D5CA"
+            android:pathData="M808,560 l91,-100 q18,-22 36,1 l148,226 q10,17 -3,27 q-15,12 -28,-4 L942,574 q-9,-12 -20,-6 l-57,29 Z" />
+        <path android:fillColor="#00000000" android:strokeColor="#FF82D5CA" android:strokeWidth="58"
+            android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:pathData="M836,387 C832,430 814,447 783,471 C758,490 729,503 728,529 C726,553 758,572 794,597 C832,623 851,647 847,682 C842,724 811,742 762,755 C699,771 613,778 536,801 C469,821 423,849 399,885" />
+        <path android:fillColor="#FF82D5CA"
+            android:pathData="M793.5,357 a67.5,67.5 0 1,0 135,0 a67.5,67.5 0 1,0 -135,0 Z M278.5,944 a87.5,87.5 0 1,0 175,0 a87.5,87.5 0 1,0 -175,0 Z" />
+        <path android:fillColor="#FFFFDEA2"
+            android:pathData="M825,357 a36,36 0 1,0 72,0 a36,36 0 1,0 -72,0 Z M316.5,944 a49.5,49.5 0 1,0 99,0 a49.5,49.5 0 1,0 -99,0 Z" />
+    </group>
+</vector>

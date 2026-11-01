@@ -8,7 +8,7 @@ generated:
   at: "2026-10-09T23:00:00Z"
 verified:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-09T23:00:00Z"
+  at: "2026-11-01T17:30:00Z"
 status: stable
 ---
 
@@ -27,17 +27,24 @@ Running `tools/generate_icons.py` is only one of five steps; README section 1 li
    the Settings picker lists `AppIcon.entries`.
 5. Add `icon_<slug>` to `values`, `values-de` and `values-it` (`TranslationsTest`).
 
+**Vector icons skip step 2.** Alpine Route (default since 2026-11-01) is flat art, so it was converted by
+hand from `icons/Alpine Route.svg` into `drawable/ic_launcher_alpine_route_foreground.xml` (solid
+background included, art scaled to stay about 30dp from the centre) and
+`drawable/ic_launcher_monochrome_alpine_route.xml`, with a hand-written `mipmap-anydpi` XML. The script
+only globs `icons/*.png`, so it ignores the SVG; its Settings preview PNG was rendered once with Pillow
+from the same geometry. Changing the SVG means redoing those files by hand.
+
 # Treat alias names as permanent
 
 `MainActivity` has no launcher filter - only the aliases do. `AppIcons.set` explicitly enables the chosen
 alias and disables every other alias **of its time**; `AppIcons.current` is the explicitly enabled alias,
 else `AppIcon.DEFAULT`. So:
 
-- the alias with `android:enabled="true"` (`.IconGradientPath` since 2026-10-18, before that
-  `.IconAbstractSilhouette`) must be `AppIcon.DEFAULT`;
+- the alias with `android:enabled="true"` (`.IconAlpineRoute` since 2026-11-01,
+  `.IconGradientPath` from 2026-10-18, before that `.IconAbstractSilhouette`) must be `AppIcon.DEFAULT`;
 - each icon's themed (monochrome) silhouette is drawn by hand: `ic_launcher_monochrome` (mountains and
   route) by default, `ic_launcher_monochrome_route` (route only) for Gradient Path, chosen per slug by
-  `MONOCHROME` in `generate_icons.py`. Android 16 appears to show it on the always-on display for the
+  `MONOCHROME` in `generate_icons.py`; Alpine Route has its own, `ic_launcher_monochrome_alpine_route`. Android 16 appears to show it on the always-on display for the
   journey notification (inferred from a device report, 2026-10-18), so a mismatched silhouette shows there;
 - the default is also hard-coded in `mipmap-anydpi/ic_launcher.xml`, the splash
   `windowSplashScreenAnimatedIcon` (`values/styles.xml`) and the widget's `previewImage`;
@@ -63,5 +70,5 @@ switcher and widget configuration. The in-app updater's FileProvider authority i
 
 # What was checked
 
-The script's imports, the activity-aliases (seven icons since Gradient Path) and `AppIcons.component` re-read on 2026-10-18; the
+The script's imports, the activity-aliases (eight icons since Alpine Route) and `AppIcons.component` re-read on 2026-10-18; the
 reconcile path is reasoned from the component-state rules, not tried on a device.

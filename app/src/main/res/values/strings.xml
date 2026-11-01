@@ -501,6 +501,7 @@
     <string name="stop_later_arrivals">Later arrivals</string>
     <string name="settings_app_icon">App icon</string>
     <string name="settings_app_icon_hint">Some launchers take a moment to show the new icon; a shortcut on the home screen may need to be added again.</string>
+    <string name="icon_alpine_route">Alpine Route</string>
     <string name="icon_gradient_path">Gradient Path</string>
     <string name="icon_flowing_forest">Flowing Forest</string>
     <string name="icon_abstract_silhouette">Abstract Silhouette</string>

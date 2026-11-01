@@ -486,6 +486,7 @@
     <string name="stop_later_arrivals">Spätere Ankünfte</string>
     <string name="settings_app_icon">App-Symbol</string>
     <string name="settings_app_icon_hint">Manche Launcher zeigen das neue Symbol erst nach kurzer Zeit; eine Verknüpfung auf dem Startbildschirm muss eventuell neu angelegt werden.</string>
+    <string name="icon_alpine_route">Alpenroute</string>
     <string name="icon_gradient_path">Verlaufspfad</string>
     <string name="icon_flowing_forest">Fließender Wald</string>
     <string name="icon_abstract_silhouette">Abstrakte Silhouette</string>

@@ -498,6 +498,7 @@
     <string name="stop_later_arrivals">Arrivi successivi</string>
     <string name="settings_app_icon">Icona dell\'app</string>
     <string name="settings_app_icon_hint">Alcuni launcher mostrano la nuova icona dopo qualche istante; potrebbe essere necessario aggiungere di nuovo il collegamento nella schermata Home.</string>
+    <string name="icon_alpine_route">Percorso alpino</string>
     <string name="icon_gradient_path">Percorso sfumato</string>
     <string name="icon_flowing_forest">Foresta fluente</string>
     <string name="icon_abstract_silhouette">Silhouette astratta</string>

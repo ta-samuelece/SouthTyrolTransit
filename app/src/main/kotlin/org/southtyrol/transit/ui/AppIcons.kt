@@ -12,6 +12,7 @@ import org.southtyrol.transit.R
  * activity-alias of MainActivity in the manifest; exactly one alias is enabled at a time.
  */
 enum class AppIcon(val alias: String, @StringRes val label: Int, @DrawableRes val preview: Int) {
+    ALPINE_ROUTE("IconAlpineRoute", R.string.icon_alpine_route, R.drawable.icon_preview_alpine_route),
     GRADIENT_PATH("IconGradientPath", R.string.icon_gradient_path, R.drawable.icon_preview_gradient_path),
     ABSTRACT_SILHOUETTE("IconAbstractSilhouette", R.string.icon_abstract_silhouette, R.drawable.icon_preview_abstract_silhouette),
     FLOWING_FOREST("IconFlowingForest", R.string.icon_flowing_forest, R.drawable.icon_preview_flowing_forest),
@@ -21,8 +22,9 @@ enum class AppIcon(val alias: String, @StringRes val label: Int, @DrawableRes va
     TEAL_VALLEY("IconTealValley", R.string.icon_teal_valley, R.drawable.icon_preview_teal_valley);
 
     companion object {
-        /** The alias enabled in the manifest (`android:enabled="true"`); Abstract Silhouette until 0.1.6. */
-        val DEFAULT = GRADIENT_PATH
+        /** The alias enabled in the manifest (`android:enabled="true"`); Abstract Silhouette until 0.1.6,
+         *  Gradient Path until 0.1.7-preview.5. */
+        val DEFAULT = ALPINE_ROUTE
     }
 }
 

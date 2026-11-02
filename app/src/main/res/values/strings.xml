@@ -39,12 +39,15 @@
     <string name="planner_depart_at">Depart at</string>
     <string name="planner_arrive_by">Arrive by</string>
     <string name="planner_options">Routing options</string>
+    <string name="planner_wheelchair_short">Wheelchair?</string>
+    <string name="planner_bike_short">With a bike?</string>
+    <string name="planner_walking_short">Walking</string>
+    <string name="planner_max_walk_short">Longest walk</string>
     <string name="planner_preference">Prefer</string>
     <string name="planner_modes">Transport modes</string>
     <string name="planner_walking_speed">Walking speed</string>
     <string name="planner_max_walk">Longest walk to a stop</string>
     <string name="planner_wheelchair">Wheelchair-accessible routes</string>
-    <string name="planner_wheelchair_hint">Uses the accessibility data supplied to the journey planner.</string>
     <string name="planner_search">Find connections</string>
     <string name="planner_saved_journeys">Saved journeys</string>
     <string name="planner_recent">Recent journeys</string>
@@ -665,7 +668,6 @@
     <string name="trip_distance_progress">%1$s travelled · %2$s to go</string>
     <string name="trip_next_stop_in">Next stop in %s</string>
     <string name="planner_bike">Travelling with a bike</string>
-    <string name="planner_bike_hint">Hides connections the timetable says take no bikes. Needs the downloaded timetable.</string>
     <string name="journey_bikes_unknown">The timetable does not say whether %s takes bikes. Check before you travel.</string>
     <plurals name="results_hidden_no_bikes">
         <item quantity="one">%d connection hidden: it takes no bikes</item>

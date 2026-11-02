@@ -53,8 +53,19 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TimePickerDialog
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.IconToggleButton
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.rememberTimePickerState
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
+import androidx.compose.material.icons.rounded.Settings
+import kotlinx.coroutines.delay
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.selection.toggleable
+import org.southtyrol.transit.design.CycleButton
+import org.southtyrol.transit.design.LocalReducedMotion
+import org.southtyrol.transit.design.TopLip
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -65,7 +76,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -73,7 +83,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -121,7 +130,6 @@ import org.southtyrol.transit.design.Format
 import org.southtyrol.transit.design.SectionHeader
 import org.southtyrol.transit.design.StatusBanner
 import org.southtyrol.transit.design.icon
-import org.southtyrol.transit.feature.common.TopLevelBar
 import org.southtyrol.transit.feature.common.rememberLocationPermission
 import org.southtyrol.transit.feature.common.showLocationDenied
 import org.southtyrol.transit.location.LocationResult
@@ -177,66 +185,100 @@ fun PlannerScreen(navigator: Navigator, viewModel: PlannerViewModel = hiltViewMo
         viewModel.clearLocationError()
     }
 
-    val scroll = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    var showOptions by rememberSaveable { mutableStateOf(false) }
+    // Back closes the open lip before it leaves the screen, like a touch outside it.
+    BackHandler(enabled = showOptions) { showOptions = false }
+    // The app's name greets the view for a moment, then gives way to the question; at once with animations off.
+    val reducedMotion = LocalReducedMotion.current
+    var introDone by rememberSaveable { mutableStateOf(reducedMotion) }
+    LaunchedEffect(Unit) {
+        if (!introDone) {
+            delay(INTRO_MILLIS)
+            introDone = true
+        }
+    }
+    val (title, titleLevel) = when {
+        showOptions -> stringResource(R.string.planner_options) to 2
+        introDone -> stringResource(R.string.planner_headline) to 1
+        else -> stringResource(R.string.app_name) to 0
+    }
     Scaffold(
-        modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
-        topBar = { TopLevelBar(stringResource(R.string.app_name), scroll) },
+        // The lip reaches under the status bar itself.
+        contentWindowInsets = ScaffoldDefaults.contentWindowInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
         snackbarHost = { SnackbarHost(snackbar) },
     ) { padding ->
-        LazyColumn(
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = padding.calculateTopPadding() + 8.dp, bottom = padding.calculateBottomPadding() + 24.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            item {
-                Text(stringResource(R.string.planner_headline), style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(vertical = 8.dp))
-            }
-            item {
-                RouteHero(
-                    from = state.from, to = state.to, locating = state.locating,
-                    onFrom = { viewModel.openSearch(Field.FROM) }, onTo = { viewModel.openSearch(Field.TO) }, onSwap = viewModel::swap,
-                )
-            }
-            item { TimeAndOptions(state, viewModel) }
-            item {
-                Button(
-                    onClick = { viewModel.request()?.let(navigator::results) },
-                    enabled = state.from != null && state.to != null,
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp),
-                    shape = RoundedCornerShape(24.dp),
-                    contentPadding = ButtonDefaults.ContentPadding,
-                ) {
-                    Icon(Icons.Rounded.Search, contentDescription = null)
-                    Spacer(Modifier.size(8.dp))
-                    Text(stringResource(R.string.planner_search), style = MaterialTheme.typography.titleMedium)
+        TopLip(
+            title = title, titleLevel = titleLevel,
+            start = {
+                IconToggleButton(
+                    checked = showOptions, onCheckedChange = { showOptions = it },
+                    colors = IconButtonDefaults.iconToggleButtonColors(
+                        checkedContainerColor = MaterialTheme.colorScheme.primary, checkedContentColor = MaterialTheme.colorScheme.onPrimary,
+                    ),
+                ) { Icon(Icons.Rounded.Tune, contentDescription = stringResource(R.string.planner_options)) }
+            },
+            end = {
+                IconButton(onClick = navigator::settings) {
+                    Icon(Icons.Rounded.Settings, contentDescription = stringResource(R.string.settings_title))
                 }
-            }
-            if (scheduleInfo == null) item {
-                val downloading = scheduleStatus is ScheduleStatus.Downloading || scheduleStatus is ScheduleStatus.Importing
-                StatusBanner(
-                    text = stringResource(if (downloading) R.string.timetable_downloading else R.string.timetable_missing),
-                    kind = BannerKind.INFO,
-                    action = if (downloading) null else stringResource(R.string.timetable_open_settings),
-                    onAction = navigator::settings,
-                )
-            }
-            item(key = "places") {
-                YourPlaces(
-                    places = savedPlaces,
-                    onGo = { place -> pendingPlace = Codec.place(place); requestLocation() },
-                    onArrive = viewModel::arriveAt,
-                    onStartHere = viewModel::startFrom,
-                    onAdd = { addingPlace = true },
-                )
-            }
-            // Each group is one item: the list's 12 dp spacing belongs between form blocks, not between rows.
-            val saved = savedJourneys.mapNotNull { item -> item.route?.let { item.label to it } }
-            if (saved.isNotEmpty()) item(key = "saved") {
-                RouteGroup(stringResource(R.string.planner_saved_journeys), Icons.Rounded.Bookmark, saved) { viewModel.useRoute(it.first, it.second) }
-            }
-            val recent = recentJourneys.mapNotNull { item -> item.route?.let { item.label to it } }
-            if (recent.isNotEmpty()) item(key = "recent") {
-                RouteGroup(stringResource(R.string.planner_recent), Icons.Rounded.History, recent) { viewModel.useRoute(it.first, it.second) }
+            },
+            expanded = showOptions,
+            onDismiss = { showOptions = false },
+            expandedContent = { RoutingOptions(state, viewModel) },
+            modifier = Modifier.padding(padding),
+        ) {
+            LazyColumn(
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                item {
+                    RouteHero(
+                        from = state.from, to = state.to, locating = state.locating,
+                        onFrom = { viewModel.openSearch(Field.FROM) }, onTo = { viewModel.openSearch(Field.TO) }, onSwap = viewModel::swap,
+                    )
+                }
+                item { TimeChoice(state, viewModel) }
+                item {
+                    Button(
+                        onClick = { viewModel.request()?.let(navigator::results) },
+                        enabled = state.from != null && state.to != null,
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp),
+                        shape = RoundedCornerShape(24.dp),
+                        contentPadding = ButtonDefaults.ContentPadding,
+                    ) {
+                        Icon(Icons.Rounded.Search, contentDescription = null)
+                        Spacer(Modifier.size(8.dp))
+                        Text(stringResource(R.string.planner_search), style = MaterialTheme.typography.titleMedium)
+                    }
+                }
+                if (scheduleInfo == null) item {
+                    val downloading = scheduleStatus is ScheduleStatus.Downloading || scheduleStatus is ScheduleStatus.Importing
+                    StatusBanner(
+                        text = stringResource(if (downloading) R.string.timetable_downloading else R.string.timetable_missing),
+                        kind = BannerKind.INFO,
+                        action = if (downloading) null else stringResource(R.string.timetable_open_settings),
+                        onAction = navigator::settings,
+                    )
+                }
+                item(key = "places") {
+                    YourPlaces(
+                        places = savedPlaces,
+                        onGo = { place -> pendingPlace = Codec.place(place); requestLocation() },
+                        onArrive = viewModel::arriveAt,
+                        onStartHere = viewModel::startFrom,
+                        onAdd = { addingPlace = true },
+                    )
+                }
+                // Each group is one item: the list's 12 dp spacing belongs between form blocks, not between rows.
+                val saved = savedJourneys.mapNotNull { item -> item.route?.let { item.label to it } }
+                if (saved.isNotEmpty()) item(key = "saved") {
+                    RouteGroup(stringResource(R.string.planner_saved_journeys), Icons.Rounded.Bookmark, saved) { viewModel.useRoute(it.first, it.second) }
+                }
+                val recent = recentJourneys.mapNotNull { item -> item.route?.let { item.label to it } }
+                if (recent.isNotEmpty()) item(key = "recent") {
+                    RouteGroup(stringResource(R.string.planner_recent), Icons.Rounded.History, recent) { viewModel.useRoute(it.first, it.second) }
+                }
             }
         }
     }
@@ -323,11 +365,10 @@ fun displayName(place: Place): String = when {
 }
 
 @Composable
-private fun TimeAndOptions(state: PlannerState, viewModel: PlannerViewModel) {
+private fun TimeChoice(state: PlannerState, viewModel: PlannerViewModel) {
     var pickDate by rememberSaveable { mutableStateOf(false) }
     var pickTime by rememberSaveable { mutableStateOf(false) }
     var chosenDate by rememberSaveable { mutableStateOf<Long?>(null) }
-    var showOptions by rememberSaveable { mutableStateOf(false) }
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             FilterChip(
@@ -343,10 +384,6 @@ private fun TimeAndOptions(state: PlannerState, viewModel: PlannerViewModel) {
                     Text(state.time?.let { "${Format.weekdayDate(it.toLocalDate())}, ${Format.time(it.toInstant())}" } ?: stringResource(R.string.planner_pick_time))
                 },
             )
-            Spacer(Modifier.weight(1f))
-            IconButton(onClick = { showOptions = !showOptions }) {
-                Icon(Icons.Rounded.Tune, contentDescription = stringResource(R.string.planner_options))
-            }
         }
         if (state.time != null) {
             ConnectedToggleGroup(
@@ -354,70 +391,6 @@ private fun TimeAndOptions(state: PlannerState, viewModel: PlannerViewModel) {
                 label = { stringResource(if (it) R.string.planner_arrive_by else R.string.planner_depart_at) },
                 modifier = Modifier.fillMaxWidth(),
             )
-        }
-        AnimatedVisibility(showOptions) {
-            // A card of its own, so the extra options read as one block apart from the rest of the form.
-            androidx.compose.material3.Card(
-                shape = RoundedCornerShape(24.dp),
-                colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(stringResource(R.string.planner_preference), style = MaterialTheme.typography.labelLarge)
-                    ConnectedToggleGroup(
-                        options = RoutePreference.entries.toList(), selected = state.preference, onSelect = viewModel::setPreference,
-                        label = { stringResource(preferenceLabel(it)) }, modifier = Modifier.fillMaxWidth(),
-                        // The card is surfaceContainer, the toggles' default: lift them one tone.
-                        uncheckedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                    )
-                    Text(stringResource(R.string.planner_modes), style = MaterialTheme.typography.labelLarge)
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        listOf(TransportMode.TRAIN, TransportMode.BUS, TransportMode.CITY_BUS, TransportMode.CABLE_CAR, TransportMode.ON_DEMAND).forEach { mode ->
-                            val included = mode !in state.excludedModes
-                            FilterChip(
-                                selected = included,
-                                onClick = { viewModel.toggleMode(mode) },
-                                label = { Text(Format.mode(mode)) },
-                                leadingIcon = { Icon(mode.icon(), contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) },
-                            )
-                        }
-                    }
-                    Text(stringResource(R.string.planner_walking_speed), style = MaterialTheme.typography.labelLarge)
-                    ConnectedToggleGroup(
-                        options = WalkingSpeed.entries.toList(), selected = state.walkingSpeed, onSelect = viewModel::setWalkingSpeed,
-                        label = { stringResource(when (it) { WalkingSpeed.SLOW -> R.string.walking_slow; WalkingSpeed.NORMAL -> R.string.walking_normal; WalkingSpeed.FAST -> R.string.walking_fast }) },
-                        modifier = Modifier.fillMaxWidth(),
-                        // The card is surfaceContainer, the toggles' default: lift them one tone.
-                        uncheckedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                    )
-                    Text(stringResource(R.string.planner_max_walk), style = MaterialTheme.typography.labelLarge)
-                    ConnectedToggleGroup(
-                        options = SearchOptions.MAX_WALK_CHOICES, selected = state.maxWalkMinutes, onSelect = viewModel::setMaxWalk,
-                        label = { Format.duration(java.time.Duration.ofMinutes(it.toLong())) },
-                        modifier = Modifier.fillMaxWidth(),
-                        // The card is surfaceContainer, the toggles' default: lift them one tone.
-                        uncheckedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                    )
-                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                        Icon(Icons.Rounded.AccessibleForward, contentDescription = null)
-                        Spacer(Modifier.size(12.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(stringResource(R.string.planner_wheelchair), style = MaterialTheme.typography.bodyLarge)
-                            Text(stringResource(R.string.planner_wheelchair_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                        Switch(checked = state.wheelchair, onCheckedChange = viewModel::setWheelchair)
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                        Icon(Icons.Rounded.PedalBike, contentDescription = null)
-                        Spacer(Modifier.size(12.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(stringResource(R.string.planner_bike), style = MaterialTheme.typography.bodyLarge)
-                            Text(stringResource(R.string.planner_bike_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                        Switch(checked = state.withBike, onCheckedChange = viewModel::setWithBike)
-                    }
-                }
-            }
         }
     }
 
@@ -445,6 +418,101 @@ private fun TimeAndOptions(state: PlannerState, viewModel: PlannerViewModel) {
         ) { TimePicker(timeState) }
     }
 }
+
+/**
+ * The routing options, opened in the top lip at their full height as cards in the surface tone: the wheelchair
+ * and bike switches side by side, then Prefer, Walking and Longest walk as cycle buttons, then the transport
+ * modes. The surface tone keeps them apart from the lip's secondary container, where the defaults would vanish.
+ */
+@Composable
+private fun RoutingOptions(state: PlannerState, viewModel: PlannerViewModel) {
+    val surface = MaterialTheme.colorScheme.surface
+    Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        SwitchTile(
+            Icons.Rounded.AccessibleForward, stringResource(R.string.planner_wheelchair_short), stringResource(R.string.planner_wheelchair),
+            state.wheelchair, viewModel::setWheelchair, Modifier.weight(1f).fillMaxHeight(),
+        )
+        SwitchTile(
+            Icons.Rounded.PedalBike, stringResource(R.string.planner_bike_short), stringResource(R.string.planner_bike),
+            state.withBike, viewModel::setWithBike, Modifier.weight(1f).fillMaxHeight(),
+        )
+    }
+    Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        CycleButton(
+            label = stringResource(R.string.planner_preference),
+            options = RoutePreference.entries.toList(), selected = state.preference, onSelect = viewModel::setPreference,
+            valueLabel = { stringResource(preferenceLabel(it)) },
+            containerColor = surface, modifier = Modifier.weight(1f).fillMaxHeight(),
+        )
+        CycleButton(
+            label = stringResource(R.string.planner_walking_short), description = stringResource(R.string.planner_walking_speed),
+            options = WalkingSpeed.entries.toList(), selected = state.walkingSpeed, onSelect = viewModel::setWalkingSpeed,
+            valueLabel = { stringResource(when (it) { WalkingSpeed.SLOW -> R.string.walking_slow; WalkingSpeed.NORMAL -> R.string.walking_normal; WalkingSpeed.FAST -> R.string.walking_fast }) },
+            containerColor = surface, modifier = Modifier.weight(1f).fillMaxHeight(),
+        )
+        CycleButton(
+            label = stringResource(R.string.planner_max_walk_short), description = stringResource(R.string.planner_max_walk),
+            options = SearchOptions.MAX_WALK_CHOICES, selected = state.maxWalkMinutes, onSelect = viewModel::setMaxWalk,
+            valueLabel = { Format.duration(java.time.Duration.ofMinutes(it.toLong())) },
+            containerColor = surface, modifier = Modifier.weight(1f).fillMaxHeight(),
+        )
+    }
+    ModesCard(state, viewModel)
+}
+
+/** The transport modes as filter chips in a card; selected chips are primary, like every choice in the lip. */
+@Composable
+private fun ModesCard(state: PlannerState, viewModel: PlannerViewModel) {
+    val colors = MaterialTheme.colorScheme
+    val chipColors = FilterChipDefaults.filterChipColors(
+        selectedContainerColor = colors.primary, selectedLabelColor = colors.onPrimary, selectedLeadingIconColor = colors.onPrimary,
+    )
+    Surface(shape = RoundedCornerShape(16.dp), color = colors.surface, modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(stringResource(R.string.planner_modes), style = MaterialTheme.typography.titleSmall)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf(TransportMode.TRAIN, TransportMode.BUS, TransportMode.CITY_BUS, TransportMode.CABLE_CAR, TransportMode.ON_DEMAND).forEach { mode ->
+                    val included = mode !in state.excludedModes
+                    FilterChip(
+                        selected = included,
+                        onClick = { viewModel.toggleMode(mode) },
+                        label = { Text(Format.mode(mode)) },
+                        leadingIcon = { Icon(mode.icon(), contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) },
+                        colors = chipColors,
+                        border = FilterChipDefaults.filterChipBorder(enabled = true, selected = included, borderColor = colors.outline),
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * A switch as a half-width tile: the option's icon and the switch on top, its short [label] under them. The whole
+ * tile toggles; TalkBack reads the full [description].
+ */
+@Composable
+private fun SwitchTile(icon: ImageVector, label: String, description: String, checked: Boolean, onChange: (Boolean) -> Unit, modifier: Modifier = Modifier) {
+    Column(
+        modifier
+            .clip(RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .toggleable(value = checked, role = Role.Switch, onValueChange = onChange)
+            .semantics { contentDescription = description }
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface)
+            Spacer(Modifier.weight(1f))
+            Switch(checked = checked, onCheckedChange = null)
+        }
+        Text(label, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurface)
+    }
+}
+
+/** How long the app's name holds in the Plan lip before "Where to?" takes over. */
+private const val INTRO_MILLIS = 1600L
 
 fun preferenceLabel(p: RoutePreference) = when (p) {
     RoutePreference.FASTEST -> R.string.pref_fastest

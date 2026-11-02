@@ -384,13 +384,21 @@ fun MapPickerDialog(
  */
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
-fun TransitDatePickerDialog(initialMillis: Long, confirmText: String, onConfirm: (Long) -> Unit, onDismiss: () -> Unit) {
+fun TransitDatePickerDialog(
+    initialMillis: Long, confirmText: String, onConfirm: (Long) -> Unit, onDismiss: () -> Unit,
+    neutral: (@Composable () -> Unit)? = null,
+) {
     var typing by rememberSaveable { mutableStateOf(false) }
     var selected by rememberSaveable { mutableStateOf<Long?>(initialMillis) }
     androidx.compose.material3.DatePickerDialog(
         onDismissRequest = onDismiss,
         confirmButton = { androidx.compose.material3.TextButton(onClick = { onConfirm(selected ?: initialMillis) }) { Text(confirmText) } },
-        dismissButton = { androidx.compose.material3.TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+        dismissButton = {
+            Row {
+                neutral?.invoke()
+                androidx.compose.material3.TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+            }
+        },
     ) {
         androidx.compose.runtime.key(typing) {
             val state = androidx.compose.material3.rememberDatePickerState(

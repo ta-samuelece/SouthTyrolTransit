@@ -5,7 +5,7 @@ description: Map content is one immutable value pushed layer by layer and marker
 tags: [map, maplibre, design-system, colors, accessibility]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-29T12:00:00Z"
+  at: "2026-11-02T20:30:00Z"
 status: stable
 ---
 
@@ -169,10 +169,28 @@ Settled on 2026-10-13 after a review of every screen against the Expressive guid
   where the labels may not fit (results sort, four options). A choice with many options or long labels (start tab, language, "my position" button) is a
   `ChoiceRow` that opens a radio `ChoiceDialog` (`SettingsScreens.kt`). **Filter chips are for
   multi-select filters only** (map layers, "My stops and lines").
-- Unselected `ConnectedToggleGroup` buttons default to `surfaceContainer`. On a card of that colour (the
-  planner's routing-options card) they vanish: pass `uncheckedContainerColor` (the planner and the
-  Settings theme group use `surfaceContainerHighest`). The `ToggleButtonDefaults` colour factory is
-  `colors(...)` in this alpha, not `toggleButtonColors`.
+- Unselected `ConnectedToggleGroup` buttons default to `surfaceContainer`. On a surface of that colour
+  they vanish: pass `uncheckedContainerColor` (the Settings theme group uses `surfaceContainerHighest`;
+  the planner's routing options, inside the top lip, use `surface`). The `ToggleButtonDefaults` colour
+  factory is `colors(...)` in this alpha, not `toggleButtonColors`.
+- **Plan's top is a `TopLip`** (`core/designsystem/.../TopLip.kt`), not a `TopAppBar`: a
+  `secondaryContainer` band from under the status bar (the Scaffold's content insets drop the top side)
+  with the title between the routing-options icon toggle and the Settings gear, and the page as a
+  `surface` sheet with 28 dp top corners. The title is an `AnimatedContent` that slides up when
+  `titleLevel` rises and down when it falls (app name 0, "Where to?" 1 after 1.6 s, "Routing options" 2);
+  with reduced motion Plan starts on "Where to?". The routing options open inside the lip and push the
+  sheet down; controls there sit on `secondaryContainer`, so unselected toggles take `surface` and
+  selected filter chips `primary`, or they vanish. The lip opens to the options' full height (it scrolls
+  only on a screen too short for them; paging them was tried and dropped at the user's request). While
+  it is open, a layer over the sheet takes the first touch, or the start of a scroll, on the
+  `PointerEventPass.Initial` pass, consumes it and calls `onDismiss`, so the page underneath neither
+  scrolls nor reacts; `BackHandler` closes it too. Inside, the options are `surface` cards: two
+  `SwitchTile`s (icon and switch on top, short label under; the whole tile is `toggleable`, TalkBack reads
+  the full label), three `CycleButton`s (`core/designsystem/.../CycleButton.kt`: Prefer, Walking, Longest
+  walk; a tap moves to the next value; press scale 0.94 on `fastSpatialSpec`, the icon turns 180° per
+  tap, the value slides up in an `AnimatedContent`; `clearAndSetSemantics` gives TalkBack "name: value"
+  and a "Switch to ..." action), and the modes card. The design system's `TopLip` and `CycleButton` cards
+  mirror this.
 - **One hero per screen** in `secondaryContainer` with 28 dp corners: the stop board's next departure
   (`NextDepartureCard` in `feature/common/Common.kt`, live departure boards only, and only while the first
   row is not an earlier departure; "earlier" sits above it; with `joined` its bottom corners are the inner
@@ -237,7 +255,7 @@ Settled on 2026-10-13 after a review of every screen against the Expressive guid
   the menu first (`CLOSE_MS`); Saved, Settings and a language pick remove it at once, so nothing lingers
   over the next screen. Lines is no longer in the menu nor in the search view, at the
   user's request: the all-lines screen (`LinesRoute`) has no entry point left, single lines open from
-  search results and stop boards. `TopLevelBar` has no settings button; About is reached from Settings.
+  search results and stop boards. `TopLevelBar` has no settings button (Plan's top lip has its own gear); About is reached from Settings.
   See [adding screens](app-screens-navigation-viewmodels.md).
 - **The map's search bar** (`MapSearchBar`, `feature/search/MapSearch.kt`) is the one surface on the map
   with a shadow (3 dp): tone alone does not lift it off light tiles. `UserSettings.searchBar` puts it at the

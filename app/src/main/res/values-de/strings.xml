@@ -36,12 +36,15 @@
     <string name="planner_depart_at">Abfahrt um</string>
     <string name="planner_arrive_by">Ankunft bis</string>
     <string name="planner_options">Routenoptionen</string>
+    <string name="planner_wheelchair_short">Rollstuhl?</string>
+    <string name="planner_bike_short">Mit Fahrrad?</string>
+    <string name="planner_walking_short">Gehtempo</string>
+    <string name="planner_max_walk_short">Längster Fußweg</string>
     <string name="planner_preference">Bevorzugen</string>
     <string name="planner_modes">Verkehrsmittel</string>
     <string name="planner_walking_speed">Gehgeschwindigkeit</string>
     <string name="planner_max_walk">Längster Fußweg zur Haltestelle</string>
     <string name="planner_wheelchair">Rollstuhlgerechte Verbindungen</string>
-    <string name="planner_wheelchair_hint">Nutzt die Barrierefreiheitsdaten der Fahrplanauskunft.</string>
     <string name="planner_search">Verbindungen suchen</string>
     <string name="planner_saved_journeys">Gespeicherte Verbindungen</string>
     <string name="planner_recent">Letzte Suchen</string>
@@ -650,7 +653,6 @@
     <string name="trip_distance_progress">%1$s zurückgelegt · noch %2$s</string>
     <string name="trip_next_stop_in">Nächster Halt in %s</string>
     <string name="planner_bike">Mit Fahrrad unterwegs</string>
-    <string name="planner_bike_hint">Blendet Verbindungen aus, die laut Fahrplan keine Fahrräder mitnehmen. Braucht den heruntergeladenen Fahrplan.</string>
     <string name="journey_bikes_unknown">Der Fahrplan sagt nicht, ob %s Fahrräder mitnimmt. Prüfe das vor der Fahrt.</string>
     <plurals name="results_hidden_no_bikes">
         <item quantity="one">%d Verbindung ausgeblendet: keine Fahrradmitnahme</item>

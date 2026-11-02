@@ -27,6 +27,7 @@
     <string name="ds_added">Extra service</string>
     <string name="ds_platform">Platform %s</string>
     <string name="ds_platform_short">Pl. %s</string>
+    <string name="ds_cycle_next">Switch to %1$s</string>
     <string name="ds_updated_ago">Updated %s</string>
     <string name="ds_age_seconds">%d s ago</string>
     <string name="ds_age_minutes">%d min ago</string>

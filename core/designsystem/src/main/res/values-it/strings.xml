@@ -30,6 +30,7 @@
     <string name="ds_added">Corsa aggiuntiva</string>
     <string name="ds_platform">Binario/stallo %s</string>
     <string name="ds_platform_short">Bin. %s</string>
+    <string name="ds_cycle_next">Passa a %1$s</string>
     <string name="ds_updated_ago">Aggiornato %s</string>
     <string name="ds_age_seconds">%d s fa</string>
     <string name="ds_age_minutes">%d min fa</string>

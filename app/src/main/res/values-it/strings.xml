@@ -36,12 +36,15 @@
     <string name="planner_depart_at">Partenza alle</string>
     <string name="planner_arrive_by">Arrivo entro</string>
     <string name="planner_options">Opzioni di percorso</string>
+    <string name="planner_wheelchair_short">Sedia a rotelle?</string>
+    <string name="planner_bike_short">Con la bici?</string>
+    <string name="planner_walking_short">Andatura</string>
+    <string name="planner_max_walk_short">Cammino max</string>
     <string name="planner_preference">Preferisci</string>
     <string name="planner_modes">Mezzi di trasporto</string>
     <string name="planner_walking_speed">Velocità a piedi</string>
     <string name="planner_max_walk">Tratto a piedi più lungo fino alla fermata</string>
     <string name="planner_wheelchair">Percorsi accessibili in sedia a rotelle</string>
-    <string name="planner_wheelchair_hint">Utilizza i dati di accessibilità forniti al calcolo percorso.</string>
     <string name="planner_search">Cerca collegamenti</string>
     <string name="planner_saved_journeys">Percorsi salvati</string>
     <string name="planner_recent">Ricerche recenti</string>
@@ -664,7 +667,6 @@
     <string name="trip_distance_progress">%1$s percorsi · mancano %2$s</string>
     <string name="trip_next_stop_in">Prossima fermata tra %s</string>
     <string name="planner_bike">Viaggio con la bici</string>
-    <string name="planner_bike_hint">Nasconde i collegamenti che secondo l\'orario non trasportano bici. Richiede l\'orario scaricato.</string>
     <string name="journey_bikes_unknown">L\'orario non indica se %s trasporta bici. Verifica prima di partire.</string>
     <plurals name="results_hidden_no_bikes">
         <item quantity="one">%d collegamento nascosto: non trasporta bici</item>

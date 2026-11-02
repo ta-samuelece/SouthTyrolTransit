@@ -27,6 +27,7 @@
     <string name="ds_added">Zusatzfahrt</string>
     <string name="ds_platform">Gleis/Steig %s</string>
     <string name="ds_platform_short">Gl. %s</string>
+    <string name="ds_cycle_next">Wechseln zu %1$s</string>
     <string name="ds_updated_ago">Aktualisiert %s</string>
     <string name="ds_age_seconds">vor %d s</string>
     <string name="ds_age_minutes">vor %d Min.</string>

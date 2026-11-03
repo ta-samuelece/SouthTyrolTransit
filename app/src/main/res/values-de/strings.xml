@@ -324,9 +324,25 @@
     <string name="charging_how_to_pay">Bezahlung</string>
 
     <string name="alerts_title">Betriebsmeldungen</string>
-    <string name="alerts_active">Aktuell</string>
-    <string name="alerts_planned">Geplant</string>
-    <string name="alerts_only_saved">Meine Haltestellen und Linien</string>
+    <string name="alerts_search">Meldungen suchen</string>
+    <string name="alerts_close_search">Suche schließen</string>
+    <string name="alerts_search_hint">Linien, Haltestellen oder Wörter</string>
+    <string name="alerts_all">Alle Meldungen</string>
+    <string name="alerts_on_your_lines">Auf deinen Linien</string>
+    <string name="alerts_at_your_stops">An deinen Haltestellen</string>
+    <string name="alerts_show_all">Alle zeigen</string>
+    <string name="alerts_in_force">Jetzt gültig</string>
+    <string name="alerts_coming_up">Demnächst</string>
+    <string name="alerts_no_match">Keine passenden Meldungen</string>
+    <string name="alerts_no_match_hint">Versuche ein anderes Wort oder zeige alle Meldungen.</string>
+    <string name="alerts_your_lines">Deine Linien</string>
+    <string name="alerts_your_stops">Deine Haltestellen</string>
+    <string name="alerts_no_saved_lines">Keine Linien gespeichert</string>
+    <string name="alerts_no_saved_stops">Keine Haltestellen gespeichert</string>
+    <string name="alerts_card_now">jetzt betroffen</string>
+    <string name="alerts_card_later">%d demnächst</string>
+    <string name="alerts_card_of">von %d</string>
+    <string name="alerts_card_choose">Tippen zum Auswählen</string>
     <string name="alerts_stale">Diese Meldungen sind eventuell veraltet: Sie konnten zuletzt nicht aktualisiert werden.</string>
     <string name="alerts_none">Keine Betriebsmeldungen</string>
     <string name="alerts_none_loaded">Betriebsmeldungen wurden noch nicht geladen</string>
@@ -421,7 +437,6 @@
     <string name="pick_use_point">Diesen Punkt verwenden</string>
     <string name="point_on_map">Punkt auf der Karte</string>
     <string name="alerts_stops">Haltestellen: %s</string>
-    <string name="alerts_filter_hint">Nach Linie oder Haltestelle filtern</string>
     <string name="settings_saved">Gespeichert</string>
     <string name="settings_saved_manage">Gespeicherte Haltestellen, Linien und Orte</string>
     <string name="settings_start_tab">App öffnen mit</string>
@@ -446,8 +461,6 @@
     <string name="settings_layers_button_hint">Kartentyp und Ebenen, über der Schaltfläche „Mein Standort“</string>
     <string name="saved_add_line">Linie hinzufügen</string>
     <string name="saved_lines_need_timetable">Die Liniensuche nutzt den Offline-Fahrplan. Bitte zuerst in den Einstellungen herunterladen.</string>
-    <string name="alerts_nothing_saved">Du hast noch keine Haltestellen oder Linien gespeichert. Speichere sie, um nur die Meldungen zu sehen, die dich betreffen.</string>
-    <string name="alerts_choose_saved">Haltestellen und Linien wählen</string>
     <plurals name="trip_notices">
         <item quantity="one">%d Meldung</item>
         <item quantity="other">%d Meldungen</item>

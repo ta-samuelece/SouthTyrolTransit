@@ -4,6 +4,7 @@ package org.southtyrol.transit.design
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -62,10 +63,12 @@ private data class LipTitle(val text: String, val level: Int)
  * the title between a button on each side, with the page below as a sheet in `surface` whose top corners are
  * rounded like the hero (28 dp).
  *
- * [expandedContent] opens inside the lip, under the title row, at its full height, and pushes the sheet down;
- * only a screen too short for it makes it scroll. While it is open, a touch or the start of a scroll anywhere
- * on the sheet calls [onDismiss] and goes no further. Controls in it sit on the secondary container, so
- * unselected toggles need the `surface` tone and selected ones `primary`, or they vanish into the lip.
+ * [lipContent], when given, stays in the lip under the title row (a view's own dashboard). [expandedContent]
+ * opens below it, at its full height, and pushes the sheet down; only a screen too short for it makes it
+ * scroll. While it is open and [modal], a touch or the start of a scroll anywhere on the sheet calls
+ * [onDismiss] and goes no further; a non-modal panel (a search field filtering the sheet) leaves the sheet
+ * usable. Controls in the lip sit on the secondary container, so unselected toggles need the `surface` tone
+ * and selected ones `primary`, or they vanish into the lip.
  *
  * The title slides up to a new text when [titleLevel] rises and back down when it falls, so a view can step
  * from its name to its question and on to an open panel. [start] and [end] are 48 dp icon buttons.
@@ -79,6 +82,8 @@ fun TopLip(
     titleLevel: Int = 0,
     expanded: Boolean = false,
     onDismiss: () -> Unit = {},
+    modal: Boolean = true,
+    lipContent: (@Composable ColumnScope.() -> Unit)? = null,
     expandedContent: @Composable ColumnScope.() -> Unit = {},
     content: @Composable () -> Unit,
 ) {
@@ -114,6 +119,15 @@ fun TopLip(
                 }
                 end()
             }
+            if (lipContent != null) {
+                // The open panel follows 12 dp below the dashboard; on its own the dashboard ends the lip at 24 dp.
+                val gap by animateDpAsState(if (expanded) 12.dp else 24.dp, motion.defaultSpatialSpec(), label = "lipGap")
+                Column(
+                    Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = gap),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    content = lipContent,
+                )
+            }
             AnimatedVisibility(
                 expanded,
                 enter = expandVertically(motion.defaultSpatialSpec()) + fadeIn(motion.defaultEffectsSpec()),
@@ -134,7 +148,7 @@ fun TopLip(
         ) {
             Box {
                 content()
-                if (expanded) {
+                if (expanded && modal) {
                     // Over the sheet while the lip is open: the first touch closes it instead of reaching the page.
                     val dismiss by rememberUpdatedState(onDismiss)
                     Box(

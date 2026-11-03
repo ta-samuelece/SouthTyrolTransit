@@ -335,9 +335,25 @@
     <string name="charging_how_to_pay">Come pagare</string>
 
     <string name="alerts_title">Avvisi di servizio</string>
-    <string name="alerts_active">Attuali</string>
-    <string name="alerts_planned">Programmati</string>
-    <string name="alerts_only_saved">Le mie fermate e linee</string>
+    <string name="alerts_search">Cerca avvisi</string>
+    <string name="alerts_close_search">Chiudi ricerca</string>
+    <string name="alerts_search_hint">Linee, fermate o parole</string>
+    <string name="alerts_all">Tutti gli avvisi</string>
+    <string name="alerts_on_your_lines">Sulle tue linee</string>
+    <string name="alerts_at_your_stops">Alle tue fermate</string>
+    <string name="alerts_show_all">Mostra tutti</string>
+    <string name="alerts_in_force">In vigore ora</string>
+    <string name="alerts_coming_up">Prossimamente</string>
+    <string name="alerts_no_match">Nessun avviso corrispondente</string>
+    <string name="alerts_no_match_hint">Prova un\'altra parola o mostra tutti gli avvisi.</string>
+    <string name="alerts_your_lines">Le tue linee</string>
+    <string name="alerts_your_stops">Le tue fermate</string>
+    <string name="alerts_no_saved_lines">Nessuna linea salvata</string>
+    <string name="alerts_no_saved_stops">Nessuna fermata salvata</string>
+    <string name="alerts_card_now">colpite ora</string>
+    <string name="alerts_card_later">%d prossimamente</string>
+    <string name="alerts_card_of">su %d</string>
+    <string name="alerts_card_choose">Tocca per scegliere</string>
     <string name="alerts_stale">Questi avvisi potrebbero non essere aggiornati: non è stato possibile aggiornarli di recente.</string>
     <string name="alerts_none">Nessun avviso di servizio</string>
     <string name="alerts_none_loaded">Gli avvisi non sono ancora stati caricati</string>
@@ -432,7 +448,6 @@
     <string name="pick_use_point">Usa questo punto</string>
     <string name="point_on_map">Punto sulla mappa</string>
     <string name="alerts_stops">Fermate: %s</string>
-    <string name="alerts_filter_hint">Filtra per linea o fermata</string>
     <string name="settings_saved">Salvati</string>
     <string name="settings_saved_manage">Fermate, linee e luoghi salvati</string>
     <string name="settings_start_tab">Apri l\'app su</string>
@@ -457,8 +472,6 @@
     <string name="settings_layers_button_hint">Tipo di mappa e livelli, sopra il pulsante \"La mia posizione\"</string>
     <string name="saved_add_line">Aggiungi linea</string>
     <string name="saved_lines_need_timetable">La ricerca delle linee usa l\'orario offline. Scaricalo prima nelle Impostazioni.</string>
-    <string name="alerts_nothing_saved">Non hai ancora salvato fermate o linee. Salvale per vedere solo gli avvisi che ti riguardano.</string>
-    <string name="alerts_choose_saved">Scegli fermate e linee</string>
     <plurals name="trip_notices">
         <item quantity="one">%d avviso</item>
         <item quantity="many">%d avvisi</item>

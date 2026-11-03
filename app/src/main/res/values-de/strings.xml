@@ -31,6 +31,8 @@
     <string name="planner_swap">Start und Ziel tauschen</string>
     <string name="planner_leave_now">Jetzt losfahren</string>
     <string name="planner_pick_time">Datum und Uhrzeit wählen</string>
+    <string name="planner_departure_now_description">Abfahrt: jetzt. Datum und Uhrzeit wählen</string>
+    <string name="planner_departure_at_description">Abfahrt: %1$s. Datum und Uhrzeit ändern</string>
     <string name="date_picker_to_input">Zur Texteingabe wechseln</string>
     <string name="date_picker_to_calendar">Zum Kalender wechseln</string>
     <string name="planner_depart_at">Abfahrt um</string>

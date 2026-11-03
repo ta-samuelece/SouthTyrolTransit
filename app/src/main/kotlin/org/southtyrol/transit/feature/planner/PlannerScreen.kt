@@ -143,6 +143,9 @@ import org.southtyrol.transit.model.WalkingSpeed
 import org.southtyrol.transit.ui.Navigator
 import java.time.Instant
 import java.time.LocalDate
+import java.time.format.TextStyle
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.material3.FilledTonalButton
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 
@@ -238,18 +241,30 @@ fun PlannerScreen(navigator: Navigator, viewModel: PlannerViewModel = hiltViewMo
                         onFrom = { viewModel.openSearch(Field.FROM) }, onTo = { viewModel.openSearch(Field.TO) }, onSwap = viewModel::swap,
                     )
                 }
-                item { TimeChoice(state, viewModel) }
+                if (state.time != null) item {
+                    ConnectedToggleGroup(
+                        options = listOf(false, true), selected = state.arriveBy, onSelect = viewModel::setArriveBy,
+                        label = { stringResource(if (it) R.string.planner_arrive_by else R.string.planner_depart_at) },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
                 item {
-                    Button(
-                        onClick = { viewModel.request()?.let(navigator::results) },
-                        enabled = state.from != null && state.to != null,
-                        modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp),
-                        shape = RoundedCornerShape(24.dp),
-                        contentPadding = ButtonDefaults.ContentPadding,
-                    ) {
-                        Icon(Icons.Rounded.Search, contentDescription = null)
-                        Spacer(Modifier.size(8.dp))
-                        Text(stringResource(R.string.planner_search), style = MaterialTheme.typography.titleMedium)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Button(
+                            onClick = { viewModel.request()?.let(navigator::results) },
+                            enabled = state.from != null && state.to != null,
+                            modifier = Modifier.weight(1f).heightIn(min = 64.dp),
+                            shape = RoundedCornerShape(24.dp),
+                            contentPadding = ButtonDefaults.ContentPadding,
+                        ) {
+                            Icon(Icons.Rounded.Search, contentDescription = null)
+                            Spacer(Modifier.size(8.dp))
+                            Text(
+                                stringResource(R.string.planner_search), style = MaterialTheme.typography.titleMedium,
+                                maxLines = 1, overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                        DepartureButton(state, viewModel)
                     }
                 }
                 if (scheduleInfo == null) item {
@@ -364,41 +379,49 @@ fun displayName(place: Place): String = when {
     else -> place.name
 }
 
+/**
+ * The one departure control, beside Find connections. Leaving now it is the clock icon alone, in the tonal
+ * colour; once a time is chosen it widens to show that time and turns primary, so a set time is never missed.
+ * A tap opens the date and time pickers; while a time is set, the date picker also offers Leave now to reset it.
+ */
 @Composable
-private fun TimeChoice(state: PlannerState, viewModel: PlannerViewModel) {
+private fun DepartureButton(state: PlannerState, viewModel: PlannerViewModel) {
     var pickDate by rememberSaveable { mutableStateOf(false) }
     var pickTime by rememberSaveable { mutableStateOf(false) }
     var chosenDate by rememberSaveable { mutableStateOf<Long?>(null) }
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            FilterChip(
-                selected = state.time == null,
-                onClick = { viewModel.setTime(null) },
-                label = { Text(stringResource(R.string.planner_leave_now)) },
-                leadingIcon = { Icon(Icons.Rounded.Schedule, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) },
-            )
-            FilterChip(
-                selected = state.time != null,
-                onClick = { pickDate = true },
-                label = {
-                    Text(state.time?.let { "${Format.weekdayDate(it.toLocalDate())}, ${Format.time(it.toInstant())}" } ?: stringResource(R.string.planner_pick_time))
-                },
-            )
-        }
-        if (state.time != null) {
-            ConnectedToggleGroup(
-                options = listOf(false, true), selected = state.arriveBy, onSelect = viewModel::setArriveBy,
-                label = { stringResource(if (it) R.string.planner_arrive_by else R.string.planner_depart_at) },
-                modifier = Modifier.fillMaxWidth(),
-            )
+    val time = state.time
+    val shape = RoundedCornerShape(24.dp)
+    if (time == null) {
+        val description = stringResource(R.string.planner_departure_now_description)
+        FilledTonalButton(
+            onClick = { pickDate = true }, shape = shape, contentPadding = PaddingValues(0.dp),
+            modifier = Modifier.size(64.dp).semantics { contentDescription = description },
+        ) { Icon(Icons.Rounded.Schedule, contentDescription = null) }
+    } else {
+        val locale = LocalConfiguration.current.locales[0]
+        val full = "${Format.weekdayDate(time.toLocalDate())}, ${Format.time(time.toInstant())}"
+        // Today's time alone; another day gets its short weekday, so the button stays narrow.
+        val short = if (time.toLocalDate() == LocalDate.now(TransitZone)) Format.time(time.toInstant())
+            else "${time.dayOfWeek.getDisplayName(TextStyle.SHORT, locale)} ${Format.time(time.toInstant())}"
+        val description = stringResource(R.string.planner_departure_at_description, full)
+        Button(
+            onClick = { pickDate = true }, shape = shape, contentPadding = PaddingValues(start = 16.dp, end = 20.dp),
+            modifier = Modifier.heightIn(min = 64.dp).semantics { contentDescription = description },
+        ) {
+            Icon(Icons.Rounded.Schedule, contentDescription = null)
+            Spacer(Modifier.size(8.dp))
+            Text(short, style = MaterialTheme.typography.titleMedium, maxLines = 1)
         }
     }
 
     if (pickDate) {
-        val initial = (state.time ?: ZonedDateTime.now(TransitZone)).toLocalDate().atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+        val initial = (time ?: ZonedDateTime.now(TransitZone)).toLocalDate().atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
         org.southtyrol.transit.feature.common.TransitDatePickerDialog(
             initial, stringResource(R.string.action_next),
             onConfirm = { chosenDate = it; pickDate = false; pickTime = true }, onDismiss = { pickDate = false },
+            neutral = if (time == null) null else {
+                { TextButton(onClick = { viewModel.setTime(null); pickDate = false }) { Text(stringResource(R.string.planner_leave_now)) } }
+            },
         )
     }
     if (pickTime) {

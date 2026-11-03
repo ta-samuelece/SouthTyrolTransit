@@ -195,7 +195,9 @@ Settled on 2026-10-13 after a review of every screen against the Expressive guid
   while open) and the Settings gear on the right. Its `lipContent` slot, always shown under the title,
   holds the dashboard: "Your lines" and "Your stops" cards (`surface`, `primary` while their filter is
   on; `toggleable`, one TalkBack sentence) counting saved lines and stops with an alert in force now,
-  plus how many more have one coming up. With nothing saved a card opens Saved instead of toggling. Search
+  plus how many more have one coming up. A card exists only for a kind with something saved: one
+  card spans the width, and with nothing saved `lipContent` is null so the lip ends under the title; a
+  filter whose card disappears falls back to all alerts. Search
   is the `expandedContent` with `modal = false`, so the sheet keeps scrolling and reacting while the query
   filters it; closing search, by the toggle or Back, clears the query, and a line badge on an alert sets
   the query and opens search. The sheet's heading names the filter; while one is on, "Show all" takes the

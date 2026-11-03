@@ -197,7 +197,11 @@ Settled on 2026-10-13 after a review of every screen against the Expressive guid
   on; `toggleable`, one TalkBack sentence) counting saved lines and stops with an alert in force now,
   plus how many more have one coming up. A card exists only for a kind with something saved: one
   card spans the width, and with nothing saved `lipContent` is null so the lip ends under the title; a
-  filter whose card disappears falls back to all alerts. Search
+  filter whose card disappears falls back to all alerts. Once the list scrolls past 24 dp the cards slim
+  to 52 dp one-line pills (label, "3/5"; the row's `animateContentSize` animates the change, and
+  `lipContentGap` drops from 24 to 16 dp). They grow back only when a scroll in progress reaches the
+  very top: the lip's shrinking can leave a short list with nothing to scroll, and resetting on offset 0
+  alone would flip them back and forth. Search
   is the `expandedContent` with `modal = false`, so the sheet keeps scrolling and reacting while the query
   filters it; closing search, by the toggle or Back, clears the query, and a line badge on an alert sets
   the query and opens search. The sheet's heading names the filter; while one is on, "Show all" takes the

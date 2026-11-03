@@ -52,6 +52,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /** The lip's title and its rank, which sets the direction it slides in. */
@@ -63,7 +64,8 @@ private data class LipTitle(val text: String, val level: Int)
  * the title between a button on each side, with the page below as a sheet in `surface` whose top corners are
  * rounded like the hero (28 dp).
  *
- * [lipContent], when given, stays in the lip under the title row (a view's own dashboard). [expandedContent]
+ * [lipContent], when given, stays in the lip under the title row (a view's own dashboard), [lipContentGap]
+ * above the sheet. [expandedContent]
  * opens below it, at its full height, and pushes the sheet down; only a screen too short for it makes it
  * scroll. While it is open and [modal], a touch or the start of a scroll anywhere on the sheet calls
  * [onDismiss] and goes no further; a non-modal panel (a search field filtering the sheet) leaves the sheet
@@ -83,6 +85,7 @@ fun TopLip(
     expanded: Boolean = false,
     onDismiss: () -> Unit = {},
     modal: Boolean = true,
+    lipContentGap: Dp = 24.dp,
     lipContent: (@Composable ColumnScope.() -> Unit)? = null,
     expandedContent: @Composable ColumnScope.() -> Unit = {},
     content: @Composable () -> Unit,
@@ -120,8 +123,8 @@ fun TopLip(
                 end()
             }
             if (lipContent != null) {
-                // The open panel follows 12 dp below the dashboard; on its own the dashboard ends the lip at 24 dp.
-                val gap by animateDpAsState(if (expanded) 12.dp else 24.dp, motion.defaultSpatialSpec(), label = "lipGap")
+                // The open panel follows 12 dp below the dashboard; on its own the dashboard ends the lip [lipContentGap] below.
+                val gap by animateDpAsState(if (expanded) 12.dp else lipContentGap, motion.defaultSpatialSpec(), label = "lipGap")
                 Column(
                     Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = gap),
                     verticalArrangement = Arrangement.spacedBy(12.dp),

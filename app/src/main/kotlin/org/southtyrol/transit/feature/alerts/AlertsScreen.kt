@@ -4,6 +4,7 @@ package org.southtyrol.transit.feature.alerts
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,6 +26,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -60,6 +62,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
@@ -69,6 +72,7 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -222,6 +226,18 @@ fun AlertsScreen(navigator: Navigator, viewModel: AlertsViewModel = hiltViewMode
     PollWhileVisible(120_000) { viewModel.refresh() }
 
     val focus = remember { FocusRequester() }
+    // Scrolling the list slims the dashboard cards to one line, for more list; they grow back only when a
+    // scroll reaches the very top, so the lip's own shrinking (which can leave nothing to scroll) never flips them back.
+    val listState = rememberLazyListState()
+    var compact by rememberSaveable { mutableStateOf(false) }
+    val slimAfter = with(LocalDensity.current) { 24.dp.roundToPx() }
+    LaunchedEffect(listState) {
+        snapshotFlow { Triple(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset, listState.isScrollInProgress) }
+            .collect { (index, offset, scrolling) ->
+                if (!compact && (index > 0 || offset > slimAfter)) compact = true
+                else if (compact && scrolling && index == 0 && offset == 0) compact = false
+            }
+    }
     val keyboard = LocalSoftwareKeyboardController.current
     val openSearch = { searching = true; focusSearch = true }
     val closeSearch = { searching = false; viewModel.query("") }
@@ -267,10 +283,11 @@ fun AlertsScreen(navigator: Navigator, viewModel: AlertsViewModel = hiltViewMode
             modal = false,
             onDismiss = closeSearch,
             // No saved lines or stops: no dashboard at all, and the lip closes up under the title.
+            lipContentGap = if (compact) 16.dp else 24.dp,
             lipContent = if (dashboardFor == null) null else {
                 {
                     AlertDashboard(
-                        dashboardFor, now, filter,
+                        dashboardFor, now, filter, compact,
                         onFilter = { picked -> filter = if (filter == picked) AlertFilter.ALL else picked },
                     )
                 }
@@ -298,6 +315,7 @@ fun AlertsScreen(navigator: Navigator, viewModel: AlertsViewModel = hiltViewMode
                 val showAll = { filter = AlertFilter.ALL }
                 // Alerts form grouped lists (2 dp apart); the heading and section labels keep their own spacing.
                 LazyColumn(
+                    state = listState,
                     contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 24.dp),
                     verticalArrangement = Arrangement.spacedBy(2.dp),
                 ) {
@@ -380,6 +398,7 @@ private fun AlertDashboard(
     ui: AlertsUi,
     now: java.time.Instant,
     filter: AlertFilter,
+    compact: Boolean,
     onFilter: (AlertFilter) -> Unit,
 ) {
     val inForce = ui.state.alerts.filter { it.active(now) }
@@ -391,11 +410,14 @@ private fun AlertDashboard(
     val wide = ui.savedLines.isEmpty() || ui.savedStops.isEmpty()
     val lineMarks = if (wide) MAX_LINE_MARKS_WIDE else MAX_LINE_MARKS
     val stopMarks = if (wide) 2 else 1
-    Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    val motion = MaterialTheme.motionScheme
+    // The row animates between the full and the slim cards' heights; the cards in it share the taller one.
+    Row(
+        Modifier.fillMaxWidth().animateContentSize(motion.defaultSpatialSpec()).height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         if (ui.savedLines.isNotEmpty()) {
             DashboardCard(
                 label = stringResource(R.string.alerts_your_lines), affected = linesNow.size, total = ui.savedLines.size, later = linesLater,
-                selected = filter == AlertFilter.LINES, onToggle = { onFilter(AlertFilter.LINES) },
+                selected = filter == AlertFilter.LINES, compact = compact, onToggle = { onFilter(AlertFilter.LINES) },
                 modifier = Modifier.weight(1f).fillMaxHeight(),
             ) {
                 linesNow.take(lineMarks).forEach { line -> LineBadge(line.name, line.mode, color = line.color, textColor = line.textColor) }
@@ -406,7 +428,7 @@ private fun AlertDashboard(
             val stopsSelected = filter == AlertFilter.STOPS
             DashboardCard(
                 label = stringResource(R.string.alerts_your_stops), affected = stopsNow.size, total = ui.savedStops.size, later = stopsLater,
-                selected = stopsSelected, onToggle = { onFilter(AlertFilter.STOPS) },
+                selected = stopsSelected, compact = compact, onToggle = { onFilter(AlertFilter.STOPS) },
                 modifier = Modifier.weight(1f).fillMaxHeight(),
             ) {
                 stopsNow.values.take(stopMarks).forEach { name ->
@@ -445,6 +467,7 @@ private fun DashboardCard(
     total: Int,
     later: Int,
     selected: Boolean,
+    compact: Boolean,
     onToggle: () -> Unit,
     modifier: Modifier = Modifier,
     marks: @Composable RowScope.() -> Unit,
@@ -459,11 +482,23 @@ private fun DashboardCard(
     val ofText = stringResource(R.string.alerts_card_of, total)
     val description = listOfNotNull("$label: $affected $ofText $nowText", laterText).joinToString(", ")
     Box(
-        modifier.heightIn(min = 148.dp).clip(RoundedCornerShape(24.dp)).background(container)
+        modifier.then(if (compact) Modifier.height(52.dp) else Modifier.heightIn(min = 148.dp))
+            .clip(RoundedCornerShape(if (compact) 26.dp else 24.dp)).background(container)
             .toggleable(value = selected, role = Role.Checkbox, onValueChange = { onToggle() }).semantics { contentDescription = description },
     ) {
         CompositionLocalProvider(LocalContentColor provides content) {
-            Column(Modifier.fillMaxSize().clearAndSetSemantics { }.padding(start = 14.dp, end = 14.dp, top = 14.dp, bottom = 12.dp)) {
+            // Slim: one line with the label and the count, as while the list is scrolled.
+            if (compact) Row(
+                Modifier.fillMaxSize().clearAndSetSemantics { }.padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (selected) Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                Text(label, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                Row {
+                    Text("$affected", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.alignByBaseline())
+                    Text("/$total", style = MaterialTheme.typography.titleSmall, color = subColor, modifier = Modifier.alignByBaseline())
+                }
+            } else Column(Modifier.fillMaxSize().clearAndSetSemantics { }.padding(start = 14.dp, end = 14.dp, top = 14.dp, bottom = 12.dp)) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Text(label, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                     if (selected) Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(18.dp))

@@ -348,12 +348,9 @@
     <string name="alerts_no_match_hint">Prova un\'altra parola o mostra tutti gli avvisi.</string>
     <string name="alerts_your_lines">Le tue linee</string>
     <string name="alerts_your_stops">Le tue fermate</string>
-    <string name="alerts_no_saved_lines">Nessuna linea salvata</string>
-    <string name="alerts_no_saved_stops">Nessuna fermata salvata</string>
     <string name="alerts_card_now">colpite ora</string>
     <string name="alerts_card_later">%d prossimamente</string>
     <string name="alerts_card_of">su %d</string>
-    <string name="alerts_card_choose">Tocca per scegliere</string>
     <string name="alerts_stale">Questi avvisi potrebbero non essere aggiornati: non è stato possibile aggiornarli di recente.</string>
     <string name="alerts_none">Nessun avviso di servizio</string>
     <string name="alerts_none_loaded">Gli avvisi non sono ancora stati caricati</string>

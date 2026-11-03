@@ -348,12 +348,9 @@
     <string name="alerts_no_match_hint">Try another word, or show all alerts.</string>
     <string name="alerts_your_lines">Your lines</string>
     <string name="alerts_your_stops">Your stops</string>
-    <string name="alerts_no_saved_lines">No lines saved</string>
-    <string name="alerts_no_saved_stops">No stops saved</string>
     <string name="alerts_card_now">affected now</string>
     <string name="alerts_card_later">%d coming up</string>
     <string name="alerts_card_of">of %d</string>
-    <string name="alerts_card_choose">Tap to choose</string>
     <string name="alerts_stale">These notices may be out of date: they could not be refreshed recently.</string>
     <string name="alerts_none">No service notices</string>
     <string name="alerts_none_loaded">Service notices have not been loaded yet</string>

@@ -337,12 +337,9 @@
     <string name="alerts_no_match_hint">Versuche ein anderes Wort oder zeige alle Meldungen.</string>
     <string name="alerts_your_lines">Deine Linien</string>
     <string name="alerts_your_stops">Deine Haltestellen</string>
-    <string name="alerts_no_saved_lines">Keine Linien gespeichert</string>
-    <string name="alerts_no_saved_stops">Keine Haltestellen gespeichert</string>
     <string name="alerts_card_now">jetzt betroffen</string>
     <string name="alerts_card_later">%d demnächst</string>
     <string name="alerts_card_of">von %d</string>
-    <string name="alerts_card_choose">Tippen zum Auswählen</string>
     <string name="alerts_stale">Diese Meldungen sind eventuell veraltet: Sie konnten zuletzt nicht aktualisiert werden.</string>
     <string name="alerts_none">Keine Betriebsmeldungen</string>
     <string name="alerts_none_loaded">Betriebsmeldungen wurden noch nicht geladen</string>

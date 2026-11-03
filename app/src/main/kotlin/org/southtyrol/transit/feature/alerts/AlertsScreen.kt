@@ -5,7 +5,6 @@ package org.southtyrol.transit.feature.alerts
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -238,6 +237,13 @@ fun AlertsScreen(navigator: Navigator, viewModel: AlertsViewModel = hiltViewMode
         }
     }
 
+    val dashboardFor = ui?.takeIf { it.savedLines.isNotEmpty() || it.savedStops.isNotEmpty() }
+    // A filter whose card is gone (its last line or stop was removed in Saved) falls back to all alerts.
+    LaunchedEffect(ui, filter) {
+        val current = ui ?: return@LaunchedEffect
+        if ((filter == AlertFilter.LINES && current.savedLines.isEmpty()) || (filter == AlertFilter.STOPS && current.savedStops.isEmpty())) filter = AlertFilter.ALL
+    }
+
     Scaffold(
         // The lip reaches under the status bar itself.
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
@@ -260,12 +266,12 @@ fun AlertsScreen(navigator: Navigator, viewModel: AlertsViewModel = hiltViewMode
             expanded = searching,
             modal = false,
             onDismiss = closeSearch,
-            lipContent = {
-                ui?.let { current ->
+            // No saved lines or stops: no dashboard at all, and the lip closes up under the title.
+            lipContent = if (dashboardFor == null) null else {
+                {
                     AlertDashboard(
-                        current, now, filter,
+                        dashboardFor, now, filter,
                         onFilter = { picked -> filter = if (filter == picked) AlertFilter.ALL else picked },
-                        onChoose = navigator::saved,
                     )
                 }
             },
@@ -366,8 +372,8 @@ fun AlertsScreen(navigator: Navigator, viewModel: AlertsViewModel = hiltViewMode
 
 /**
  * The lip's dashboard: the saved lines and the saved stops, each a card with how many have an alert in force
- * now, how many more have one coming up, and the affected ones as marks. A card is a toggle for its filter; with
- * nothing saved yet it opens Saved instead.
+ * now, how many more have one coming up, and the affected ones as marks. A card is a toggle for its filter.
+ * Only kinds with something saved get a card; a lone card spans the width and shows more marks.
  */
 @Composable
 private fun AlertDashboard(
@@ -375,7 +381,6 @@ private fun AlertDashboard(
     now: java.time.Instant,
     filter: AlertFilter,
     onFilter: (AlertFilter) -> Unit,
-    onChoose: () -> Unit,
 ) {
     val inForce = ui.state.alerts.filter { it.active(now) }
     val comingUp = ui.state.alerts.filter { it.upcoming(now) }
@@ -383,40 +388,45 @@ private fun AlertDashboard(
     val linesLater = ui.savedLines.count { line -> line !in linesNow && comingUp.any { AlertMatcher.affectsLine(it, line) } }
     val stopsNow = ui.savedStops.filter { (key, _) -> inForce.any { AlertMatcher.affectsStop(it, key) } }
     val stopsLater = ui.savedStops.count { (key, _) -> key !in stopsNow && comingUp.any { AlertMatcher.affectsStop(it, key) } }
+    val wide = ui.savedLines.isEmpty() || ui.savedStops.isEmpty()
+    val lineMarks = if (wide) MAX_LINE_MARKS_WIDE else MAX_LINE_MARKS
+    val stopMarks = if (wide) 2 else 1
     Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        val linesSelected = filter == AlertFilter.LINES
-        DashboardCard(
-            label = stringResource(R.string.alerts_your_lines), affected = linesNow.size, total = ui.savedLines.size, later = linesLater,
-            selected = linesSelected, onToggle = { onFilter(AlertFilter.LINES) }, onChoose = onChoose,
-            empty = stringResource(R.string.alerts_no_saved_lines),
-            modifier = Modifier.weight(1f).fillMaxHeight(),
-        ) {
-            linesNow.take(MAX_LINE_MARKS).forEach { line -> LineBadge(line.name, line.mode, color = line.color, textColor = line.textColor) }
-            MoreMark(linesNow.size - MAX_LINE_MARKS)
-        }
-        val stopsSelected = filter == AlertFilter.STOPS
-        DashboardCard(
-            label = stringResource(R.string.alerts_your_stops), affected = stopsNow.size, total = ui.savedStops.size, later = stopsLater,
-            selected = stopsSelected, onToggle = { onFilter(AlertFilter.STOPS) }, onChoose = onChoose,
-            empty = stringResource(R.string.alerts_no_saved_stops),
-            modifier = Modifier.weight(1f).fillMaxHeight(),
-        ) {
-            stopsNow.values.firstOrNull()?.let { name ->
-                val colors = MaterialTheme.colorScheme
-                Text(
-                    name, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                    color = if (stopsSelected) colors.primary else colors.onSecondaryContainer,
-                    modifier = Modifier.weight(1f, fill = false).clip(RoundedCornerShape(11.dp))
-                        .background(if (stopsSelected) colors.onPrimary else colors.secondaryContainer)
-                        .padding(horizontal = 8.dp, vertical = 3.dp),
-                )
+        if (ui.savedLines.isNotEmpty()) {
+            DashboardCard(
+                label = stringResource(R.string.alerts_your_lines), affected = linesNow.size, total = ui.savedLines.size, later = linesLater,
+                selected = filter == AlertFilter.LINES, onToggle = { onFilter(AlertFilter.LINES) },
+                modifier = Modifier.weight(1f).fillMaxHeight(),
+            ) {
+                linesNow.take(lineMarks).forEach { line -> LineBadge(line.name, line.mode, color = line.color, textColor = line.textColor) }
+                MoreMark(linesNow.size - lineMarks)
             }
-            MoreMark(stopsNow.size - 1)
+        }
+        if (ui.savedStops.isNotEmpty()) {
+            val stopsSelected = filter == AlertFilter.STOPS
+            DashboardCard(
+                label = stringResource(R.string.alerts_your_stops), affected = stopsNow.size, total = ui.savedStops.size, later = stopsLater,
+                selected = stopsSelected, onToggle = { onFilter(AlertFilter.STOPS) },
+                modifier = Modifier.weight(1f).fillMaxHeight(),
+            ) {
+                stopsNow.values.take(stopMarks).forEach { name ->
+                    val colors = MaterialTheme.colorScheme
+                    Text(
+                        name, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        color = if (stopsSelected) colors.primary else colors.onSecondaryContainer,
+                        modifier = Modifier.weight(1f, fill = false).clip(RoundedCornerShape(11.dp))
+                            .background(if (stopsSelected) colors.onPrimary else colors.secondaryContainer)
+                            .padding(horizontal = 8.dp, vertical = 3.dp),
+                    )
+                }
+                MoreMark(stopsNow.size - stopMarks)
+            }
         }
     }
 }
 
 private const val MAX_LINE_MARKS = 3
+private const val MAX_LINE_MARKS_WIDE = 6
 
 /** "+2" after the marks that fit. */
 @Composable
@@ -436,8 +446,6 @@ private fun DashboardCard(
     later: Int,
     selected: Boolean,
     onToggle: () -> Unit,
-    onChoose: () -> Unit,
-    empty: String,
     modifier: Modifier = Modifier,
     marks: @Composable RowScope.() -> Unit,
 ) {
@@ -449,17 +457,10 @@ private fun DashboardCard(
     val nowText = stringResource(R.string.alerts_card_now)
     val laterText = if (later > 0) stringResource(R.string.alerts_card_later, later) else null
     val ofText = stringResource(R.string.alerts_card_of, total)
-    val chooseText = stringResource(R.string.alerts_card_choose)
-    val description = if (total == 0) "$label. $empty. $chooseText"
-    else listOfNotNull("$label: $affected $ofText $nowText", laterText).joinToString(", ")
-    val action = if (total == 0) {
-        Modifier.clickable(role = Role.Button, onClick = onChoose)
-    } else {
-        Modifier.toggleable(value = selected, role = Role.Checkbox, onValueChange = { onToggle() })
-    }
+    val description = listOfNotNull("$label: $affected $ofText $nowText", laterText).joinToString(", ")
     Box(
         modifier.heightIn(min = 148.dp).clip(RoundedCornerShape(24.dp)).background(container)
-            .then(action).semantics { contentDescription = description },
+            .toggleable(value = selected, role = Role.Checkbox, onValueChange = { onToggle() }).semantics { contentDescription = description },
     ) {
         CompositionLocalProvider(LocalContentColor provides content) {
             Column(Modifier.fillMaxSize().clearAndSetSemantics { }.padding(start = 14.dp, end = 14.dp, top = 14.dp, bottom = 12.dp)) {
@@ -467,28 +468,23 @@ private fun DashboardCard(
                     Text(label, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                     if (selected) Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(18.dp))
                 }
-                if (total == 0) {
-                    Text(empty, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp))
-                    Text(chooseText, style = MaterialTheme.typography.labelMedium, color = subColor, modifier = Modifier.padding(top = 2.dp))
-                } else {
-                    Row(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(
-                            "$affected", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.alignByBaseline(),
-                        )
-                        Text(ofText, style = MaterialTheme.typography.titleMedium, modifier = Modifier.alignByBaseline())
-                    }
+                Row(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(
-                        listOfNotNull(nowText, laterText).joinToString(" · "), style = MaterialTheme.typography.labelMedium, color = subColor,
-                        maxLines = 2, overflow = TextOverflow.Ellipsis,
+                        "$affected", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.alignByBaseline(),
                     )
-                    Spacer(Modifier.weight(1f).heightIn(min = 8.dp))
-                    Row(
-                        Modifier.fillMaxWidth().clipToBounds(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically,
-                        content = marks,
-                    )
+                    Text(ofText, style = MaterialTheme.typography.titleMedium, modifier = Modifier.alignByBaseline())
                 }
+                Text(
+                    listOfNotNull(nowText, laterText).joinToString(" · "), style = MaterialTheme.typography.labelMedium, color = subColor,
+                    maxLines = 2, overflow = TextOverflow.Ellipsis,
+                )
+                Spacer(Modifier.weight(1f).heightIn(min = 8.dp))
+                Row(
+                    Modifier.fillMaxWidth().clipToBounds(),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically,
+                    content = marks,
+                )
             }
         }
     }

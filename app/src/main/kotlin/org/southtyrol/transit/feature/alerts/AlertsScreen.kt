@@ -1,37 +1,88 @@
-@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class, ExperimentalLayoutApi::class)
+@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 
 package org.southtyrol.transit.feature.alerts
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.SearchOff
+import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.IconToggleButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
@@ -42,13 +93,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
-import org.southtyrol.transit.model.localized
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material.icons.rounded.Star
-import androidx.compose.material.icons.rounded.StarBorder
-import androidx.compose.foundation.layout.size
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.southtyrol.transit.R
@@ -60,24 +104,27 @@ import org.southtyrol.transit.data.LineRepository
 import org.southtyrol.transit.data.SavedKind
 import org.southtyrol.transit.data.SavedRepository
 import org.southtyrol.transit.design.BannerKind
-import org.southtyrol.transit.design.ConnectedToggleGroup
 import org.southtyrol.transit.design.Format
 import org.southtyrol.transit.design.FreshnessIndicator
+import org.southtyrol.transit.design.LineBadge
 import org.southtyrol.transit.design.MessageState
 import org.southtyrol.transit.design.StatusBanner
+import org.southtyrol.transit.design.TopLip
 import org.southtyrol.transit.design.TransitLoading
 import org.southtyrol.transit.design.rememberNow
 import org.southtyrol.transit.di.AppLanguage
 import org.southtyrol.transit.feature.common.AlertCard
 import org.southtyrol.transit.feature.common.PollWhileVisible
-import org.southtyrol.transit.feature.common.TopLevelBar
+import org.southtyrol.transit.feature.common.groupShape
 import org.southtyrol.transit.model.Freshness
 import org.southtyrol.transit.model.Line
 import org.southtyrol.transit.model.ServiceAlert
+import org.southtyrol.transit.model.localized
 import org.southtyrol.transit.ui.Navigator
 import javax.inject.Inject
 
-data class AlertsUi(val state: AlertsState, val savedStops: Set<String>, val savedLines: List<Line>, val loaded: Boolean)
+/** The alerts with the saved lines and stops, in their saved order; [savedStops] maps station key to name. */
+data class AlertsUi(val state: AlertsState, val savedStops: Map<String, String>, val savedLines: List<Line>, val loaded: Boolean)
 
 /**
  * Human-readable scope of an alert: public line names and stop names, plus the GTFS route behind a line
@@ -139,130 +186,366 @@ class AlertsViewModel @Inject constructor(
     }
 
     val ui: StateFlow<AlertsUi?> = combine(alerts.state, saved.saved) { state, items ->
-        val stopKeys = items.filter { it.kind == SavedKind.STOP }.map { it.id }.toSet()
+        val stops = items.filter { it.kind == SavedKind.STOP }.associate { it.id to it.label }
         val lineKeys = items.filter { it.kind == SavedKind.LINE }.map { it.id }
         val missing = lineKeys.filter { it !in resolvedLines }
         if (missing.isNotEmpty()) resolvedLines = resolvedLines + missing.associateWith { runCatching { lines.line(it) }.getOrNull() }
-        AlertsUi(state, stopKeys, lineKeys.mapNotNull { resolvedLines[it] }, loaded = true)
+        AlertsUi(state, stops, lineKeys.mapNotNull { resolvedLines[it] }, loaded = true)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     suspend fun refresh(force: Boolean = false) = alerts.refresh(language.current(), force)
 
-    fun mine(alert: ServiceAlert, ui: AlertsUi) = ui.savedStops.any { AlertMatcher.affectsStop(alert, it) } || ui.savedLines.any { AlertMatcher.affectsLine(alert, it) }
+    fun onSavedLine(alert: ServiceAlert, ui: AlertsUi) = ui.savedLines.any { AlertMatcher.affectsLine(alert, it) }
+    fun atSavedStop(alert: ServiceAlert, ui: AlertsUi) = ui.savedStops.keys.any { AlertMatcher.affectsStop(alert, it) }
 }
 
+
+/** What the sheet shows: every alert, or only those on the saved lines or at the saved stops (a dashboard card). */
+private enum class AlertFilter { ALL, LINES, STOPS }
+
+/**
+ * Service alerts under a top lip, like Plan: search on the left, Settings on the right. Under the title the
+ * lip holds a dashboard of two cards, the saved lines and the saved stops with an alert in force now; a tap
+ * on a card shows only those alerts, a second tap shows all again. Search opens at the bottom of the lip and
+ * filters the sheet as you type, without closing on a touch of the list. The sheet groups the alerts into
+ * "In force now" and "Coming up".
+ */
 @Composable
 fun AlertsScreen(navigator: Navigator, viewModel: AlertsViewModel = hiltViewModel()) {
     val ui by viewModel.ui.collectAsStateWithLifecycle()
     val scopes by viewModel.scopes.collectAsStateWithLifecycle()
     val query by viewModel.query.collectAsStateWithLifecycle()
-    var tab by rememberSaveable { mutableStateOf(0) }
-    var onlyMine by rememberSaveable { mutableStateOf(false) }
+    var filter by rememberSaveable { mutableStateOf(AlertFilter.ALL) }
+    // A query handed over on the way in (a line's alerts) opens the screen with search open.
+    var searching by rememberSaveable { mutableStateOf(query.isNotEmpty()) }
+    var focusSearch by remember { mutableStateOf(false) }
     var refreshing by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val now = rememberNow(60_000)
     val language = AppLanguage.textLanguages()
     PollWhileVisible(120_000) { viewModel.refresh() }
 
-    Scaffold(
-        topBar = {
-            TopLevelBar(stringResource(R.string.alerts_title)) {
-                // How current the notices are sits in the header.
-                ui?.let { FreshnessIndicator(it.state.freshness, it.state.fetchedAt, now, compact = true) }
+    val focus = remember { FocusRequester() }
+    // Scrolling the list slims the dashboard cards to one line, for more list; they grow back only when a
+    // scroll reaches the very top, so the lip's own shrinking (which can leave nothing to scroll) never flips them back.
+    val listState = rememberLazyListState()
+    var compact by rememberSaveable { mutableStateOf(false) }
+    val slimAfter = with(LocalDensity.current) { 24.dp.roundToPx() }
+    LaunchedEffect(listState) {
+        snapshotFlow { Triple(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset, listState.isScrollInProgress) }
+            .collect { (index, offset, scrolling) ->
+                if (!compact && (index > 0 || offset > slimAfter)) compact = true
+                else if (compact && scrolling && index == 0 && offset == 0) compact = false
             }
-        },
+    }
+    val keyboard = LocalSoftwareKeyboardController.current
+    val openSearch = { searching = true; focusSearch = true }
+    val closeSearch = { searching = false; viewModel.query("") }
+    // Back closes search, and clears it, before it leaves the screen.
+    BackHandler(enabled = searching) { closeSearch() }
+    LaunchedEffect(searching, focusSearch) {
+        if (searching && focusSearch) {
+            focusSearch = false
+            // The field joins the composition with the lip's opening: wait a frame for it to attach.
+            withFrameNanos { }
+            runCatching { focus.requestFocus() }
+            keyboard?.show()
+        }
+    }
+
+    val dashboardFor = ui?.takeIf { it.savedLines.isNotEmpty() || it.savedStops.isNotEmpty() }
+    // A filter whose card is gone (its last line or stop was removed in Saved) falls back to all alerts.
+    LaunchedEffect(ui, filter) {
+        val current = ui ?: return@LaunchedEffect
+        if ((filter == AlertFilter.LINES && current.savedLines.isEmpty()) || (filter == AlertFilter.STOPS && current.savedStops.isEmpty())) filter = AlertFilter.ALL
+    }
+
+    Scaffold(
+        // The lip reaches under the status bar itself.
+        contentWindowInsets = ScaffoldDefaults.contentWindowInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
     ) { padding ->
-        PullToRefreshBox(
-            isRefreshing = refreshing,
-            onRefresh = { scope.launch { refreshing = true; viewModel.refresh(force = true); refreshing = false } },
-            modifier = Modifier.padding(padding).fillMaxSize(),
-        ) {
-            val current = ui
-            if (current == null) { TransitLoading(contained = true); return@PullToRefreshBox }
-            val all = current.state.alerts
-            val filtered = all.filter { if (tab == 0) it.active(now) else it.upcoming(now) }.filter { !onlyMine || viewModel.mine(it, current) }
-                .filter { viewModel.matches(it, scopes[it.id], query, language) }
-            // Alerts form one grouped list (2 dp apart); the controls above keep their own spacing.
-            LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                item {
-                    // A filled search field in the expressive search-bar style.
-                    androidx.compose.material3.TextField(
-                        value = query, onValueChange = viewModel::query, singleLine = true,
-                        placeholder = { Text(stringResource(R.string.alerts_filter_hint)) },
-                        leadingIcon = { androidx.compose.material3.Icon(androidx.compose.material.icons.Icons.Rounded.Search, contentDescription = null) },
-                        trailingIcon = {
-                            if (query.isNotEmpty()) androidx.compose.material3.IconButton(onClick = { viewModel.query("") }) {
-                                androidx.compose.material3.Icon(androidx.compose.material.icons.Icons.Rounded.Close, contentDescription = stringResource(R.string.action_clear))
-                            }
-                        },
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(28.dp),
-                        colors = androidx.compose.material3.TextFieldDefaults.colors(
-                            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                            focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
-                            unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
-                        ),
-                        modifier = Modifier.fillMaxWidth(),
+        TopLip(
+            title = stringResource(R.string.alerts_title),
+            start = {
+                IconToggleButton(
+                    checked = searching, onCheckedChange = { if (it) openSearch() else closeSearch() },
+                    colors = IconButtonDefaults.iconToggleButtonColors(
+                        checkedContainerColor = MaterialTheme.colorScheme.primary, checkedContentColor = MaterialTheme.colorScheme.onPrimary,
+                    ),
+                ) { Icon(Icons.Rounded.Search, contentDescription = stringResource(if (searching) R.string.alerts_close_search else R.string.alerts_search)) }
+            },
+            end = {
+                IconButton(onClick = navigator::settings) {
+                    Icon(Icons.Rounded.Settings, contentDescription = stringResource(R.string.settings_title))
+                }
+            },
+            expanded = searching,
+            modal = false,
+            onDismiss = closeSearch,
+            // No saved lines or stops: no dashboard at all, and the lip closes up under the title.
+            lipContentGap = if (compact) 16.dp else 24.dp,
+            lipContent = if (dashboardFor == null) null else {
+                {
+                    AlertDashboard(
+                        dashboardFor, now, filter, compact,
+                        onFilter = { picked -> filter = if (filter == picked) AlertFilter.ALL else picked },
                     )
                 }
-                item {
-                    // Current/planned fills the row, the "my stops and lines" filter on the right; on a narrow
-                    // screen the filter wraps below.
-                    FlowRow(
-                        Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp),
-                        itemVerticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
-                    ) {
-                        ConnectedToggleGroup(
-                            options = listOf(0, 1), selected = tab, onSelect = { tab = it },
-                            label = { stringResource(if (it == 0) R.string.alerts_active else R.string.alerts_planned) },
-                            modifier = Modifier.weight(1f),
-                        )
-                        FilterChip(
-                            selected = onlyMine, onClick = { onlyMine = !onlyMine },
-                            label = { Text(stringResource(R.string.alerts_only_saved)) },
-                            leadingIcon = {
-                                androidx.compose.material3.Icon(
-                                    if (onlyMine) androidx.compose.material.icons.Icons.Rounded.Star else androidx.compose.material.icons.Icons.Rounded.StarBorder,
-                                    contentDescription = null, modifier = Modifier.size(androidx.compose.material3.FilterChipDefaults.IconSize),
-                                )
-                            },
-                        )
-                    }
+            },
+            expandedContent = {
+                AlertSearchField(query, viewModel::query, onDone = { keyboard?.hide() }, modifier = Modifier.focusRequester(focus))
+            },
+            modifier = Modifier.padding(padding),
+        ) {
+            PullToRefreshBox(
+                isRefreshing = refreshing,
+                onRefresh = { scope.launch { refreshing = true; viewModel.refresh(force = true); refreshing = false } },
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                val current = ui
+                if (current == null) { TransitLoading(contained = true); return@PullToRefreshBox }
+                val picked: (ServiceAlert) -> Boolean = when (filter) {
+                    AlertFilter.ALL -> { _ -> true }
+                    AlertFilter.LINES -> { alert -> viewModel.onSavedLine(alert, current) }
+                    AlertFilter.STOPS -> { alert -> viewModel.atSavedStop(alert, current) }
                 }
-                item { Spacer(Modifier.height(10.dp)) }
-                if (current.state.freshness == Freshness.STALE) item { StatusBanner(stringResource(R.string.alerts_stale), Modifier.padding(bottom = 8.dp), kind = BannerKind.WARNING) }
-                current.state.error?.let { item { StatusBanner(Format.error(it), Modifier.padding(bottom = 8.dp), kind = BannerKind.ERROR) } }
-                if (onlyMine && current.savedStops.isEmpty() && current.savedLines.isEmpty()) item {
-                    androidx.compose.material3.Card(Modifier.fillMaxWidth()) {
-                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(stringResource(R.string.alerts_nothing_saved), style = MaterialTheme.typography.bodyMedium)
-                            androidx.compose.material3.FilledTonalButton(onClick = navigator::saved) { Text(stringResource(R.string.alerts_choose_saved)) }
+                val shown = current.state.alerts.filter { picked(it) && viewModel.matches(it, scopes[it.id], query, language) }
+                val inForce = shown.filter { it.active(now) }
+                val comingUp = shown.filter { it.upcoming(now) }
+                val showAll = { filter = AlertFilter.ALL }
+                // Alerts form grouped lists (2 dp apart); the heading and section labels keep their own spacing.
+                LazyColumn(
+                    state = listState,
+                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 24.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                ) {
+                    item(key = "heading") {
+                        Row(
+                            Modifier.fillMaxWidth().heightIn(min = 40.dp).padding(bottom = 6.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            val headingText = when (filter) {
+                                AlertFilter.ALL -> R.string.alerts_all
+                                AlertFilter.LINES -> R.string.alerts_on_your_lines
+                                AlertFilter.STOPS -> R.string.alerts_at_your_stops
+                            }
+                            Text(
+                                stringResource(headingText), style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f).semantics { heading() },
+                            )
+                            // While filtered, "Show all" takes the freshness pill's place: both would crowd a narrow screen.
+                            if (filter == AlertFilter.ALL) FreshnessIndicator(current.state.freshness, current.state.fetchedAt, now, compact = true)
+                            else FilledTonalButton(onClick = showAll, contentPadding = ButtonDefaults.ButtonWithIconContentPadding) {
+                                Icon(Icons.Rounded.Close, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
+                                Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+                                Text(stringResource(R.string.alerts_show_all))
+                            }
                         }
                     }
-                } else if (filtered.isEmpty()) item {
-                    MessageState(
-                        stringResource(if (current.state.fetchedAt == null) R.string.alerts_none_loaded else R.string.alerts_none),
-                        icon = Icons.Rounded.CheckCircle,
-                    )
-                }
-                itemsIndexed(filtered, key = { _, it -> it.id }, contentType = { _, _ -> "alert" }) { index, alert ->
-                    val scope = scopes[alert.id]
-                    AlertCard(
-                        alert, language, now, Modifier.animateItem(),
-                        onLine = { name -> viewModel.query(name) },
-                        lineNames = scope?.lines ?: alert.lineNames,
-                        stopNames = scope?.stops.orEmpty(),
-                        lineRoutes = scope?.routes.orEmpty(),
-                        shape = org.southtyrol.transit.feature.common.groupShape(index, filtered.size),
-                    )
-                }
-                item {
-                    Text(
-                        stringResource(R.string.alerts_source), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 14.dp),
-                    )
+                    if (current.state.freshness == Freshness.STALE) item(key = "stale") { StatusBanner(stringResource(R.string.alerts_stale), Modifier.padding(bottom = 8.dp), kind = BannerKind.WARNING) }
+                    current.state.error?.let { item(key = "error") { StatusBanner(Format.error(it), Modifier.padding(bottom = 8.dp), kind = BannerKind.ERROR) } }
+                    // A line badge on an alert searches for that line, so search opens with it.
+                    val onLine: (String) -> Unit = { name -> viewModel.query(name); searching = true }
+                    listOf(R.string.alerts_in_force to inForce, R.string.alerts_coming_up to comingUp).forEachIndexed { section, (label, alerts) ->
+                        if (alerts.isEmpty()) return@forEachIndexed
+                        item(key = "section$section", contentType = "section") {
+                            Text(
+                                stringResource(label), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(top = if (section > 0 && inForce.isNotEmpty()) 12.dp else 0.dp, bottom = 4.dp).semantics { heading() },
+                            )
+                        }
+                        itemsIndexed(alerts, key = { _, it -> it.id }, contentType = { _, _ -> "alert" }) { index, alert ->
+                            val alertScope = scopes[alert.id]
+                            AlertCard(
+                                alert, language, now, Modifier.animateItem(),
+                                onLine = onLine,
+                                lineNames = alertScope?.lines ?: alert.lineNames,
+                                stopNames = alertScope?.stops.orEmpty(),
+                                lineRoutes = alertScope?.routes.orEmpty(),
+                                shape = groupShape(index, alerts.size),
+                            )
+                        }
+                    }
+                    if (inForce.isEmpty() && comingUp.isEmpty()) item(key = "empty") {
+                        if (filter != AlertFilter.ALL || query.isNotBlank()) MessageState(
+                            stringResource(R.string.alerts_no_match), body = stringResource(R.string.alerts_no_match_hint),
+                            icon = Icons.Rounded.SearchOff,
+                            action = stringResource(R.string.alerts_show_all), onAction = { showAll(); closeSearch() },
+                        ) else MessageState(
+                            stringResource(if (current.state.fetchedAt == null) R.string.alerts_none_loaded else R.string.alerts_none),
+                            icon = Icons.Rounded.CheckCircle,
+                        )
+                    }
+                    item(key = "source") {
+                        Text(
+                            stringResource(R.string.alerts_source), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 14.dp),
+                        )
+                    }
                 }
             }
         }
     }
+}
+
+/**
+ * The lip's dashboard: the saved lines and the saved stops, each a card with how many have an alert in force
+ * now, how many more have one coming up, and the affected ones as marks. A card is a toggle for its filter.
+ * Only kinds with something saved get a card; a lone card spans the width and shows more marks.
+ */
+@Composable
+private fun AlertDashboard(
+    ui: AlertsUi,
+    now: java.time.Instant,
+    filter: AlertFilter,
+    compact: Boolean,
+    onFilter: (AlertFilter) -> Unit,
+) {
+    val inForce = ui.state.alerts.filter { it.active(now) }
+    val comingUp = ui.state.alerts.filter { it.upcoming(now) }
+    val linesNow = ui.savedLines.filter { line -> inForce.any { AlertMatcher.affectsLine(it, line) } }
+    val linesLater = ui.savedLines.count { line -> line !in linesNow && comingUp.any { AlertMatcher.affectsLine(it, line) } }
+    val stopsNow = ui.savedStops.filter { (key, _) -> inForce.any { AlertMatcher.affectsStop(it, key) } }
+    val stopsLater = ui.savedStops.count { (key, _) -> key !in stopsNow && comingUp.any { AlertMatcher.affectsStop(it, key) } }
+    val wide = ui.savedLines.isEmpty() || ui.savedStops.isEmpty()
+    val lineMarks = if (wide) MAX_LINE_MARKS_WIDE else MAX_LINE_MARKS
+    val stopMarks = if (wide) 2 else 1
+    val motion = MaterialTheme.motionScheme
+    // The row animates between the full and the slim cards' heights; the cards in it share the taller one.
+    Row(
+        Modifier.fillMaxWidth().animateContentSize(motion.defaultSpatialSpec()).height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (ui.savedLines.isNotEmpty()) {
+            DashboardCard(
+                label = stringResource(R.string.alerts_your_lines), affected = linesNow.size, total = ui.savedLines.size, later = linesLater,
+                selected = filter == AlertFilter.LINES, compact = compact, onToggle = { onFilter(AlertFilter.LINES) },
+                modifier = Modifier.weight(1f).fillMaxHeight(),
+            ) {
+                linesNow.take(lineMarks).forEach { line -> LineBadge(line.name, line.mode, color = line.color, textColor = line.textColor) }
+                MoreMark(linesNow.size - lineMarks)
+            }
+        }
+        if (ui.savedStops.isNotEmpty()) {
+            val stopsSelected = filter == AlertFilter.STOPS
+            DashboardCard(
+                label = stringResource(R.string.alerts_your_stops), affected = stopsNow.size, total = ui.savedStops.size, later = stopsLater,
+                selected = stopsSelected, compact = compact, onToggle = { onFilter(AlertFilter.STOPS) },
+                modifier = Modifier.weight(1f).fillMaxHeight(),
+            ) {
+                stopsNow.values.take(stopMarks).forEach { name ->
+                    val colors = MaterialTheme.colorScheme
+                    Text(
+                        name, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        color = if (stopsSelected) colors.primary else colors.onSecondaryContainer,
+                        modifier = Modifier.weight(1f, fill = false).clip(RoundedCornerShape(11.dp))
+                            .background(if (stopsSelected) colors.onPrimary else colors.secondaryContainer)
+                            .padding(horizontal = 8.dp, vertical = 3.dp),
+                    )
+                }
+                MoreMark(stopsNow.size - stopMarks)
+            }
+        }
+    }
+}
+
+private const val MAX_LINE_MARKS = 3
+private const val MAX_LINE_MARKS_WIDE = 6
+
+/** "+2" after the marks that fit. */
+@Composable
+private fun MoreMark(hidden: Int) {
+    if (hidden > 0) Text("+$hidden", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, maxLines = 1)
+}
+
+/**
+ * One dashboard card in the lip: in the `surface` tone, `primary` while its filter is on, so it neither
+ * vanishes into the lip nor hides its state. TalkBack hears one sentence and the toggle state.
+ */
+@Composable
+private fun DashboardCard(
+    label: String,
+    affected: Int,
+    total: Int,
+    later: Int,
+    selected: Boolean,
+    compact: Boolean,
+    onToggle: () -> Unit,
+    modifier: Modifier = Modifier,
+    marks: @Composable RowScope.() -> Unit,
+) {
+    val colors = MaterialTheme.colorScheme
+    val motion = MaterialTheme.motionScheme
+    val container by animateColorAsState(if (selected) colors.primary else colors.surface, motion.defaultEffectsSpec(), label = "cardContainer")
+    val content by animateColorAsState(if (selected) colors.onPrimary else colors.onSurface, motion.defaultEffectsSpec(), label = "cardContent")
+    val subColor = if (selected) colors.onPrimary else colors.onSurfaceVariant
+    val nowText = stringResource(R.string.alerts_card_now)
+    val laterText = if (later > 0) stringResource(R.string.alerts_card_later, later) else null
+    val ofText = stringResource(R.string.alerts_card_of, total)
+    val description = listOfNotNull("$label: $affected $ofText $nowText", laterText).joinToString(", ")
+    Box(
+        modifier.then(if (compact) Modifier.height(52.dp) else Modifier.heightIn(min = 148.dp))
+            .clip(RoundedCornerShape(if (compact) 26.dp else 24.dp)).background(container)
+            .toggleable(value = selected, role = Role.Checkbox, onValueChange = { onToggle() }).semantics { contentDescription = description },
+    ) {
+        CompositionLocalProvider(LocalContentColor provides content) {
+            // Slim: one line with the label and the count, as while the list is scrolled.
+            if (compact) Row(
+                Modifier.fillMaxSize().clearAndSetSemantics { }.padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (selected) Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                Text(label, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                Row {
+                    Text("$affected", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.alignByBaseline())
+                    Text("/$total", style = MaterialTheme.typography.titleSmall, color = subColor, modifier = Modifier.alignByBaseline())
+                }
+            } else Column(Modifier.fillMaxSize().clearAndSetSemantics { }.padding(start = 14.dp, end = 14.dp, top = 14.dp, bottom = 12.dp)) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text(label, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                    if (selected) Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                }
+                Row(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(
+                        "$affected", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.alignByBaseline(),
+                    )
+                    Text(ofText, style = MaterialTheme.typography.titleMedium, modifier = Modifier.alignByBaseline())
+                }
+                Text(
+                    listOfNotNull(nowText, laterText).joinToString(" · "), style = MaterialTheme.typography.labelMedium, color = subColor,
+                    maxLines = 2, overflow = TextOverflow.Ellipsis,
+                )
+                Spacer(Modifier.weight(1f).heightIn(min = 8.dp))
+                Row(
+                    Modifier.fillMaxWidth().clipToBounds(),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically,
+                    content = marks,
+                )
+            }
+        }
+    }
+}
+
+/** The search field at the bottom of the lip, in the `surface` tone so it stands out from the lip. */
+@Composable
+private fun AlertSearchField(query: String, onQuery: (String) -> Unit, onDone: () -> Unit, modifier: Modifier = Modifier) {
+    TextField(
+        value = query, onValueChange = onQuery, singleLine = true,
+        placeholder = { Text(stringResource(R.string.alerts_search_hint)) },
+        leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
+        trailingIcon = {
+            if (query.isNotEmpty()) IconButton(onClick = { onQuery("") }) {
+                Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.action_clear))
+            }
+        },
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+        keyboardActions = KeyboardActions(onSearch = { onDone() }),
+        shape = RoundedCornerShape(28.dp),
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = MaterialTheme.colorScheme.surface,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+        ),
+        modifier = modifier.fillMaxWidth(),
+    )
 }

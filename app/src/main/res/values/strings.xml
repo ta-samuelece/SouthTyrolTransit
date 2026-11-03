@@ -337,9 +337,22 @@
 
     <!-- Alerts -->
     <string name="alerts_title">Service alerts</string>
-    <string name="alerts_active">Current</string>
-    <string name="alerts_planned">Planned</string>
-    <string name="alerts_only_saved">My stops and lines</string>
+    <string name="alerts_search">Search alerts</string>
+    <string name="alerts_close_search">Close search</string>
+    <string name="alerts_search_hint">Lines, stops or words</string>
+    <string name="alerts_all">All alerts</string>
+    <string name="alerts_on_your_lines">On your lines</string>
+    <string name="alerts_at_your_stops">At your stops</string>
+    <string name="alerts_show_all">Show all</string>
+    <string name="alerts_in_force">In force now</string>
+    <string name="alerts_coming_up">Coming up</string>
+    <string name="alerts_no_match">No alerts match</string>
+    <string name="alerts_no_match_hint">Try another word, or show all alerts.</string>
+    <string name="alerts_your_lines">Your lines</string>
+    <string name="alerts_your_stops">Your stops</string>
+    <string name="alerts_card_now">affected now</string>
+    <string name="alerts_card_later">%d coming up</string>
+    <string name="alerts_card_of">of %d</string>
     <string name="alerts_stale">These notices may be out of date: they could not be refreshed recently.</string>
     <string name="alerts_none">No service notices</string>
     <string name="alerts_none_loaded">Service notices have not been loaded yet</string>
@@ -438,7 +451,6 @@
     <string name="pick_use_point">Use this point</string>
     <string name="point_on_map">Point on map</string>
     <string name="alerts_stops">Stops: %s</string>
-    <string name="alerts_filter_hint">Filter by line or stop</string>
     <string name="settings_saved">Saved</string>
     <string name="settings_saved_manage">Saved stops, lines and places</string>
     <string name="settings_start_tab">Open the app on</string>
@@ -463,8 +475,6 @@
     <string name="settings_layers_button_hint">Map type and layers, above the \"My position\" button</string>
     <string name="saved_add_line">Add line</string>
     <string name="saved_lines_need_timetable">Line search uses the offline timetable. Download it in Settings first.</string>
-    <string name="alerts_nothing_saved">You have not saved any stops or lines yet. Save them to see only the notices that concern you.</string>
-    <string name="alerts_choose_saved">Choose stops and lines</string>
     <plurals name="trip_notices">
         <item quantity="one">%d service notice</item>
         <item quantity="other">%d service notices</item>

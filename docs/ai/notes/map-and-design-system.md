@@ -1,11 +1,11 @@
 ---
 type: Reference
 title: Map and design-system conventions - MapContent, styles, attribution, colours, reduced motion
-description: Map content is one immutable value pushed layer by layer and marker ids must be unique across stops, vehicles and POIs; without a timetable the map's stops come from the EFA coordinate search; maps inside pages use ExpandableMapPage and enlarge where their small card sits; the one convention for showing progress along a run; the dark style falls back to the light override; four map types from one provider catalogue, Province rasters under the transit layers, credit per style and the font every style must serve; feed route colours are already used; the colour scheme (own palette by default, optional wallpaper colours and pure black); which Material 3 Expressive component to use for a choice, a hero, a grouped list and data freshness; the map's locate button is a FAB menu opened by a long press, with the layers button above it; reduced motion is read once.
+description: Map content is one immutable value pushed layer by layer and marker ids must be unique across stops, vehicles and POIs; without a timetable the map's stops come from the EFA coordinate search; maps inside pages use ExpandableMapPage and enlarge where their small card sits; the one convention for showing progress along a run; the dark style falls back to the light override; four map types from one provider catalogue, Province rasters under the transit layers, credit per style and the font every style must serve; feed route colours are already used; the colour scheme (own palette by default, optional wallpaper colours and pure black); which Material 3 Expressive component to use for a choice, a hero, a grouped list and data freshness; the top lips of Plan and Alerts; the map's locate button is a FAB menu opened by a long press, with the layers button above it; reduced motion is read once.
 tags: [map, maplibre, design-system, colors, accessibility]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-11-02T20:30:00Z"
+  at: "2026-11-03T12:00:00Z"
 status: stable
 ---
 
@@ -168,7 +168,7 @@ Settled on 2026-10-13 after a review of every screen against the Expressive guid
   `equalWidth = false` lets each button take its label's width; wrap the group in `horizontalScroll`
   where the labels may not fit (results sort, four options). A choice with many options or long labels (start tab, language, "my position" button) is a
   `ChoiceRow` that opens a radio `ChoiceDialog` (`SettingsScreens.kt`). **Filter chips are for
-  multi-select filters only** (map layers, "My stops and lines").
+  multi-select filters only** (map layers, Plan's transport modes).
 - Unselected `ConnectedToggleGroup` buttons default to `surfaceContainer`. On a surface of that colour
   they vanish: pass `uncheckedContainerColor` (the Settings theme group uses `surfaceContainerHighest`;
   the planner's routing options, inside the top lip, use `surface`). The `ToggleButtonDefaults` colour
@@ -191,6 +191,21 @@ Settled on 2026-10-13 after a review of every screen against the Expressive guid
   tap, the value slides up in an `AnimatedContent`; `clearAndSetSemantics` gives TalkBack "name: value"
   and a "Switch to ..." action), and the modes card. The design system's `TopLip` and `CycleButton` cards
   mirror this.
+- **Alerts' top is a `TopLip` too**, with a fixed title, search on the left (an icon toggle, `primary`
+  while open) and the Settings gear on the right. Its `lipContent` slot, always shown under the title,
+  holds the dashboard: "Your lines" and "Your stops" cards (`surface`, `primary` while their filter is
+  on; `toggleable`, one TalkBack sentence) counting saved lines and stops with an alert in force now,
+  plus how many more have one coming up. A card exists only for a kind with something saved: one
+  card spans the width, and with nothing saved `lipContent` is null so the lip ends under the title; a
+  filter whose card disappears falls back to all alerts. Once the list scrolls past 24 dp the cards slim
+  to 52 dp one-line pills (label, "3/5"; the row's `animateContentSize` animates the change, and
+  `lipContentGap` drops from 24 to 16 dp). They grow back only when a scroll in progress reaches the
+  very top: the lip's shrinking can leave a short list with nothing to scroll, and resetting on offset 0
+  alone would flip them back and forth. Search
+  is the `expandedContent` with `modal = false`, so the sheet keeps scrolling and reacting while the query
+  filters it; closing search, by the toggle or Back, clears the query, and a line badge on an alert sets
+  the query and opens search. The sheet's heading names the filter; while one is on, "Show all" takes the
+  freshness pill's place. Alerts are grouped as "In force now" (`active`) and "Coming up" (`upcoming`).
 - **One hero per screen** in `secondaryContainer` with 28 dp corners: the stop board's next departure
   (`NextDepartureCard` in `feature/common/Common.kt`, live departure boards only, and only while the first
   row is not an earlier departure; "earlier" sits above it; with `joined` its bottom corners are the inner
@@ -255,7 +270,7 @@ Settled on 2026-10-13 after a review of every screen against the Expressive guid
   the menu first (`CLOSE_MS`); Saved, Settings and a language pick remove it at once, so nothing lingers
   over the next screen. Lines is no longer in the menu nor in the search view, at the
   user's request: the all-lines screen (`LinesRoute`) has no entry point left, single lines open from
-  search results and stop boards. `TopLevelBar` has no settings button (Plan's top lip has its own gear); About is reached from Settings.
+  search results and stop boards. `TopLevelBar` has no settings button (the top lips of Plan and Alerts have their own gear); About is reached from Settings.
   See [adding screens](app-screens-navigation-viewmodels.md).
 - **The map's search bar** (`MapSearchBar`, `feature/search/MapSearch.kt`) is the one surface on the map
   with a shadow (3 dp): tone alone does not lift it off light tiles. `UserSettings.searchBar` puts it at the

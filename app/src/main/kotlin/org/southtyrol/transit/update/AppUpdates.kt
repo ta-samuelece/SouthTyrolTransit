@@ -24,6 +24,8 @@ import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.southtyrol.transit.BuildConfig
+import org.southtyrol.transit.whatsnew.WhatsNew
+import org.southtyrol.transit.whatsnew.WhatsNewParser
 import java.io.File
 import java.io.IOException
 import java.security.MessageDigest
@@ -33,7 +35,19 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /** A published release that carries an installable APK. */
-data class AppRelease(val version: String, val notes: String, val pageUrl: String, val apkUrl: String, val apkSize: Long, val preview: Boolean = false)
+data class AppRelease(
+    val version: String,
+    val notes: String,
+    val pageUrl: String,
+    val apkUrl: String,
+    val apkSize: Long,
+    val preview: Boolean = false,
+    val published: Instant? = null,
+    /** Where this release's cards and translated notes are; null on releases published without them. */
+    val whatsNewUrl: String? = null,
+    /** Those cards and notes once fetched; stays null if that failed, and the sheet shows [notes] instead. */
+    val whatsNew: WhatsNew? = null,
+)
 
 enum class UpdateError { NETWORK, NO_APK, DOWNLOAD, WRONG_PACKAGE, NOT_NEWER, SIGNATURE }
 
@@ -45,6 +59,28 @@ sealed interface UpdateState {
     data class Downloading(val release: AppRelease, val bytes: Long, val total: Long) : UpdateState
     data class Ready(val release: AppRelease, val file: File) : UpdateState
     data class Failed(val error: UpdateError, val release: AppRelease?) : UpdateState
+}
+
+/** The release this state is about, if any. */
+val UpdateState.release: AppRelease?
+    get() = when (this) {
+        is UpdateState.Available -> release
+        is UpdateState.Downloading -> release
+        is UpdateState.Ready -> release
+        is UpdateState.Failed -> release
+        else -> null
+    }
+
+/**
+ * Whether the app-wide sheet shows. A running download always does; everything else stays closed once the
+ * user chose "Later" and the version they skipped is not offered again.
+ */
+internal fun shouldPrompt(state: UpdateState, dismissed: Boolean, skippedVersion: String): Boolean = when (state) {
+    is UpdateState.Available -> !dismissed && state.release.version != skippedVersion
+    is UpdateState.Downloading -> true
+    is UpdateState.Ready -> !dismissed
+    is UpdateState.Failed -> !dismissed && state.release != null
+    else -> false
 }
 
 /**
@@ -102,6 +138,7 @@ object ReleaseParser {
         @SerialName("html_url") val pageUrl: String = "",
         val draft: Boolean = false,
         val prerelease: Boolean = false,
+        @SerialName("published_at") val publishedAt: String? = null,
         val assets: List<Asset> = emptyList(),
     )
 
@@ -125,8 +162,20 @@ object ReleaseParser {
         val apk = apks.firstOrNull { "release" in it.name.lowercase() || "preview" in it.name.lowercase() }
             ?: apks.firstOrNull { "debug" !in it.name.lowercase() } ?: apks.firstOrNull()
             ?: return null to false
-        return AppRelease(Versions.clean(r.tag), r.body.orEmpty().trim(), r.pageUrl, apk.url, apk.size, preview = r.prerelease) to true
+        return AppRelease(
+            version = Versions.clean(r.tag),
+            notes = r.body.orEmpty().trim(),
+            pageUrl = r.pageUrl,
+            apkUrl = apk.url,
+            apkSize = apk.size,
+            preview = r.prerelease,
+            published = r.publishedAt?.let { runCatching { Instant.parse(it) }.getOrNull() },
+            whatsNewUrl = r.assets.firstOrNull { it.name == WHATS_NEW_ASSET }?.url,
+        ) to true
     }
+
+    /** Written by `tools/release.py`; keep the name in step with it. */
+    private const val WHATS_NEW_ASSET = "whats-new.json"
 }
 
 /** Name prefix of downloaded update APKs in `cacheDir/updates`, followed by the version and `.apk`. */
@@ -172,6 +221,7 @@ class UpdateManager @Inject constructor(
 
     fun startDownload(release: AppRelease) {
         if (downloadJob?.isActive == true) return
+        setDismissed(false)
         downloadJob = scope.launch { download(release) }
     }
 
@@ -180,8 +230,14 @@ class UpdateManager @Inject constructor(
         _state.value = UpdateState.Available(release)
     }
 
-    /** Set once the user dismissed the prompt; it is not shown again until the next app start. */
-    var dismissed = false
+    private val _dismissed = MutableStateFlow(false)
+
+    /** Set once the user dismissed the prompt; it is not shown again until the next app start or a manual reopen. */
+    val dismissed: StateFlow<Boolean> = _dismissed.asStateFlow()
+
+    fun setDismissed(value: Boolean) {
+        _dismissed.value = value
+    }
 
     suspend fun check(force: Boolean = false, preview: Boolean = false) {
         if (!enabled) return
@@ -207,7 +263,7 @@ class UpdateManager @Inject constructor(
             lastCheck = Instant.now()
             val (release, hasApk) = result
             when {
-                release != null && Versions.isNewer(release.version, currentVersion) -> UpdateState.Available(release)
+                release != null && Versions.isNewer(release.version, currentVersion) -> UpdateState.Available(release.copy(whatsNew = fetchWhatsNew(release)))
                 !hasApk -> UpdateState.Failed(UpdateError.NO_APK, null)
                 else -> UpdateState.UpToDate(lastCheck)
             }
@@ -215,6 +271,18 @@ class UpdateManager @Inject constructor(
             throw e
         } catch (_: Exception) {
             UpdateState.Failed(UpdateError.NETWORK, null)
+        }
+    }
+
+    /** Best effort and quick: without it the sheet still offers the update, with the plain notes. */
+    private suspend fun fetchWhatsNew(release: AppRelease): WhatsNew? {
+        val url = release.whatsNewUrl ?: return null
+        return withContext(Dispatchers.IO) {
+            runCatching {
+                http.newBuilder().callTimeout(Duration.ofSeconds(10)).build().newCall(Request.Builder().url(url).build()).execute().use { response ->
+                    if (response.isSuccessful) WhatsNewParser.parse(response.body.string()) else null
+                }
+            }.getOrNull()
         }
     }
 

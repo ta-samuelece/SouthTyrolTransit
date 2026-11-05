@@ -13,9 +13,16 @@ pull request, then build the signed APK from main with `gradlew assembleRelease`
   * versionName matches the channel (stable: "1.2.0"; preview: "1.2.0-preview.1"),
   * the APK is signed and has exactly this versionName and versionCode,
   * the current commit is on origin/main and the tag does not exist yet,
+  * the notes are complete: a stable release needs <version>.md, .de.md, .it.md and .highlights.json next
+    to each other; a preview needs only the .md, and anything else it has is checked the same way,
 
-then creates the tag and release on that commit and uploads the APK. Previews are published as
-pre-releases (never marked "latest"), so only apps on the Preview update channel see them.
+then creates the tag and release on that commit and uploads whats-new.json (the cards and the translated
+notes, for the app's update sheet) and the APK. Previews are published as pre-releases (never marked
+"latest"), so only apps on the Preview update channel see them.
+
+    python tools/release.py --check-notes --notes docs/release-notes/<version>.md
+
+runs only the channel and notes checks, without an APK; the Release workflow starts with it.
 
 GitHub access uses the credential git already has for github.com (or the GITHUB_TOKEN variable);
 the token is never printed.
@@ -33,6 +40,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_APK = os.path.join(ROOT, 'app', 'build', 'outputs', 'apk', 'release', 'app-release.apk')
 PREVIEW = re.compile(r'^\d+\.\d+\.\d+-preview\.\d+$')
 STABLE = re.compile(r'^\d+\.\d+\.\d+$')
+LANGUAGES = ('en', 'de', 'it')
+WHATS_NEW_ASSET = 'whats-new.json'  # the app looks for this exact name
 
 
 def fail(msg):
@@ -137,12 +146,65 @@ def check_apk(apk, code, name):
         print('  (apksigner not found: skipped signature check)')
 
 
+def read_text(path):
+    with open(path, encoding='utf-8') as f:
+        return f.read()
+
+
+def whats_new(notes_path, name, preview):
+    """The content of whats-new.json, or None when a preview has nothing beyond its English notes.
+
+    The files sit next to the English notes: <version>.de.md, <version>.it.md, <version>.highlights.json.
+    Fails on anything a stable release lacks, and on any highlights file that is malformed."""
+    folder = os.path.dirname(os.path.abspath(notes_path))
+    path = lambda suffix: os.path.join(folder, name + suffix)
+    required = ('en',) if preview else LANGUAGES
+    notes = {}
+    for language in LANGUAGES:
+        file = path('.md') if language == 'en' else path(f'.{language}.md')
+        text = read_text(file).strip() if os.path.exists(file) else ''
+        if text:
+            notes[language] = text
+        elif language in required:
+            fail(f'{file} is missing or empty')
+
+    highlights = []
+    file = path('.highlights.json')
+    if os.path.exists(file):
+        highlights = check_highlights(file, required)
+    elif not preview:
+        fail(f'{file} is missing: a stable release needs its highlight cards')
+
+    if preview and not highlights and list(notes) == ['en']:
+        return None
+    return {'version': name, 'highlights': highlights, 'notes': notes}
+
+
+def check_highlights(file, languages):
+    try:
+        highlights = json.loads(read_text(file)).get('highlights')
+    except (ValueError, AttributeError) as e:
+        fail(f'{file} is not readable: {e}')
+    if not isinstance(highlights, list) or not highlights:
+        fail(f'{file} needs a non-empty "highlights" list')
+    known = set(read_text(os.path.join(os.path.dirname(file), 'icons.txt')).split())
+    for i, card in enumerate(highlights, 1):
+        if card.get('icon') not in known:
+            fail(f'{file}: card {i} has the unknown icon {card.get("icon")!r}; see icons.txt')
+        for field in ('title', 'body'):
+            for language in languages:
+                if not str(card.get(field, {}).get(language, '')).strip():
+                    fail(f'{file}: card {i} has no {field} in {language}')
+    return highlights
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('--preview', action='store_true', help='publish as a preview (GitHub pre-release)')
     ap.add_argument('--notes', help='Markdown file with the release notes')
     ap.add_argument('--apk', default=DEFAULT_APK, help='APK to upload (default: the assembleRelease output)')
     ap.add_argument('--dry-run', action='store_true', help='run every check but publish nothing')
+    ap.add_argument('--check-notes', action='store_true', help='check only the channel and the notes, then stop')
     args = ap.parse_args()
 
     code, name = gradle_versions()
@@ -153,6 +215,13 @@ def main():
         fail(f'versionName "{name}" is not a stable version; use e.g. "0.2.0" (or pass --preview)')
     tag = 'v' + name
     print(f'{channel} release {tag} (versionCode {code})')
+
+    if not args.notes and not args.preview:
+        fail('a stable release needs --notes')
+    extra = whats_new(args.notes, name, args.preview) if args.notes else None
+    print(f'  {WHATS_NEW_ASSET}: {len(extra["highlights"])} cards, notes in {", ".join(extra["notes"])}' if extra else f'  no {WHATS_NEW_ASSET}: plain notes')
+    if args.check_notes:
+        return
 
     if not os.path.exists(args.apk):
         fail(f'{args.apk} not found: run gradlew assembleRelease first')
@@ -189,7 +258,11 @@ def main():
         'tag_name': tag, 'target_commitish': head, 'name': f'South Tyrol Transit {name}', 'body': notes,
         'draft': False, 'prerelease': args.preview, 'make_latest': 'false' if args.preview else 'true',
     }).encode(), 'POST')
-    upload = release['upload_url'].split('{')[0] + '?name=' + asset_name
+    upload_base = release['upload_url'].split('{')[0] + '?name='
+    # Before the APK: the app offers a release only once its APK is there, so it never misses this file.
+    if extra:
+        api(tok, upload_base + WHATS_NEW_ASSET, json.dumps(extra, ensure_ascii=False).encode('utf-8'), 'POST')
+    upload = upload_base + asset_name
     with open(args.apk, 'rb') as f:
         asset = api(tok, upload, f.read(), 'POST', 'application/vnd.android.package-archive')
     git('fetch', '-q', '--tags', 'origin')

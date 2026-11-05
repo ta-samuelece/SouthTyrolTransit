@@ -15,6 +15,29 @@ fun raw(key: String, env: String): String = local.getProperty(key) ?: System.get
 /** Escaped for use inside a BuildConfig string literal. */
 fun setting(key: String, env: String): String = raw(key, env).replace("\\", "\\\\").replace("\"", "\\\"")
 
+/**
+ * Copies the current version's notes from docs/release-notes/ into the build's assets, for the "What's new"
+ * sheet in Settings. Only a release build insists on them: other builds work between notes files.
+ */
+abstract class BundleReleaseNotes : DefaultTask() {
+    @get:InputDirectory @get:PathSensitive(PathSensitivity.RELATIVE) abstract val notesDir: DirectoryProperty
+    @get:Input abstract val versionName: Property<String>
+    @get:Input abstract val required: Property<Boolean>
+    @get:OutputDirectory abstract val outputDir: DirectoryProperty
+
+    @TaskAction fun copy() {
+        val version = versionName.get()
+        val source = notesDir.get().asFile
+        val target = outputDir.get().asFile.resolve("whats-new").apply { deleteRecursively(); mkdirs() }
+        val english = source.resolve("$version.md")
+        if (required.get() && !english.isFile) throw GradleException("$english is missing: write the release notes first")
+        mapOf(
+            "$version.md" to "notes.en.md", "$version.de.md" to "notes.de.md", "$version.it.md" to "notes.it.md",
+            "$version.highlights.json" to "highlights.json",
+        ).forEach { (from, to) -> source.resolve(from).takeIf { it.isFile }?.copyTo(target.resolve(to)) }
+    }
+}
+
 android {
     namespace = "org.southtyrol.transit"
     compileSdk { version = release(37) { minorApiLevel = 1 } }
@@ -85,6 +108,17 @@ android {
         htmlReport = true
         // Version-bump suggestions are handled deliberately via the version catalog.
         disable += setOf("NewerVersionAvailable", "GradleDependency", "AndroidGradlePluginVersion", "OldTargetApi")
+    }
+}
+
+androidComponents {
+    onVariants { variant ->
+        val task = tasks.register<BundleReleaseNotes>("bundle${variant.name.replaceFirstChar { it.uppercase() }}ReleaseNotes") {
+            notesDir.set(rootProject.layout.projectDirectory.dir("docs/release-notes"))
+            versionName.set(android.defaultConfig.versionName)
+            required.set(variant.buildType == "release")
+        }
+        variant.sources.assets?.addGeneratedSourceDirectory(task, BundleReleaseNotes::outputDir)
     }
 }
 

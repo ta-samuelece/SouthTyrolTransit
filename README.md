@@ -299,8 +299,7 @@ chosen in Settings → App updates:
 | **Preview** | the newest of previews *and* stable releases | pre-releases, tag `vX.Y.Z-preview.N`, plus normal releases (asks the release list) |
 
 - The check runs on start (switchable) and on "Check for updates"; switching channel checks right away.
-- If the release's version is newer than the installed `versionName`, the app offers it with its notes:
-  **Update**, **Later** or **Skip this version**. Previews are labelled "Preview update available".
+- If the release's version is newer than the installed `versionName`, a bottom sheet offers it: the version, highlight cards in the app's language and a way to all changes, with **Update**, **Later** or **Skip this version** always in reach. Previews carry a "Preview" label. A release without cards, or if its `whats-new.json` cannot be fetched, shows its plain notes instead. The sheet cannot be swiped away during a download. Settings' "Update to" button reopens it, and "What's new in this version" there shows the installed version's own notes, offline.
 - Versions compare numerically, and a preview ranks below the finished version: `0.2.0-preview.1` < `0.2.0-preview.2` <
   `0.2.0`. So preview testers are moved onto `0.2.0` when it ships, and stable users never see a preview.
 - Going back from Preview to Stable never downgrades: the preview stays installed until a newer stable version exists.
@@ -339,7 +338,7 @@ release.keyPassword=...
      `versionCode` is not higher than the installed one.
    - `versionName`: stable `0.2.0`; preview `0.2.0-preview.1`, then `0.2.0-preview.2`, … and finally `0.2.0` for the
      finished release.
-2. **Write the notes** in `docs/release-notes/<versionName>.md`, e.g. `0.2.0-preview.1.md` (headings, bullets, **bold** and links are shown formatted in the app).
+2. **Write the notes** in `docs/release-notes/<versionName>.md`, e.g. `0.2.0-preview.1.md` (headings, bullets, **bold** and links are shown formatted in the app). A stable release also needs `.de.md`, `.it.md` and `.highlights.json` next to it; see [docs/release-notes/README.md](docs/release-notes/README.md).
 3. **Merge** both into `main` through a pull request. `main` is protected: direct pushes are rejected, and only a repository admin (or the Release workflow, after the owner's approval) can create the `v*` tags a release needs. The release is tagged on the merged commit.
 4. **Publish from GitHub**: *Actions → Release → Run workflow*, pick `preview` or `stable`, then approve the waiting deployment. The workflow checks that the channel, `versionName` and notes file agree, builds the signed APK with the signing key stored as secrets of the `release` environment, and runs `tools/release.py`, which publishes it.
 

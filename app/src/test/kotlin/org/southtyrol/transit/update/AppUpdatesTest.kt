@@ -49,6 +49,39 @@ class AppUpdatesTest {
         assertNull(ReleaseParser.parse(release("v0.3.0", asset("a.apk"), prerelease = true)).first)
     }
 
+    @Test fun readsThePublishDateAndTheWhatsNewFile() {
+        val body = """{"tag_name":"v0.2.0","published_at":"2026-11-01T19:44:57Z","assets":[${asset("a-release.apk")},${asset("whats-new.json")}]}"""
+        val r = ReleaseParser.parse(body).first!!
+        assertEquals(java.time.Instant.parse("2026-11-01T19:44:57Z"), r.published)
+        assertTrue(r.whatsNewUrl!!.endsWith("/whats-new.json"))
+        assertTrue(r.apkUrl.endsWith("a-release.apk"))
+    }
+
+    @Test fun releasesWithoutThoseStillParse() {
+        val r = ReleaseParser.parse(release("v0.2.0", asset("a-release.apk"))).first!!
+        assertNull(r.published)
+        assertNull(r.whatsNewUrl)
+    }
+
+    private val offered = AppRelease("0.2.0", "", "", "", 0)
+
+    @Test fun laterClosesTheSheetExceptDuringADownload() {
+        assertTrue(shouldPrompt(UpdateState.Available(offered), dismissed = false, skippedVersion = ""))
+        assertFalse(shouldPrompt(UpdateState.Available(offered), dismissed = true, skippedVersion = ""))
+        assertTrue(shouldPrompt(UpdateState.Downloading(offered, 0, 0), dismissed = true, skippedVersion = ""))
+        val file = java.io.File("x.apk")
+        assertTrue(shouldPrompt(UpdateState.Ready(offered, file), dismissed = false, skippedVersion = ""))
+        assertFalse(shouldPrompt(UpdateState.Ready(offered, file), dismissed = true, skippedVersion = ""))
+        assertTrue(shouldPrompt(UpdateState.Failed(UpdateError.DOWNLOAD, offered), dismissed = false, skippedVersion = ""))
+        assertFalse(shouldPrompt(UpdateState.Failed(UpdateError.DOWNLOAD, offered), dismissed = true, skippedVersion = ""))
+    }
+
+    @Test fun aSkippedVersionAndAFailedCheckDoNotOpenTheSheet() {
+        assertFalse(shouldPrompt(UpdateState.Available(offered), dismissed = false, skippedVersion = "0.2.0"))
+        assertFalse(shouldPrompt(UpdateState.Failed(UpdateError.NETWORK, null), dismissed = false, skippedVersion = ""))
+        assertFalse(shouldPrompt(UpdateState.Idle, dismissed = false, skippedVersion = ""))
+    }
+
     @Test fun previewSuffixesCompareNumerically() {
         assertTrue(Versions.isNewer("0.2.0-preview.10", "0.2.0-preview.9"))
         assertTrue(Versions.isNewer("0.2.0", "0.2.0-preview.10"))

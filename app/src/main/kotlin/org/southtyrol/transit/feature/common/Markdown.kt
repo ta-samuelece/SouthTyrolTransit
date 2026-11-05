@@ -37,8 +37,12 @@ object MarkdownParser {
     private val bullet = Regex("^(\\s*)[-*+]\\s+(.*)$")
     private val numbered = Regex("^(\\s*)(\\d+)[.)]\\s+(.*)$")
     private val rule = Regex("^\\s*([-*_])(\\s*\\1){2,}\\s*$")
+    private val quote = Regex("^\\s*>\\s?")
 
-    /** Headings, bullet and numbered lists, rules and paragraphs (soft-wrapped lines are joined). */
+    /**
+     * Headings, bullet and numbered lists, rules and paragraphs (soft-wrapped lines are joined). A quote
+     * marker is dropped and its text read as ordinary text: previews' release notes start with one.
+     */
     fun parse(markdown: String): List<MdBlock> {
         val blocks = mutableListOf<MdBlock>()
         val paragraph = StringBuilder()
@@ -47,7 +51,7 @@ object MarkdownParser {
             paragraph.clear()
         }
         for (raw in markdown.replace("\r\n", "\n").lines()) {
-            val line = raw.trimEnd()
+            val line = raw.trimEnd().replaceFirst(quote, "")
             when {
                 line.isBlank() -> flush()
                 rule.matches(line) -> { flush(); blocks += MdBlock.Rule }
@@ -99,7 +103,8 @@ fun MarkdownText(markdown: String, modifier: Modifier = Modifier) {
             when (block) {
                 is MdBlock.Heading -> Text(
                     MarkdownParser.inline(block.text, code, link),
-                    style = if (block.level <= 2) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleSmall,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = if (block.level <= 2) colors.primary else colors.onSurface,
                     modifier = Modifier.padding(top = if (i == 0) 0.dp else 6.dp),
                 )
                 is MdBlock.Paragraph -> Text(MarkdownParser.inline(block.text, code, link), style = body)

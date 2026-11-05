@@ -11,6 +11,12 @@ import org.southtyrol.transit.feature.common.MarkdownParser
 import org.southtyrol.transit.feature.common.MdBlock
 
 class MarkdownTest {
+    @Test fun aQuoteMarkerIsNotShown() {
+        val blocks = MarkdownParser.parse("> **Preview build.** It may contain bugs.\n\n## What's new\n- One")
+        assertEquals(MdBlock.Paragraph("**Preview build.** It may contain bugs."), blocks[0])
+        assertEquals(MdBlock.Heading(2, "What's new"), blocks[1])
+    }
+
     @Test fun parsesReleaseNoteBlocks() {
         val md = """
             Intro line one

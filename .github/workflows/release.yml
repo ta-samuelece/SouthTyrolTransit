@@ -59,6 +59,9 @@ jobs:
           esac
           notes="docs/release-notes/$name.md"
           [ -s "$notes" ] || { echo "::error::$notes is missing or empty"; exit 1; }
+          flag=""
+          [ "$CHANNEL" = preview ] && flag="--preview"
+          python3 tools/release.py $flag --check-notes --notes "$notes"
           echo "VERSION_NAME=$name" >> "$GITHUB_ENV"
           echo "NOTES=$notes" >> "$GITHUB_ENV"
 

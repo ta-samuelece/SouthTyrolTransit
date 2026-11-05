@@ -51,6 +51,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.border
@@ -188,6 +189,8 @@ fun SettingsScreen(navigator: Navigator, viewModel: SettingsViewModel = hiltView
     val context = LocalContext.current
     var language by remember { mutableStateOf(AppLanguage.selected()) }
     val updates: org.southtyrol.transit.update.UpdateViewModel = hiltViewModel()
+    var whatsNewOpen by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    if (whatsNewOpen) org.southtyrol.transit.whatsnew.WhatsNewReadSheet(onDismiss = { whatsNewOpen = false })
     val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted -> viewModel.alerts(granted) }
     // Which choice dialog (or the app icon sheet) is open, if any.
     var choice by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
@@ -345,6 +348,7 @@ fun SettingsScreen(navigator: Navigator, viewModel: SettingsViewModel = hiltView
         item {
             SettingsGroup(stringResource(R.string.settings_updates)) {
                 item { org.southtyrol.transit.update.UpdateStatus(updates) }
+                item { LinkRow(stringResource(R.string.settings_whats_new), Icons.Rounded.AutoAwesome) { whatsNewOpen = true } }
                 if (updates.enabled) {
                     item { org.southtyrol.transit.update.UpdateAutoCheck(updates) { label, hint, checked, onChange -> SwitchRow(label, hint, checked, onChange) } }
                     item { org.southtyrol.transit.update.UpdateChannelChoice(updates) }

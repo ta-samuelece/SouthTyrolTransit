@@ -1,7 +1,7 @@
 ---
 type: Reference
 title: In-app updater internals the README does not cover
-description: Hourly in-memory check throttle, the lenient certificate comparison, the three coupled updates/ paths and the startup cleanup of installed downloads, how version strings compare (build metadata and rc suffixes), and why the update dialog and the Settings section can disagree.
+description: Hourly in-memory check throttle, the lenient certificate comparison, the three coupled updates/ paths and the startup cleanup of installed downloads, how version strings compare (build metadata and rc suffixes), how the update sheet gets its cards, and what holds it open during a download.
 tags: [updates, release, versioning, fileprovider]
 generated:
   by: claude-code/claude-opus-5-5
@@ -26,12 +26,25 @@ README "In-app updates and publishing a release" describes the user-visible flow
   *below* `1.0.0`, and non-numeric suffixes compare as strings (`rc` > `preview`). Stick to `X.Y.Z` and
   `X.Y.Z-preview.N`.
 - Downloads run on `UpdateManager`'s own `SupervisorJob` scope, so they survive leaving Settings.
-- **Two ViewModels**: `UpdatePrompt` is Activity-scoped (outside the `NavHost`), `UpdateSettings` lives in
-  the Settings back-stack entry. "Later" is copied into each VM's own `dismissed` flow, so after "Later" a
-  manual check from Settings shows Settings' own button, not the app-wide dialog. Shared update state
-  belongs in `UpdateManager` as a flow.
+- **Two ViewModels, one state**: `UpdatePrompt` is Activity-scoped (outside the `NavHost`), the Settings
+  section lives in the Settings back-stack entry. Everything shared, "Later" included, is a flow in
+  `UpdateManager`; `shouldPrompt` decides whether the sheet shows.
+- **The sheet is drawn by the installed version, about a newer one.** So its cards and translated notes
+  come over the network, from the `whats-new.json` asset `tools/release.py` attaches, and the sheet knows
+  only the icons of its own build. The GitHub release body stays plain English Markdown, because versions
+  before 0.1.8 render it in their old dialog; anything hidden in it would show there as text. The asset is
+  uploaded before the APK, since a release is offered only once it has an APK. Fetching is best effort
+  (10 s): failing falls back to the body. The Settings entry reads the build's own copy instead, which the
+  `BundleReleaseNotes` task in `app/build.gradle.kts` puts in the assets as `whats-new/`.
+- **During a download the sheet needs `sheetGesturesEnabled = false`.** `confirmValueChange` alone is not
+  enough: a fast swipe still sometimes hid it, and it then stayed hidden when the download ended, with
+  `shouldPrompt` true and nothing on screen. Seen on the emulator with material3 1.5 alpha.
 
 # What was checked
 
 Code read of `AppUpdates.kt`, `UpdateUi.kt` and `update_paths.xml` on 2026-10-09; startup cleanup added
 2026-10-31 with a test in `AppUpdatesTest` (written without an Android SDK, so not yet run, nor tried on a device).
+The sheet was walked through on the `Screenshots_36` emulator on 2026-11-05, with a temporary build posing as
+0.1.6 that read its cards from its own assets: offer, all changes, back, download, swipe and Back during it,
+failure, "Later", Settings' two entries, German, a short screen. Not seen on a device: the "Ready" state, a
+real `whats-new.json` download and the preview label, which need a published release.

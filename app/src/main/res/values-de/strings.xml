@@ -474,13 +474,11 @@
     <string name="update_to">Auf %s aktualisieren</string>
     <string name="update_disabled">In-App-Updates sind in diesem Build deaktiviert.</string>
     <string name="update_available_title">Update verfügbar</string>
-    <string name="update_available_body">Version %1$s ist verfügbar. Du hast %2$s.</string>
     <string name="update_whats_new">Neuigkeiten</string>
     <string name="update_now">Aktualisieren</string>
     <string name="update_later">Später</string>
     <string name="update_skip">Diese Version überspringen</string>
     <string name="update_downloading">Update wird heruntergeladen…</string>
-    <string name="update_ready_title">Version %s ist bereit</string>
     <string name="update_ready">Android fragt nach einer Bestätigung der Installation. Beim ersten Mal musst du der App außerdem erlauben, Updates zu installieren.</string>
     <string name="update_install">Installieren</string>
     <string name="update_retry">Erneut versuchen</string>
@@ -530,7 +528,6 @@
     <string name="update_channel_preview">Vorschau</string>
     <string name="update_channel_stable_hint">Nur fertige Versionen.</string>
     <string name="update_channel_preview_hint">Bietet auch Vorschau-Versionen mit neuen Funktionen vor der Veröffentlichung an. Sie können Fehler enthalten. Zurück mit „Stabil“: Die Vorschau bleibt installiert, bis eine neuere stabile Version erscheint.</string>
-    <string name="update_available_preview_title">Vorschau-Update verfügbar</string>
     <string name="stop_all_directions">Alle Richtungen</string>
     <string name="stop_no_departures_filtered">Keine Abfahrten für die gewählten Linien oder die Richtung.</string>
     <string name="stop_clear_filters">Alle anzeigen</string>
@@ -698,4 +695,14 @@
     <string name="ride_strip_reached">%s erreicht</string>
     <string name="ride_strip_last_seen">Zuletzt gesehen bei %s</string>
     <string name="ride_estimated">geschätzt</string>
+    <string name="update_you_have_published">Du hast %1$s · Veröffentlicht am %2$s</string>
+    <string name="update_you_have">Du hast %s</string>
+    <string name="update_keep_reading">Lies ruhig weiter. Android fragt nach deiner Bestätigung, sobald die Installation bereit ist.</string>
+    <string name="update_ready_hero">Bereit zur Installation</string>
+    <string name="update_all_changes">Alle Änderungen dieser Version</string>
+    <string name="update_whats_new_in">Neu in %s</string>
+    <string name="update_release_page">Release-Seite</string>
+    <string name="update_back_to_highlights">Zurück zu den Highlights</string>
+    <string name="update_got_it">Verstanden</string>
+    <string name="settings_whats_new">Neu in dieser Version</string>
 </resources>

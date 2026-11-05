@@ -32,10 +32,14 @@ if they have not said. The rules:
 1. On a branch, edit only `versionCode` and `versionName` in `app/build.gradle.kts`.
 2. Write the release notes to `docs/release-notes/<versionName>.md` - committed, so they are reviewed in
    the pull request and the Release workflow finds them. The app renders headings, bullets, **bold** and
-   links in its "What's new" dialog. Write for users, not developers: what they will notice. Base them on
+   links in its update sheet. Write for users, not developers: what they will notice. Base them on
    `git log <previous tag>..HEAD`. The script prepends a "Preview build" banner to previews by itself -
-   do not add one.
-3. Run the unit tests and `./gradlew lintDebug` (CLAUDE.md rule 9). Do not release red.
+   do not add one. A stable release also needs `<versionName>.de.md`, `.it.md` and `.highlights.json`;
+   for a preview they are optional. Format, categories and icons: `docs/release-notes/README.md`. Show
+   the user the cards and translations in the pull request: they check this text at each release.
+3. Run `python tools/release.py --check-notes --notes docs/release-notes/<versionName>.md` (add
+   `--preview` for a preview), the unit tests and `./gradlew lintDebug` (CLAUDE.md rule 9). Do not
+   release red.
 4. Commit through the `commit-changes` skill (bump and notes together). A version-only commit is titled
    `Release v0.2.0 (versionCode 7)`; when the bump rides on a feature commit, the version ends the title.
 5. Get it into `main` through a pull request - `main` rejects direct pushes, CI must be green, and the

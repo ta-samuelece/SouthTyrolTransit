@@ -61,6 +61,6 @@ the release runtime classpath (`filterVariants = release`). Three things to know
 # What was checked
 
 Code read of the Gradle files, `proguard-rules.pro` and `consumer-rules.pro` on 2026-10-09; the toolchain
-versions in README section 19 match the build files. The trimmed keep rules of 2026-10-29 were checked by
+versions in `docs/DEVELOPMENT.md` match the build files. The trimmed keep rules of 2026-10-29 were checked by
 `assembleRelease`, the R8 configuration analyzer, unit tests and lint, and on a device by the human
 (map and live times on a release build).

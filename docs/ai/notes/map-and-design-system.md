@@ -134,7 +134,7 @@ and the map screen's vehicle sheet (no route drawn).
 
 GTFS route colours **are** used whenever the feed provides them: rows parse `color`/`textColor` and the UI
 uses `x.color ?: ModeColors.container(mode)`; `ColorContrast.readableOn` falls back to black or white below
-WCAG AA (4.5:1). README sections 16 and 20 read as if this needed new work - it only needs the feed to
+WCAG AA (4.5:1). The limitations and future improvements in `docs/DEVELOPMENT.md` read as if this needed new work - it only needs the feed to
 carry colours. Journey legs always use mode colours. A new `TransportMode` needs entries in both
 `ModeColors.container` and `ModeShapes.badge` - badges differ by shape too, so lines are never told apart
 by colour alone. Status colours are fixed hex values in `Tokens.kt`, chosen by dark/light only.

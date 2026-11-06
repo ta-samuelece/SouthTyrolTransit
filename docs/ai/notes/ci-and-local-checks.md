@@ -52,7 +52,7 @@ recorded. Its design is why the current one publishes nothing:
 
 | What it did | Why that would break today |
 | --- | --- |
-| `setup-java` 17 | The build needs JDK 21+ (README section 8) |
+| `setup-java` 17 | The build needs JDK 21+ (`docs/DEVELOPMENT.md`, Setup) |
 | `assembleDebug` only, no tests or lint | Checks nothing beyond compilation |
 | `-PversionCode=<run number>` / `-PversionName` | `app/build.gradle.kts` does not read these properties; the version lives in the file |
 | On a `v*` tag, published the **debug** APK as a GitHub release | `tools/release.py` creates the `v*` tags itself; the updater would offer a debug-signed APK that fails its same-certificate check |

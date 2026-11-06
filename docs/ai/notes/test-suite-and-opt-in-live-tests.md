@@ -18,11 +18,11 @@ sources:
     resource: ../../../app/src/test/kotlin/org/southtyrol/transit/TranslationsTest.kt
     title: TranslationsTest
   - id: readme
-    resource: ../../../README.md
-    title: README section 11, Tests
+    resource: ../../DEVELOPMENT.md
+    title: Development guide, Tests
 ---
 
-README section 11 lists what the tests cover and the commands.[^readme] This note records what it leaves
+"Tests" in `docs/DEVELOPMENT.md` lists what the tests cover and the commands.[^readme] This note records what it leaves
 out.
 
 # Where tests live
@@ -41,7 +41,7 @@ copies in `app/src/androidTest/assets/`.
 
 `app/src/test` holds `UiComponentsTest` (stateless composables), `AppUpdatesTest`, `MarkdownTest`,
 `LicenseTextTest` and `TranslationsTest`; "journey search" is a `RequestCodec` round trip, and **no
-screen, ViewModel or NavHost is tested** and no test saves a stop. README section 11 says so since
+screen, ViewModel or NavHost is tested** and no test saves a stop. `docs/DEVELOPMENT.md` says so since
 2026-10-09 (issue #14); before, it claimed screen-level tests.
 
 Conventions: `app/src/test/resources/robolectric.properties` sets `sdk=35` (not 37) and
@@ -61,7 +61,7 @@ mean they ran.
 | `-PgtfsReal=<path to zip>` | `gtfs.real` | `RealFeedTest`'s import of a locally downloaded ~150 MB STA feed |
 | both together | both | `LegMatchLiveTest`: real planner journeys matched against the real timetable (journey-view live vehicles) |
 
-Only `-PgtfsReal` is in the README. Never enable `liveTests` in an automated loop: it downloads the full
+Only `-PgtfsReal` is in the development guide. Never enable `liveTests` in an automated loop: it downloads the full
 feed from STA's server.
 
 # Translations are enforced by a test, not by lint
@@ -78,6 +78,6 @@ Read `core/data/build.gradle.kts`, `FtpLiveTest.kt`, `RealFeedTest.kt`, `Transla
 block of `app/build.gradle.kts` on 2026-10-09; listed `app/src/test` and its `robolectric.properties` the
 same day. The tests were not run.
 
-[^readme]: README section 11
+[^readme]: `docs/DEVELOPMENT.md`, "Tests"
 [^data-build]: core:data test system properties
 [^translations]: TranslationsTest

@@ -12,7 +12,7 @@ verified:
 status: stable
 ---
 
-README section 12 describes the strategy for users. This note records the mechanics and the traps.
+"Static GTFS update strategy" in `docs/DEVELOPMENT.md` describes the strategy for users. This note records the mechanics and the traps.
 
 # Scheduling (`work/Workers.kt`, `TransitApplication.kt`)
 

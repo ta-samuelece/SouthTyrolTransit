@@ -24,7 +24,7 @@ sources:
 
 # What happens
 
-The GTFS-RT trip-updates feed is often empty or thin (README section 16: about 57 trip updates at a time)
+The GTFS-RT trip-updates feed is often empty or thin (`docs/DEVELOPMENT.md`, "Known API limitations": about 57 trip updates at a time)
 while the STA journey planner (EFA) still reports delays. So a timetable board gets live times in two
 layers, applied in `DepartureRepository.merge`:[^board-merge]
 

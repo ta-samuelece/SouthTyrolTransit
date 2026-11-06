@@ -167,9 +167,11 @@ journey planner, ODH mobility, OpenStreetMap tiles). It is written almost entire
 human steering and testing on devices. Published on GitHub as `ta-samuelece/SouthTyrolTransit`; APKs are
 distributed as GitHub release assets and installed through the app's own updater.
 
-`README.md` is the authoritative human documentation - features, architecture, modules, data sources,
-update strategies, known API limitations, the release process. Read it rather than expecting it restated
-here. `docs/API_DISCOVERY.md` details every endpoint; `docs/PUSH_BACKEND.md` is the contract for a push
+`README.md` is the short overview for people; keep it that way and put detail in `docs/`. The authoritative
+human documentation is `docs/FEATURES.md` (screens and features), `docs/DEVELOPMENT.md` (setup, tests,
+architecture, modules, data sources, update strategies, known API limitations) and `docs/RELEASING.md`
+(updater, signing, publishing). Read them rather than expecting them restated here.
+`docs/API_DISCOVERY.md` details every endpoint; `docs/PUSH_BACKEND.md` is the contract for a push
 server that does not exist yet.
 
 ## Non-obvious things that will bite you
@@ -182,7 +184,7 @@ on the map, since nothing gives their positions. Details:
 
 **Material 3 Expressive is pinned to an alpha** (`material3` 1.5.0-alpha, Compose 1.13.0-alpha). Do not
 "upgrade" to the stable line - it lacks the Expressive APIs the design system uses. Opt-ins are per file
-(`@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)`). See README section 19.
+(`@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)`). See `docs/DEVELOPMENT.md`.
 
 **MapLibre must stay on the OpenGL ES build** (`org.maplibre.gl:android-sdk-opengl`). The default Vulkan
 build crashed the emulator's software GPU and is riskier on old devices at minSdk 26. MapLibre code lives

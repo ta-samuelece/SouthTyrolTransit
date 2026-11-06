@@ -9,7 +9,7 @@ generated:
 status: stable
 ---
 
-README section 15 states the user-facing behaviour for a single language. This is the mechanics.
+"Localization" in `docs/DEVELOPMENT.md` states the user-facing behaviour for a single language. This is the mechanics.
 
 # Per source (`Languages` in `core/model/.../Text.kt`)
 
@@ -20,7 +20,7 @@ README section 15 states the user-facing behaviour for a single language. This i
 | `en` | Italian | `en` | `de` |
 
 \* `Languages.efa` maps `it` (and `lld`, a leftover of the removed Ladin UI) to `it` and everything else
-to `en`; README section 16 explains why StopFinder queries de and it in parallel. `Languages` in
+to `en`; "Known API limitations" in `docs/DEVELOPMENT.md` explains why StopFinder queries de and it in parallel. `Languages` in
 `Text.kt` still knows `lld` because feeds carry Ladin texts; no UI choice produces it any more.
 
 - `AppLanguage.current()` returns one tag; `textLanguages()` returns a list such as `en,de-DE,...` and is

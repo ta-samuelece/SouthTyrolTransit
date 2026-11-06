@@ -66,6 +66,13 @@ data class StopState(
     val live: Boolean get() = start == null && end == null
 }
 
+/**
+ * The board keeps the name it was opened with, so it reads like the result that was tapped: search names
+ * follow the app's language where the timetable may only have the Italian one. The timetable's name is for
+ * boards opened without a name, such as from a journey's stops.
+ */
+internal fun boardTitle(opened: String, timetable: String?): String = opened.ifBlank { timetable.orEmpty() }
+
 private val DEFAULT_WINDOW: Duration = Duration.ofHours(4)
 private val STEP: Duration = Duration.ofHours(1)
 
@@ -116,7 +123,7 @@ class StopViewModel @AssistedInject constructor(
             val served = runCatching { lines.atStop(stationKey) }.getOrDefault(emptyList())
             val toggle = departures.arrivalsDiffer(stationKey)
             val directions = departures.directions(stationKey, lang)
-            _state.update { it.copy(stop = stop, name = stop?.name ?: it.name, platforms = platforms, lines = served, showArrivalsToggle = toggle, directions = directions) }
+            _state.update { it.copy(stop = stop, name = boardTitle(it.name, stop?.name), platforms = platforms, lines = served, showArrivalsToggle = toggle, directions = directions) }
         }
     }
 
@@ -190,7 +197,8 @@ class StopViewModel @AssistedInject constructor(
     }
 
     fun toggleSaved() = viewModelScope.launch {
-        val stop = _state.value.stop ?: Stop(stationKey, _state.value.name, _state.value.platforms.firstOrNull()?.point ?: Point(0.0, 0.0), stationKey = stationKey)
+        val s = _state.value
+        val stop = s.stop?.copy(name = s.name) ?: Stop(stationKey, s.name, s.platforms.firstOrNull()?.point ?: Point(0.0, 0.0), stationKey = stationKey)
         if (isSaved.value) saved.remove(SavedKind.STOP, stationKey) else saved.saveStop(stop)
     }
 

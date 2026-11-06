@@ -179,6 +179,14 @@ fun placeTypeLabel(type: PlaceType): String = stringResource(
 
 data class PlaceQueryState(val query: String = "", val results: List<Place> = emptyList(), val loading: Boolean = false, val error: DataError? = null)
 
+/**
+ * Whether a search is under way once the text changes from [old] to [new]. It counts from the keystroke, not
+ * from the end of the debounce, so a query not searched yet never reads as having no results. Spaces around
+ * the text change nothing, and text too short to search has nothing to wait for.
+ */
+internal fun searchPending(loading: Boolean, old: String, new: String): Boolean =
+    new.trim().length >= 2 && (loading || new.trim() != old.trim())
+
 /** Place search (stops, addresses, POIs) and every change to saved places, shared by the planner and the Saved screen. */
 @HiltViewModel
 class PlacesViewModel @Inject constructor(
@@ -199,14 +207,13 @@ class PlacesViewModel @Inject constructor(
             // Only a changed query starts a search, never the search's own updates.
             _state.map { it.query.trim() }.distinctUntilChanged().debounce(300).collectLatest { query ->
                 if (query.length < 2) { _state.update { it.copy(results = emptyList(), loading = false, error = null) }; return@collectLatest }
-                _state.update { it.copy(loading = true) }
                 val (results, error) = places.search(query, language.current())
-                _state.update { it.copy(results = results, loading = false, error = error) }
+                _state.update { if (it.query.trim() == query) it.copy(results = results, loading = false, error = error) else it }
             }
         }
     }
 
-    fun query(text: String) = _state.update { it.copy(query = text) }
+    fun query(text: String) = _state.update { it.copy(query = text, loading = searchPending(it.loading, it.query, text)) }
     fun reset() { _state.value = PlaceQueryState() }
 
     /** Any point picked on the map, labelled with the nearest address; planned as a coordinate. */

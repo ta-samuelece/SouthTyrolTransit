@@ -281,7 +281,7 @@ fun PlaceSearchSheet(
             )
             Spacer(Modifier.size(8.dp))
         }
-        LazyColumn(contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(2.dp), modifier = Modifier.fillMaxHeight().imePadding()) {
+        LazyColumn(contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(2.dp), modifier = Modifier.keepsSheetOpen().fillMaxHeight().imePadding()) {
             if (state.query.isBlank()) {
                 val actions = listOfNotNull(
                     onUseLocation?.let { Triple(R.string.location_use_current, Icons.Rounded.MyLocation, it) },

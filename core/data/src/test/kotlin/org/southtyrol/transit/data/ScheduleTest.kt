@@ -382,6 +382,40 @@ class ScheduleTest {
         assertEquals(listOf(same), PlacesRepository(complete, schedule).search("Bozen", "de").first)
     }
 
+    @Test fun mapAndPlannerListTheSameStopsUnderTheSameNames() = runTest {
+        store.importFile(SyntheticGtfs.zip(context.cacheDir), emptyMap())
+        val point = Point(46.65, 11.15)
+        val local = schedule.searchStops("Bozen", "de")
+        val station = local.single()
+        val online = listOf(
+            // Only EFA knows this one, under a name of the app's language.
+            Place("66000301", "Bahnhof Meran Untermais", PlaceType.STOP, point, "Meran", "it:22021:301"),
+            Place("streetID:1::2:-1:Bozner Strasse", "Bozner Strasse", PlaceType.STREET, point),
+        )
+        val places = PlacesRepository.merged(online, local, schedule, "de")
+        assertEquals(listOf("Bahnhof Meran Untermais", "Bozner Strasse", station.name), places.map { it.name })
+
+        val stops = StopSearchRepository.stopsOf(places, local)
+        assertEquals(places.filter { it.type == PlaceType.STOP }.map { it.name }, stops.map { it.name })
+        assertEquals(listOf("it:22021:301", station.stationKey), stops.map { it.stationKey })
+    }
+
+    @Test fun stopNamesFromTheOtherLanguageGiveWayToTheTimetable() = runTest {
+        store.importFile(SyntheticGtfs.zip(context.cacheDir), emptyMap())
+        val local = schedule.searchStops("Bozen", "de")
+        val station = local.single()
+        val inApp = Place("1", "Bahnhof Bozen", PlaceType.STOP, station.point, "Bozen", station.stationKey)
+        assertEquals("Bahnhof Bozen", PlacesRepository.merged(listOf(inApp), local, schedule, "de").single().name)
+
+        val other = inApp.copy(name = "Stazione di Bolzano", nameInOtherLanguage = true)
+        assertEquals(station.name, PlacesRepository.merged(listOf(other), local, schedule, "de").single().name)
+        // Also when the timetable's own search did not match the query.
+        assertEquals(station.name, PlacesRepository.merged(listOf(other), emptyList(), schedule, "de").single().name)
+        // Not a timetable station: EFA's name is all there is.
+        val foreign = other.copy(stopGlobalId = "at:47:1")
+        assertEquals("Stazione di Bolzano", PlacesRepository.merged(listOf(foreign), local, schedule, "de").first().name)
+    }
+
     @Test fun cachedAlertsSurviveRestartAsStale() = runTest {
         val user = FakeUserDao()
         val now = Instant.parse("2026-10-04T18:00:00Z")

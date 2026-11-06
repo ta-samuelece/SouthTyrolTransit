@@ -114,7 +114,7 @@ fun SavedStopsFlow(repo: SavedRepository, schedule: TransitScheduleDataSource, l
 
 data class StopQueryState(val query: String = "", val loading: Boolean = false, val results: List<Stop> = emptyList(), val error: DataError? = null)
 
-/** Stop search by name: offline timetable first, completed by the EFA stop finder when online. */
+/** Stop search by name: the same stops as the planner, from the EFA stop finder and the offline timetable. */
 @HiltViewModel
 class StopSearchViewModel @Inject constructor(
     private val stops: StopSearchRepository,
@@ -161,7 +161,7 @@ fun StopSearchSheet(onPick: (Stop) -> Unit, onDismiss: () -> Unit, viewModel: St
                 shape = RoundedCornerShape(28.dp), modifier = Modifier.fillMaxWidth().focusRequester(focus),
             )
         }
-        LazyColumn(Modifier.fillMaxHeight().imePadding(), contentPadding = PaddingValues(16.dp)) {
+        LazyColumn(Modifier.keepsSheetOpen().fillMaxHeight().imePadding(), contentPadding = PaddingValues(16.dp)) {
             item {
                 SegmentedListItem(
                     onClick = { mapOpen = true }, shapes = ListItemDefaults.segmentedShapes(0, 1), colors = groupedItemColors(), modifier = Modifier.groupGap(0, 1),
@@ -223,7 +223,7 @@ fun LineSearchSheet(onPick: (org.southtyrol.transit.model.Line) -> Unit, onDismi
                 shape = RoundedCornerShape(28.dp), modifier = Modifier.fillMaxWidth().focusRequester(focus),
             )
         }
-        LazyColumn(Modifier.fillMaxHeight().imePadding(), contentPadding = PaddingValues(16.dp)) {
+        LazyColumn(Modifier.keepsSheetOpen().fillMaxHeight().imePadding(), contentPadding = PaddingValues(16.dp)) {
             when {
                 state.loading && state.results.isEmpty() -> item { TransitLoading() }
                 !state.available -> item { StatusBanner(stringResource(R.string.saved_lines_need_timetable), kind = BannerKind.INFO) }

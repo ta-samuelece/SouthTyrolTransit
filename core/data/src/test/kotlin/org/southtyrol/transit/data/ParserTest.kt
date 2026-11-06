@@ -182,6 +182,20 @@ class EfaXmlTest {
         val merged = EfaXml.mergeRanked(listOf(listOf(street, stationIt), listOf(stationDe)))
         assertEquals(listOf("66000468", "s1"), merged.map { it.id })
         assertEquals("Bolzano, Stazione di Bolzano", merged.first().name) // preferred language spelling kept
+        assertFalse(merged.first().nameInOtherLanguage)
+    }
+
+    @Test fun mergeMarksNamesFoundOnlyInTheOtherLanguage() {
+        val station = Place("66000468", "Bolzano, Stazione di Bolzano", PlaceType.STOP) to 900
+        assertTrue(EfaXml.mergeRanked(listOf(emptyList(), listOf(station))).single().nameInOtherLanguage)
+    }
+
+    @Test fun mergeListsAStreetOnceAcrossLanguages() {
+        val tisens = Place("streetID:185::22021099:-1:Untermair:Tisens:Untermair::Untermair: 39010:ANY:DIVA_STREET:664986:338807:APBV:apb:0", "Untermair, Tisens", PlaceType.STREET) to 227
+        val tesimo = Place("streetID:185::22021099:-1:Untermair:Tesimo:Untermair::Untermair: 39010:ANY:DIVA_STREET:664986:338807:APBV:apb:0", "Untermair, Tesimo", PlaceType.STREET) to 208
+        val otherStreet = Place("streetID:186::22021099:-1:Untermair:Tesimo:Untermair::Untermair: 39010:ANY:DIVA_STREET:664986:338807:APBV:apb:0", "Untermair 2, Tesimo", PlaceType.STREET) to 100
+        val merged = EfaXml.mergeRanked(listOf(listOf(tisens), listOf(tesimo, otherStreet)))
+        assertEquals(listOf("Untermair, Tisens", "Untermair 2, Tesimo"), merged.map { it.name })
     }
 
     @Test fun coordinateStops() {
@@ -195,18 +209,6 @@ class EfaXmlTest {
         val stops = StopSearchRepository.namedStops(EfaXml.places(fixture("efa_stopfinder_list.xml")))
         assertEquals(listOf("it:22021:998"), stops.map { it.id })
         assertEquals("it:22021:998", stops[0].stationKey)
-    }
-
-    @Test fun onlineOnlyStopsAreTheStationsTheTimetableMissed() {
-        val point = org.southtyrol.transit.model.Point(46.65, 11.15)
-        fun stop(key: String, name: String) = org.southtyrol.transit.model.Stop(key, name, point, stationKey = key)
-        val local = listOf(stop("it:22021:1", "Merano, Stazione di Merano"))
-        val online = listOf(
-            stop("it:22021:1", "Bahnhof Meran"),
-            stop("it:22021:301", "Bahnhof Meran Untermais"),
-            stop("it:22021:301", "Fernbushaltestelle Meran Untermais"),
-        )
-        assertEquals(listOf("Bahnhof Meran Untermais"), StopSearchRepository.onlyOnline(local, online).map { it.name })
     }
 
     @Test fun onlineNearbyStopsHaveDistancesAndNoDuplicates() {

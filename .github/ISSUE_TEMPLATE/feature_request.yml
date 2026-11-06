@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to suggest something. South Tyrol Transit is an unofficial app built only on open data (STA GTFS and GTFS-Realtime, the public EFA journey planner, Open Data Hub, OpenStreetMap). Some ideas depend on data that is not published - see [Known API limitations](https://github.com/ta-samuelece/SouthTyrolTransit/blob/main/README.md#16-known-api-limitations) and [Future improvements](https://github.com/ta-samuelece/SouthTyrolTransit/blob/main/README.md#20-future-improvements) in the README before opening a request.
+        Thanks for taking the time to suggest something. South Tyrol Transit is an unofficial app built only on open data (STA GTFS and GTFS-Realtime, the public EFA journey planner, Open Data Hub, OpenStreetMap). Some ideas depend on data that is not published - see [Known API limitations](https://github.com/ta-samuelece/SouthTyrolTransit/blob/main/docs/DEVELOPMENT.md#known-api-limitations) and [Future improvements](https://github.com/ta-samuelece/SouthTyrolTransit/blob/main/docs/DEVELOPMENT.md#future-improvements) in the README before opening a request.
 
   - type: dropdown
     id: area

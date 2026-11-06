@@ -83,6 +83,8 @@ data class Place(
     val locality: String = "",
     /** Network-wide stop identifier (e.g. `it:22021:468`) when the place is a stop. */
     val stopGlobalId: String = "",
+    /** The search found this place only in the language other than the app's, so [name] is spelled in that one. */
+    val nameInOtherLanguage: Boolean = false,
 )
 
 data class Stop(

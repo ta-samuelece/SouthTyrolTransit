@@ -45,6 +45,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -52,6 +56,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -332,6 +337,17 @@ fun BikesPill(bikes: Bikes, container: androidx.compose.ui.graphics.Color, modif
 fun groupedItemColors() = ListItemDefaults.segmentedColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
 
 /** The gap after item [index] of [count] in a grouped list (none after the last). */
+/**
+ * For the list of a search sheet: scrolling past its top drags a bottom sheet down, so an ordinary swipe
+ * through the results closed it. The drag handle, the search field and the back gesture still do.
+ */
+fun Modifier.keepsSheetOpen(): Modifier = nestedScroll(KeepSheetOpen)
+
+private object KeepSheetOpen : NestedScrollConnection {
+    override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset = available
+    override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity = available
+}
+
 fun Modifier.groupGap(index: Int, count: Int): Modifier = padding(bottom = if (index < count - 1) ListItemDefaults.SegmentedGap else 0.dp)
 
 /**

@@ -9,11 +9,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -348,18 +350,17 @@ class JourneyRepository(private val planner: JourneyPlannerDataSource, private v
 
 class PlacesRepository(private val geocoder: GeocodingLocationDataSource, private val schedule: TransitScheduleDataSource) {
     /**
-     * Network place search, completed with stops from the cached schedule. EFA answers a query it can
-     * "identify" with that single place only, so timetable stations it did not return are appended.
-     * Offline, the schedule alone answers.
+     * Network place search, completed with stops from the cached schedule (see [merged]). Offline, the
+     * schedule alone answers.
      */
     suspend fun search(query: String, language: String): Pair<List<Place>, DataError?> {
         if (query.isBlank()) return emptyList<Place>() to null
         return coroutineScope {
-            val local = async { runCatching { if (schedule.isAvailable()) schedule.searchStops(query, language, 15) else emptyList() }.getOrDefault(emptyList()).map { it.toPlace() } }
+            val local = async { runCatching { if (schedule.isAvailable()) schedule.searchStops(query, language) else emptyList() }.getOrDefault(emptyList()) }
             try {
-                withSchedule(geocoder.search(query, language), local.await()) to null
+                merged(geocoder.search(query, language), local.await(), schedule, language) to null
             } catch (e: DataException) {
-                local.await() to e.error
+                local.await().map { it.toPlace() } to e.error
             }
         }
     }
@@ -371,10 +372,24 @@ class PlacesRepository(private val geocoder: GeocodingLocationDataSource, privat
         /** EFA accepts the network-wide stop id as a stop reference. */
         fun Stop.toPlace() = Place(id, name, PlaceType.STOP, point, "", stationKey)
 
-        /** EFA places first, then timetable stops whose station key (EFA's gid) EFA did not return. */
-        internal fun withSchedule(online: List<Place>, local: List<Place>): List<Place> {
-            val known = online.mapNotNullTo(HashSet()) { it.stopGlobalId.ifBlank { null } }
-            return online + local.filter { it.stopGlobalId !in known }
+        /**
+         * The one result list behind every search by name, so the planner and the map offer the same stops
+         * under the same names. EFA's places come first, in its order, then the timetable stations it did
+         * not return: EFA answers a query it can "identify" with that single place only.
+         *
+         * A stop EFA found in the app's language keeps EFA's name, since the timetable may have only the
+         * Italian one ("Bahnhof Meran Untermais", "Stazione di Merano Maia Bassa"). One it found only in the
+         * other language takes the timetable's name when the timetable has the station.
+         */
+        internal suspend fun merged(online: List<Place>, local: List<Stop>, schedule: TransitScheduleDataSource, language: String): List<Place> {
+            val timetable = local.associateBy { it.stationKey }
+            val places = online.distinctBy { it.stopGlobalId.ifBlank { it.id } }.map { place ->
+                if (place.type != PlaceType.STOP || !place.nameInOtherLanguage || place.stopGlobalId.isBlank()) return@map place
+                val station = timetable[place.stopGlobalId] ?: try { schedule.stop(place.stopGlobalId, language) } catch (e: DataException) { null }
+                station?.let { place.copy(name = it.name, nameInOtherLanguage = false) } ?: place
+            }
+            val known = places.mapNotNullTo(HashSet()) { it.stopGlobalId.ifBlank { null } }
+            return places + local.filter { it.stationKey !in known }.map { it.toPlace() }
         }
     }
 }
@@ -385,8 +400,21 @@ class PlacesRepository(private val geocoder: GeocodingLocationDataSource, privat
  * stations, so saved stops still match.
  */
 class StopSearchRepository(private val schedule: TransitScheduleDataSource, private val efa: EfaClient) {
-    suspend fun search(query: String, language: String): List<Stop> =
-        if (schedule.isAvailable()) schedule.searchStops(query, language) else namedStops(efa.search(query, language))
+    /**
+     * The stops of [PlacesRepository.merged], the same ones the planner offers. Only an EFA answer slower
+     * than [ONLINE_WAIT_MILLIS] shows the timetable's matches meanwhile, as the list then changes under the
+     * finger; with none, nothing is emitted before EFA answers, so "no matches" does not flash. Without a
+     * timetable EFA alone answers and its errors propagate; with one, an EFA failure leaves its matches.
+     */
+    fun search(query: String, language: String): Flow<List<Stop>> = flow {
+        if (!schedule.isAvailable()) { emit(namedStops(efa.search(query, language))); return@flow }
+        val local = schedule.searchStops(query, language)
+        coroutineScope {
+            val online = async { try { efa.search(query, language) } catch (e: DataException) { emptyList() } }
+            if (withTimeoutOrNull(ONLINE_WAIT_MILLIS) { online.join() } == null && local.isNotEmpty()) emit(local)
+            emit(stopsOf(PlacesRepository.merged(online.await(), local, schedule, language), local))
+        }
+    }
 
     suspend fun nearby(point: Point, language: String): List<Stop> =
         if (schedule.isAvailable()) schedule.nearbyStops(point, NEARBY_METERS.toDouble(), language, 25)
@@ -394,6 +422,13 @@ class StopSearchRepository(private val schedule: TransitScheduleDataSource, priv
 
     companion object {
         private const val NEARBY_METERS = 800
+        private const val ONLINE_WAIT_MILLIS = 1000L
+
+        /** The stops among merged results; the timetable's stations keep what only it knows, such as the stop code. */
+        internal fun stopsOf(merged: List<Place>, local: List<Stop>): List<Stop> {
+            val timetable = local.associateBy { it.stationKey }
+            return namedStops(merged).map { stop -> timetable[stop.stationKey]?.copy(name = stop.name) ?: stop }
+        }
 
         internal fun namedStops(places: List<Place>): List<Stop> = places
             .filter { it.type == PlaceType.STOP && it.stopGlobalId.isNotBlank() && it.point != null }

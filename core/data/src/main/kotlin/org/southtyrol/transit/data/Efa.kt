@@ -271,12 +271,21 @@ object EfaXml {
     /** Merges per-language result lists (first list = preferred spelling) by EFA match quality. */
     fun mergeRanked(lists: List<List<Pair<Place, Int>>>): List<Place> {
         val best = LinkedHashMap<String, Pair<Place, Int>>()
-        for (list in lists) for ((place, quality) in list) {
-            val existing = best[place.id]
-            best[place.id] = if (existing == null) place to quality else existing.first to maxOf(existing.second, quality)
+        lists.forEachIndexed { index, list ->
+            for ((place, quality) in list) {
+                val key = mergeKey(place.id)
+                val existing = best[key]
+                best[key] = if (existing == null) place.copy(nameInOtherLanguage = index > 0) to quality else existing.first to maxOf(existing.second, quality)
+            }
         }
         return best.values.sortedByDescending { it.second }.map { it.first }
     }
+
+    /**
+     * A street's id spells its name and locality in the request's language ("Untermair:Tisens" and
+     * "Untermair:Tesimo"); only the numbers before them identify it.
+     */
+    private fun mergeKey(id: String) = if (id.startsWith("streetID:")) id.split(':').take(4).joinToString(":") else id
 
     /**
      * Places with EFA's matchQuality (a unique identification scores highest). EFA lists one stop under

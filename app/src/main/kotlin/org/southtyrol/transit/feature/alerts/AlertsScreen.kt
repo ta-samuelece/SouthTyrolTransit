@@ -253,11 +253,11 @@ fun AlertsScreen(navigator: Navigator, viewModel: AlertsViewModel = hiltViewMode
         }
     }
 
-    val dashboardFor = ui?.takeIf { it.savedLines.isNotEmpty() || it.savedStops.isNotEmpty() }
-    // A filter whose card is gone (its last line or stop was removed in Saved) falls back to all alerts.
-    LaunchedEffect(ui, filter) {
-        val current = ui ?: return@LaunchedEffect
-        if ((filter == AlertFilter.LINES && current.savedLines.isEmpty()) || (filter == AlertFilter.STOPS && current.savedStops.isEmpty())) filter = AlertFilter.ALL
+    val cards = remember(ui, now) { ui?.dashboardCards(now).orEmpty() }
+    val dashboardFor = ui?.takeIf { cards.isNotEmpty() }
+    // A filter whose card is gone (nothing saved of its kind is affected any more) falls back to all alerts.
+    LaunchedEffect(cards, filter) {
+        if (ui != null && filter != AlertFilter.ALL && filter !in cards) filter = AlertFilter.ALL
     }
 
     Scaffold(
@@ -282,12 +282,12 @@ fun AlertsScreen(navigator: Navigator, viewModel: AlertsViewModel = hiltViewMode
             expanded = searching,
             modal = false,
             onDismiss = closeSearch,
-            // No saved lines or stops: no dashboard at all, and the lip closes up under the title.
+            // No saved line or stop affected: no dashboard at all, and the lip closes up under the title.
             lipContentGap = if (compact) 16.dp else 24.dp,
             lipContent = if (dashboardFor == null) null else {
                 {
                     AlertDashboard(
-                        dashboardFor, now, filter, compact,
+                        dashboardFor, now, cards, filter, compact,
                         onFilter = { picked -> filter = if (filter == picked) AlertFilter.ALL else picked },
                     )
                 }
@@ -389,14 +389,27 @@ fun AlertsScreen(navigator: Navigator, viewModel: AlertsViewModel = hiltViewMode
 }
 
 /**
+ * Which dashboard cards to show: the saved lines and the saved stops each get one only while an alert in force
+ * or coming up touches at least one of them. With nothing affected the card would only say "0 of N".
+ */
+private fun AlertsUi.dashboardCards(now: java.time.Instant): Set<AlertFilter> {
+    val relevant = state.alerts.filter { it.active(now) || it.upcoming(now) }
+    return buildSet {
+        if (savedLines.any { line -> relevant.any { AlertMatcher.affectsLine(it, line) } }) add(AlertFilter.LINES)
+        if (savedStops.keys.any { key -> relevant.any { AlertMatcher.affectsStop(it, key) } }) add(AlertFilter.STOPS)
+    }
+}
+
+/**
  * The lip's dashboard: the saved lines and the saved stops, each a card with how many have an alert in force
  * now, how many more have one coming up, and the affected ones as marks. A card is a toggle for its filter.
- * Only kinds with something saved get a card; a lone card spans the width and shows more marks.
+ * Only the kinds in [cards] get one (see [dashboardCards]); a lone card spans the width and shows more marks.
  */
 @Composable
 private fun AlertDashboard(
     ui: AlertsUi,
     now: java.time.Instant,
+    cards: Set<AlertFilter>,
     filter: AlertFilter,
     compact: Boolean,
     onFilter: (AlertFilter) -> Unit,
@@ -407,14 +420,14 @@ private fun AlertDashboard(
     val linesLater = ui.savedLines.count { line -> line !in linesNow && comingUp.any { AlertMatcher.affectsLine(it, line) } }
     val stopsNow = ui.savedStops.filter { (key, _) -> inForce.any { AlertMatcher.affectsStop(it, key) } }
     val stopsLater = ui.savedStops.count { (key, _) -> key !in stopsNow && comingUp.any { AlertMatcher.affectsStop(it, key) } }
-    val wide = ui.savedLines.isEmpty() || ui.savedStops.isEmpty()
+    val wide = cards.size == 1
     val lineMarks = if (wide) MAX_LINE_MARKS_WIDE else MAX_LINE_MARKS
     val stopMarks = if (wide) 2 else 1
     val motion = MaterialTheme.motionScheme
     // The row animates between the full and the slim cards' heights; the cards in it share the taller one.
     Row(
         Modifier.fillMaxWidth().animateContentSize(motion.defaultSpatialSpec()).height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (ui.savedLines.isNotEmpty()) {
+        if (AlertFilter.LINES in cards) {
             DashboardCard(
                 label = stringResource(R.string.alerts_your_lines), affected = linesNow.size, total = ui.savedLines.size, later = linesLater,
                 selected = filter == AlertFilter.LINES, compact = compact, onToggle = { onFilter(AlertFilter.LINES) },
@@ -424,7 +437,7 @@ private fun AlertDashboard(
                 MoreMark(linesNow.size - lineMarks)
             }
         }
-        if (ui.savedStops.isNotEmpty()) {
+        if (AlertFilter.STOPS in cards) {
             val stopsSelected = filter == AlertFilter.STOPS
             DashboardCard(
                 label = stringResource(R.string.alerts_your_stops), affected = stopsNow.size, total = ui.savedStops.size, later = stopsLater,

@@ -197,6 +197,18 @@ class EfaXmlTest {
         assertEquals("it:22021:998", stops[0].stationKey)
     }
 
+    @Test fun onlineOnlyStopsAreTheStationsTheTimetableMissed() {
+        val point = org.southtyrol.transit.model.Point(46.65, 11.15)
+        fun stop(key: String, name: String) = org.southtyrol.transit.model.Stop(key, name, point, stationKey = key)
+        val local = listOf(stop("it:22021:1", "Merano, Stazione di Merano"))
+        val online = listOf(
+            stop("it:22021:1", "Bahnhof Meran"),
+            stop("it:22021:301", "Bahnhof Meran Untermais"),
+            stop("it:22021:301", "Fernbushaltestelle Meran Untermais"),
+        )
+        assertEquals(listOf("Bahnhof Meran Untermais"), StopSearchRepository.onlyOnline(local, online).map { it.name })
+    }
+
     @Test fun onlineNearbyStopsHaveDistancesAndNoDuplicates() {
         val center = org.southtyrol.transit.model.Point(46.4979, 11.3541)
         val stops = StopSearchRepository.nearbyStops(EfaXml.coordStops(fixture("efa_coord.xml")), center)

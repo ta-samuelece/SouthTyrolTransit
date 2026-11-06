@@ -154,8 +154,10 @@ class MapSearchViewModel @Inject constructor(
                 // Lines come only from the offline timetable; without it the section simply stays empty.
                 val found = runCatching { lines.search(query) }.getOrDefault(emptyList())
                 try {
-                    val stops = stopSearch.search(query, language.current())
-                    _search.update { it.copy(stops = stops, lines = found, loading = false, error = null) }
+                    // The timetable's matches first, then once more with stations only EFA knows by this name.
+                    stopSearch.search(query, language.current()).collect { stops ->
+                        _search.update { it.copy(stops = stops, lines = found, loading = false, error = null) }
+                    }
                 } catch (e: DataException) {
                     _search.update { it.copy(stops = emptyList(), lines = found, loading = false, error = e.error) }
                 }

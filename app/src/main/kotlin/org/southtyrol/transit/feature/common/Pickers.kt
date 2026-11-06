@@ -114,7 +114,7 @@ fun SavedStopsFlow(repo: SavedRepository, schedule: TransitScheduleDataSource, l
 
 data class StopQueryState(val query: String = "", val loading: Boolean = false, val results: List<Stop> = emptyList(), val error: DataError? = null)
 
-/** Stop search by name: offline timetable when available, otherwise the EFA stop finder. */
+/** Stop search by name: offline timetable first, completed by the EFA stop finder when online. */
 @HiltViewModel
 class StopSearchViewModel @Inject constructor(
     private val stops: StopSearchRepository,
@@ -131,8 +131,9 @@ class StopSearchViewModel @Inject constructor(
                 if (query.length < 2) { _state.update { it.copy(results = emptyList(), loading = false, error = null) }; return@collectLatest }
                 _state.update { it.copy(loading = true) }
                 try {
-                    val results = stops.search(query, language.current())
-                    _state.update { it.copy(results = results, loading = false, error = null) }
+                    stops.search(query, language.current()).collect { results ->
+                        _state.update { it.copy(results = results, loading = false, error = null) }
+                    }
                 } catch (e: DataException) {
                     _state.update { it.copy(results = emptyList(), loading = false, error = e.error) }
                 }

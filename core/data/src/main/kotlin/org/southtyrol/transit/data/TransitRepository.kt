@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
@@ -385,8 +386,25 @@ class PlacesRepository(private val geocoder: GeocodingLocationDataSource, privat
  * stations, so saved stops still match.
  */
 class StopSearchRepository(private val schedule: TransitScheduleDataSource, private val efa: EfaClient) {
-    suspend fun search(query: String, language: String): List<Stop> =
-        if (schedule.isAvailable()) schedule.searchStops(query, language) else namedStops(efa.search(query, language))
+    /**
+     * The timetable's matches, completed by the stations only EFA found. The timetable knows a stop by
+     * its Italian name and STA's German translation, if any; EFA also knows other names ("Bahnhof Meran
+     * Untermais" for "Stazione di Merano Maia Bassa"), which the planner found and the map search
+     * missed. Timetable matches are emitted at once and again with EFA's additions; with none, only the
+     * final list is emitted, so "no matches" does not flash while EFA answers. Without a timetable EFA
+     * alone answers and its errors propagate; with one, an EFA failure leaves the timetable's matches.
+     */
+    fun search(query: String, language: String): Flow<List<Stop>> = flow {
+        if (!schedule.isAvailable()) { emit(namedStops(efa.search(query, language))); return@flow }
+        val local = schedule.searchStops(query, language)
+        if (local.isNotEmpty()) emit(local)
+        val online = try { namedStops(efa.search(query, language)) } catch (e: DataException) { emptyList() }
+        val added = onlyOnline(local, online).take(MAX_ONLINE_ONLY).map { stop ->
+            // The timetable's station, so the name and position match its boards and saved stops.
+            (try { schedule.stop(stop.stationKey, language) } catch (e: DataException) { null }) ?: stop
+        }
+        if (local.isEmpty() || added.isNotEmpty()) emit(local + added)
+    }
 
     suspend fun nearby(point: Point, language: String): List<Stop> =
         if (schedule.isAvailable()) schedule.nearbyStops(point, NEARBY_METERS.toDouble(), language, 25)
@@ -394,6 +412,13 @@ class StopSearchRepository(private val schedule: TransitScheduleDataSource, priv
 
     companion object {
         private const val NEARBY_METERS = 800
+        private const val MAX_ONLINE_ONLY = 10
+
+        /** EFA's stops whose station the timetable search did not return, in EFA's order. */
+        internal fun onlyOnline(local: List<Stop>, online: List<Stop>): List<Stop> {
+            val known = local.mapTo(HashSet()) { it.stationKey }
+            return online.filter { it.stationKey !in known }.distinctBy { it.stationKey }
+        }
 
         internal fun namedStops(places: List<Place>): List<Stop> = places
             .filter { it.type == PlaceType.STOP && it.stopGlobalId.isNotBlank() && it.point != null }

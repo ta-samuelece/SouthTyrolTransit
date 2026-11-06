@@ -5,7 +5,7 @@ description: Importer changes reach existing installs only when GtfsImporter.VER
 tags: [room, database, gtfs, importer, search, migrations]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-11-06T12:30:00Z"
+  at: "2026-11-06T23:30:00Z"
 verified:
   by: claude-code/claude-opus-5-5
   at: "2026-10-11T12:00:00Z"
@@ -86,9 +86,9 @@ Never keep a `ScheduleDatabase` or DAO beyond the `withDatabase` block that prod
 Kotlin on both sides, so changing `TextNormalizer.key` needs a re-import (see above). `searchStops` fetches
 `limit * 8` platform rows **without** `ORDER BY` and ranks afterwards, so for very common tokens the best
 station can be cut before ranking. The feed has only Italian names and German translations, so EFA aliases
-such as "Bahnhof Meran Untermais" (station `it:22021:301`) are not in the index; `StopSearchRepository`
-appends EFA-only stations when online (whether the feed lacks this station's German translation or just
-names it differently was not checked against the real feed).
+such as "Bahnhof Meran Untermais" (station `it:22021:301`) are not in the index; `PlacesRepository.merged`
+adds EFA's stations when online (whether the feed lacks this station's German translation or just names it
+differently was not checked against the real feed; the app shows its Italian name in German).
 
 # Other limits worth knowing
 

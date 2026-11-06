@@ -101,11 +101,18 @@ also saves, moves and removes saved places; the planner only keeps which endpoin
 changed, so typing a space does not flash a spinner.
 
 Screens never take `EfaClient` or `ScheduleStore`. Stop search by name or nearby goes through
-`StopSearchRepository` (offline timetable when downloaded, else the EFA stop finder, keyed by station so
-saved stops match). Its `search` is a `Flow`: timetable matches first, then the same list plus up to 10
-stations only EFA found (EFA knows aliases the timetable lacks); an EFA failure then just ends the flow,
-and "no matches" is not emitted until EFA has answered. The timetable's info, status and "downloaded yet"
-go through `ScheduleRepository`.
+`StopSearchRepository`, keyed by station so saved stops match. Searches by name share
+`PlacesRepository.merged`, so Plan, the map and the stop pickers list the same stops under the same names:
+EFA's places in its order, then timetable stations it left out. A stop keeps EFA's name if EFA found it in
+the app's language (`Place.nameInOtherLanguage` false), else takes the timetable's name when there is one.
+`StopSearchRepository.search` is a `Flow` holding the stops of that list: it waits up to a second for EFA,
+showing timetable matches only if EFA is slower, and "no matches" is not emitted until EFA has answered. An
+EFA failure leaves the timetable's matches; without a timetable EFA's errors propagate. The timetable's
+info, status and "downloaded yet" go through `ScheduleRepository`.
+
+The lists of the search sheets (`PlaceSearchSheet`, `StopSearchSheet`, `LineSearchSheet`) use
+`Modifier.keepsSheetOpen()`: it consumes what the list cannot scroll, which would otherwise drag the sheet
+closed. The drag handle, the search field and back still close it.
 Both live in `TransitRepository.kt` and are provided in `AppModule`.
 
 # Polling and workers

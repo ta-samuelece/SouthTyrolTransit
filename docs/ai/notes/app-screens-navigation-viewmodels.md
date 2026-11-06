@@ -97,8 +97,10 @@ _state.map { it.query.trim() }.distinctUntilChanged().debounce(200).collectLates
 
 Used by `MapSearchViewModel` (stops and lines from one query), `LinesViewModel`, `StopSearchViewModel`, `LineSearchViewModel`
 and `PlacesViewModel` (`feature/common/Places.kt`: the place search sheet shared by Plan and Saved, which
-also saves, moves and removes saved places; the planner only keeps which endpoint the sheet is open for). Set `loading` only when the trimmed query
-changed, so typing a space does not flash a spinner.
+also saves, moves and removes saved places; the planner only keeps which endpoint the sheet is open for). Set `loading` in `query()`, not after the
+debounce, and only when the trimmed query changed (`searchPending` in `feature/common/Places.kt`): a query
+not searched yet must not read as "no matches", and typing a space must not flash a spinner. A search then
+writes its results only while its query is still the current one, or it would clear `loading` for the next.
 
 Screens never take `EfaClient` or `ScheduleStore`. Stop search by name or nearby goes through
 `StopSearchRepository`, keyed by station so saved stops match. Searches by name share

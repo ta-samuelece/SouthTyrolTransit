@@ -90,6 +90,7 @@ import org.southtyrol.transit.design.TransitLoading
 import org.southtyrol.transit.feature.common.groupGap
 import org.southtyrol.transit.feature.common.groupedItemColors
 import org.southtyrol.transit.feature.common.rememberLocationPermission
+import org.southtyrol.transit.feature.common.searchPending
 import org.southtyrol.transit.location.LocationProvider
 import org.southtyrol.transit.location.LocationResult
 import org.southtyrol.transit.model.DataError
@@ -128,7 +129,7 @@ class MapSearchViewModel @Inject constructor(
     private val saved: SavedRepository,
     private val handle: SavedStateHandle,
 ) : ViewModel() {
-    private val _search = MutableStateFlow(SearchState(handle.get<String>("q").orEmpty()))
+    private val _search = MutableStateFlow(handle.get<String>("q").orEmpty().let { SearchState(it, loading = searchPending(false, "", it)) })
     val search: StateFlow<SearchState> = _search.asStateFlow()
     private val _nearby = MutableStateFlow<NearbyState>(NearbyState.Idle)
     val nearby: StateFlow<NearbyState> = _nearby.asStateFlow()
@@ -150,16 +151,15 @@ class MapSearchViewModel @Inject constructor(
             // re-trigger it, or the list keeps reloading in a loop.
             _search.map { it.query.trim() }.distinctUntilChanged().debounce(250).collectLatest { query ->
                 if (query.length < 2) { _search.update { it.copy(stops = emptyList(), lines = emptyList(), loading = false, error = null) }; return@collectLatest }
-                _search.update { it.copy(loading = true) }
                 // Lines come only from the offline timetable; without it the section simply stays empty.
                 val found = runCatching { lines.search(query) }.getOrDefault(emptyList())
                 try {
                     // The same stops as the planner; a slow network shows the timetable's matches meanwhile.
                     stopSearch.search(query, language.current()).collect { stops ->
-                        _search.update { it.copy(stops = stops, lines = found, loading = false, error = null) }
+                        _search.update { if (it.query.trim() == query) it.copy(stops = stops, lines = found, loading = false, error = null) else it }
                     }
                 } catch (e: DataException) {
-                    _search.update { it.copy(stops = emptyList(), lines = found, loading = false, error = e.error) }
+                    _search.update { if (it.query.trim() == query) it.copy(stops = emptyList(), lines = found, loading = false, error = e.error) else it }
                 }
             }
         }
@@ -167,7 +167,7 @@ class MapSearchViewModel @Inject constructor(
         if (_open.value && location.hasPermission()) locate()
     }
 
-    fun query(value: String) { handle["q"] = value; _search.update { it.copy(query = value) } }
+    fun query(value: String) { handle["q"] = value; _search.update { it.copy(query = value, loading = searchPending(it.loading, it.query, value)) } }
 
     private var focusPending = false
 

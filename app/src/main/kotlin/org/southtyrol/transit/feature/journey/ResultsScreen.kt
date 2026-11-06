@@ -251,12 +251,14 @@ fun JourneyCard(journey: Journey, selected: Boolean, onClick: () -> Unit, modifi
                     )
                 }
             }
-            Row(verticalAlignment = Alignment.Bottom) {
-                TimeColumn(journey.departure, journey.bestDeparture, journey.cancelled)
-                Text("  –  ", style = TimeStyles.large, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                TimeColumn(journey.arrival, journey.bestArrival, journey.cancelled)
-                Spacer(Modifier.weight(1f))
-                Text(Format.duration(journey.duration), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            // Long times (12-hour clock) can leave no room beside them: the duration then moves below, whole.
+            FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalArrangement = Arrangement.spacedBy(4.dp), itemVerticalAlignment = Alignment.Bottom) {
+                Row(verticalAlignment = Alignment.Bottom) {
+                    TimeColumn(journey.departure, journey.bestDeparture, journey.cancelled)
+                    Text("  –  ", style = TimeStyles.large, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    TimeColumn(journey.arrival, journey.bestArrival, journey.cancelled)
+                }
+                Text(Format.duration(journey.duration), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false)
             }
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp), itemVerticalAlignment = Alignment.CenterVertically) {
                 journey.legs.forEachIndexed { index, leg ->

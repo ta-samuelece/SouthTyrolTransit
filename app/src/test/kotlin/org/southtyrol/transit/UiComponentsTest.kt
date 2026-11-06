@@ -1,11 +1,18 @@
 package org.southtyrol.transit
 
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.unit.dp
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -18,6 +25,8 @@ import org.southtyrol.transit.design.MessageState
 import org.southtyrol.transit.design.TransitTheme
 import org.southtyrol.transit.feature.common.AlertCard
 import org.southtyrol.transit.feature.common.DepartureRow
+import org.southtyrol.transit.feature.common.searchPending
+import org.southtyrol.transit.feature.stop.boardTitle
 import org.southtyrol.transit.feature.journey.JourneyCard
 import org.southtyrol.transit.feature.onboarding.OnboardingContent
 import org.southtyrol.transit.feature.onboarding.OnboardingStep
@@ -85,6 +94,42 @@ class UiComponentsTest {
         compose.onNodeWithText("Up to 5 min late").assertIsDisplayed()
         compose.onNodeWithContentDescription("Departs", substring = true).performClick()
         assertEquals("j1", selected)
+    }
+
+    @Test fun journeyCardDurationMovesBelowTimesWhenTheyFillTheRow() {
+        val dep = now.plusSeconds(600)
+        val journey = Journey("j1", listOf(Leg(TransportMode.BUS, "201", "Meran", bozen, meran, dep, dep.plusSeconds(3720))), changes = 0)
+        // Robolectric's stand-in font draws about 1 px per character, so the row only fills on a card this narrow.
+        compose.setContent { TransitTheme(dynamicColor = false) { JourneyCard(journey, selected = false, onClick = {}, modifier = Modifier.width(66.dp)) } }
+        val duration = compose.onNodeWithText("1 h 02 min", useUnmergedTree = true).fetchSemanticsNode()
+        val time = compose.onAllNodesWithText(":", substring = true, useUnmergedTree = true)[0].fetchSemanticsNode()
+        assertTrue("duration should sit below the times", duration.boundsInRoot.top >= time.boundsInRoot.bottom)
+        val layouts = mutableListOf<TextLayoutResult>()
+        duration.config[SemanticsActions.GetTextLayoutResult].action!!(layouts)
+        assertEquals(1, layouts.single().lineCount)
+    }
+
+    @Test fun journeyCardDurationStaysBesideTimesWhenThereIsRoom() {
+        val dep = now.plusSeconds(600)
+        val journey = Journey("j1", listOf(Leg(TransportMode.BUS, "201", "Meran", bozen, meran, dep, dep.plusSeconds(3720))), changes = 0)
+        compose.setContent { TransitTheme(dynamicColor = false) { JourneyCard(journey, selected = false, onClick = {}, modifier = Modifier.width(600.dp)) } }
+        val duration = compose.onNodeWithText("1 h 02 min", useUnmergedTree = true).fetchSemanticsNode()
+        val time = compose.onAllNodesWithText(":", substring = true, useUnmergedTree = true)[0].fetchSemanticsNode()
+        assertTrue("duration should share the times' row", duration.boundsInRoot.top < time.boundsInRoot.bottom)
+    }
+
+    @Test fun searchIsPendingFromTheKeystroke() {
+        assertTrue(searchPending(loading = false, old = "bo", new = "boz"))
+        assertTrue("a running search stays pending", searchPending(loading = true, old = "boz", new = "boz "))
+        assertFalse("spaces start no search", searchPending(loading = false, old = "boz", new = "boz "))
+        assertFalse("too short to search", searchPending(loading = true, old = "bo", new = "b"))
+        assertTrue("a query restored on start is not searched yet", searchPending(loading = false, old = "", new = "boz"))
+    }
+
+    @Test fun boardKeepsTheNameItWasOpenedWith() {
+        assertEquals("Bahnhof Meran Untermais", boardTitle("Bahnhof Meran Untermais", "Merano, Stazione di Merano Maia Bassa"))
+        assertEquals("Merano, Stazione di Merano Maia Bassa", boardTitle("", "Merano, Stazione di Merano Maia Bassa"))
+        assertEquals("", boardTitle("", null))
     }
 
     @Test fun stopDepartureShowsCountdownDelayAndOpensTrip() {

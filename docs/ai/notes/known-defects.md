@@ -19,12 +19,3 @@ user. Background for each lives in the linked note.
 Open bugs that the user moved to GitHub issues are tracked there (labels `bug` and `documentation`) and
 no longer listed here - read the issue before working on one, and reference it in the fixing commit
 (CLAUDE.md rule 3).
-
-1. **Stop board title differs from the search result's name.** Search can show "Bahnhof Meran Untermais", but
-   the board then titles itself "Merano, Stazione di Merano Maia Bassa": `StopViewModel` replaces the name it
-   was opened with by the timetable's, which has no German name for this station. Likely fix: keep the
-   opening name, or give boards a name source that follows the app's language. See
-   [identifiers](./identifiers-across-sources.md).
-2. **"No matches" flashes while typing in a search.** `MapSearchViewModel` and `PlacesViewModel` set `loading`
-   only after the debounce, so a new query shows the no-results text for up to 300 ms before its search starts.
-   Likely fix: treat a query that has not been searched yet as loading.

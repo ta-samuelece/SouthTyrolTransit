@@ -12,7 +12,7 @@ verified:
 status: stable
 ---
 
-The images live in `docs/screenshots/` and only `README.md` uses them. Each is a 1080x2400 capture from
+The images live in `docs/screenshots/` `README.md` shows a selection and `docs/FEATURES.md` all of them. Each is a 1080x2400 capture from
 the `Screenshots_36` emulator (API 36), scaled to 540x1200; `notification.png` is the notification cropped
 from the open shade. They show live data, so evening captures have the most buses without being empty;
 late at night the planner returns few connections.

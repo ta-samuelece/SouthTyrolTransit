@@ -12,7 +12,7 @@ verified:
 status: stable
 ---
 
-README section 12 describes the import pipeline. This note records what you must know before changing it.
+"Static GTFS update strategy" in `docs/DEVELOPMENT.md` describes the import pipeline. This note records what you must know before changing it.
 
 # Two databases, nothing shared
 

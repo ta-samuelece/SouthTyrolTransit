@@ -9,8 +9,8 @@ accumulated knowledge. `/CLAUDE.md` is loaded automatically at the start of a se
 
 This directory is an [Open Knowledge Format](https://github.com/GoogleCloudPlatform/open-knowledge-format)
 v0.2 bundle: plain markdown with YAML frontmatter, readable by hand and machine-queryable by agents. It is
-deliberately separate from `README.md`, `docs/API_DISCOVERY.md`, `docs/FEATURE_PARITY.md` and
-`docs/PUSH_BACKEND.md` - those are the human documentation this project already had, and they stay
+deliberately separate from `README.md`, `docs/FEATURES.md`, `docs/DEVELOPMENT.md`, `docs/RELEASING.md`,
+`docs/API_DISCOVERY.md`, `docs/FEATURE_PARITY.md` and `docs/PUSH_BACKEND.md` - those are the human documentation this project already had, and they stay
 authoritative for what they cover. This bundle holds what an agent (or a returning session) would
 otherwise have to re-investigate.
 

@@ -92,6 +92,9 @@ STRUCTURAL = [
     "app/src/test",
     "tools",
     "README.md",
+    "docs/FEATURES.md",
+    "docs/DEVELOPMENT.md",
+    "docs/RELEASING.md",
     "docs/API_DISCOVERY.md",
     ".gitignore",
     ".gitattributes",
@@ -165,7 +168,7 @@ def spec_baseline():
 
 def doc_files():
     """Every markdown document the rules govern."""
-    for base in ("CLAUDE.md", "README.md"):
+    for base in ("CLAUDE.md", "README.md", "docs/FEATURES.md", "docs/DEVELOPMENT.md", "docs/RELEASING.md"):
         f = os.path.join(REPO, base)
         if os.path.exists(f):
             yield base, f

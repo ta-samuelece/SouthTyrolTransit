@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for reporting a problem. South Tyrol Transit is an unofficial app built only on open data, so wrong or missing times, stops or alerts are sometimes in the source data rather than in the app - see [Known API limitations](https://github.com/ta-samuelece/SouthTyrolTransit/blob/main/README.md#16-known-api-limitations) in the README. Report it anyway if you are unsure: the details below help tell the two apart.
+        Thanks for reporting a problem. South Tyrol Transit is an unofficial app built only on open data, so wrong or missing times, stops or alerts are sometimes in the source data rather than in the app - see [Known API limitations](https://github.com/ta-samuelece/SouthTyrolTransit/blob/main/docs/DEVELOPMENT.md#known-api-limitations) in the development guide. Report it anyway if you are unsure: the details below help tell the two apart.
 
   - type: dropdown
     id: area

@@ -1,6 +1,6 @@
 ---
 type: Reference
-title: In-app updater internals the README does not cover
+title: In-app updater internals the release guide does not cover
 description: Hourly in-memory check throttle, the lenient certificate comparison, the three coupled updates/ paths and the startup cleanup of installed downloads, how version strings compare (build metadata and rc suffixes), how the update sheet gets its cards, and what holds it open during a download.
 tags: [updates, release, versioning, fileprovider]
 generated:
@@ -9,7 +9,7 @@ generated:
 status: stable
 ---
 
-README "In-app updates and publishing a release" describes the user-visible flow. Code:
+`docs/RELEASING.md` describes the user-visible flow. Code:
 `app/src/main/kotlin/org/southtyrol/transit/update/AppUpdates.kt`, tests in `AppUpdatesTest`.
 
 - **Throttle**: checks run at most once an hour (in-memory `lastCheck`) unless forced. The Preview channel

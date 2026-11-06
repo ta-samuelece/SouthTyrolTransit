@@ -9,7 +9,7 @@ A GitHub release **is** the deploy: the in-app updater offers it to every phone 
 on its next start. A stable release reaches every user; a preview reaches everyone who opted into the
 Preview channel. CI checks the unit tests and lint of what is merged, but nothing builds, tests or
 stages the release itself, so this procedure is the only gate. The human-facing
-version of it is the "In-app updates and publishing a release" section of `README.md`; this is the agent
+version of it is `docs/RELEASING.md`; this is the agent
 procedure on top.
 
 ## 1. Agree the version

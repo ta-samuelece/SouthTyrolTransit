@@ -1,6 +1,6 @@
 ---
 type: Reference
-title: App icons and the package name are wired in more places than the README says
+title: App icons and the package name are wired in more places than you would expect
 description: generate_icons.py (needs Pillow and numpy) only writes images; a new icon also needs a manifest activity-alias, an AppIcon entry and three strings; alias names are permanent; the package name is hard-coded in the icon switcher, the widget and MainActivity.
 tags: [icons, launcher, manifest, package-name, tools]
 generated:
@@ -12,7 +12,7 @@ verified:
 status: stable
 ---
 
-Running `tools/generate_icons.py` is only one of five steps; README section 1 lists all five (since
+Running `tools/generate_icons.py` is only one of five steps; "App icons" in `docs/DEVELOPMENT.md` lists all five (since
 2026-10-09, issue #13).
 
 # Adding an icon, end to end

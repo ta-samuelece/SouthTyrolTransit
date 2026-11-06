@@ -15,7 +15,7 @@ status: stable
   order not to repeat an investigation. If it cost more than a few minutes to learn, write it down.
 - **`/CLAUDE.md`** - stable project-wide facts and the mandatory working rules. Keep it short: it is
   loaded on every single session and competes for room with actual work.
-- **`/README.md` and `/docs/*.md`** - human documentation: features, architecture, modules, data sources,
+- **`/README.md` (a short overview) and `/docs/*.md`** - human documentation: features, architecture, modules, data sources,
   update strategies, API limitations, the release process. Not AI-specific, and not to be duplicated
   here - link to them instead of restating them. A note here records what they *don't* say, or where the
   code has moved past them.

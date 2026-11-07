@@ -498,7 +498,7 @@ fun TimeButton(
  * button with [icon], the chosen option's [label] and a chevron, opening a bottom sheet titled [title] that
  * lists every option in full as a grouped list, the chosen one in the emphasis colour with a check. A
  * segmented group would cut such labels down to the same first word. In the sheet an option reads as
- * [sheetLabel] (the button's label by default), with [supporting] as a second line where it gives one.
+ * [sheetLabel] (the button's label by default), with [supporting] under it where it gives content.
  */
 @Composable
 fun <T> ChoiceButton(
@@ -510,7 +510,7 @@ fun <T> ChoiceButton(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     modifier: Modifier = Modifier,
     sheetLabel: @Composable (T) -> String = label,
-    supporting: @Composable (T) -> String? = { null },
+    supporting: (T) -> (@Composable () -> Unit)? = { null },
 ) {
     var open by rememberSaveable { mutableStateOf(false) }
     val value = label(selected)
@@ -534,7 +534,6 @@ fun <T> ChoiceButton(
             )
             options.forEachIndexed { index, option ->
                 val chosen = option == selected
-                val second = supporting(option)
                 SegmentedListItem(
                     onClick = { onSelect(option); open = false },
                     shapes = ListItemDefaults.segmentedShapes(index, options.size),
@@ -544,7 +543,7 @@ fun <T> ChoiceButton(
                     ) else groupedItemColors(),
                     modifier = Modifier.groupGap(index, options.size).semantics { this.selected = chosen },
                     leadingContent = { if (chosen) Icon(Icons.Rounded.Check, contentDescription = null) else androidx.compose.foundation.layout.Spacer(Modifier.size(24.dp)) },
-                    supportingContent = second?.let { { Text(it) } },
+                    supportingContent = supporting(option),
                 ) { Text(sheetLabel(option)) }
             }
         }

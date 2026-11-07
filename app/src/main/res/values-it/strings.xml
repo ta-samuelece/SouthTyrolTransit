@@ -544,6 +544,7 @@
     <string name="choice_description">%1$s: %2$s. Cambia</string>
     <string name="results_order">Ordine</string>
     <string name="stop_direction_also">e %1$s</string>
+    <string name="stop_direction_all_lines">Tutte le linee</string>
     <string name="stop_no_departures_filtered">Nessuna partenza per le linee o la direzione scelte.</string>
     <string name="stop_clear_filters">Mostra tutte</string>
     <string name="stop_open_line">Apri la linea</string>

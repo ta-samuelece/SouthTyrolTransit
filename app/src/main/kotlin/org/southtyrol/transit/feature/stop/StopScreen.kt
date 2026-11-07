@@ -198,7 +198,7 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
                             StopTimeButton(viewModel)
                             when {
                                 toggle -> arrivalsToggle(Modifier.weight(1f))
-                                directions != null -> DirectionButton(directions, state.direction, viewModel::setDirection, Modifier.weight(1f))
+                                directions != null -> DirectionButton(directions, state.direction, viewModel::setDirection, state.lines, Modifier.weight(1f))
                                 else -> androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
                             }
                         }
@@ -206,7 +206,7 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
                     }
                     if (toggle && directions != null) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                         StopTimeButton(viewModel)
-                        DirectionButton(directions, state.direction, viewModel::setDirection, Modifier.weight(1f))
+                        DirectionButton(directions, state.direction, viewModel::setDirection, state.lines, Modifier.weight(1f))
                     }
                     if (board?.source == BoardSource.NETWORK) StatusBanner(stringResource(R.string.stop_network_board), kind = BannerKind.INFO)
                     else if (board?.realtime == Freshness.STALE || board?.realtime == Freshness.UNAVAILABLE) StatusBanner(stringResource(R.string.stop_realtime_unavailable), kind = BannerKind.WARNING)
@@ -328,13 +328,15 @@ private fun StopTimeButton(viewModel: StopViewModel) {
 
 /**
  * The direction as a [org.southtyrol.transit.feature.common.ChoiceButton]: all directions, or where the buses
- * go next. In its sheet a direction reads as its main next stop with the second one under it.
+ * go next. In its sheet a direction reads as its main next stop with the second one under it, then the lines
+ * leaving from that side as badges, or one "All lines" pill when every line of the stop calls there.
  */
 @Composable
 private fun DirectionButton(
     directions: List<org.southtyrol.transit.model.StopDirection>,
     selected: org.southtyrol.transit.model.StopDirection?,
     onSelect: (org.southtyrol.transit.model.StopDirection?) -> Unit,
+    lines: List<org.southtyrol.transit.model.Line>,
     modifier: Modifier = Modifier,
 ) {
     val all = stringResource(R.string.stop_all_directions)
@@ -342,6 +344,23 @@ private fun DirectionButton(
         title = stringResource(R.string.stop_direction), options = listOf(null) + directions, selected = selected, onSelect = onSelect,
         label = { it?.towards?.joinToString(" · ") ?: all }, icon = Icons.Rounded.AltRoute, modifier = modifier,
         sheetLabel = { it?.towards?.firstOrNull() ?: all },
-        supporting = { d -> d?.towards?.getOrNull(1)?.let { stringResource(R.string.stop_direction_also, it) } },
+        supporting = { d ->
+            val served = d?.let { lines.filter { line -> line.key in it.lineKeys } }.orEmpty()
+            val second = d?.towards?.getOrNull(1)
+            if (served.isEmpty() && second == null) null else ({
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    second?.let { Text(stringResource(R.string.stop_direction_also, it)) }
+                    when {
+                        served.isEmpty() -> Unit
+                        served.size == lines.size -> org.southtyrol.transit.feature.common.InfoPill(
+                            stringResource(R.string.stop_direction_all_lines), MaterialTheme.colorScheme.surfaceContainerHighest,
+                        )
+                        else -> FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            served.forEach { LineBadge(it.name, it.mode, color = it.color, textColor = it.textColor, showIcon = false) }
+                        }
+                    }
+                }
+            })
+        },
     )
 }

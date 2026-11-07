@@ -207,6 +207,9 @@ class ScheduleTest {
         assertEquals(listOf("Merano, Stazione"), one.towards)
         val two = directions.single { "it:1:100:1:2" in it.platformIds }
         assertEquals(setOf("Merano, Stazione", "Bressanone, Stazione"), two.towards.toSet())
+        // Each direction knows the lines calling at its platforms.
+        assertTrue(one.lineKeys.isNotEmpty())
+        assertTrue(two.lineKeys.isNotEmpty())
         // A stop with a single platform offers no choice.
         assertTrue(schedule.stationDirections("it:1:200", "it").isEmpty())
     }

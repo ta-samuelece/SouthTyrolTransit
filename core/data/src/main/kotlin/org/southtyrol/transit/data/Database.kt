@@ -43,6 +43,8 @@ data class StationTypeRow(val stationKey: String, val type: Int)
 
 data class NextStopRow(val platformId: String, val nextId: String, val nextName: String, val calls: Int)
 
+data class PlatformLineRow(val platformId: String, val lineKey: String)
+
 /** Full-text index over every stop name variant (all languages, accent-folded). */
 @Fts4(tokenizer = FtsOptions.TOKENIZER_UNICODE61, notIndexed = ["stationKey"])
 @Entity(tableName = "stop_search")
@@ -243,6 +245,10 @@ interface ScheduleDao {
 
     @Query("SELECT DISTINCT r.lineKey FROM stop_times st JOIN stops s ON s.idx = st.stopIdx JOIN trips t ON t.idx = st.tripIdx JOIN routes r ON r.id = t.routeId WHERE s.id IN (:stopIds)")
     suspend fun lineKeysAtStops(stopIds: Collection<String>): List<String>
+
+    /** The lines calling at each of the platforms. */
+    @Query("SELECT DISTINCT s.id AS platformId, r.lineKey AS lineKey FROM stop_times st JOIN stops s ON s.idx = st.stopIdx JOIN trips t ON t.idx = st.tripIdx JOIN routes r ON r.id = t.routeId WHERE s.id IN (:platformIds)")
+    suspend fun platformLines(platformIds: Collection<String>): List<PlatformLineRow>
 
     @Query(
         """

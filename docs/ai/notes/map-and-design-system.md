@@ -5,7 +5,7 @@ description: Map content is one immutable value pushed layer by layer and marker
 tags: [map, maplibre, design-system, colors, accessibility]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-11-07T12:00:00Z"
+  at: "2026-11-07T14:00:00Z"
 status: stable
 ---
 
@@ -174,8 +174,10 @@ Settled on 2026-10-13 after a review of every screen against the Expressive guid
   the results order) is a `ChoiceButton` (`feature/common/Pickers.kt`, 2026-11-07): one row button with
   an icon, the chosen value and a chevron, opening a bottom sheet that lists the options in full as a
   grouped list, the chosen one in `secondaryContainer` with a check. In Settings a choice with many
-  options or long labels (start tab, language, "my position" button) is a `ChoiceRow` that opens a radio
-  `ChoiceDialog` (`SettingsScreens.kt`). **Filter chips are for
+  options or long labels (start tab, language, map type, search bar, "my position" button) is a
+  `ChoiceRow` that opens the same sheet as a flyout (`ChoiceSheet`, through `ChoiceFlyout` in
+  `SettingsScreens.kt`); a tap applies and closes, swiping away or Back keeps the setting, there is no
+  Cancel. No setting opens a centred dialog. **Filter chips are for
   multi-select filters only** (map layers, Plan's transport modes).
 - Unselected `ConnectedToggleGroup` buttons default to `surfaceContainer`. On a surface of that colour
   they vanish: pass `uncheckedContainerColor` (the Settings theme group uses `surfaceContainerHighest`;

@@ -376,12 +376,6 @@ fun AlertsScreen(navigator: Navigator, viewModel: AlertsViewModel = hiltViewMode
                             icon = Icons.Rounded.CheckCircle,
                         )
                     }
-                    item(key = "source") {
-                        Text(
-                            stringResource(R.string.alerts_source), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(top = 14.dp),
-                        )
-                    }
                 }
             }
         }

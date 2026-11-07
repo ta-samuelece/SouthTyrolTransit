@@ -46,6 +46,16 @@ object GtfsFiles {
         return "${mode.name}:${shortName.ifBlank { longName.ifBlank { routeId } }}"
     }
 
+    private val funicularName = Regex("(?i)\\b(standseilbahn|funicolare|funicular)\\b")
+
+    /**
+     * The route type to store. STA tags every ropeway as 7 (funicular), aerial ones included, so a type-7
+     * route is stored as 6 (aerial lift) unless its name says funicular ("Standseilbahn Mendel"). Line keys
+     * keep being built from the feed's own type, so saved ropeway lines stay `FUNICULAR:...`.
+     */
+    fun storedRouteType(type: Int, shortName: String, longName: String): Int =
+        if (type == 7 && !funicularName.containsMatchIn("$shortName $longName")) 6 else type
+
     fun ftsQuery(query: String): String? {
         val tokens = TextNormalizer.key(query).split(' ').filter { it.isNotBlank() }.take(6)
         if (tokens.isEmpty()) return null
@@ -64,7 +74,7 @@ class GtfsImporter(private val shapeToleranceMeters: Double = 4.0) {
          * Bump whenever a change to the importer changes what ends up in the database: installs then
          * re-import their current feed on the next sync instead of waiting for STA to publish a new one.
          */
-        const val VERSION = 2
+        const val VERSION = 3
     }
 
     suspend fun import(zipFile: File, db: SupportSQLiteDatabase, meta: Map<String, String>, progress: (ImportProgress) -> Unit = {}): ImportSummary {
@@ -180,7 +190,7 @@ class GtfsImporter(private val shapeToleranceMeters: Double = 4.0) {
                     val type = r.int("route_type", 3)
                     val color = ColorContrast.parseHex(r["route_color"])?.let { "%06X".format(it) }.orEmpty()
                     val text = ColorContrast.parseHex(r["route_text_color"])?.let { "%06X".format(it) }.orEmpty()
-                    st.put(r["route_id"], r["route_short_name"], r["route_long_name"], type, r["agency_id"], color, text, GtfsFiles.lineKey(type, r["route_short_name"], r["route_long_name"], r["route_id"]))
+                    st.put(r["route_id"], r["route_short_name"], r["route_long_name"], GtfsFiles.storedRouteType(type, r["route_short_name"], r["route_long_name"]), r["agency_id"], color, text, GtfsFiles.lineKey(type, r["route_short_name"], r["route_long_name"], r["route_id"]))
                     routes++
                 }
             }

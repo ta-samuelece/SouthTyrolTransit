@@ -53,6 +53,10 @@ class CsvTest {
         assertEquals("bozen* bahnhof*", GtfsFiles.ftsQuery(" Bozen,  Bahnhof "))
         assertNull(GtfsFiles.ftsQuery("  - "))
         assertEquals("BUS:201", GtfsFiles.lineKey(3, "201", "", "1-201"))
+        assertEquals(6, GtfsFiles.storedRouteType(7, "", "Rittner Seilbahn"))
+        assertEquals(7, GtfsFiles.storedRouteType(7, "", "Standseilbahn Mendel"))
+        assertEquals(7, GtfsFiles.storedRouteType(7, "Funicolare della Mendola", ""))
+        assertEquals(3, GtfsFiles.storedRouteType(3, "201", ""))
     }
 }
 

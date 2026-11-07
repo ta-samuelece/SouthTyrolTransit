@@ -52,7 +52,7 @@ Observations:
 
 - Stop ids follow `it:22021:<station>:<area>:<platform>`. The first three segments are the station key, and they equal the EFA `gid`. That is how GTFS and EFA are joined.
 - `agency_timezone` is `Europe/Rome`; the importer rejects other zones.
-- Route types present: 3 (bus), 2 (rail), 7 (funicular / cable car).
+- Route types present: 3 (bus), 2 (rail), 7 (funicular / cable car). STA uses 7 for aerial ropeways too, so the importer stores a type-7 route as 6 (aerial lift) unless its name says funicular (`Standseilbahn`, `Funicolare`).
 
 ---
 

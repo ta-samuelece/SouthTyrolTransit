@@ -238,7 +238,9 @@ Settled on 2026-10-13 after a review of every screen against the Expressive guid
   (`feature/common/Pickers.kt`, also Plan's departure button at 64 dp), here at the toggle's height
   (`ButtonDefaults.MinHeight`): clock alone for now, widened and primary with a × back to now once a time
   is set. The direction is a `ChoiceButton` whose sheet lists every direction as its main next stop with
-  the second one under it; no line badges and no left/right arrow, both tried and dropped by the user.
+  the second one under it, then the badges of the lines calling at its platforms
+  (`StopDirection.lineKeys`), or one "All lines" `InfoPill` when that is every line of the stop. No
+  left/right arrow: tried in the mockup and dropped by the user.
   The old full-width `ConnectedToggleGroup` of directions cut every name to the same first word.
   Departures/arrivals keeps the shared toggle's bright primary selection (the user's choice): beside the
   time button, or alone on the first row when the stop also has directions, with the time and direction

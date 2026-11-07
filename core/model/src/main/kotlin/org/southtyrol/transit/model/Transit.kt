@@ -148,9 +148,10 @@ data class TripStop(
 
 /**
  * One direction at a stop: the platform(s) whose buses head towards the same next stops. Two-way
- * stops have one platform per side of the road, so a platform stands for a direction.
+ * stops have one platform per side of the road, so a platform stands for a direction. [lineKeys] are the
+ * lines calling at those platforms.
  */
-data class StopDirection(val platformIds: Set<String>, val towards: List<String>)
+data class StopDirection(val platformIds: Set<String>, val towards: List<String>, val lineKeys: Set<String> = emptySet())
 
 /** Narrows a departure board to some lines and/or one direction (empty / null = no restriction). */
 object BoardFilter {

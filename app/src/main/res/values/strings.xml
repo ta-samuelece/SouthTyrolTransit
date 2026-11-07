@@ -503,7 +503,8 @@
     <string name="update_failed_package">The downloaded file is not an update for this app.</string>
     <string name="update_failed_not_newer">The downloaded build is not newer than the installed one.</string>
     <string name="update_failed_signature">This update is signed with a different key than the installed app, so Android would refuse it. Install it manually from the release page (this needs uninstalling the current version first).</string>
-    <string name="stop_time_now">Now</string>
+    <string name="stop_time_now_description">Times from now. Choose date and time</string>
+    <string name="stop_time_at_description">Times from %1$s. Change date and time</string>
     <string name="stop_next_departure">Next departure</string>
     <string name="stop_back_to_now">Back to now</string>
     <string name="stop_earlier_departures">Earlier departures</string>
@@ -542,6 +543,11 @@
     <string name="update_channel_stable_hint">Only finished releases.</string>
     <string name="update_channel_preview_hint">Also offers preview builds with new features before they are released. They may contain bugs. To go back, switch to Stable: you keep the preview until a newer stable version comes out.</string>
     <string name="stop_all_directions">All directions</string>
+    <string name="stop_direction">Direction</string>
+    <string name="choice_description">%1$s: %2$s. Change</string>
+    <string name="results_order">Order</string>
+    <string name="stop_direction_also">and %1$s</string>
+    <string name="stop_direction_all_lines">All lines</string>
     <string name="stop_no_departures_filtered">No departures for the selected lines or direction.</string>
     <string name="stop_clear_filters">Show all</string>
     <string name="stop_open_line">Open line</string>

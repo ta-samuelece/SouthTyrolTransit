@@ -380,9 +380,8 @@ fun displayName(place: Place): String = when {
 }
 
 /**
- * The one departure control, beside Find connections. Leaving now it is the clock icon alone, in the tonal
- * colour; once a time is chosen it widens to show that time and turns primary, so a set time is never missed.
- * A tap opens the date and time pickers; while a time is set, the date picker also offers Leave now to reset it.
+ * The one departure control, beside Find connections: the shared [TimeButton] at 64 dp. A tap opens the date
+ * and time pickers; while a time is set, its × (and Leave now in the date picker) goes back to leaving now.
  */
 @Composable
 private fun DepartureButton(state: PlannerState, viewModel: PlannerViewModel) {
@@ -390,29 +389,11 @@ private fun DepartureButton(state: PlannerState, viewModel: PlannerViewModel) {
     var pickTime by rememberSaveable { mutableStateOf(false) }
     var chosenDate by rememberSaveable { mutableStateOf<Long?>(null) }
     val time = state.time
-    val shape = RoundedCornerShape(24.dp)
-    if (time == null) {
-        val description = stringResource(R.string.planner_departure_now_description)
-        FilledTonalButton(
-            onClick = { pickDate = true }, shape = shape, contentPadding = PaddingValues(0.dp),
-            modifier = Modifier.size(64.dp).semantics { contentDescription = description },
-        ) { Icon(Icons.Rounded.Schedule, contentDescription = null) }
-    } else {
-        val locale = LocalConfiguration.current.locales[0]
-        val full = "${Format.weekdayDate(time.toLocalDate())}, ${Format.time(time.toInstant())}"
-        // Today's time alone; another day gets its short weekday, so the button stays narrow.
-        val short = if (time.toLocalDate() == LocalDate.now(TransitZone)) Format.time(time.toInstant())
-            else "${time.dayOfWeek.getDisplayName(TextStyle.SHORT, locale)} ${Format.time(time.toInstant())}"
-        val description = stringResource(R.string.planner_departure_at_description, full)
-        Button(
-            onClick = { pickDate = true }, shape = shape, contentPadding = PaddingValues(start = 16.dp, end = 20.dp),
-            modifier = Modifier.heightIn(min = 64.dp).semantics { contentDescription = description },
-        ) {
-            Icon(Icons.Rounded.Schedule, contentDescription = null)
-            Spacer(Modifier.size(8.dp))
-            Text(short, style = MaterialTheme.typography.titleMedium, maxLines = 1)
-        }
-    }
+    org.southtyrol.transit.feature.common.TimeButton(
+        time, onPick = { pickDate = true }, onClear = { viewModel.setTime(null) },
+        nowDescription = R.string.planner_departure_now_description, atDescription = R.string.planner_departure_at_description,
+        clearDescription = R.string.planner_leave_now, size = 64.dp,
+    )
 
     if (pickDate) {
         val initial = (time ?: ZonedDateTime.now(TransitZone)).toLocalDate().atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()

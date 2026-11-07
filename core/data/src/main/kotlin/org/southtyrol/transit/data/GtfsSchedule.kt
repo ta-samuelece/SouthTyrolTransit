@@ -199,9 +199,10 @@ class GtfsSchedule(private val store: ScheduleStore) : TransitScheduleDataSource
                 .filterValues { it * 5 >= total }.entries.sortedByDescending { it.value }.take(2).map { it.key }
             if (towards.isEmpty()) null else platform to towards
         }
+        val lines = platformLines(platforms).groupBy({ it.platformId }, { it.lineKey })
         // Platforms heading to the same places form one direction.
         val directions = byPlatform.groupBy({ it.second.toSet() }, { it.first })
-            .map { (_, ids) -> StopDirection(ids.toSet(), byPlatform.first { it.first == ids.first() }.second) }
+            .map { (_, ids) -> StopDirection(ids.toSet(), byPlatform.first { it.first == ids.first() }.second, ids.flatMap { lines[it].orEmpty() }.toSet()) }
         if (directions.size in 2..6) directions else emptyList()
     }
 

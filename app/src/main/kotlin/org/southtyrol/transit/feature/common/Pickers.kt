@@ -3,6 +3,17 @@
 package org.southtyrol.transit.feature.common
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.ExpandMore
+import androidx.compose.material.icons.rounded.Schedule
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -427,6 +438,132 @@ fun TransitDatePickerDialog(
                     }
                 },
             )
+        }
+    }
+}
+
+/**
+ * The departure time control of Plan and the stop board. At now it is the clock icon alone, a tonal square of
+ * [size]; once a time is chosen it widens to that time and turns primary, so a set time is never missed, and
+ * a × at its end ([onClear], read as [clearDescription]) goes back to now. Today's time reads alone; another
+ * day gets its short weekday, so the button stays narrow. A tap anywhere else calls [onPick].
+ * [nowDescription] and [atDescription] (one argument, the full date and time) are what TalkBack reads.
+ */
+@Composable
+fun TimeButton(
+    time: java.time.ZonedDateTime?,
+    onPick: () -> Unit,
+    onClear: () -> Unit,
+    @androidx.annotation.StringRes nowDescription: Int,
+    @androidx.annotation.StringRes atDescription: Int,
+    @androidx.annotation.StringRes clearDescription: Int,
+    size: androidx.compose.ui.unit.Dp,
+    modifier: Modifier = Modifier,
+) {
+    val shape = RoundedCornerShape(size * 0.375f)
+    val large = size >= 56.dp
+    if (time == null) {
+        val description = stringResource(nowDescription)
+        androidx.compose.material3.FilledTonalButton(
+            onClick = onPick, shape = shape, contentPadding = PaddingValues(0.dp),
+            modifier = modifier.size(size).semantics { contentDescription = description },
+        ) { Icon(Icons.Rounded.Schedule, contentDescription = null) }
+        return
+    }
+    val locale = androidx.compose.ui.platform.LocalConfiguration.current.locales[0]
+    val instant = time.toInstant()
+    val full = "${Format.weekdayDate(time.toLocalDate())}, ${Format.time(instant)}"
+    val short = if (time.toLocalDate() == java.time.LocalDate.now(org.southtyrol.transit.model.TransitZone)) Format.time(instant)
+        else "${time.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, locale)} ${Format.time(instant)}"
+    val description = stringResource(atDescription, full)
+    Button(
+        onClick = onPick, shape = shape, contentPadding = PaddingValues(start = if (large) 16.dp else 12.dp, end = 4.dp),
+        modifier = modifier.heightIn(min = size).semantics { contentDescription = description },
+    ) {
+        Icon(Icons.Rounded.Schedule, contentDescription = null, modifier = Modifier.size(if (large) 24.dp else 18.dp))
+        androidx.compose.foundation.layout.Spacer(Modifier.size(8.dp))
+        Text(short, style = if (large) MaterialTheme.typography.titleMedium else MaterialTheme.typography.labelLarge, maxLines = 1)
+        androidx.compose.foundation.layout.Spacer(Modifier.size(4.dp))
+        // A target of its own inside the button, larger than the icon, so going back to now is easy to hit.
+        Box(
+            Modifier.size(if (large) 40.dp else 32.dp).clip(CircleShape)
+                .clickable(role = androidx.compose.ui.semantics.Role.Button, onClick = onClear),
+            contentAlignment = Alignment.Center,
+        ) { Icon(Icons.Rounded.Close, contentDescription = stringResource(clearDescription), modifier = Modifier.size(18.dp)) }
+    }
+}
+
+/**
+ * One choice among options whose labels run long (a stop's directions, the order of connections): a row
+ * button with [icon], the chosen option's [label] and a chevron, opening a bottom sheet titled [title] that
+ * lists every option in full as a grouped list, the chosen one in the emphasis colour with a check. A
+ * segmented group would cut such labels down to the same first word. In the sheet an option reads as
+ * [sheetLabel] (the button's label by default), with [supporting] under it where it gives content.
+ */
+@Composable
+fun <T> ChoiceButton(
+    title: String,
+    options: List<T>,
+    selected: T,
+    onSelect: (T) -> Unit,
+    label: @Composable (T) -> String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    modifier: Modifier = Modifier,
+    sheetLabel: @Composable (T) -> String = label,
+    supporting: (T) -> (@Composable () -> Unit)? = { null },
+) {
+    var open by rememberSaveable { mutableStateOf(false) }
+    val value = label(selected)
+    val description = stringResource(R.string.choice_description, title, value)
+    Surface(
+        onClick = { open = true }, shape = CircleShape, color = MaterialTheme.colorScheme.surfaceContainer,
+        modifier = modifier.heightIn(min = androidx.compose.material3.ButtonDefaults.MinHeight).semantics { contentDescription = description },
+    ) {
+        Row(Modifier.padding(start = 14.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+            androidx.compose.foundation.layout.Spacer(Modifier.size(8.dp))
+            Text(value, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+            Icon(Icons.Rounded.ExpandMore, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+    if (open) ChoiceSheet(title, options, selected, onSelect = { onSelect(it); open = false }, onDismiss = { open = false }, label = sheetLabel, supporting = supporting)
+}
+
+/**
+ * The bottom sheet behind a [ChoiceButton], also used on its own (the choices in Settings): [title] over
+ * every option as a grouped list, the [selected] one in the emphasis colour with a check. A tap calls
+ * [onSelect], which is expected to close the sheet; swiping it away, Back or a tap outside calls [onDismiss].
+ */
+@Composable
+fun <T> ChoiceSheet(
+    title: String,
+    options: List<T>,
+    selected: T,
+    onSelect: (T) -> Unit,
+    onDismiss: () -> Unit,
+    label: @Composable (T) -> String,
+    supporting: (T) -> (@Composable () -> Unit)? = { null },
+) {
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+        Column(Modifier.verticalScroll(androidx.compose.foundation.rememberScrollState()).padding(start = 16.dp, end = 16.dp, bottom = 24.dp)) {
+            Text(
+                title, style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(start = 4.dp, bottom = 16.dp).semantics { heading() },
+            )
+            options.forEachIndexed { index, option ->
+                val chosen = option == selected
+                SegmentedListItem(
+                    onClick = { onSelect(option) },
+                    shapes = ListItemDefaults.segmentedShapes(index, options.size),
+                    colors = if (chosen) ListItemDefaults.segmentedColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    ) else groupedItemColors(),
+                    modifier = Modifier.groupGap(index, options.size).semantics { this.selected = chosen },
+                    leadingContent = { if (chosen) Icon(Icons.Rounded.Check, contentDescription = null) else androidx.compose.foundation.layout.Spacer(Modifier.size(24.dp)) },
+                    supportingContent = supporting(option),
+                ) { Text(label(option)) }
+            }
         }
     }
 }

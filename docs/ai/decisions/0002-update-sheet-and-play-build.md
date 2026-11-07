@@ -38,7 +38,7 @@ The two distributions behave differently: on GitHub the app updates itself, and 
 The code and build side was built on 2026-11-07 ([store flavors](../notes/store-flavors-github-and-play.md)):
 the two flavors, the "New in X" sheet, the bundle without language splits, the renamed Gradle tasks and the
 generated Play "What's new". Still open, all on the owner's side: the Play account and closed test, Play
-App Signing with the existing key and an upload key, the listing, `docs/PRIVACY.md`, and proving on a phone
+App Signing with the existing key and an upload key, the listing, and proving on a phone
 that one build installs over the other.
 
 - **Real build variants, `github` and `play`.** `update.repo=none` leaves the install permission and the
@@ -61,7 +61,7 @@ that one build installs over the other.
 - **Play's own "What's new" text is generated from the cards**, cut at a whole card at its limit.
 - **Listing**: named South Tyrol Transit, "unofficial" in the short description and the first line, no STA
   or SASA logos, three languages. All foreground service features stay, with their declarations. A
-  `docs/PRIVACY.md` in three languages is the public privacy page.
+  `docs/PRIVACY.md` in three languages is the public privacy page (written 2026-11-08).
 
 # What it costs
 

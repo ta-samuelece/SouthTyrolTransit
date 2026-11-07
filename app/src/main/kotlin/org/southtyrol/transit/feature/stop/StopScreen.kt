@@ -49,6 +49,7 @@ import androidx.compose.material.icons.rounded.ArrowUpward
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.rounded.AltRoute
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -178,26 +179,35 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
                             )
                         }
                     }
-                    // When the board starts, with departures/arrivals beside it filling the rest of the row where
-                    // arrivals differ from the departures (hidden at most intermediate stops) and the wheelchair
-                    // mark at the end.
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        StopTimeChip(viewModel)
-                        if (state.showArrivalsToggle || state.arrivals) ConnectedToggleGroup(
+                    // Departures/arrivals only where arrivals differ (hidden at most intermediate stops); a direction
+                    // only at two-way stops, picked from a sheet that names each side in full. With both, the toggle
+                    // takes its own row and the time sits beside the direction; otherwise the time leads one row.
+                    // The wheelchair mark ends the first row.
+                    val toggle = state.showArrivalsToggle || state.arrivals
+                    val directions = state.directions.takeIf { it.size >= 2 && board?.source != BoardSource.NETWORK }
+                    val accessible = state.stop?.wheelchair == Accessibility.ACCESSIBLE
+                    val arrivalsToggle = @Composable { modifier: Modifier ->
+                        ConnectedToggleGroup(
                             options = listOf(false, true), selected = state.arrivals, onSelect = viewModel::setArrivals,
                             label = { stringResource(if (it) R.string.stop_arrivals else R.string.stop_departures) },
-                            modifier = Modifier.weight(1f),
-                        ) else androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
-                        if (state.stop?.wheelchair == Accessibility.ACCESSIBLE) WheelchairIcon()
+                            modifier = modifier,
+                        )
                     }
-                    // Two-way stops pick a side of the road, named after where the buses go next: a group across
-                    // the full width.
-                    val directions = state.directions.takeIf { it.size >= 2 && board?.source != BoardSource.NETWORK }
-                    if (directions != null) ConnectedToggleGroup(
-                        options = listOf(null) + directions, selected = state.direction, onSelect = viewModel::setDirection,
-                        label = { it?.towards?.joinToString(" · ") ?: stringResource(R.string.stop_all_directions) },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        if (toggle && directions != null) arrivalsToggle(Modifier.weight(1f)) else {
+                            StopTimeButton(viewModel)
+                            when {
+                                toggle -> arrivalsToggle(Modifier.weight(1f))
+                                directions != null -> DirectionButton(directions, state.direction, viewModel::setDirection, Modifier.weight(1f))
+                                else -> androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
+                            }
+                        }
+                        if (accessible) WheelchairIcon()
+                    }
+                    if (toggle && directions != null) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        StopTimeButton(viewModel)
+                        DirectionButton(directions, state.direction, viewModel::setDirection, Modifier.weight(1f))
+                    }
                     if (board?.source == BoardSource.NETWORK) StatusBanner(stringResource(R.string.stop_network_board), kind = BannerKind.INFO)
                     else if (board?.realtime == Freshness.STALE || board?.realtime == Freshness.UNAVAILABLE) StatusBanner(stringResource(R.string.stop_realtime_unavailable), kind = BannerKind.WARNING)
                 }
@@ -295,11 +305,12 @@ private fun LineFilterBadge(line: org.southtyrol.transit.model.Line, selected: B
 }
 
 /**
- * When the board starts: "Now" (live) or a chosen date and time, with its picker. Sits in the stop's
- * header; a chosen time also offers the way back to now.
+ * When the board starts: the shared [org.southtyrol.transit.feature.common.TimeButton], as tall as the
+ * departures/arrivals toggle. Now is the clock alone; a chosen start shows its time, and its × returns to the
+ * live board.
  */
 @Composable
-private fun StopTimeChip(viewModel: StopViewModel, modifier: Modifier = Modifier) {
+private fun StopTimeButton(viewModel: StopViewModel) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var pickTime by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     if (pickTime) org.southtyrol.transit.feature.common.DateTimePickerDialogs(
@@ -307,24 +318,30 @@ private fun StopTimeChip(viewModel: StopViewModel, modifier: Modifier = Modifier
         onPicked = { pickTime = false; viewModel.setTime(it) },
         onDismiss = { pickTime = false },
     )
-    androidx.compose.material3.FilterChip(
-        selected = !state.live,
-        onClick = { pickTime = true },
-        leadingIcon = { Icon(androidx.compose.material.icons.Icons.Rounded.Schedule, contentDescription = null, modifier = Modifier.size(18.dp)) },
-        label = { Text(state.start?.let { Format.dateTime(it) } ?: stringResource(R.string.stop_time_now), maxLines = 1) },
-        // A chosen time: the chip's close icon returns to the live board.
-        trailingIcon = if (!state.live) ({
-            // A target of its own inside the chip, so it gets more than the icon's 18 dp to aim at.
-            Box(
-                Modifier.size(32.dp).clip(CircleShape).clickable(role = androidx.compose.ui.semantics.Role.Button, onClick = viewModel::now),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    androidx.compose.material.icons.Icons.Rounded.Close, contentDescription = stringResource(R.string.stop_back_to_now),
-                    modifier = Modifier.size(18.dp),
-                )
-            }
-        }) else null,
-        modifier = modifier,
+    org.southtyrol.transit.feature.common.TimeButton(
+        state.start?.atZone(org.southtyrol.transit.model.TransitZone),
+        onPick = { pickTime = true }, onClear = viewModel::now,
+        nowDescription = R.string.stop_time_now_description, atDescription = R.string.stop_time_at_description,
+        clearDescription = R.string.stop_back_to_now, size = androidx.compose.material3.ButtonDefaults.MinHeight,
+    )
+}
+
+/**
+ * The direction as a [org.southtyrol.transit.feature.common.ChoiceButton]: all directions, or where the buses
+ * go next. In its sheet a direction reads as its main next stop with the second one under it.
+ */
+@Composable
+private fun DirectionButton(
+    directions: List<org.southtyrol.transit.model.StopDirection>,
+    selected: org.southtyrol.transit.model.StopDirection?,
+    onSelect: (org.southtyrol.transit.model.StopDirection?) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val all = stringResource(R.string.stop_all_directions)
+    org.southtyrol.transit.feature.common.ChoiceButton(
+        title = stringResource(R.string.stop_direction), options = listOf(null) + directions, selected = selected, onSelect = onSelect,
+        label = { it?.towards?.joinToString(" · ") ?: all }, icon = Icons.Rounded.AltRoute, modifier = modifier,
+        sheetLabel = { it?.towards?.firstOrNull() ?: all },
+        supporting = { d -> d?.towards?.getOrNull(1)?.let { stringResource(R.string.stop_direction_also, it) } },
     )
 }

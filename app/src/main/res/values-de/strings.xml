@@ -488,7 +488,8 @@
     <string name="update_failed_package">Die heruntergeladene Datei ist kein Update für diese App.</string>
     <string name="update_failed_not_newer">Der heruntergeladene Build ist nicht neuer als der installierte.</string>
     <string name="update_failed_signature">Dieses Update ist mit einem anderen Schlüssel signiert als die installierte App, daher würde Android es ablehnen. Installiere es manuell über die Release-Seite (dazu muss die aktuelle Version zuerst deinstalliert werden).</string>
-    <string name="stop_time_now">Jetzt</string>
+    <string name="stop_time_now_description">Zeiten ab jetzt. Datum und Uhrzeit wählen</string>
+    <string name="stop_time_at_description">Zeiten ab %1$s. Datum und Uhrzeit ändern</string>
     <string name="stop_next_departure">Nächste Abfahrt</string>
     <string name="stop_back_to_now">Zurück zu jetzt</string>
     <string name="stop_earlier_departures">Frühere Abfahrten</string>
@@ -527,6 +528,10 @@
     <string name="update_channel_stable_hint">Nur fertige Versionen.</string>
     <string name="update_channel_preview_hint">Bietet auch Vorschau-Versionen mit neuen Funktionen vor der Veröffentlichung an. Sie können Fehler enthalten. Zurück mit „Stabil“: Die Vorschau bleibt installiert, bis eine neuere stabile Version erscheint.</string>
     <string name="stop_all_directions">Alle Richtungen</string>
+    <string name="stop_direction">Richtung</string>
+    <string name="choice_description">%1$s: %2$s. Ändern</string>
+    <string name="results_order">Reihenfolge</string>
+    <string name="stop_direction_also">und %1$s</string>
     <string name="stop_no_departures_filtered">Keine Abfahrten für die gewählten Linien oder die Richtung.</string>
     <string name="stop_clear_filters">Alle anzeigen</string>
     <string name="stop_open_line">Linie öffnen</string>

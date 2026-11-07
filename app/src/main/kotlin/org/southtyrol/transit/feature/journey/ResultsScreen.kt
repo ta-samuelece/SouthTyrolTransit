@@ -27,6 +27,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.Sort
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.automirrored.rounded.DirectionsWalk
 import androidx.compose.material.icons.rounded.ArrowDownward
@@ -137,12 +138,11 @@ private fun ResultsList(state: ResultsState, viewModel: ResultsViewModel, modifi
     val now = rememberNow()
     LazyColumn(modifier, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
-            // One order at a time: a connected button group, scrolling sideways where the labels do not fit.
-            org.southtyrol.transit.design.ConnectedToggleGroup(
-                options = ResultSort.entries, selected = state.sort, onSelect = viewModel::sort,
-                label = { stringResource(sortLabel(it)) },
-                equalWidth = false,
-                modifier = Modifier.horizontalScroll(rememberScrollState()),
+            // One order at a time, chosen from a sheet: the four labels never fit side by side.
+            org.southtyrol.transit.feature.common.ChoiceButton(
+                title = stringResource(R.string.results_order), options = ResultSort.entries, selected = state.sort, onSelect = viewModel::sort,
+                label = { stringResource(sortLabel(it)) }, icon = Icons.AutoMirrored.Rounded.Sort,
+                modifier = Modifier.fillMaxWidth(),
             )
         }
         when {

@@ -36,8 +36,8 @@ CI runs the unit tests and lint only once a pull request is open
 an **App** change that touches Kotlin or resources, run, for the modules touched:
 
 ```bash
-./gradlew :core:model:test :core:data:testDebugUnitTest :app:testDebugUnitTest
-./gradlew lintDebug
+./gradlew :core:model:test :core:data:testDebugUnitTest :app:testGithubDebugUnitTest :app:testPlayDebugUnitTest
+./gradlew :app:lintGithubDebug :app:lintPlayDebug
 ```
 
 Report which ones you ran and their result in the approval question. If something fails, fix it or say

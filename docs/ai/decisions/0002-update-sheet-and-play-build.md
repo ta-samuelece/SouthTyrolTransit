@@ -33,7 +33,13 @@ The two distributions behave differently: on GitHub the app updates itself, and 
 - **Stable users first see it going from the first version with it to the next one**, because the installed
   version draws the prompt. No one-time sheet was added for that; previews test it earlier.
 
-# Decided: the Play build (stage 2, not started)
+# Decided: the Play build (stage 2, built in code; the store steps are the owner's)
+
+The code and build side was built on 2026-11-07 ([store flavors](../notes/store-flavors-github-and-play.md)):
+the two flavors, the "New in X" sheet, the bundle without language splits, the renamed Gradle tasks and the
+generated Play "What's new". Still open, all on the owner's side: the Play account and closed test, Play
+App Signing with the existing key and an upload key, the listing, `docs/PRIVACY.md`, and proving on a phone
+that one build installs over the other.
 
 - **Real build variants, `github` and `play`.** `update.repo=none` leaves the install permission and the
   updater code in the build, which Play restricts. The updater, `REQUEST_INSTALL_PACKAGES` and its file

@@ -119,8 +119,10 @@ silently**: read the new `SPEC.md`, work out what genuinely affects this bundle,
 and any reorganisation to the user before touching anything.
 
 **9. Run the checks before calling it done.** CI runs the same checks on every pull request, but only
-after a push ([CI](docs/ai/notes/ci-and-local-checks.md)). For any change under `app/` or `core/`, run the unit tests of the modules you touched and `./gradlew lintDebug`
-(`abortOnError = true`) before reporting the work as finished, and say which ones you ran. A UI string
+after a push ([CI](docs/ai/notes/ci-and-local-checks.md)). For any change under `app/` or `core/`, run the unit tests of the modules you touched and
+`./gradlew :app:lintGithubDebug :app:lintPlayDebug` (`abortOnError = true`) before reporting the work as
+finished, and say which ones you ran. The app has two store flavors, so its tasks name one: `github` or
+`play`. A UI string
 added to `values/strings.xml` must be added to `values-de/` and `values-it/` in the same change -
 `TranslationsTest` fails on a missing *or* a stale key. Details and the opt-in network tests:
 [test suite](docs/ai/notes/test-suite-and-opt-in-live-tests.md).
@@ -212,7 +214,9 @@ EFA uses different stop ids from GTFS. Changing `GtfsFiles.stationKey`, `GtfsFil
 ## Layout
 
 - `app/` - Application, Hilt DI, navigation, feature screens as packages under `feature/`, widget,
-  workers, the in-app updater (`update/`). Version and signing in `app/build.gradle.kts`.
+  workers. Version, signing and the two store flavors in `app/build.gradle.kts`: `src/github/` holds the
+  in-app updater and its install permission, `src/play/` the Play build's "New in X" sheet; shared code
+  reaches them through `update/UpdateSettingsRows.kt`.
 - `core/model/` - pure Kotlin/JVM: domain models, data-source interfaces (`Interfaces.kt`), realtime merge
   and freshness rules (`Realtime.kt`), time and text utilities. No Android dependency.
 - `core/data/` - network, GTFS importer and Room schedule store, EFA client and parsers, GTFS-RT,
@@ -233,9 +237,9 @@ Requires JDK 21+ (Android Studio's bundled JBR works) and the Android SDK with p
 `local.properties` points at the SDK. Then:
 
 ```bash
-./gradlew assembleDebug
-./gradlew :core:model:test :core:data:testDebugUnitTest :app:testDebugUnitTest
-./gradlew lintDebug
+./gradlew assembleGithubDebug
+./gradlew :core:model:test :core:data:testDebugUnitTest :app:testGithubDebugUnitTest :app:testPlayDebugUnitTest
+./gradlew :app:lintGithubDebug :app:lintPlayDebug
 ```
 
 On Windows use `gradlew.bat` (or `./gradlew` from Git Bash). Dependencies are declared in the version

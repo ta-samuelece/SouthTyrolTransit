@@ -38,7 +38,7 @@ if they have not said. The rules:
    for a preview they are optional. Format, categories and icons: `docs/release-notes/README.md`. Show
    the user the cards and translations in the pull request: they check this text at each release.
 3. Run `python tools/release.py --check-notes --notes docs/release-notes/<versionName>.md` (add
-   `--preview` for a preview), the unit tests and `./gradlew lintDebug` (CLAUDE.md rule 9). Do not
+   `--preview` for a preview), the unit tests and lint of both flavors (CLAUDE.md rule 9). Do not
    release red.
 4. Commit through the `commit-changes` skill (bump and notes together). A version-only commit is titled
    `Release v0.2.0 (versionCode 7)`; when the bump rides on a feature commit, the version ends the title.
@@ -47,7 +47,9 @@ if they have not said. The rules:
 
 ## 3. Publish - from GitHub (the usual way)
 
-`.github/workflows/release.yml` builds the signed APK and runs `tools/release.py` on GitHub
+`.github/workflows/release.yml` builds the signed GitHub APK and the Play bundle, runs `tools/release.py`
+on GitHub, and keeps the bundle with Play's "What's new" text as the run's `play-upload` artifact. Uploading
+it to the Play Console is the user's step, by hand
 ([branch protection](../../../docs/ai/notes/github-main-and-tag-protection.md) has the setup). Open a
 **dedicated** `AskUserQuestion` - never bundled with a commit or merge question - showing the channel,
 tag, `versionCode`, the `main` commit and the notes. Only after an approving answer, start it:
@@ -66,7 +68,7 @@ alone (CLAUDE.md rule 10). Follow the run with `gh run watch`.
 Only when the user asks for it. Switch to `main` and pull, then:
 
 ```bash
-./gradlew assembleRelease
+./gradlew assembleGithubRelease bundlePlayRelease
 python tools/release.py --preview --notes docs/release-notes/<version>.md --dry-run
 python tools/release.py --notes docs/release-notes/<version>.md --dry-run      # stable
 ```

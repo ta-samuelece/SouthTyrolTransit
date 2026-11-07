@@ -223,9 +223,12 @@ class WhatsNewViewModel @Inject constructor(private val bundled: BundledWhatsNew
     suspend fun load(): WhatsNew = bundled.load()
 }
 
-/** Settings' "What's new in this version": the running build's own notes, offline. */
+/**
+ * The running build's own notes, offline: Settings' "What's new in this version", and on the Play build the
+ * "New in X" sheet after an update, which passes its own [heroTitle].
+ */
 @Composable
-fun WhatsNewReadSheet(onDismiss: () -> Unit, viewModel: WhatsNewViewModel = hiltViewModel()) {
+fun WhatsNewReadSheet(onDismiss: () -> Unit, heroTitle: String? = null, viewModel: WhatsNewViewModel = hiltViewModel()) {
     val language = LocalLocale.current.platformLocale.language
     var content by remember { mutableStateOf<LocalizedWhatsNew?>(null) }
     LaunchedEffect(language) { content = viewModel.load().inLanguage(language) }
@@ -243,7 +246,7 @@ fun WhatsNewReadSheet(onDismiss: () -> Unit, viewModel: WhatsNewViewModel = hilt
         if (showAll) {
             WhatsNewAllChanges(stringResource(R.string.update_whats_new_in, version), null, loaded.notes, onBack = { showAll = false }, footer = footer)
         } else {
-            WhatsNewHero(Icons.Rounded.AutoAwesome, stringResource(R.string.update_whats_new), version)
+            WhatsNewHero(Icons.Rounded.AutoAwesome, heroTitle ?: stringResource(R.string.update_whats_new), version)
             WhatsNewBody(loaded.highlights, loaded.notes, stringResource(R.string.update_whats_new_in, version), onAllChanges = { showAll = true })
             WhatsNewFooter(footer)
         }

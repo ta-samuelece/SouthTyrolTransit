@@ -74,6 +74,8 @@ data class UserSettings(
     val onboardingDone: Boolean = false,
     /** The map has once told the user that a long press on the locate button lists the saved stops. */
     val savedStopsHintShown: Boolean = false,
+    /** The Play build's last version whose "New in X" was decided on, so it shows once per update. */
+    val notesSeenVersion: String = "",
 )
 
 /** The app language currently in effect (per-app locale or system), as a BCP-47 tag. */
@@ -109,6 +111,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val icon = stringPreferencesKey("appIcon")
         val onboarding = booleanPreferencesKey("onboardingDone")
         val savedStopsHint = booleanPreferencesKey("savedStopsHintShown")
+        val notesSeen = stringPreferencesKey("notesSeenVersion")
     }
 
     val settings: Flow<UserSettings> = store.data
@@ -137,6 +140,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
                 appIcon = p[Keys.icon] ?: "",
                 onboardingDone = p[Keys.onboarding] ?: false,
                 savedStopsHintShown = p[Keys.savedStopsHint] ?: false,
+                notesSeenVersion = p[Keys.notesSeen] ?: "",
             )
         }
 
@@ -164,4 +168,5 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
     suspend fun setAppIcon(value: String) { store.edit { it[Keys.icon] = value } }
     suspend fun setOnboardingDone(value: Boolean) { store.edit { it[Keys.onboarding] = value } }
     suspend fun setSavedStopsHintShown(value: Boolean) { store.edit { it[Keys.savedStopsHint] = value } }
+    suspend fun setNotesSeenVersion(value: String) { store.edit { it[Keys.notesSeen] = value } }
 }

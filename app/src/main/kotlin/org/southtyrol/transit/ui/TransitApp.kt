@@ -234,14 +234,11 @@ fun TransitApp(
         if (reduced || isTabSwitch()) fadeOut(tween(BACK_MS, easing = BackFade)) else backExit(edge)
     }
 
-    // Offers a newer GitHub release (if any) on start; also shows download progress for manual updates.
-    val updates: org.southtyrol.transit.update.UpdateViewModel = hiltViewModel()
-    org.southtyrol.transit.update.UpdatePrompt(updates)
-    // Offers to download the offline timetable when it is missing or outdated, after any update offer.
-    if (checkTimetable) {
-        val updatePrompt by updates.prompt.collectAsStateWithLifecycle()
-        TimetablePrompt(blocked = updatePrompt)
-    }
+    // The store's start-up sheet: on GitHub a newer release (and the download of a manual update), on Play
+    // "New in X" after an update.
+    val updatePrompt = org.southtyrol.transit.update.showUpdateStartPrompt()
+    // Offers to download the offline timetable when it is missing or outdated, after that sheet.
+    if (checkTimetable) TimetablePrompt(blocked = updatePrompt)
 
     // The followed journey or ride, minimised: a strip under the bar on every screen but its own (the
     // Following screen, the ride's trip) and the map search.

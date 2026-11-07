@@ -1,4 +1,4 @@
-"""Publishes the built APK as a GitHub release: stable, or a preview (GitHub pre-release).
+"""Publishes the built GitHub APK as a GitHub release: stable, or a preview (GitHub pre-release).
 
     python tools/release.py --notes notes.md            # stable release   (tag vX.Y.Z)
     python tools/release.py --preview --notes notes.md  # preview release  (tag vX.Y.Z-preview.N)
@@ -8,7 +8,7 @@ The Release workflow (.github/workflows/release.yml) runs this same script on Gi
 from docs/release-notes/<versionName>.md.
 
 Before running: bump versionCode/versionName in app/build.gradle.kts, merge it into main through a
-pull request, then build the signed APK from main with `gradlew assembleRelease`. The script checks that
+pull request, then build the signed APK from main with `gradlew assembleGithubRelease`. The script checks that
 
   * versionName matches the channel (stable: "1.2.0"; preview: "1.2.0-preview.1"),
   * the APK is signed and has exactly this versionName and versionCode,
@@ -24,6 +24,12 @@ notes, for the app's update sheet) and the APK. Previews are published as pre-re
 
 runs only the channel and notes checks, without an APK; the Release workflow starts with it.
 
+    python tools/release.py --check-notes --notes docs/release-notes/<version>.md --play-notes whats-new.txt
+
+also writes Play's "What's new" text for the Play bundle (`gradlew bundlePlayRelease`), in the
+<en-US>...</en-US> form the Play Console accepts pasted: the cards as "Title: body" lines, as many whole
+cards as fit Play's limit, or the notes' bullets for a version without cards. Publishing to Play is by hand.
+
 GitHub access uses the credential git already has for github.com (or the GITHUB_TOKEN variable);
 the token is never printed.
 """
@@ -37,11 +43,13 @@ import urllib.error
 import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DEFAULT_APK = os.path.join(ROOT, 'app', 'build', 'outputs', 'apk', 'release', 'app-release.apk')
+DEFAULT_APK = os.path.join(ROOT, 'app', 'build', 'outputs', 'apk', 'github', 'release', 'app-github-release.apk')
 PREVIEW = re.compile(r'^\d+\.\d+\.\d+-preview\.\d+$')
 STABLE = re.compile(r'^\d+\.\d+\.\d+$')
 LANGUAGES = ('en', 'de', 'it')
 WHATS_NEW_ASSET = 'whats-new.json'  # the app looks for this exact name
+PLAY_LIMIT = 500  # characters of Play's "What's new" text, per language
+PLAY_LANGUAGES = {'en': 'en-US', 'de': 'de-DE', 'it': 'it-IT'}
 
 
 def fail(msg):
@@ -198,11 +206,44 @@ def check_highlights(file, languages):
     return highlights
 
 
+def play_text(cards, notes, limit=PLAY_LIMIT):
+    """One language's "What's new" for Play: whole cards as "Title: body" lines while they fit [limit].
+
+    Without cards (a preview, or a hotfix), the bullets of the notes, again only whole ones."""
+    lines = [f'{c["title"]}: {c["body"]}'.strip() for c in cards] if cards else [
+        re.sub(r'\*\*|__|\[([^\]]*)\]\([^)]*\)', lambda m: m.group(1) or '', line.strip()[2:].strip())
+        for line in notes.splitlines() if line.strip().startswith(('- ', '* '))]
+    text = ''
+    for line in lines:
+        candidate = f'{text}\n{line}' if text else line
+        if len(candidate) > limit:
+            break
+        text = candidate
+    return text
+
+
+def play_whats_new(extra, name):
+    """Play's "What's new" in every language there is text for, in the Play Console's pasted form."""
+    notes = extra['notes'] if extra else {'en': ''}
+    blocks = []
+    for language, tag in PLAY_LANGUAGES.items():
+        if language not in notes:
+            continue
+        cards = [{field: card[field].get(language) or card[field].get('en', '') for field in ('title', 'body')}
+                 for card in (extra['highlights'] if extra else [])]
+        text = play_text(cards, notes[language])
+        if not text:
+            fail(f'no Play "What\'s new" text for {name} in {language}: the first card or bullet is over {PLAY_LIMIT} characters')
+        blocks.append(f'<{tag}>\n{text}\n</{tag}>')
+    return '\n'.join(blocks) + '\n'
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('--preview', action='store_true', help='publish as a preview (GitHub pre-release)')
     ap.add_argument('--notes', help='Markdown file with the release notes')
-    ap.add_argument('--apk', default=DEFAULT_APK, help='APK to upload (default: the assembleRelease output)')
+    ap.add_argument('--apk', default=DEFAULT_APK, help='APK to upload (default: the assembleGithubRelease output)')
+    ap.add_argument('--play-notes', metavar='FILE', help='also write Play\'s "What\'s new" text to FILE')
     ap.add_argument('--dry-run', action='store_true', help='run every check but publish nothing')
     ap.add_argument('--check-notes', action='store_true', help='check only the channel and the notes, then stop')
     args = ap.parse_args()
@@ -220,11 +261,18 @@ def main():
         fail('a stable release needs --notes')
     extra = whats_new(args.notes, name, args.preview) if args.notes else None
     print(f'  {WHATS_NEW_ASSET}: {len(extra["highlights"])} cards, notes in {", ".join(extra["notes"])}' if extra else f'  no {WHATS_NEW_ASSET}: plain notes')
+    if args.play_notes:
+        plain = extra or ({'highlights': [], 'notes': {'en': read_text(args.notes)}} if args.notes else None)
+        if not plain:
+            fail('--play-notes needs --notes')
+        with open(args.play_notes, 'w', encoding='utf-8', newline='\n') as f:
+            f.write(play_whats_new(plain, name))
+        print(f'  Play "What\'s new": {args.play_notes}')
     if args.check_notes:
         return
 
     if not os.path.exists(args.apk):
-        fail(f'{args.apk} not found: run gradlew assembleRelease first')
+        fail(f'{args.apk} not found: run gradlew assembleGithubRelease first')
     check_apk(args.apk, code, name)
 
     if git('status', '--porcelain', '--untracked-files=no'):

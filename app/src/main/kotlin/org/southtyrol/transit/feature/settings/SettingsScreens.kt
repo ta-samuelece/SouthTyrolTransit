@@ -187,7 +187,7 @@ fun SettingsScreen(navigator: Navigator, viewModel: SettingsViewModel = hiltView
     val icon by viewModel.icon.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var language by remember { mutableStateOf(AppLanguage.selected()) }
-    val updates: org.southtyrol.transit.update.UpdateViewModel = hiltViewModel()
+    val updates = org.southtyrol.transit.update.updateSettingsRows { label, hint, checked, onChange -> SwitchRow(label, hint, checked, onChange) }
     var whatsNewOpen by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     if (whatsNewOpen) org.southtyrol.transit.whatsnew.WhatsNewReadSheet(onDismiss = { whatsNewOpen = false })
     val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted -> viewModel.alerts(granted) }
@@ -346,12 +346,9 @@ fun SettingsScreen(navigator: Navigator, viewModel: SettingsViewModel = hiltView
 
         item {
             SettingsGroup(stringResource(R.string.settings_updates)) {
-                item { org.southtyrol.transit.update.UpdateStatus(updates) }
+                item { updates.status() }
                 item { LinkRow(stringResource(R.string.settings_whats_new), Icons.Rounded.AutoAwesome) { whatsNewOpen = true } }
-                if (updates.enabled) {
-                    item { org.southtyrol.transit.update.UpdateAutoCheck(updates) { label, hint, checked, onChange -> SwitchRow(label, hint, checked, onChange) } }
-                    item { org.southtyrol.transit.update.UpdateChannelChoice(updates) }
-                }
+                updates.options.forEach { option -> item { option() } }
             }
         }
 

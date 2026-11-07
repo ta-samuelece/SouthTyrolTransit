@@ -1,6 +1,6 @@
 # Unit tests and Android Lint on every pull request into main and every push to main.
 # "Tests and lint" is a required status check in the "Protect main" ruleset.
-# This workflow never builds a release APK and never publishes anything: releases are cut locally with
+# This workflow never builds a release APK or bundle and never publishes anything: releases are cut locally with
 # tools/release.py, signed with a key that never leaves the owner's machine.
 name: CI
 
@@ -48,11 +48,12 @@ jobs:
       - name: Install Android platform 37.1
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.1" > /dev/null
 
+      # The app has two store flavors, github and play; each has code of its own, so both are tested and linted.
       - name: Unit tests
-        run: bash ./gradlew :core:model:test :core:data:testDebugUnitTest :app:testDebugUnitTest
+        run: bash ./gradlew :core:model:test :core:data:testDebugUnitTest :app:testGithubDebugUnitTest :app:testPlayDebugUnitTest
 
       - name: Lint
-        run: bash ./gradlew lintDebug
+        run: bash ./gradlew :app:lintGithubDebug :app:lintPlayDebug
 
       - name: Upload reports
         if: failure()

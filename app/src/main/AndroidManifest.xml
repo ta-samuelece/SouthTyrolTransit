@@ -18,9 +18,6 @@
     <!-- Lets Android 16 show the followed journey as a Live Update (status bar chip). -->
     <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
 
-    <!-- In-app updates from GitHub Releases: Android still asks the user to confirm every install. -->
-    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
-
     <uses-feature android:name="android.hardware.location" android:required="false" />
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
 
@@ -204,17 +201,6 @@
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>
         </activity>
-
-        <!-- Shares a downloaded update APK with the system installer. -->
-        <provider
-            android:name="androidx.core.content.FileProvider"
-            android:authorities="${applicationId}.updates"
-            android:exported="false"
-            android:grantUriPermissions="true">
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/update_paths" />
-        </provider>
 
         <!-- Persists the per-app language on Android 12 and lower. -->
         <service

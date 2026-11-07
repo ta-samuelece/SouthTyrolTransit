@@ -1,0 +1,32 @@
+{ "highlights": [
+  { "icon": "route",
+    "title": { "en": "A new Plan screen", "de": "Neues Planen", "it": "Nuovo Pianifica" },
+    "body": {
+      "en": "Start from \"Where to?\", open the routing options at the top and set the time with one button.",
+      "de": "Beginne mit „Wohin?“, öffne die Routenoptionen oben und stelle die Zeit mit einer Taste ein.",
+      "it": "Parti da \"Dove vuoi andare?\", apri le opzioni di percorso in alto e scegli l'orario con un solo pulsante." } },
+  { "icon": "alert",
+    "title": { "en": "Alerts for what you saved", "de": "Meldungen für Gespeichertes", "it": "Avvisi per ciò che hai salvato" },
+    "body": {
+      "en": "Your lines and Your stops show how many alerts affect them now and soon. Tap one to see only those.",
+      "de": "Deine Linien und Deine Haltestellen zeigen, wie viele Meldungen sie jetzt und demnächst betreffen. Ein Tippen zeigt nur diese.",
+      "it": "Le tue linee e Le tue fermate mostrano quanti avvisi le riguardano ora e prossimamente. Un tocco mostra solo quelli." } },
+  { "icon": "schedule",
+    "title": { "en": "Simpler stop boards", "de": "Einfachere Abfahrtstafeln", "it": "Tabelloni più semplici" },
+    "body": {
+      "en": "Pick the time and direction from one row each, and see which lines leave from each side.",
+      "de": "Zeit und Richtung wählst du in je einer Zeile, und du siehst, welche Linien auf welcher Seite abfahren.",
+      "it": "Scegli orario e direzione da una riga ciascuno, e vedi quali linee partono da ogni lato." } },
+  { "icon": "search",
+    "title": { "en": "One search everywhere", "de": "Eine Suche überall", "it": "Una ricerca ovunque" },
+    "body": {
+      "en": "Plan, the map and the stop pickers show the same results, and stops are found by every name.",
+      "de": "Planen, Karte und Haltestellenauswahl zeigen dieselben Ergebnisse, und Haltestellen werden unter jedem Namen gefunden.",
+      "it": "Pianifica, la mappa e la scelta delle fermate mostrano gli stessi risultati, e le fermate si trovano con ogni nome." } },
+  { "icon": "sparkle",
+    "title": { "en": "A new update screen", "de": "Neuer Update-Bildschirm", "it": "Nuova schermata di aggiornamento" },
+    "body": {
+      "en": "Updates now come with cards like these, in your language. Find them again in Settings.",
+      "de": "Updates kommen jetzt mit Karten wie diesen, in deiner Sprache. Du findest sie wieder in den Einstellungen.",
+      "it": "Gli aggiornamenti ora arrivano con schede come queste, nella tua lingua. Le ritrovi nelle Impostazioni." } }
+] }

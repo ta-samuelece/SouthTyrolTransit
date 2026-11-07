@@ -117,7 +117,6 @@
     <string name="results_departed">Abgefahren</string>
     <string name="results_none">Keine Verbindungen gefunden</string>
     <string name="results_none_hint">Versuche eine andere Uhrzeit, weniger Einschränkungen oder Haltestellen in der Nähe.</string>
-    <string name="results_source">Verbindungen berechnet von der STA-Fahrplanauskunft (EFA).</string>
     <string name="sort_recommended">Reihenfolge der Auskunft</string>
     <string name="sort_earliest_arrival">Früheste Ankunft</string>
     <plurals name="changes">
@@ -352,7 +351,6 @@
     <string name="alerts_until">Bis %s</string>
     <string name="alerts_from_until">%1$s – %2$s</string>
     <string name="alerts_until_further_notice">Bis auf Weiteres</string>
-    <string name="alerts_source">Quellen: STA GTFS-Realtime-Meldungen und Hinweise der STA-Fahrplanauskunft.</string>
 
     <string name="saved_empty">Noch nichts gespeichert</string>
     <string name="saved_empty_hint">Speichere Haltestellen, Linien, Orte und Verbindungen mit dem Stern- oder Lesezeichen-Symbol.</string>

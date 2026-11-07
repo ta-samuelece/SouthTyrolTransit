@@ -49,6 +49,8 @@ Rules:
   ordered by `position` (new ones at the end); rows from before positions were written all hold 0 and
   are renumbered by the first "Move up/down".
 
+`lineKey` takes the feed's raw `route_type`, not the type the importer stores: aerial ropeways keep
+`FUNICULAR:...` keys although their stored mode is `CABLE_CAR` ([map and design system](./map-and-design-system.md)).
 So saved lines survive feed swaps while STA keeps the short name. They break if `TransportMode.fromGtfs`
 is remapped, an enum constant is renamed, or STA renames a line; saved stops break if STA changes its
 stop_id segment scheme. `AlertCheckWorker` matches notifications on the same strings. Changing

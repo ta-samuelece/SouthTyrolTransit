@@ -117,7 +117,6 @@
     <string name="results_departed">Partito</string>
     <string name="results_none">Nessun collegamento trovato</string>
     <string name="results_none_hint">Prova un altro orario, meno restrizioni o fermate vicine.</string>
-    <string name="results_source">Collegamenti calcolati dal servizio orari STA (EFA).</string>
     <string name="sort_recommended">Ordine del servizio</string>
     <string name="sort_earliest_arrival">Arrivo più presto</string>
     <plurals name="changes">
@@ -363,7 +362,6 @@
     <string name="alerts_until">Fino al %s</string>
     <string name="alerts_from_until">%1$s – %2$s</string>
     <string name="alerts_until_further_notice">Fino a nuovo avviso</string>
-    <string name="alerts_source">Fonti: avvisi GTFS-Realtime di STA e comunicazioni del servizio orari STA.</string>
 
     <string name="saved_empty">Ancora nulla di salvato</string>
     <string name="saved_empty_hint">Salva fermate, linee, luoghi e percorsi con il pulsante stella o segnalibro.</string>

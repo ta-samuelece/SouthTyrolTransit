@@ -122,7 +122,6 @@
     <string name="results_departed">Departed</string>
     <string name="results_none">No connections found</string>
     <string name="results_none_hint">Try a different time, fewer restrictions or nearby stops.</string>
-    <string name="results_source">Connections calculated by the STA journey planner (EFA).</string>
     <string name="sort_recommended">Planner order</string>
     <string name="sort_earliest_arrival">Earliest arrival</string>
     <plurals name="changes">
@@ -363,7 +362,6 @@
     <string name="alerts_until">Until %s</string>
     <string name="alerts_from_until">%1$s – %2$s</string>
     <string name="alerts_until_further_notice">Until further notice</string>
-    <string name="alerts_source">Sources: STA GTFS-Realtime service alerts and STA journey-planner notices.</string>
 
     <!-- Saved -->
     <string name="saved_empty">Nothing saved yet</string>

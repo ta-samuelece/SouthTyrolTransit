@@ -5,7 +5,7 @@ description: Map content is one immutable value pushed layer by layer and marker
 tags: [map, maplibre, design-system, colors, accessibility]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-11-03T12:00:00Z"
+  at: "2026-11-07T12:00:00Z"
 status: stable
 ---
 
@@ -23,9 +23,10 @@ status: stable
   **ids must be unique across all three lists**, or a stop shadows the vehicle or POI it collides with. `MapMarker.color` is the stroke for stops and the fill for vehicles and
   journey endpoints; mobility points use their kind's colour unless `color` overrides it (grey
   status-stale for anything `MobilityPoint.outOfService` says is closed).
-- **Map sheets carry no data-source line**: no "Data: ..." credit at the bottom of a stop, parking,
-  charger, bike box or e-bike sheet (removed at the user's request on 2026-10-25); sources are credited
-  in the map's attribution and on the About screen.
+- **Pages carry no data-source line**: no "Data: ..." credit at the bottom of a stop, parking,
+  charger, bike box or e-bike sheet (removed at the user's request on 2026-10-25), nor a "Sources: ..."
+  line under the alerts list or an "STA journey planner" line under plan results (removed on 2026-11-07);
+  sources are credited in the map's attribution and on the About screen.
 - **Stop markers carry mode and alerts** (design of 2026-10-28, canvas "Stop Markers"): on the map tab
   `MapMarker.mode` is the station's `TransportMode.dominant` mode (train, cable car, funicular, tram,
   city bus, bus, in that order) from `MapRepository.stopModes` - one `stationModes` query over the
@@ -143,7 +144,10 @@ Ropeways have no line number, so `LineBadge` and the map's vehicle tag show `Lin
 name without its generic word and leading article ("Rittner Seilbahn" becomes "Rittner"), or the icon
 alone when nothing short is left; TalkBack keeps the full name. Cable cars and funiculars use the
 Material Symbols `gondola_lift` and `funicular` glyphs in `RopewayIcons.kt`, because the Compose icon
-set has neither.
+set has neither. STA's feed tags every ropeway as route type 7 (funicular), so the importer stores a
+type-7 route as 6 (cable car) unless its name says funicular (`GtfsFiles.storedRouteType`); without that
+every aerial ropeway showed the funicular glyph. Line keys are still built from the feed's own type, so a
+saved ropeway line stays `FUNICULAR:...` while its mode reads `CABLE_CAR`.
 
 # Colour scheme
 

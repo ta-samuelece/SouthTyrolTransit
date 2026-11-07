@@ -185,9 +185,6 @@ private fun ResultsList(state: ResultsState, viewModel: ResultsViewModel, modifi
                 if (state.journeys.isNotEmpty()) item {
                     org.southtyrol.transit.feature.common.PageButton(stringResource(R.string.results_later), Icons.Rounded.ArrowDownward, viewModel::later)
                 }
-                item {
-                    Text(stringResource(R.string.results_source), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
             }
         }
     }

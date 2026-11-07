@@ -1,6 +1,8 @@
 # Updates and releases
 
-The app updates itself from **GitHub Releases** of [ta-samuelece/SouthTyrolTransit](https://github.com/ta-samuelece/SouthTyrolTransit). There are two **update channels**, chosen in Settings → App updates:
+The app is built in two flavors with the same package name and signing key: **`github`**, described first below, and **`play`** for Google Play (see [Google Play](#google-play) at the end). Only the GitHub build updates itself.
+
+The GitHub build updates itself from **GitHub Releases** of [ta-samuelece/SouthTyrolTransit](https://github.com/ta-samuelece/SouthTyrolTransit). There are two **update channels**, chosen in Settings → App updates:
 
 | Channel | Offered | GitHub |
 |---|---|---|
@@ -14,7 +16,7 @@ The app updates itself from **GitHub Releases** of [ta-samuelece/SouthTyrolTrans
 - The APK asset (a name containing `release` or `preview` is preferred; `debug` builds are never preferred) is downloaded with progress. Before installing, the app checks that the APK is **this app**, has a **higher `versionCode`**, and is signed with the **same certificate** as the installed app.
 - It then opens Android's package installer. The first time, Android asks to allow "install unknown apps" for this app, and every install needs the user's confirmation. Nothing installs silently.
 - The downloaded APK is deleted on the next app start once it is installed (any file in the download folder that is not newer than the running version goes).
-- The repository is set by `update.repo` in `local.properties` (or `TRANSIT_UPDATE_REPO`). Set it to `none` to build without updates (e.g. for an app-store build).
+- The repository is set by `update.repo` in `local.properties` (or `TRANSIT_UPDATE_REPO`). Set it to `none` to build the GitHub flavor without updates; a store build is the `play` flavor instead, which has no updater code and no install permission at all.
 
 ## Signing key (once)
 
@@ -30,7 +32,7 @@ release.storePassword=...
 release.keyAlias=southtyroltransit
 release.keyPassword=...
 ```
-(or the environment variables `TRANSIT_RELEASE_STORE_FILE`, `TRANSIT_RELEASE_STORE_PASSWORD`, `TRANSIT_RELEASE_KEY_ALIAS`, `TRANSIT_RELEASE_KEY_PASSWORD`). `assembleRelease` then signs automatically.
+(or the environment variables `TRANSIT_RELEASE_STORE_FILE`, `TRANSIT_RELEASE_STORE_PASSWORD`, `TRANSIT_RELEASE_KEY_ALIAS`, `TRANSIT_RELEASE_KEY_PASSWORD`). `assembleGithubRelease` and `bundlePlayRelease` then sign automatically.
 
 ## Publishing a release (stable or preview)
 
@@ -39,9 +41,9 @@ release.keyPassword=...
    - `versionName`: stable `0.2.0`; preview `0.2.0-preview.1`, then `0.2.0-preview.2`, … and finally `0.2.0` for the finished release.
 2. **Write the notes** in `docs/release-notes/<versionName>.md`, e.g. `0.2.0-preview.1.md` (headings, bullets, **bold** and links are shown formatted in the app). A stable release also needs `.de.md`, `.it.md` and `.highlights.json` next to it; see [docs/release-notes/README.md](release-notes/README.md).
 3. **Merge** both into `main` through a pull request. `main` is protected: direct pushes are rejected, and only a repository admin (or the Release workflow, after the owner's approval) can create the `v*` tags a release needs. The release is tagged on the merged commit.
-4. **Publish from GitHub**: *Actions → Release → Run workflow*, pick `preview` or `stable`, then approve the waiting deployment. The workflow checks that the channel, `versionName` and notes file agree, builds the signed APK with the signing key stored as secrets of the `release` environment, and runs `tools/release.py`, which publishes it.
+4. **Publish from GitHub**: *Actions → Release → Run workflow*, pick `preview` or `stable`, then approve the waiting deployment. The workflow checks that the channel, `versionName` and notes file agree, builds the signed APK and the Play bundle with the signing key stored as secrets of the `release` environment, and runs `tools/release.py`, which publishes the APK. The Play bundle and Play's "What's new" text are kept for 30 days as the run's `play-upload` artifact.
 
-Or publish from your own machine instead of step 4: check out `main` and pull, build the signed APK with `gradlew assembleRelease` (output `app/build/outputs/apk/release/app-release.apk`), and run the script (needs Python 3 and `JAVA_HOME` set, e.g. to Android Studio's `jbr`):
+Or publish from your own machine instead of step 4: check out `main` and pull, build the signed APK with `gradlew assembleGithubRelease` (output `app/build/outputs/apk/github/release/app-github-release.apk`), and run the script (needs Python 3 and `JAVA_HOME` set, e.g. to Android Studio's `jbr`):
 ```bash
 python tools/release.py --preview --notes docs/release-notes/<versionName>.md --dry-run   # checks only
 python tools/release.py --preview --notes docs/release-notes/<versionName>.md             # publishes the preview
@@ -54,3 +56,12 @@ The script checks that the version matches the channel, that the APK is signed a
 The workflow signs with the same key as local builds, stored as secrets of the `release` environment (*Settings → Environments → release*): `TRANSIT_RELEASE_STORE_BASE64` (the keystore file, base64-encoded), `TRANSIT_RELEASE_STORE_PASSWORD`, `TRANSIT_RELEASE_KEY_ALIAS` and `TRANSIT_RELEASE_KEY_PASSWORD`. A fifth secret, `TRANSIT_RELEASE_GITHUB_TOKEN`, is the owner's fine-grained personal access token (only this repository, permission *Contents: Read and write*): the release is created with it because only an admin may create `v*` tags, and the workflow's own token is not an admin. When it expires, set a new one. Only the repository owner sets these secrets, by hand. GitHub secrets cannot be read back, so they are not a backup: keep the keystore safe elsewhere too. The `release` environment only runs from `main` and waits for the owner's approval, so a run started by anyone else publishes nothing until approved.
 
 Apps on the matching channel offer the update on their next start. To promote a preview, publish the finished version (`0.2.0`, higher `versionCode`) as a normal release; both channels then get it.
+
+## Google Play
+
+The `play` flavor is the Google Play build. It has no in-app updater, no "install unknown apps" permission and no update channels: Play installs its updates, and Settings only shows the installed version. After Play updated the app to a version with highlight cards, a **"New in X"** sheet shows that version's cards once, with "Got it" (and "All changes", also with only "Got it"). It does not show on a fresh install (Android's install and update times are equal), nor for a version without cards.
+
+- **Build** the bundle with `gradlew bundlePlayRelease` (`app/build/outputs/bundle/playRelease/app-play-release.aab`); the Release workflow builds it too, from the same commit and version as the GitHub release. Language splitting is off, so every install carries all three languages for the app's own language picker.
+- **Play's "What's new"** text comes from the cards: `python tools/release.py --check-notes --notes docs/release-notes/<versionName>.md --play-notes whats-new.txt` writes it in the `<en-US>…</en-US>` form the Play Console accepts pasted, as many whole cards as fit Play's 500 characters per language (a version without cards uses the notes' bullets).
+- **Upload** by hand in the Play Console for now: previews to closed testing, stable versions to production with a staged rollout. Play App Signing, the upload key and the closed test are the owner's steps; the bundle is signed with whatever key the `release.*` settings name.
+- The same `versionCode` rule applies: one number per build, shared by both stores.

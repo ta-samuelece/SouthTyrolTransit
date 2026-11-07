@@ -31,8 +31,9 @@ out.
 | --- | --- | --- |
 | Pure JVM unit | `core/model/src/test/` | `./gradlew :core:model:test` |
 | Android unit (Robolectric, MockWebServer, fixtures) | `core/data/src/test/` | `./gradlew :core:data:testDebugUnitTest` |
-| Compose UI (Robolectric) and resource checks | `app/src/test/` | `./gradlew :app:testDebugUnitTest` |
-| Instrumented | `app/src/androidTest/` | `./gradlew :app:connectedDebugAndroidTest` - needs a device or emulator |
+| Compose UI (Robolectric) and resource checks | `app/src/test/` | `./gradlew :app:testGithubDebugUnitTest` (and `testPlayDebugUnitTest`, which runs them again) |
+| Store-flavor code | `app/src/testGithub/`, `app/src/testPlay/` | only the matching one of the two tasks above |
+| Instrumented | `app/src/androidTest/` | `./gradlew :app:connectedGithubDebugAndroidTest` - needs a device or emulator |
 
 Fixtures are real captured API payloads in `docs/fixtures/`; the instrumented tests carry their own
 copies in `app/src/androidTest/assets/`.

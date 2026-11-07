@@ -47,10 +47,12 @@ Built only on open data: STA timetables and GTFS-Realtime via Open Data Hub, the
 You need JDK 21 and the Android SDK with platform android-37.1, with `sdk.dir` set in `local.properties`. No API keys are required.
 
 ```bash
-./gradlew assembleDebug
-./gradlew :core:model:test :core:data:testDebugUnitTest :app:testDebugUnitTest
-./gradlew lintDebug
+./gradlew assembleGithubDebug
+./gradlew :core:model:test :core:data:testDebugUnitTest :app:testGithubDebugUnitTest :app:testPlayDebugUnitTest
+./gradlew :app:lintGithubDebug :app:lintPlayDebug
 ```
+
+The app builds in two flavors with the same package name: `github`, which updates itself from GitHub Releases, and `play`, for Google Play, which has no updater. See [Updates and releases](docs/RELEASING.md).
 
 Changes reach `main` through pull requests from a branch named `<type>/<short-description>`, with type `feature/`, `fix/`, `chore/` or `docs/`.
 

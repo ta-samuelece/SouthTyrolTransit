@@ -723,5 +723,8 @@
     <string name="update_release_page">Release page</string>
     <string name="update_back_to_highlights">Back to highlights</string>
     <string name="update_got_it">Got it</string>
+    <!-- Play build only: the sheet after an update, and Settings' version row. -->
+    <string name="update_new_in_hero">App updated</string>
+    <string name="update_from_play">Updates come through Google Play.</string>
     <string name="settings_whats_new">What\'s new in this version</string>
 </resources>

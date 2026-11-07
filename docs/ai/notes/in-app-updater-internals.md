@@ -10,16 +10,18 @@ status: stable
 ---
 
 `docs/RELEASING.md` describes the user-visible flow. Code:
-`app/src/main/kotlin/org/southtyrol/transit/update/AppUpdates.kt`, tests in `AppUpdatesTest`.
+`app/src/github/kotlin/org/southtyrol/transit/update/AppUpdates.kt`, tests in `AppUpdatesTest` under
+`app/src/testGithub/`. All of it, the install permission and the FileProvider exist only in the `github`
+flavor ([store flavors](./store-flavors-github-and-play.md)).
 
 - **Throttle**: checks run at most once an hour (in-memory `lastCheck`) unless forced. The Preview channel
   reads only `releases?per_page=30`. A 404 counts as "up to date".
 - **Certificate check is lenient**: the update is refused only if both certificate sets are readable and
   share nothing. If either side cannot be read, the decision is left to Android's installer.
 - **Coupled paths** - change all three together: `File(context.cacheDir, "updates")`,
-  `<cache-path name="updates" path="updates/" />` in `res/xml/update_paths.xml`, and the FileProvider
-  authority `${applicationId}.updates`. `download` deletes everything in `cacheDir/updates` first, and
-  `UpdateManager`'s `init` deletes every file there that `isStaleUpdateFile` rejects (not named
+  `<cache-path name="updates" path="updates/" />` in `app/src/github/res/xml/update_paths.xml`, and the
+  FileProvider authority `${applicationId}.updates` in `app/src/github/AndroidManifest.xml`. `download`
+  deletes everything in `cacheDir/updates` first, and `UpdateManager`'s `init` deletes every file there that `isStaleUpdateFile` rejects (not named
   `SouthTyrolTransit-<version>.apk` with a version newer than the running one), so an installed update
   does not linger. The name pattern is shared through `APK_PREFIX`; keep the two in step.
 - **Version comparison** (`Versions.compare`) splits on `-` or `+`: build metadata (`1.0.0+x`) ranks

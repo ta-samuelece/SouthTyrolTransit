@@ -51,8 +51,28 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "MAP_STYLE_LIGHT", "\"${setting("map.styleUrl", "TRANSIT_MAP_STYLE_URL")}\"")
         buildConfigField("String", "MAP_STYLE_DARK", "\"${setting("map.styleUrlDark", "TRANSIT_MAP_STYLE_URL_DARK")}\"")
-        // GitHub "owner/repo" whose latest release is offered as an in-app update ("none" disables it).
-        buildConfigField("String", "UPDATE_REPO", "\"${setting("update.repo", "TRANSIT_UPDATE_REPO").ifBlank { "ta-samuelece/SouthTyrolTransit" }}\"")
+    }
+
+    // Where the build is distributed. Both share the package name and signing key, so either installs over
+    // the other. Only "github" has the in-app updater, its install permission and its file provider
+    // (src/github/); Play updates the "play" build itself and shows "New in X" afterwards (src/play/).
+    flavorDimensions += "store"
+    productFlavors {
+        create("github") {
+            dimension = "store"
+            isDefault = true
+            // GitHub "owner/repo" whose latest release is offered as an in-app update ("none" disables it).
+            buildConfigField("String", "UPDATE_REPO", "\"${setting("update.repo", "TRANSIT_UPDATE_REPO").ifBlank { "ta-samuelece/SouthTyrolTransit" }}\"")
+        }
+        create("play") {
+            dimension = "store"
+        }
+    }
+
+    // The Play bundle keeps every language in every install: the app has its own language picker, and a
+    // language Play did not deliver would be missing when the user picks it.
+    bundle {
+        language { enableSplit = false }
     }
 
     buildFeatures {
@@ -174,6 +194,6 @@ aboutLibraries {
         // copyright line belongs, and BSD requires that notice to be reproduced.
         configPath = file("licenses-config")
         // Only what ships: debug-only tooling (Compose UI tooling, test manifests) stays out of the list.
-        filterVariants.addAll("release")
+        filterVariants.addAll("githubRelease", "playRelease")
     }
 }

@@ -1,4 +1,6 @@
-# Publishes a preview or stable release from main: builds the signed APK and runs tools/release.py.
+# Publishes a preview or stable release from main: builds the signed GitHub APK and runs tools/release.py.
+# It also builds the Play bundle and Play's "What's new" text and keeps them as a workflow artifact
+# ("play-upload"), for the owner to upload to the Play Console by hand.
 # Started by hand (Actions -> Release -> Run workflow). The job runs in the "release" environment, which
 # waits for the owner's approval and alone holds the signing secrets. A GitHub release is the deploy:
 # the in-app updater offers it to every phone on the matching channel.
@@ -78,12 +80,18 @@ jobs:
           [ "$HAS_TOKEN" = true ] || { echo "::error::the release environment has no TRANSIT_RELEASE_GITHUB_TOKEN"; exit 1; }
           echo "$STORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
 
-      - name: Build signed APK
+      - name: Build signed APK and Play bundle
         env:
           TRANSIT_RELEASE_STORE_PASSWORD: ${{ secrets.TRANSIT_RELEASE_STORE_PASSWORD }}
           TRANSIT_RELEASE_KEY_ALIAS: ${{ secrets.TRANSIT_RELEASE_KEY_ALIAS }}
           TRANSIT_RELEASE_KEY_PASSWORD: ${{ secrets.TRANSIT_RELEASE_KEY_PASSWORD }}
-        run: TRANSIT_RELEASE_STORE_FILE="$RUNNER_TEMP/release.jks" bash ./gradlew assembleRelease
+        run: TRANSIT_RELEASE_STORE_FILE="$RUNNER_TEMP/release.jks" bash ./gradlew assembleGithubRelease bundlePlayRelease
+
+      - name: Play "What's new"
+        run: |
+          flag=""
+          [ "$CHANNEL" = preview ] && flag="--preview"
+          python3 tools/release.py $flag --check-notes --notes "$NOTES" --play-notes app/build/outputs/bundle/playRelease/whats-new.txt
 
       - name: Publish
         env:
@@ -92,6 +100,17 @@ jobs:
           flag=""
           [ "$CHANNEL" = preview ] && flag="--preview"
           python3 tools/release.py $flag --notes "$NOTES"
+
+      # Only after a successful publish: the bundle is the same commit and version as the GitHub release.
+      - name: Keep the Play upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: play-upload
+          path: |
+            app/build/outputs/bundle/playRelease/app-play-release.aab
+            app/build/outputs/bundle/playRelease/whats-new.txt
+          if-no-files-found: error
+          retention-days: 30
 
       - name: Remove signing key
         if: always()

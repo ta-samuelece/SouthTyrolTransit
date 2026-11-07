@@ -27,18 +27,28 @@ Steps:
 ## Build
 
 ```bash
-./gradlew assembleDebug            # app/build/outputs/apk/debug/app-debug.apk
-./gradlew assembleRelease          # R8-minified; configure signing first
-./gradlew lintDebug                # Android Lint (abortOnError)
+./gradlew assembleGithubDebug      # app/build/outputs/apk/github/debug/app-github-debug.apk
+./gradlew assembleGithubRelease    # R8-minified; configure signing first
+./gradlew bundlePlayRelease        # the Play bundle: app/build/outputs/bundle/playRelease/app-play-release.aab
+./gradlew :app:lintGithubDebug :app:lintPlayDebug   # Android Lint (abortOnError)
 ```
+
+The app has two **store flavors** with the same package name and signing key, so either installs over the other:
+
+| Flavor | For | Updates |
+|---|---|---|
+| `github` (default) | APKs on GitHub Releases | the in-app updater (`app/src/github/`): it alone has `REQUEST_INSTALL_PACKAGES` and the updater's file provider |
+| `play` | Google Play, as an app bundle | Play's own; after an update to a version with highlight cards, a "New in X" sheet shows them once (`app/src/play/`) |
+
+Shared code reaches the store-specific part through two functions each flavor defines under `update/` (`showUpdateStartPrompt`, `updateSettingsRows`; see `UpdateSettingsRows.kt`). The Play bundle has language splitting off, since the app has its own language picker. Name the flavor in Gradle task names: the app's flavorless ones, such as `:app:lintDebug` or `:app:testDebugUnitTest`, no longer exist.
 
 The release APK carries native code (MapLibre) only for ARM (`arm64-v8a`, `armeabi-v7a`), which is every phone; leaving out x86/x86_64 saves about 22 MB. Debug builds keep all four, so they still run on an x86_64 emulator. To try a release build on an emulator, use an ARM64 system image or one with ARM translation.
 
 ## Tests
 
 ```bash
-./gradlew :core:model:test :core:data:testDebugUnitTest :app:testDebugUnitTest
-./gradlew :app:connectedDebugAndroidTest           # on a device/emulator
+./gradlew :core:model:test :core:data:testDebugUnitTest :app:testGithubDebugUnitTest :app:testPlayDebugUnitTest
+./gradlew :app:connectedGithubDebugAndroidTest     # on a device/emulator
 # Optional: import the real 150 MB STA feed and join it with captured realtime
 ./gradlew :core:data:testDebugUnitTest --tests '*RealFeedTest*' -PgtfsReal=/path/to/google_transit_shp.zip
 ```

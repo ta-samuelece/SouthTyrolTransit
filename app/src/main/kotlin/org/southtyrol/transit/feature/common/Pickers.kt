@@ -526,7 +526,25 @@ fun <T> ChoiceButton(
             Icon(Icons.Rounded.ExpandMore, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
-    if (open) ModalBottomSheet(onDismissRequest = { open = false }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+    if (open) ChoiceSheet(title, options, selected, onSelect = { onSelect(it); open = false }, onDismiss = { open = false }, label = sheetLabel, supporting = supporting)
+}
+
+/**
+ * The bottom sheet behind a [ChoiceButton], also used on its own (the choices in Settings): [title] over
+ * every option as a grouped list, the [selected] one in the emphasis colour with a check. A tap calls
+ * [onSelect], which is expected to close the sheet; swiping it away, Back or a tap outside calls [onDismiss].
+ */
+@Composable
+fun <T> ChoiceSheet(
+    title: String,
+    options: List<T>,
+    selected: T,
+    onSelect: (T) -> Unit,
+    onDismiss: () -> Unit,
+    label: @Composable (T) -> String,
+    supporting: (T) -> (@Composable () -> Unit)? = { null },
+) {
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(Modifier.verticalScroll(androidx.compose.foundation.rememberScrollState()).padding(start = 16.dp, end = 16.dp, bottom = 24.dp)) {
             Text(
                 title, style = MaterialTheme.typography.titleLarge,
@@ -535,7 +553,7 @@ fun <T> ChoiceButton(
             options.forEachIndexed { index, option ->
                 val chosen = option == selected
                 SegmentedListItem(
-                    onClick = { onSelect(option); open = false },
+                    onClick = { onSelect(option) },
                     shapes = ListItemDefaults.segmentedShapes(index, options.size),
                     colors = if (chosen) ListItemDefaults.segmentedColors(
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -544,7 +562,7 @@ fun <T> ChoiceButton(
                     modifier = Modifier.groupGap(index, options.size).semantics { this.selected = chosen },
                     leadingContent = { if (chosen) Icon(Icons.Rounded.Check, contentDescription = null) else androidx.compose.foundation.layout.Spacer(Modifier.size(24.dp)) },
                     supportingContent = supporting(option),
-                ) { Text(sheetLabel(option)) }
+                ) { Text(label(option)) }
             }
         }
     }

@@ -45,7 +45,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -192,27 +191,27 @@ fun SettingsScreen(navigator: Navigator, viewModel: SettingsViewModel = hiltView
     var whatsNewOpen by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     if (whatsNewOpen) org.southtyrol.transit.whatsnew.WhatsNewReadSheet(onDismiss = { whatsNewOpen = false })
     val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted -> viewModel.alerts(granted) }
-    // Which choice dialog (or the app icon sheet) is open, if any.
+    // Which choice flyout (or the app icon sheet) is open, if any.
     var choice by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
     val dismiss = { choice = null }
     when (choice) {
-        CHOICE_START -> ChoiceDialog(
+        CHOICE_START -> ChoiceFlyout(
             stringResource(R.string.settings_start_tab), StartTab.entries.filter { it != StartTab.SETTINGS && it != StartTab.DEPARTURES }, prefs.startTab,
             { stringResource(startTabLabel(it)) }, { viewModel.startTab(it); dismiss() }, dismiss,
         )
-        CHOICE_LANGUAGE -> ChoiceDialog(
+        CHOICE_LANGUAGE -> ChoiceFlyout(
             stringResource(R.string.settings_language), AppLanguage.Option.entries, language,
             { stringResource(languageLabel(it)) }, { language = it; dismiss(); AppLanguage.select(it) }, dismiss,
         )
-        CHOICE_LOCATE -> ChoiceDialog(
+        CHOICE_LOCATE -> ChoiceFlyout(
             stringResource(R.string.settings_locate_button), LocateButtonPosition.entries, prefs.locateButton,
             { stringResource(locateLabel(it)) }, { viewModel.locateButton(it); dismiss() }, dismiss,
         )
-        CHOICE_SEARCH_BAR -> ChoiceDialog(
+        CHOICE_SEARCH_BAR -> ChoiceFlyout(
             stringResource(R.string.settings_search_bar), SearchBarPosition.entries, prefs.searchBar,
             { stringResource(searchBarLabel(it)) }, { viewModel.searchBar(it); dismiss() }, dismiss,
         )
-        CHOICE_MAP_BASE -> ChoiceDialog(
+        CHOICE_MAP_BASE -> ChoiceFlyout(
             stringResource(R.string.map_type), MapBase.entries, prefs.mapBase,
             { stringResource(mapBaseLabel(it)) }, { viewModel.mapBase(it); dismiss() }, dismiss,
         )
@@ -450,20 +449,13 @@ private fun ChoiceRow(label: String, value: String, onClick: () -> Unit) {
     }
 }
 
-/** The choices of a [ChoiceRow]: radio buttons; picking one applies it and closes the dialog. */
+/**
+ * The choices of a [ChoiceRow] as a flyout: the shared choice sheet, a grouped list with the current option
+ * checked. Picking one applies it and closes the sheet; swiping it away or Back leaves the setting as it was.
+ */
 @Composable
-private fun <T> ChoiceDialog(title: String, options: List<T>, selected: T, label: @Composable (T) -> String, onSelect: (T) -> Unit, onDismiss: () -> Unit) {
-    androidx.compose.material3.AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(title) },
-        text = {
-            Column(Modifier.selectableGroup()) {
-                options.forEach { option -> RadioRow(label(option), option == selected) { onSelect(option) } }
-            }
-        },
-        confirmButton = {},
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
-    )
+private fun <T> ChoiceFlyout(title: String, options: List<T>, selected: T, label: @Composable (T) -> String, onSelect: (T) -> Unit, onDismiss: () -> Unit) {
+    org.southtyrol.transit.feature.common.ChoiceSheet(title, options, selected, onSelect = onSelect, onDismiss = onDismiss, label = label)
 }
 
 /**
@@ -506,18 +498,6 @@ private fun languageLabel(option: AppLanguage.Option) = when (option) {
     AppLanguage.Option.ENGLISH -> R.string.language_english
     AppLanguage.Option.GERMAN -> R.string.language_german
     AppLanguage.Option.ITALIAN -> R.string.language_italian
-}
-
-@Composable
-private fun RadioRow(label: String, selected: Boolean, onClick: () -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().heightIn(min = 48.dp).selectable(selected = selected, onClick = onClick, role = Role.RadioButton),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        RadioButton(selected = selected, onClick = null)
-        Spacer(Modifier.width(12.dp))
-        Text(label, style = MaterialTheme.typography.bodyLarge)
-    }
 }
 
 @Composable

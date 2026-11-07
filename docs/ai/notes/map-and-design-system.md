@@ -166,12 +166,16 @@ components that default to it (FABs, the contained loading indicator, time picke
 
 Settled on 2026-10-13 after a review of every screen against the Expressive guidelines:
 
-- **One of several options** is a `ConnectedToggleGroup` (stop departures/arrivals, results sort,
+- **One of several options** is a `ConnectedToggleGroup` (stop departures/arrivals,
   alerts current/planned, theme), never filter chips. Stop departures/arrivals and alerts
   current/planned take `Modifier.weight(1f)` and fill the rest of their row with equal buttons.
   `equalWidth = false` lets each button take its label's width; wrap the group in `horizontalScroll`
-  where the labels may not fit (results sort, four options). A choice with many options or long labels (start tab, language, "my position" button) is a
-  `ChoiceRow` that opens a radio `ChoiceDialog` (`SettingsScreens.kt`). **Filter chips are for
+  where the labels may not fit. A choice whose labels run long on a content screen (a stop's direction,
+  the results order) is a `ChoiceButton` (`feature/common/Pickers.kt`, 2026-11-07): one row button with
+  an icon, the chosen value and a chevron, opening a bottom sheet that lists the options in full as a
+  grouped list, the chosen one in `secondaryContainer` with a check. In Settings a choice with many
+  options or long labels (start tab, language, "my position" button) is a `ChoiceRow` that opens a radio
+  `ChoiceDialog` (`SettingsScreens.kt`). **Filter chips are for
   multi-select filters only** (map layers, Plan's transport modes).
 - Unselected `ConnectedToggleGroup` buttons default to `surfaceContainer`. On a surface of that colour
   they vanish: pass `uncheckedContainerColor` (the Settings theme group uses `surfaceContainerHighest`;
@@ -229,10 +233,17 @@ Settled on 2026-10-13 after a review of every screen against the Expressive guid
   the line page. One indicator per screen: the journey's leg cards have none of their own.
 - **Paging in time** (earlier/later departures, earlier/later connections) is `PageButton` in
   `feature/common/Common.kt`, a centred tonal button with an arrow.
-- **The stop board, kept quiet at the user's request** (2026-10-13): lines row; then the time chip
-  (`StopTimeChip`) with departures/arrivals and the wheelchair mark on the same row; then the direction
-  choice, a full-width `ConnectedToggleGroup` with "All directions" as `null`. No distance (the board no
-  longer asks for the location) and no "tap lines to filter" hint. Only the live pill is in the top bar.
+- **The stop board, kept quiet at the user's request** (2026-10-13, simplified 2026-11-07): lines row;
+  then the controls in at most two rows. The time is the shared `TimeButton`
+  (`feature/common/Pickers.kt`, also Plan's departure button at 64 dp), here at the toggle's height
+  (`ButtonDefaults.MinHeight`): clock alone for now, widened and primary with a × back to now once a time
+  is set. The direction is a `ChoiceButton` whose sheet lists every direction as its main next stop with
+  the second one under it; no line badges and no left/right arrow, both tried and dropped by the user.
+  The old full-width `ConnectedToggleGroup` of directions cut every name to the same first word.
+  Departures/arrivals keeps the shared toggle's bright primary selection (the user's choice): beside the
+  time button, or alone on the first row when the stop also has directions, with the time and direction
+  below. The wheelchair mark ends the first row. No distance and no "tap lines to filter" hint; only the
+  live pill is in the top bar.
 - **Every `SegmentedListItem`** passes `colors = groupedItemColors()` (surfaceContainer) and
   `Modifier.groupGap(index, count)` (`feature/common/Common.kt`): the library's default segmented colours
   are indistinguishable from the page in dark mode, and without the gap the separators disappear.

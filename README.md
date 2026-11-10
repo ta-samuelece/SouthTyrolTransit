@@ -59,7 +59,8 @@ Changes reach `main` through pull requests from a branch named `<type>/<short-de
 - [Development guide](docs/DEVELOPMENT.md): architecture, tests, data strategies and limitations
 - [Updates and releases](docs/RELEASING.md): how the updater works and how to publish
 - [Push backend contract](docs/PUSH_BACKEND.md): for a server that does not exist yet
-- [Privacy policy](docs/PRIVACY.md): what leaves the phone, in English, German and Italian; the page linked from Google Play
+- [Privacy policy](docs/PRIVACY.md): what leaves the phone, in English, German and Italian; published on the [tester site](https://ta-samuelece.github.io/SouthTyrolTransit/privacy/) for Google Play
+- [Become a tester](https://ta-samuelece.github.io/SouthTyrolTransit/): join the Google Play closed test; the site is built from `site/` (see [Tester site](docs/DEVELOPMENT.md#tester-site))
 
 Found a bug? [Open an issue](https://github.com/ta-samuelece/SouthTyrolTransit/issues/new/choose).
 

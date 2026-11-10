@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="{{lang}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{page_title}}</title>
+<meta name="description" content="{{meta_description}}">
+<meta name="theme-color" content="#004b49">
+<link rel="canonical" href="{{canonical_url}}">
+{{hreflang_html}}
+<meta property="og:type" content="website">
+<meta property="og:title" content="{{page_title}}">
+<meta property="og:description" content="{{meta_description}}">
+<meta property="og:image" content="{{site_url}}assets/feature-graphic.webp">
+<meta property="og:url" content="{{canonical_url}}">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="{{root}}assets/icon.webp" type="image/webp">
+{{fonts_html}}
+<link rel="stylesheet" href="{{root}}style.css">
+</head>
+<body>
+<header class="hero">
+<div class="container topbar">
+<a class="brand" href="#top"><img src="{{root}}assets/icon.webp" alt="" width="40" height="40">South Tyrol Transit</a>
+<nav class="langs" aria-label="{{language_label}}">
+{{langs_html}}
+</nav>
+</div>
+<img class="hero-art" src="{{root}}assets/feature-graphic.webp" alt="{{banner_alt}}" width="2000" height="1000">
+<div class="hero-blend" aria-hidden="true"></div>
+<div class="hero-copy">
+<div id="top" class="container hero-row">
+<div class="hero-text">
+<h1>{{hero_title}}</h1>
+<p>{{hero_body}}</p>
+</div>
+<div class="hero-facts">
+<ul class="facts">
+<li class="fact"><span class="fact-icon" aria-hidden="true"><span class="ms">group</span></span><span><span class="fact-value">12</span><br><span class="fact-label">{{fact_testers}}</span></span></li>
+<li class="fact"><span class="fact-icon" aria-hidden="true"><span class="ms">calendar_month</span></span><span><span class="fact-value">14</span><br><span class="fact-label">{{fact_days}}</span></span></li>
+<li class="fact"><span class="fact-icon" aria-hidden="true"><span class="ms">android</span></span><span><span class="fact-value">8+</span><br><span class="fact-label">{{fact_android}}</span></span></li>
+<li class="fact"><span class="fact-icon" aria-hidden="true"><span class="ms">translate</span></span><span><span class="fact-value">EN · DE · IT</span><br><span class="fact-label">{{fact_languages}}</span></span></li>
+</ul>
+<a class="btn hero-cta" href="#steps"><span class="ms" aria-hidden="true">how_to_reg</span>{{hero_cta}}</a>
+</div>
+</div>
+</div>
+</header>
+
+<main class="container">
+<section id="steps" class="block" aria-labelledby="steps-title">
+<h2 id="steps-title" class="eyebrow">{{steps_eyebrow}}</h2>
+<p class="section-title">{{steps_title}}</p>
+<ol class="steps">
+<li class="step">
+<span class="step-number" aria-hidden="true">1</span>
+<div class="step-text"><h3>{{step1_title}}</h3><p class="body">{{step1_body}}</p></div>
+<a class="btn btn-filled" href="{{group_url}}"><span class="ms" aria-hidden="true">group_add</span>{{step1_button}}</a>
+</li>
+<li class="step">
+<span class="step-number" aria-hidden="true">2</span>
+<div class="step-text"><h3>{{step2_title}}</h3><p class="body">{{step2_body}}</p></div>
+<a class="btn btn-tonal" href="{{opt_in_url}}"><span class="ms" aria-hidden="true">open_in_new</span>{{step2_button}}</a>
+</li>
+<li class="step">
+<span class="step-number" aria-hidden="true">3</span>
+<div class="step-text"><h3>{{step3_title}}</h3><p class="body">{{step3_body}}</p></div>
+<a class="btn btn-tonal" href="{{store_url}}"><span class="ms" aria-hidden="true">shop</span>{{step3_button}}</a>
+</li>
+</ol>
+<div class="note" role="note">
+<span class="ms" aria-hidden="true">warning</span>
+<p><strong>{{github_note_title}}</strong> {{github_note_body}}</p>
+</div>
+</section>
+
+<section class="block" aria-labelledby="try-title">
+<h2 id="try-title" class="eyebrow">{{try_eyebrow}}</h2>
+<p class="section-title">{{try_title}}</p>
+<div class="cards">
+<div class="card"><div class="card-shot"><div class="phone"><img src="{{root}}screenshots/{{shot_board}}" alt="{{card_board_alt}}" width="540" height="1200" loading="lazy"></div></div><div class="card-text"><h3>{{card_board_title}}</h3><p class="body">{{card_board_body}}</p></div></div>
+<div class="card"><div class="card-shot"><div class="phone"><img src="{{root}}screenshots/{{shot_follow}}" alt="{{card_plan_alt}}" width="540" height="1200" loading="lazy"></div></div><div class="card-text"><h3>{{card_plan_title}}</h3><p class="body">{{card_plan_body}}</p></div></div>
+<div class="card"><div class="card-shot"><div class="phone"><img src="{{root}}screenshots/{{shot_map}}" alt="{{card_map_alt}}" width="540" height="1200" loading="lazy"></div></div><div class="card-text"><h3>{{card_map_title}}</h3><p class="body">{{card_map_body}}</p></div></div>
+<div class="card"><div class="card-shot"><div class="phone"><img src="{{root}}screenshots/{{shot_alerts}}" alt="{{card_alerts_alt}}" width="540" height="1200" loading="lazy"></div></div><div class="card-text"><h3>{{card_alerts_title}}</h3><p class="body">{{card_alerts_body}}</p></div></div>
+<div class="card"><div class="card-shot"><div class="phone"><img src="{{root}}screenshots/{{shot_parking}}" alt="{{card_parking_alt}}" width="540" height="1200" loading="lazy"></div></div><div class="card-text"><h3>{{card_parking_title}}</h3><p class="body">{{card_parking_body}}</p></div></div>
+<div class="card"><div class="card-shot"><div class="phone"><img src="{{root}}screenshots/{{shot_widget}}" alt="{{card_widget_alt}}" width="540" height="1200" loading="lazy"></div></div><div class="card-text"><h3>{{card_widget_title}}</h3><p class="body">{{card_widget_body}}</p></div></div>
+</div>
+<div class="feedback">
+<span class="feedback-icon" aria-hidden="true"><span class="ms">chat</span></span>
+<div class="feedback-text"><h3>{{feedback_title}}</h3><p>{{feedback_body}}</p></div>
+<a class="btn btn-filled" href="{{store_url}}"><span class="ms" aria-hidden="true">feedback</span>{{feedback_button}}</a>
+</div>
+</section>
+
+<section id="faq" class="block" aria-labelledby="faq-title">
+<h2 id="faq-title" class="eyebrow">{{faq_eyebrow}}</h2>
+<p class="section-title">{{faq_title}}</p>
+<div class="faq">
+<details open><summary>{{faq_cost_q}}<span class="ms" aria-hidden="true">expand_more</span></summary><p>{{faq_cost_a}}</p></details>
+<details><summary>{{faq_email_q}}<span class="ms" aria-hidden="true">expand_more</span></summary><p>{{faq_email_a}}</p></details>
+<details><summary>{{faq_stop_q}}<span class="ms" aria-hidden="true">expand_more</span></summary><p>{{faq_stop_a}}</p></details>
+<details><summary>{{faq_iphone_q}}<span class="ms" aria-hidden="true">expand_more</span></summary><p>{{faq_iphone_a}}</p></details>
+<details><summary>{{faq_official_q}}<span class="ms" aria-hidden="true">expand_more</span></summary><p>{{faq_official_a}}</p></details>
+</div>
+</section>
+</main>
+
+<footer class="container">
+<nav class="footer-row" aria-label="{{footer_label}}">
+<a href="{{repo_url}}">{{footer_source}}</a>
+<a href="{{root}}privacy/">{{footer_privacy}}</a>
+</nav>
+</footer>
+<script>
+// Remember a language picked by hand; on the English page, follow the browser language until then.
+(function () {
+  var here = "{{lang}}";
+  var store = { get: function () { try { return localStorage.getItem("lang"); } catch (e) { return null; } },
+                set: function (v) { try { localStorage.setItem("lang", v); } catch (e) {} } };
+  document.querySelectorAll(".langs a").forEach(function (a) {
+    a.addEventListener("click", function () { store.set(a.getAttribute("hreflang")); });
+  });
+  if (here === "en" && !store.get()) {
+    var want = (navigator.language || "").slice(0, 2).toLowerCase();
+    if (want === "de" || want === "it") location.replace(want + "/" + location.hash);
+  }
+})();
+</script>
+</body>
+</html>

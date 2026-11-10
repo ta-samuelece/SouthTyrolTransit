@@ -1,0 +1,16 @@
+{
+  "site_url": "https://ta-samuelece.github.io/SouthTyrolTransit/",
+  "package": "org.southtyrol.transit",
+  "group_url": "https://groups.google.com/g/south-tyrol-transit",
+  "repo_url": "https://github.com/ta-samuelece/SouthTyrolTransit",
+  "languages": ["en", "de", "it"],
+  "icons": ["android", "arrow_back", "calendar_month", "chat", "expand_more", "feedback", "group", "group_add", "how_to_reg", "open_in_new", "shop", "translate", "warning"],
+  "screenshots": {
+    "board": "stop.png",
+    "follow": "following.png",
+    "map": "map.png",
+    "alerts": "alerts.png",
+    "parking": "parking.png",
+    "widget": "widget.png"
+  }
+}

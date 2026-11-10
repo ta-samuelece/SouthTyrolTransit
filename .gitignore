@@ -38,3 +38,6 @@ goal.md
 .claude/local/*
 !.claude/local/README.md
 .claude/settings.local.json
+
+# Tester site build output (tools/build_site.py)
+_site/

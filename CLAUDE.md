@@ -222,13 +222,15 @@ EFA uses different stop ids from GTFS. Changing `GtfsFiles.stationKey`, `GtfsFil
 - `core/data/` - network, GTFS importer and Room schedule store, EFA client and parsers, GTFS-RT,
   repositories (`TransitRepository.kt`), DataStore settings. Room schemas in `core/data/schemas/`.
 - `core/designsystem/`, `core/map/` - theme and components; the provider-agnostic `TransitMap` API.
+- `site/` - the tester sign-up page and privacy page for GitHub Pages, built by `tools/build_site.py`
+  (see [tester site](docs/ai/notes/tester-site-github-pages.md)).
 - `tools/release.py` publishes a release (plain Python 3); `tools/generate_icons.py` regenerates launcher
   icons from `icons/` (needs Pillow and numpy, and is only one of five steps - see
   [app icons](docs/ai/notes/app-icons-and-package-name.md)).
 - `docs/` - human documentation, screenshots, `docs/fixtures/` (captured real API payloads the tests
   use) and `docs/release-notes/` (one file per published version, read by the Release workflow).
-- `.github/workflows/` - `ci.yml` (tests and lint, a required check) and `release.yml` (publishes a
-  release after the owner's approval).
+- `.github/workflows/` - `ci.yml` (tests and lint, a required check), `release.yml` (publishes a
+  release after the owner's approval) and `pages.yml` (publishes the tester site on merges into `main`).
 - `docs/ai/` - the AI knowledge base, an OKF v0.2 bundle (see "AI workspace" below).
 
 ## Workflow

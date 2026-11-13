@@ -1,5 +1,6 @@
 package org.southtyrol.transit.data
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -106,9 +107,23 @@ class EfaClient(
         withContext(Dispatchers.Default) { EfaXml.coordStops(bytes) }
     }
 
+    /**
+     * A fewest-changes search also asks for the fastest trips and merges both answers. EFA's LEASTINTERCHANGE
+     * alone hides much faster trips with one more change - Vilpian to Vöran gave only a 1h51 bus trip, never
+     * the 43-minute one via the Vöran cable car. The extra search failing leaves the main one's answer.
+     */
     override suspend fun plan(from: Place, to: Place, options: SearchOptions, language: String): List<Journey> = guarded {
-        val bytes = get("XML_TRIP_REQUEST2", tripParams(from, to, options, language))
-        val journeys = withContext(Dispatchers.Default) { EfaXml.journeys(bytes) }.let { inWindow(it, options) }
+        suspend fun search(o: SearchOptions) = get("XML_TRIP_REQUEST2", tripParams(from, to, o, language)).let { bytes ->
+            withContext(Dispatchers.Default) { EfaXml.journeys(bytes) }
+        }
+        val found = if (options.preference != RoutePreference.FEWEST_CHANGES) search(options) else coroutineScope {
+            val fastest = async {
+                try { search(options.copy(preference = RoutePreference.FASTEST)) } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
+            }
+            val fewest = search(options)
+            (fewest + fastest.await()).distinctBy { it.id }
+        }
+        val journeys = inWindow(found, options)
         when (options.preference) {
             RoutePreference.FASTEST -> journeys.sortedWith(compareBy<Journey> { if (options.arriveBy) -it.bestDeparture.epochSecond else it.bestArrival.epochSecond }.thenBy { it.duration })
             RoutePreference.FEWEST_CHANGES -> journeys.sortedWith(compareBy<Journey> { it.changes }.thenBy { it.bestArrival })

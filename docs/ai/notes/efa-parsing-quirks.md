@@ -8,8 +8,8 @@ generated:
   at: "2026-10-30T12:00:00Z"
 verified:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-30T12:00:00Z"
-  what: stop-finder aliases, trITMOTvalue100 cap and LEASTINTERCHANGE past trips against the live EFA API
+  at: "2026-11-13T18:30:00Z"
+  what: stop-finder aliases, trITMOTvalue100 cap, LEASTINTERCHANGE past trips (2026-10-30) and ropeways in trips, LEASTINTERCHANGE vs LEASTTIME (2026-11-13) against the live EFA API
 status: stable
 ---
 
@@ -62,7 +62,19 @@ status: stable
   bus ride for a 28-minute walk, which is why it is a choice rather than a fixed high value.
 - `LEASTINTERCHANGE` answers a departure search with trips that already left (asked 22:30, got 20:56).
   `EfaClient.inWindow` drops departures over a minute before the requested time and, for arrive-by,
-  arrivals over a minute after it. The default preference is `FEWEST_CHANGES`, so this matters.
+  arrivals over a minute after it. `FEWEST_CHANGES` still sends it, so this matters.
+- `LEASTINTERCHANGE` alone hides much faster trips with one more change: Vilpian station -> Vöran,
+  Seilbahnstraße 13 on Saturday 9:00 gave only a 1h51 train-and-bus trip (1 change), never the 43-minute
+  train, bus 215 and Vöran cable car (2 changes) that `LEASTTIME` finds. So `EfaClient.plan` runs a
+  `FEWEST_CHANGES` search as two requests, `LEASTINTERCHANGE` and `LEASTTIME` in parallel, merged by
+  `Journey.id`; a failed `LEASTTIME` request leaves the main answer, a failed main request fails the
+  search. The default preference is `FASTEST` (`SearchOptions`, `PlannerState`, `RequestCodec`), as on
+  STA's own site; a saved or recent journey keeps the preference it was encoded with.
+- Ropeways are planned like any other mode: EFA reports cable cars and funiculars as motType 8 (itd type
+  12 cable car, 11 funicular), which `TransportMode.fromEfa` maps to `CABLE_CAR`, and they are only left
+  out when the user excludes that mode. When a ropeway seems missing, check STA's alerts and timetable
+  first: in November 2026 the Ritten cable car was closed for maintenance, the Mendel funicular ran
+  replacement buses until mid-December, and the Jenesien cable car is not in EFA at all.
 
 # AddInfo (alerts)
 
@@ -87,4 +99,6 @@ behind a 10 KB comment. The parser's 15 MB cap sits behind a
 The `trainType` label and its test assertion re-read on 2026-10-09; the rest from a code read of `Efa.kt`,
 `ParserTest` and the fixtures the same day, not re-verified line by line. The stop-name aliases, the
 footpath cap and the `LEASTINTERCHANGE` past trips were reproduced against the live API on 2026-10-30
-(Via Piero Agostini 2, Bolzano -> Via Guglielmo Marconi 58, Laives, at 14:00 and 22:30).
+(Via Piero Agostini 2, Bolzano -> Via Guglielmo Marconi 58, Laives, at 14:00 and 22:30). The ropeway
+findings and the `LEASTINTERCHANGE`/`LEASTTIME` difference were reproduced against the live API on
+2026-11-13 (Vilpian -> Vöran, Bozen -> Oberbozen, Kohlern, Kaltern -> Mendel Pass).

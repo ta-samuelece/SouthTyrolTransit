@@ -1,8 +1,10 @@
 package org.southtyrol.transit.data
 
 import kotlinx.coroutines.test.runTest
+import mockwebserver3.Dispatcher
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
+import mockwebserver3.RecordedRequest
 import mockwebserver3.SocketEffect
 import okhttp3.OkHttpClient
 import okio.Buffer
@@ -90,7 +92,57 @@ class NetworkTest {
         val request = server.takeRequest()
         assertEquals("/apb/XML_TRIP_REQUEST2", request.url.encodedPath)
         assertEquals("stop", request.url.queryParameter("type_origin"))
-        assertEquals("LEASTINTERCHANGE", request.url.queryParameter("routeType"))
+        assertEquals("LEASTTIME", request.url.queryParameter("routeType"))
+        assertEquals(1, server.requestCount)
+    }
+
+    /** Answers each trip request by its routeType; a missing entry is a 404, which is not retried. */
+    private fun answerTrips(byRouteType: Map<String, ByteArray>) {
+        server.dispatcher = object : Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse =
+                byRouteType[request.url.queryParameter("routeType")]?.let { MockResponse.Builder().body(Buffer().write(it)).build() }
+                    ?: MockResponse.Builder().code(404).build()
+        }
+    }
+
+    private suspend fun planFewestChanges() = EfaClient(http, url("/apb/")).plan(
+        org.southtyrol.transit.model.Place("66000468", "Bozen", org.southtyrol.transit.model.PlaceType.STOP),
+        org.southtyrol.transit.model.Place("x", "Meran"),
+        org.southtyrol.transit.model.SearchOptions(
+            at = java.time.ZonedDateTime.of(2026, 10, 5, 7, 55, 0, 0, org.southtyrol.transit.model.TransitZone),
+            preference = org.southtyrol.transit.model.RoutePreference.FEWEST_CHANGES,
+        ),
+        "de",
+    )
+
+    @Test fun fewestChangesAddsTheFastestTrips() = runTest {
+        val all = fixture("efa_trip_ok.xml")
+        val none = String(all, Charsets.UTF_8).replace(Regex("(?s)<itdRouteList>.*</itdRouteList>"), "<itdRouteList/>").toByteArray()
+        answerTrips(mapOf("LEASTINTERCHANGE" to none, "LEASTTIME" to all))
+        assertEquals(4, planFewestChanges().size)
+        val routeTypes = List(server.requestCount) { server.takeRequest().url.queryParameter("routeType") }.toSet()
+        assertEquals(setOf("LEASTINTERCHANGE", "LEASTTIME"), routeTypes)
+    }
+
+    @Test fun fewestChangesDropsTripsBothSearchesFound() = runTest {
+        val all = fixture("efa_trip_ok.xml")
+        answerTrips(mapOf("LEASTINTERCHANGE" to all, "LEASTTIME" to all))
+        assertEquals(4, planFewestChanges().size)
+    }
+
+    @Test fun fewestChangesSurvivesTheFastestSearchFailing() = runTest {
+        answerTrips(mapOf("LEASTINTERCHANGE" to fixture("efa_trip_ok.xml")))
+        assertEquals(4, planFewestChanges().size)
+    }
+
+    @Test fun fewestChangesFailsWhenItsOwnSearchFails() = runTest {
+        answerTrips(mapOf("LEASTTIME" to fixture("efa_trip_ok.xml")))
+        try {
+            planFewestChanges()
+            fail()
+        } catch (_: DataException) {
+            // The fastest search's trips alone are not a fewest-changes answer.
+        }
     }
 
     @Test fun mapStopsWithoutTimetableComeFromTheCoordinateSearch() = runTest {

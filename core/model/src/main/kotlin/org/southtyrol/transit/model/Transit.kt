@@ -430,7 +430,7 @@ enum class WalkingSpeed { SLOW, NORMAL, FAST }
 data class SearchOptions(
     val at: ZonedDateTime = ZonedDateTime.now(TransitZone),
     val arriveBy: Boolean = false,
-    val preference: RoutePreference = RoutePreference.FEWEST_CHANGES,
+    val preference: RoutePreference = RoutePreference.FASTEST,
     val excludedModes: Set<TransportMode> = emptySet(),
     val wheelchair: Boolean = false,
     val walkingSpeed: WalkingSpeed = WalkingSpeed.NORMAL,

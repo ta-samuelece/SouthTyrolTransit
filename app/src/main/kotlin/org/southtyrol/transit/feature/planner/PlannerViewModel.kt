@@ -76,7 +76,7 @@ object RequestCodec {
             SearchOptions(
                 at = at.atZone(TransitZone),
                 arriveBy = o["arriveBy"]?.jsonPrimitive?.booleanOrNull ?: false,
-                preference = o.enum("preference", RoutePreference.FEWEST_CHANGES),
+                preference = o.enum("preference", RoutePreference.FASTEST),
                 excludedModes = (o["excluded"]?.jsonArray?.mapNotNull { e -> runCatching { TransportMode.valueOf(e.jsonPrimitive.content) }.getOrNull() } ?: emptyList()).toSet(),
                 wheelchair = o["wheelchair"]?.jsonPrimitive?.booleanOrNull ?: false,
                 walkingSpeed = o.enum("walking", WalkingSpeed.NORMAL),
@@ -100,7 +100,7 @@ data class PlannerState(
     /** null = leave now. */
     val time: ZonedDateTime? = null,
     val arriveBy: Boolean = false,
-    val preference: RoutePreference = RoutePreference.FEWEST_CHANGES,
+    val preference: RoutePreference = RoutePreference.FASTEST,
     val excludedModes: Set<TransportMode> = emptySet(),
     val wheelchair: Boolean = false,
     val walkingSpeed: WalkingSpeed = WalkingSpeed.NORMAL,

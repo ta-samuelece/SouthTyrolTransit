@@ -14,6 +14,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
+import androidx.compose.material3.ScaffoldDefaults
+import androidx.compose.ui.semantics.heading
+import org.southtyrol.transit.feature.common.MapLipPage
+import org.southtyrol.transit.feature.common.rememberLipSlim
+import org.southtyrol.transit.feature.common.rememberMapLipState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -94,43 +101,27 @@ import org.southtyrol.transit.ui.Navigator
 @Composable
 fun StopScreen(navigator: Navigator, stationKey: String, name: String) {
     val viewModel = hiltViewModel<StopViewModel, StopViewModel.Factory>(key = stationKey) { it.create(stationKey, name) }
-    val state by viewModel.state.collectAsStateWithLifecycle()
-    val saved by viewModel.isSaved.collectAsStateWithLifecycle()
-    val board by viewModel.board.collectAsStateWithLifecycle()
-    val now = rememberNow()
-    val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
-        modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
-        topBar = {
-            LargeFlexibleTopAppBar(
-                title = { Text(state.name.ifBlank { stringResource(R.string.stop_title) }, maxLines = 2, overflow = TextOverflow.Ellipsis) },
-                subtitle = state.stop?.code?.takeIf { it.isNotBlank() }?.let { { Text(stringResource(R.string.stop_code, it)) } },
-                navigationIcon = { IconButton(onClick = navigator::back) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.action_back)) } },
-                actions = {
-                    // How current the board is sits in the header, next to the favourite.
-                    board?.let { FreshnessIndicator(it.realtime, it.realtimeFetchedAt ?: state.loadedAt, now, compact = true) }
-                    IconButton(onClick = { viewModel.toggleSaved() }) {
-                        Icon(if (saved) Icons.Rounded.Star else Icons.Rounded.StarBorder, contentDescription = stringResource(if (saved) R.string.action_unsave_stop else R.string.action_save_stop))
-                    }
-                },
-                scrollBehavior = scroll,
-            )
-        },
+        // The map lip reaches under the status bar itself.
+        contentWindowInsets = ScaffoldDefaults.contentWindowInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
     ) { padding ->
         StopContent(viewModel, navigator, Modifier.padding(padding).fillMaxSize())
     }
 }
 
-/** Live board + stop details; also used as the detail pane next to the stop list on large screens. */
+/**
+ * Live board + stop details under the map lip of the stop's platforms; how current the board is sits on the
+ * map, the stop's name and its favourite star head the sheet.
+ */
 @Composable
 fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifier = Modifier) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val board by viewModel.board.collectAsStateWithLifecycle()
+    val saved by viewModel.isSaved.collectAsStateWithLifecycle()
     val visible by viewModel.visible.collectAsStateWithLifecycle()
     // The board's countdowns tick only between flings: a tick recomposes every visible row.
     val listState = androidx.compose.foundation.lazy.rememberLazyListState()
     val now = rememberNow(holdWhile = { listState.isScrollInProgress })
-    val mapState = org.southtyrol.transit.feature.common.rememberExpandableMapState()
     val scope = rememberCoroutineScope()
     var refreshing by remember { mutableStateOf(false) }
     val dark = LocalDarkTheme.current
@@ -139,30 +130,47 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
     // Live screens refresh every 30 s only while visible.
     PollWhileVisible(30_000, key = state.arrivals) { viewModel.refresh() }
 
+    // Built once per platforms and direction: the board's clock and polls must not hand the map a new
+    // content instance, which it compares marker by marker.
+    val platforms = state.platforms
+    val direction = state.direction
+    val points = remember(platforms) { platforms.map { it.point }.filter { it.isValid } }
+    // The chosen direction's platforms are highlighted on the map.
+    val mapContent = remember(platforms, direction) {
+        MapContent(
+            stops = platforms.map { MapMarker(it.id, it.point, MarkerKind.STOP, it.platform, selected = direction?.platformIds?.contains(it.id) ?: true) },
+            clusterStops = false,
+        )
+    }
+    val camera = remember(points) { CameraRequest.Fit(points + points.take(1)) }
+    MapLipPage(
+        rememberMapLipState(), points.isNotEmpty(), mapContent, camera, navigator::back, modifier,
+        slim = rememberLipSlim(listState),
+        end = { board?.let { FreshnessIndicator(it.realtime, it.realtimeFetchedAt ?: state.loadedAt, now, compact = true) } },
+    ) {
     PullToRefreshBox(
         isRefreshing = refreshing,
         onRefresh = { scope.launch { refreshing = true; viewModel.refresh(force = true); refreshing = false } },
-        modifier = modifier,
+        modifier = Modifier.fillMaxSize(),
     ) {
-        // Built once per platforms and direction: the board's clock and polls must not hand the map a new
-        // content instance, which it compares marker by marker.
-        val platforms = state.platforms
-        val direction = state.direction
-        val points = remember(platforms) { platforms.map { it.point }.filter { it.isValid } }
-        // The chosen direction's platforms are highlighted on the map.
-        val mapContent = remember(platforms, direction) {
-            MapContent(
-                stops = platforms.map { MapMarker(it.id, it.point, MarkerKind.STOP, it.platform, selected = direction?.platformIds?.contains(it.id) ?: true) },
-                clusterStops = false,
-            )
-        }
-        val camera = remember(points) { CameraRequest.Fit(points + points.take(1)) }
-        // The small map is the last thing on the page, so the enlarged one stays at the bottom too.
-        org.southtyrol.transit.feature.common.ExpandableMapPage(
-            mapState, points.isNotEmpty(), mapContent, camera, Modifier.fillMaxSize(),
-            placement = org.southtyrol.transit.feature.common.MapPlacement.BOTTOM,
-        ) { listModifier ->
-        LazyColumn(state = listState, contentPadding = PaddingValues(bottom = 24.dp), modifier = listModifier) {
+        LazyColumn(state = listState, contentPadding = PaddingValues(bottom = 24.dp), modifier = Modifier.fillMaxSize()) {
+            item(key = "name") {
+                // The stop's name heads the sheet, with its code under it and the favourite star at its end.
+                Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            state.name.ifBlank { stringResource(R.string.stop_title) }, style = MaterialTheme.typography.headlineSmall,
+                            maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.semantics { heading() },
+                        )
+                        state.stop?.code?.takeIf { it.isNotBlank() }?.let {
+                            Text(stringResource(R.string.stop_code, it), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                    IconButton(onClick = { viewModel.toggleSaved() }) {
+                        Icon(if (saved) Icons.Rounded.Star else Icons.Rounded.StarBorder, contentDescription = stringResource(if (saved) R.string.action_unsave_stop else R.string.action_save_stop))
+                    }
+                }
+            }
             item {
                 Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     // Large stations serve dozens of lines: one row that scrolls sideways keeps the live board in view.
@@ -264,12 +272,10 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
                     Modifier.padding(vertical = 8.dp), enabled = !state.loadingMore,
                 )
             }
-            if (points.isNotEmpty()) {
+            // The map of the platforms is the lip; their names stay at the end of the page.
+            if (state.platforms.any { it.platform.isNotBlank() }) {
                 item { SectionHeader(stringResource(R.string.stop_location)) }
-                if (!mapState.expanded) item {
-                    org.southtyrol.transit.feature.common.CompactMapCard(mapState, mapContent, camera, Modifier.padding(horizontal = 16.dp).fillMaxWidth().height(200.dp))
-                }
-                if (state.platforms.any { it.platform.isNotBlank() }) item {
+                item {
                     Text(
                         stringResource(R.string.stop_platforms, state.platforms.mapNotNull { it.platform.ifBlank { null } }.distinct().sorted().joinToString(", ")),
                         style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(16.dp),
@@ -277,7 +283,7 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
                 }
             }
         }
-        }
+    }
     }
 }
 

@@ -276,8 +276,11 @@ internal fun MapLibreTransitMap(
                 when {
                     valid.size >= 2 -> {
                         val bounds = LatLngBounds.Builder().includes(valid.map { LatLng(it.latitude, it.longitude) }).build()
-                        val pad = (request.paddingDp * density).toInt()
-                        runCatching { map.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, pad), 600) }
+                        val px = { dp: Int -> (dp * density).toInt() }
+                        val insets = request.insets
+                        val update = if (insets == null) CameraUpdateFactory.newLatLngBounds(bounds, px(request.paddingDp))
+                        else CameraUpdateFactory.newLatLngBounds(bounds, px(insets.side), px(insets.top), px(insets.side), px(insets.bottom))
+                        runCatching { map.animateCamera(update, 600) }
                     }
                     valid.size == 1 -> map.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(valid[0].latitude, valid[0].longitude), 15.0), 600)
                 }

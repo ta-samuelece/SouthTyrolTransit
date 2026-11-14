@@ -71,6 +71,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.heading
+import androidx.compose.foundation.layout.only
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -258,32 +260,23 @@ fun TripScreen(navigator: Navigator, tripId: String, serviceDate: String, liveRe
                 }
             }
         },
-        topBar = {
-            TopAppBar(
-                title = {
-                    val detail = (state as? TripLoad.Ready)?.detail
-                    if (detail != null) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        LineBadge(detail.route.shortName.ifBlank { detail.route.longName }, detail.route.mode, color = detail.route.color, textColor = detail.route.textColor)
-                        Text(detail.trip.headsign, maxLines = 1)
-                    } else Text(stringResource(R.string.trip_title))
-                },
-                navigationIcon = { IconButton(onClick = navigator::back) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.action_back)) } },
-                // How current the run's data is sits in the header.
-                actions = {
-                    (state as? TripLoad.Ready)?.detail?.let { FreshnessIndicator(it.freshness, it.observedAt, headerNow, Modifier.padding(end = 12.dp), compact = true) }
-                },
-            )
-        },
+        // The map lip reaches under the status bar itself.
+        contentWindowInsets = androidx.compose.material3.ScaffoldDefaults.contentWindowInsets
+            .only(androidx.compose.foundation.layout.WindowInsetsSides.Horizontal + androidx.compose.foundation.layout.WindowInsetsSides.Bottom),
     ) { padding ->
         Box(Modifier.padding(padding).fillMaxSize()) {
             when (val s = state) {
-                TripLoad.Loading -> TransitLoading(contained = true)
-                TripLoad.NotFound -> MessageState(stringResource(R.string.trip_not_found))
-                is TripLoad.Error -> ErrorState(s.error, onRetry = { viewModel.load() })
                 is TripLoad.Ready -> TripContent(
                     s.detail, navigator, viewModel.tripAlerts.collectAsStateWithLifecycle().value,
                     following = followed?.let { ride -> followedView?.let { ride to it } },
                 )
+                else -> org.southtyrol.transit.feature.common.NoMapLip(onBack = navigator::back) {
+                    when (s) {
+                        TripLoad.NotFound -> MessageState(stringResource(R.string.trip_not_found))
+                        is TripLoad.Error -> ErrorState(s.error, onRetry = { viewModel.load() })
+                        else -> TransitLoading(contained = true)
+                    }
+                }
             }
         }
     }
@@ -315,13 +308,12 @@ private fun TripContent(
         if (vehicleFreshness == Freshness.LIVE) org.southtyrol.transit.model.RouteDistance.of(detail.shape, detail.stops, position) else null
     }
     val firstDistance = detail.stops.firstOrNull()?.distanceMeters
-    val mapState = org.southtyrol.transit.feature.common.rememberExpandableMapState()
     val routeLine = detail.shape.takeIf { it.size >= 2 } ?: detail.stops.map { it.stop.point }.filter { it.isValid }
     val hasMap = routeLine.size >= 2
-    // Bring the next stop into view once, below the header (and the compact map).
+    // Bring the next stop into view once, below the header, with the stop before it on top.
     androidx.compose.runtime.LaunchedEffect(detail.trip.id) {
         // Not while following: the card on top already says where it is.
-        if (nextIndex > 3 && following == null) listState.scrollToItem(nextIndex + (if (hasMap) 2 else 1) - 1)
+        if (nextIndex > 3 && following == null) listState.scrollToItem(nextIndex)
     }
     val mapContent = remember(detail, position, color, nextIndex) {
         // Same split as the timeline: passed calls and the stretch already travelled are dimmed.
@@ -354,22 +346,33 @@ private fun TripContent(
     }
     val camera = remember(detail.trip.id) { CameraRequest.Fit(routeLine) }
 
-    // Notices for this run sit in one collapsed card above the timeline, which stays visible while the
-    // list scrolls to the next stop; expanding it reveals every notice in full.
-    org.southtyrol.transit.feature.common.ExpandableMapPage(
-        mapState, hasMap, mapContent, camera,
-        header = {
-            if (alerts.isNotEmpty()) TripNoticesCard(alerts, now, Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp).heightIn(max = 480.dp))
-        },
-    ) { listModifier ->
+    org.southtyrol.transit.feature.common.MapLipPage(
+        org.southtyrol.transit.feature.common.rememberMapLipState(), hasMap, mapContent, camera, navigator::back,
+        slim = org.southtyrol.transit.feature.common.rememberLipSlim(listState),
+        // How current the run's data is sits on the map.
+        end = { FreshnessIndicator(detail.freshness, detail.observedAt, now, compact = true) },
+    ) {
     // Room below the last stop for the Follow button, which floats over the list.
     val bottom = if (following == null && detail.canFollow(now)) 88.dp else 16.dp
-    LazyColumn(state = listState, contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = bottom), verticalArrangement = Arrangement.spacedBy(0.dp), modifier = listModifier) {
+    Column(Modifier.fillMaxSize()) {
+    // Notices for this run sit in one collapsed card above the timeline, which stays visible while the
+    // list scrolls to the next stop; expanding it reveals every notice in full.
+    if (alerts.isNotEmpty()) TripNoticesCard(alerts, now, Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp).heightIn(max = 480.dp))
+    LazyColumn(state = listState, contentPadding = PaddingValues(start = 16.dp, top = 8.dp, end = 16.dp, bottom = bottom), verticalArrangement = Arrangement.spacedBy(0.dp), modifier = Modifier.fillMaxWidth().weight(1f)) {
         if (following != null) item(key = "following") {
             FollowingRideCard(following.first, following.second, Modifier.padding(bottom = 16.dp))
         }
         item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 12.dp)) {
+                // The run's line and where it goes head the sheet.
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    LineBadge(detail.route.shortName.ifBlank { detail.route.longName }, detail.route.mode, color = detail.route.color, textColor = detail.route.textColor)
+                    Text(
+                        detail.trip.headsign, style = MaterialTheme.typography.titleLarge, maxLines = 2,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        modifier = Modifier.semantics { heading() },
+                    )
+                }
                 Text(
                     listOfNotNull(detail.trip.shortName.ifBlank { null }, Format.mode(detail.route.mode), detail.route.operator?.name, Format.date(detail.serviceDate)).joinToString(" · "),
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -408,10 +411,6 @@ private fun TripContent(
                 else Text(stringResource(R.string.trip_no_vehicle), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
-        // Compact: a static preview in the list; tap it (or the expand button) for the large, interactive map.
-        if (hasMap && !mapState.expanded) item {
-            org.southtyrol.transit.feature.common.CompactMapCard(mapState, mapContent, camera, Modifier.fillMaxWidth().height(220.dp).padding(bottom = 12.dp))
-        }
         itemsIndexed(detail.stops, key = { _, s -> s.sequence }, contentType = { _, _ -> "stop" }) { index, stop ->
             val marker = when {
                 position == null -> VehicleMarker.NONE
@@ -428,6 +427,7 @@ private fun TripContent(
                 distance = if (index > 0 && firstDistance != null) stop.distanceMeters?.let { Format.distance(it - firstDistance) } else null,
             )
         }
+    }
     }
     }
 }

@@ -174,14 +174,19 @@ internal fun MapLibreTransitMap(
     }
 
     // Listeners once per map view: the style effect below re-runs on every theme or map type change.
-    LaunchedEffect(mapView) {
+    // Applied again whenever it changes: one map can switch between still and live (the map lip opening).
+    LaunchedEffect(mapView, interactive) {
         mapView.getMapAsync { map ->
-            holder.map = map
             map.uiSettings.isRotateGesturesEnabled = interactive
             map.uiSettings.isScrollGesturesEnabled = interactive
             map.uiSettings.isZoomGesturesEnabled = interactive
-            map.uiSettings.isTiltGesturesEnabled = false
             map.uiSettings.isCompassEnabled = interactive
+        }
+    }
+    LaunchedEffect(mapView) {
+        mapView.getMapAsync { map ->
+            holder.map = map
+            map.uiSettings.isTiltGesturesEnabled = false
             if (map.cameraPosition.target == null || holder.appliedCamera == null) {
                 map.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(Geo.Bolzano.latitude, Geo.Bolzano.longitude), 9.0))
             }
@@ -276,8 +281,11 @@ internal fun MapLibreTransitMap(
                 when {
                     valid.size >= 2 -> {
                         val bounds = LatLngBounds.Builder().includes(valid.map { LatLng(it.latitude, it.longitude) }).build()
-                        val pad = (request.paddingDp * density).toInt()
-                        runCatching { map.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, pad), 600) }
+                        val px = { dp: Int -> (dp * density).toInt() }
+                        val insets = request.insets
+                        val update = if (insets == null) CameraUpdateFactory.newLatLngBounds(bounds, px(request.paddingDp))
+                        else CameraUpdateFactory.newLatLngBounds(bounds, px(insets.side), px(insets.top), px(insets.side), px(insets.bottom))
+                        runCatching { map.animateCamera(update, 600) }
                     }
                     valid.size == 1 -> map.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(valid[0].latitude, valid[0].longitude), 15.0), 600)
                 }

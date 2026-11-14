@@ -66,10 +66,15 @@ import org.southtyrol.transit.design.StatusBanner
 import org.southtyrol.transit.design.TimeStyles
 import org.southtyrol.transit.design.TransitLoading
 import org.southtyrol.transit.design.rememberNow
-import org.southtyrol.transit.feature.common.CompactMapCard
-import org.southtyrol.transit.feature.common.ExpandableMapPage
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.ScaffoldDefaults
 import org.southtyrol.transit.feature.common.LegStops
-import org.southtyrol.transit.feature.common.rememberExpandableMapState
+import org.southtyrol.transit.feature.common.MapLipPage
+import org.southtyrol.transit.feature.common.NoMapLip
+import org.southtyrol.transit.feature.common.rememberLipSlim
+import org.southtyrol.transit.feature.common.rememberMapLipState
 import org.southtyrol.transit.feature.journey.TransferRow
 import org.southtyrol.transit.feature.journey.TransitLeg
 import org.southtyrol.transit.feature.journey.WalkLeg
@@ -128,33 +133,21 @@ class FollowViewModel @Inject constructor(active: ActiveJourney, private val con
 fun FollowScreen(navigator: Navigator, viewModel: FollowViewModel = hiltViewModel()) {
     val session by viewModel.session.collectAsStateWithLifecycle()
     val view by viewModel.view.collectAsStateWithLifecycle()
-    val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
-        modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
-        topBar = {
-            MediumFlexibleTopAppBar(
-                title = { Text(stringResource(R.string.follow_title), maxLines = 1) },
-                subtitle = (view?.journey ?: session?.journey)?.let { j ->
-                    { Text(stringResource(R.string.follow_subtitle, Format.time(j.bestArrival), j.legs.last().to.name), maxLines = 1, overflow = TextOverflow.Ellipsis) }
-                },
-                navigationIcon = { IconButton(onClick = navigator::back) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.action_back)) } },
-                actions = {
-                    // The second clock ticks only here and in the step's countdown, not for the whole screen.
-                    view?.let { FreshnessIndicator(it.freshness, it.updatedAt, rememberNow(1_000), Modifier.padding(end = 12.dp), compact = true) }
-                },
-                scrollBehavior = scroll,
-            )
-        },
+        // The map lip reaches under the status bar itself.
+        contentWindowInsets = ScaffoldDefaults.contentWindowInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
     ) { padding ->
         Box(Modifier.padding(padding).fillMaxSize()) {
             val current = session
             val shown = view
             when {
-                current == null -> MessageState(
-                    stringResource(R.string.follow_none_title), stringResource(R.string.follow_none_body),
-                    icon = Icons.Rounded.Navigation, action = stringResource(R.string.action_back), onAction = navigator::back,
-                )
-                shown == null -> TransitLoading(contained = true)
+                current == null -> NoMapLip(onBack = navigator::back) {
+                    MessageState(
+                        stringResource(R.string.follow_none_title), stringResource(R.string.follow_none_body),
+                        icon = Icons.Rounded.Navigation, action = stringResource(R.string.action_back), onAction = navigator::back,
+                    )
+                }
+                shown == null -> NoMapLip(onBack = navigator::back) { TransitLoading(contained = true) }
                 else -> FollowContent(current, shown, navigator, viewModel)
             }
         }
@@ -171,9 +164,14 @@ private fun FollowContent(session: FollowSession, view: FollowView, navigator: N
     val user = remember(view.fix) { listOfNotNull(view.fix?.let { MapMarker("user", it, MarkerKind.USER) }) }
     // Zoomed on the current step: the leg being walked, waited for or ridden.
     val map = rememberJourneyMap(view.journey, view.runs, now, user, focus = step.legIndex)
-    val mapState = rememberExpandableMapState()
-    ExpandableMapPage(mapState, map.hasLines, map.content, map.camera, Modifier.fillMaxSize()) { listModifier ->
-        LazyColumn(listModifier, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    val listState = rememberLazyListState()
+    MapLipPage(
+        rememberMapLipState(), map.hasLines, map.content, map.camera, navigator::back, Modifier.fillMaxSize(),
+        slim = rememberLipSlim(listState),
+        // The second clock ticks only here and in the step's countdown, not for the whole screen.
+        end = { FreshnessIndicator(view.freshness, view.updatedAt, rememberNow(1_000), compact = true) },
+    ) {
+        LazyColumn(state = listState, contentPadding = PaddingValues(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             view.offPlan?.let { off ->
                 item {
                     StatusBanner(
@@ -184,9 +182,6 @@ private fun FollowContent(session: FollowSession, view: FollowView, navigator: N
                         onAction = { viewModel.anotherWay(session, view, Instant.now())?.let(navigator::results) },
                     )
                 }
-            }
-            if (map.hasLines && !mapState.expanded) item {
-                CompactMapCard(mapState, map.content, map.camera, Modifier.fillMaxWidth().height(140.dp))
             }
             item {
                 if (step.kind == StepKind.ARRIVED) {

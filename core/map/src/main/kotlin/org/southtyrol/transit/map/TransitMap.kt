@@ -74,8 +74,13 @@ sealed class CameraRequest {
     abstract val key: Int
 
     data class Center(val point: Point, val zoom: Double, override val key: Int = 0) : CameraRequest()
-    data class Fit(val points: List<Point>, val paddingDp: Int = 48, override val key: Int = 0) : CameraRequest()
+    /** [insets], when given, replaces [paddingDp] edge by edge: room for what the caller lays over the map. */
+    data class Fit(val points: List<Point>, val paddingDp: Int = 48, override val key: Int = 0, val insets: FitInsets? = null) : CameraRequest()
 }
+
+/** Padding of a [CameraRequest.Fit] per edge, in dp: [side] on the left and the right alike. */
+@Immutable
+data class FitInsets(val top: Int, val bottom: Int, val side: Int)
 
 data class MapViewport(val box: BoundingBox, val zoom: Double, val center: Point)
 

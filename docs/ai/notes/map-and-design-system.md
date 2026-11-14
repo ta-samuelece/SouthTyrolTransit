@@ -1,11 +1,11 @@
 ---
 type: Reference
 title: Map and design-system conventions - MapContent, styles, attribution, colours, reduced motion
-description: Map content is one immutable value pushed layer by layer and marker ids must be unique across stops, vehicles and POIs; without a timetable the map's stops come from the EFA coordinate search; maps inside pages use ExpandableMapPage and enlarge where their small card sits; the one convention for showing progress along a run; the dark style falls back to the light override; four map types from one provider catalogue, Province rasters under the transit layers, credit per style and the font every style must serve; feed route colours are already used; the colour scheme (own palette by default, optional wallpaper colours and pure black); which Material 3 Expressive component to use for a choice, a hero, a grouped list and data freshness; the top lips of Plan and Alerts; the map's locate button is a FAB menu opened by a long press, with the layers button above it; reduced motion is read once.
+description: Map content is one immutable value pushed layer by layer and marker ids must be unique across stops, vehicles and POIs; without a timetable the map's stops come from the EFA coordinate search; the journey, following, stop and trip screens have a map lip (MapLipPage) instead of a top bar, the line page still an ExpandableMapPage; the one convention for showing progress along a run; the dark style falls back to the light override; four map types from one provider catalogue, Province rasters under the transit layers, credit per style and the font every style must serve; feed route colours are already used; the colour scheme (own palette by default, optional wallpaper colours and pure black); which Material 3 Expressive component to use for a choice, a hero, a grouped list and data freshness; the top lips of Plan and Alerts; the map's locate button is a FAB menu opened by a long press, with the layers button above it; reduced motion is read once.
 tags: [map, maplibre, design-system, colors, accessibility]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-11-07T14:00:00Z"
+  at: "2026-11-14T13:10:00Z"
 status: stable
 ---
 
@@ -90,20 +90,24 @@ status: stable
   viewport centre, radius = half the diagonal capped at 3 km, filtered to the box. Online stops use the
   EFA global id as `id` and `stationKey`, the same key as timetable stations, so saved-stop highlighting
   and the stop page work for both. The map screen and the map picker both go through it.
-- **Maps inside pages** (trip, journey, line, stop) use `ExpandableMapPage` + `CompactMapCard`
-  (`app/.../feature/common/ExpandableMap.kt`): a static card in the list, enlarged to 60% of the page's
-  height outside the list so its gestures never fight the list's scrolling; back shrinks it. The page is
-  one custom `Layout` (header, enlarged map, list in the rest), not a `BoxWithConstraints`, so the whole
-  page is not subcomposed during measurement. `CompactMapCard` pins its list item
-  (`LocalPinnableContainer`) while the page is shown: unpinned, scrolling it out of view disposed the
-  `MapView`, whose `onDestroy` blocks the main thread 20-50 ms on MapLibre's render thread, and scrolling
-  back built a new map (Perfetto, 2026-10-31). `placement` puts
-  the enlarged map where the small card is - `BOTTOM` on the stop page, whose map is the last item, `TOP`
-  elsewhere. A new page with a map should use these rather than an interactive `TransitMap` in a list.
-  The enlarge button sits in the top end corner, where MapLibre puts its compass once the map is
-  rotated, so the card passes `TransitMap(compassTopMargin = 60.dp)` to keep the compass below it.
-  Any edge-to-edge `TransitMap` must pass a margin too, or the compass lands under the status bar: the
-  Map tab passes the status-bar inset plus 12 dp, or plus 76 dp to clear a search bar at the top.
+- **The map lip** (`MapLipPage`, `app/.../feature/common/MapLip.kt`) is the top of the journey,
+  following, stop and trip screens, in place of a top bar: the map fills the lip from under the status
+  bar, the back button and the live pill sit on it in the surface tone, and the page is a `surface` sheet
+  with 28 dp corners and a drag handle. No title in the lip (the sheet's first item says what the page
+  is). Closed, the map is a still 48 dp strip below the buttons (20 dp once the list scrolls, by the same
+  latch as the Alerts dashboard, `rememberLipSlim`); the handle (drag or tap) or a tap on the map opens it
+  at 65% of the page, live; a drag back, a touch on the sheet or Back closes it. The sheet moves in the
+  layout phase, but the map is resized only when it settles (opening: at once; closing: after the sheet
+  has covered it), because a MapLibre surface resized every frame stutters; each new height re-fits the
+  camera with `CameraRequest.Fit.insets`, clear of the buttons and the sheet's corners. The credit sits
+  28 dp up, above the corners. The journey detail pane beside the results uses it with no back button and
+  no status-bar inset; loading and error states use `NoMapLip`. The line page still uses the older
+  `ExpandableMapPage` + `CompactMapCard` (`ExpandableMap.kt`): a static card in the list, enlarged to 60%
+  of the page outside the list; the card pins its list item (`LocalPinnableContainer`), because a
+  disposed `MapView` blocks the main thread 20-50 ms on MapLibre's render thread (Perfetto, 2026-10-31).
+  Any `TransitMap` with something laid over its top must pass `compassTopMargin`, or the compass lands
+  under it: the lip passes its button row's height, the Map tab the status-bar inset plus 12 dp, or plus
+  76 dp to clear a search bar at the top.
 - **Lines**: `MapPolyline` has `opacity` and `dashed`. Dashed lines live in their own layer
   (`line-dasharray` cannot be data-driven on Android) - before 2026-10-09 `dashed` was written to the
   feature but never rendered, so walking legs drew solid.

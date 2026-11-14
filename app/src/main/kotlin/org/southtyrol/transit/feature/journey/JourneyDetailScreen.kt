@@ -22,6 +22,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.material3.ScaffoldDefaults
+import org.southtyrol.transit.feature.common.MapLipPage
+import org.southtyrol.transit.feature.common.NoMapLip
+import org.southtyrol.transit.feature.common.rememberLipSlim
+import org.southtyrol.transit.feature.common.rememberMapLipState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -113,31 +123,12 @@ import java.time.Instant
 @Composable
 fun JourneyDetailScreen(navigator: Navigator, viewModel: JourneyDetailViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val found = (state as? DetailState.Found)?.journey
     val headerNow = rememberNow()
     var showStart by rememberSaveable { mutableStateOf(false) }
     Scaffold(
-        modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
-        topBar = {
-            // The journey's times are its name: they are the title, duration and changes the subtitle.
-            MediumFlexibleTopAppBar(
-                title = {
-                    Text(
-                        found?.let { "${Format.time(it.bestDeparture)} – ${Format.time(it.bestArrival)}" } ?: stringResource(R.string.journey_title),
-                        maxLines = 1,
-                    )
-                },
-                subtitle = found?.let { j ->
-                    { Text(listOf(Format.duration(j.duration), pluralStringResource(R.plurals.changes, j.changes, j.changes)).joinToString(" · ")) }
-                },
-                navigationIcon = { IconButton(onClick = navigator::back) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.action_back)) } },
-                actions = {
-                    found?.let { FreshnessIndicator(if (it.hasRealtime) Freshness.LIVE else Freshness.SCHEDULED, null, headerNow, Modifier.padding(end = 12.dp), compact = true) }
-                },
-                scrollBehavior = scroll,
-            )
-        },
+        // The map lip reaches under the status bar itself.
+        contentWindowInsets = ScaffoldDefaults.contentWindowInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
         floatingActionButton = {
             // Following makes sense until the journey has arrived.
             val followedId by viewModel.followedId.collectAsStateWithLifecycle()
@@ -153,11 +144,15 @@ fun JourneyDetailScreen(navigator: Navigator, viewModel: JourneyDetailViewModel 
     ) { padding ->
         Box(Modifier.padding(padding).fillMaxSize()) {
             when (val s = state) {
-                DetailState.Loading -> TransitLoading(contained = true)
-                DetailState.Missing -> MessageState(stringResource(R.string.journey_missing), stringResource(R.string.journey_missing_hint), action = stringResource(R.string.action_back), onAction = navigator::back)
-                is DetailState.Error -> ErrorState(s.error, onRetry = viewModel::load)
                 // Room below the list for the Start button.
-                is DetailState.Found -> JourneyDetailContent(s.journey, navigator, Modifier.fillMaxSize(), showHeader = false, bottomPadding = 88.dp, withBike = viewModel.withBike)
+                is DetailState.Found -> JourneyDetailContent(s.journey, navigator, Modifier.fillMaxSize(), onBack = navigator::back, bottomPadding = 88.dp, withBike = viewModel.withBike)
+                else -> NoMapLip(onBack = navigator::back) {
+                    when (s) {
+                        DetailState.Missing -> MessageState(stringResource(R.string.journey_missing), stringResource(R.string.journey_missing_hint), action = stringResource(R.string.action_back), onAction = navigator::back)
+                        is DetailState.Error -> ErrorState(s.error, onRetry = viewModel::load)
+                        else -> TransitLoading(contained = true)
+                    }
+                }
             }
         }
     }
@@ -176,22 +171,28 @@ fun JourneyDetailScreen(navigator: Navigator, viewModel: JourneyDetailViewModel 
 }
 
 /**
- * Rich itinerary: header, route map, leg timeline with transfers, then fare information. The times
- * header is left out ([showHeader] false) where the top app bar already shows them. [withBike]: the search
- * was for travelling with a bike, so a leg whose bike rule the timetable does not give gets a warning.
+ * Rich itinerary under the map lip: the times header, leg timeline with transfers, then fare information.
+ * [onBack] null is the detail pane beside the results, whose lip has no back button and does not reach under
+ * the status bar. [withBike]: the search was for travelling with a bike, so a leg whose bike rule the
+ * timetable does not give gets a warning.
  */
 @Composable
-fun JourneyDetailContent(journey: Journey, navigator: Navigator, modifier: Modifier = Modifier, showHeader: Boolean = true, bottomPadding: androidx.compose.ui.unit.Dp = 16.dp, withBike: Boolean = false) {
+fun JourneyDetailContent(journey: Journey, navigator: Navigator, modifier: Modifier = Modifier, onBack: (() -> Unit)? = null, bottomPadding: androidx.compose.ui.unit.Dp = 16.dp, withBike: Boolean = false) {
     val now = rememberNow(10_000)
     val live = hiltViewModel<JourneyLiveViewModel, JourneyLiveViewModel.Factory>(key = "live:" + journey.id) { it.create(journey) }
     val legRuns by live.legRuns.collectAsStateWithLifecycle()
     val matched by live.matched.collectAsStateWithLifecycle()
     PollWhileVisible(20_000) { live.poll() }
     val map = rememberJourneyMap(journey, legRuns, now)
-    val mapState = org.southtyrol.transit.feature.common.rememberExpandableMapState()
-    org.southtyrol.transit.feature.common.ExpandableMapPage(mapState, map.hasLines, map.content, map.camera, modifier) { listModifier ->
-    LazyColumn(listModifier, contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = bottomPadding), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        if (showHeader) item {
+    val listState = rememberLazyListState()
+    MapLipPage(
+        rememberMapLipState(), map.hasLines, map.content, map.camera, onBack, modifier,
+        slim = rememberLipSlim(listState),
+        topInset = if (onBack == null) 0.dp else androidx.compose.foundation.layout.WindowInsets.statusBars.asPaddingValues().calculateTopPadding(),
+        end = { FreshnessIndicator(if (journey.hasRealtime) Freshness.LIVE else Freshness.SCHEDULED, null, now, compact = true) },
+    ) {
+    LazyColumn(state = listState, contentPadding = PaddingValues(start = 16.dp, top = 8.dp, end = 16.dp, bottom = bottomPadding), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        item {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text("${Format.time(journey.bestDeparture)} – ${Format.time(journey.bestArrival)}", style = TimeStyles.hero, modifier = Modifier.semantics { heading() })
@@ -200,12 +201,7 @@ fun JourneyDetailContent(journey: Journey, navigator: Navigator, modifier: Modif
                     listOf(Format.duration(journey.duration), pluralStringResource(R.plurals.changes, journey.changes, journey.changes)).joinToString(" · "),
                     style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                // Only without a top bar of its own (the detail pane beside the results); the screen's bar shows all this.
-                FreshnessIndicator(if (journey.hasRealtime) Freshness.LIVE else Freshness.SCHEDULED, null, now)
             }
-        }
-        if (map.hasLines && !mapState.expanded) item {
-            org.southtyrol.transit.feature.common.CompactMapCard(mapState, map.content, map.camera, Modifier.fillMaxWidth().height(220.dp))
         }
         itemsIndexed(journey.legs, contentType = { _, leg -> if (leg.mode == TransportMode.WALK) "walk" else "transit" }) { index, leg ->
             val previous = journey.legs.getOrNull(index - 1)

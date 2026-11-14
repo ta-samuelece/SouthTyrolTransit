@@ -73,7 +73,6 @@ import androidx.compose.material3.ScaffoldDefaults
 import org.southtyrol.transit.feature.common.LegStops
 import org.southtyrol.transit.feature.common.MapLipPage
 import org.southtyrol.transit.feature.common.NoMapLip
-import org.southtyrol.transit.feature.common.rememberLipSlim
 import org.southtyrol.transit.feature.common.rememberMapLipState
 import org.southtyrol.transit.feature.journey.TransferRow
 import org.southtyrol.transit.feature.journey.TransitLeg
@@ -167,7 +166,7 @@ private fun FollowContent(session: FollowSession, view: FollowView, navigator: N
     val listState = rememberLazyListState()
     MapLipPage(
         rememberMapLipState(), map.hasLines, map.content, map.camera, navigator::back, Modifier.fillMaxSize(),
-        slim = rememberLipSlim(listState),
+        listState = listState,
         // The second clock ticks only here and in the step's countdown, not for the whole screen.
         end = { FreshnessIndicator(view.freshness, view.updatedAt, rememberNow(1_000), compact = true) },
     ) {

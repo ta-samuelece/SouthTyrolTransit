@@ -30,7 +30,6 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.material3.ScaffoldDefaults
 import org.southtyrol.transit.feature.common.MapLipPage
 import org.southtyrol.transit.feature.common.NoMapLip
-import org.southtyrol.transit.feature.common.rememberLipSlim
 import org.southtyrol.transit.feature.common.rememberMapLipState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -187,8 +186,12 @@ fun JourneyDetailContent(journey: Journey, navigator: Navigator, modifier: Modif
     val listState = rememberLazyListState()
     MapLipPage(
         rememberMapLipState(), map.hasLines, map.content, map.camera, onBack, modifier,
-        slim = rememberLipSlim(listState),
+        listState = listState,
         topInset = if (onBack == null) 0.dp else androidx.compose.foundation.layout.WindowInsets.statusBars.asPaddingValues().calculateTopPadding(),
+        // Once the sheet covers the map and the times have scrolled away, the header carries them.
+        title = {
+            Text("${Format.time(journey.bestDeparture)} – ${Format.time(journey.bestArrival)}", style = MaterialTheme.typography.titleLarge, maxLines = 1)
+        },
         end = { FreshnessIndicator(if (journey.hasRealtime) Freshness.LIVE else Freshness.SCHEDULED, null, now, compact = true) },
     ) {
     LazyColumn(state = listState, contentPadding = PaddingValues(start = 16.dp, top = 8.dp, end = 16.dp, bottom = bottomPadding), verticalArrangement = Arrangement.spacedBy(12.dp)) {

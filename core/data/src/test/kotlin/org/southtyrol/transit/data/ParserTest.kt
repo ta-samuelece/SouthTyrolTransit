@@ -107,7 +107,8 @@ class EfaXmlTest {
         // EFA's own 10-minute footpath cap would drop "walk further to a direct bus" connections.
         assertEquals("100", params["trITMOT"])
         assertEquals("20", params["trITMOTvalue100"])
-        assertEquals("LEASTINTERCHANGE", params["routeType"])
+        // The default preference is the fastest trip.
+        assertEquals("LEASTTIME", params["routeType"])
     }
 
     @Test fun connectionsOutsideTheRequestedTimeAreDropped() {

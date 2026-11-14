@@ -1,11 +1,11 @@
 ---
 type: Reference
 title: Map and design-system conventions - MapContent, styles, attribution, colours, reduced motion
-description: Map content is one immutable value pushed layer by layer and marker ids must be unique across stops, vehicles and POIs; without a timetable the map's stops come from the EFA coordinate search; the journey, following, stop and trip screens have a map lip (MapLipPage) instead of a top bar, the line page still an ExpandableMapPage; the one convention for showing progress along a run; the dark style falls back to the light override; four map types from one provider catalogue, Province rasters under the transit layers, credit per style and the font every style must serve; feed route colours are already used; the colour scheme (own palette by default, optional wallpaper colours and pure black); which Material 3 Expressive component to use for a choice, a hero, a grouped list and data freshness; the top lips of Plan and Alerts; the map's locate button is a FAB menu opened by a long press, with the layers button above it; reduced motion is read once.
+description: Map content is one immutable value pushed layer by layer and marker ids must be unique across stops, vehicles and POIs; without a timetable the map's stops come from the EFA coordinate search; the journey, following, stop and trip screens have a map lip (MapLipPage) instead of a top bar, which scrolling covers with a plain header, the line page still an ExpandableMapPage; the one convention for showing progress along a run; the dark style falls back to the light override; four map types from one provider catalogue, Province rasters under the transit layers, credit per style and the font every style must serve; feed route colours are already used; the colour scheme (own palette by default, optional wallpaper colours and pure black); which Material 3 Expressive component to use for a choice, a hero, a grouped list and data freshness; the top lips of Plan and Alerts; the map's locate button is a FAB menu opened by a long press, with the layers button above it; reduced motion is read once.
 tags: [map, maplibre, design-system, colors, accessibility]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-11-14T13:10:00Z"
+  at: "2026-11-14T16:00:00Z"
 status: stable
 ---
 
@@ -94,9 +94,15 @@ status: stable
   following, stop and trip screens, in place of a top bar: the map fills the lip from under the status
   bar, the back button and the live pill sit on it in the surface tone, and the page is a `surface` sheet
   with 28 dp corners and a drag handle. No title in the lip (the sheet's first item says what the page
-  is). Closed, the map is a still 48 dp strip below the buttons (20 dp once the list scrolls, by the same
-  latch as the Alerts dashboard, `rememberLipSlim`); the handle (drag or tap) or a tap on the map opens it
-  at 65% of the page, live; a drag back, a touch on the sheet or Back closes it. The sheet moves in the
+  is). Closed, the map is a still 48 dp strip below the buttons; the handle (drag or tap) or a tap on the
+  map opens it at 65% of the page, live; a drag back, a touch on the sheet or Back closes it. Scrolling the
+  page's list (passed as `listState`) first slides the sheet up by the strip plus the handle, through a
+  `NestedScrollConnection` on the sheet: a `surface` layer fades in over the map, so the lip becomes a
+  plain header in which the buttons' surface-tone pills dissolve, the corners and handle fade, and once
+  the list has scrolled 48 dp the header shows the page's `title` slot. It slides back only when a scroll
+  down starts from the list's top (`canScrollBackward` false), and settles at either end after a fling.
+  The connection is the outermost, so it runs before the stop page's pull to refresh. The button row is
+  drawn after the sheet, which reaches up behind it when covered. The sheet moves in the
   layout phase, but the map is resized only when it settles (opening: at once; closing: after the sheet
   has covered it), because a MapLibre surface resized every frame stutters; each new height re-fits the
   camera with `CameraRequest.Fit.insets`, clear of the buttons and the sheet's corners. The credit sits

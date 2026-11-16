@@ -82,6 +82,19 @@ sealed class CameraRequest {
 @Immutable
 data class FitInsets(val top: Int, val bottom: Int, val side: Int)
 
+/**
+ * Whether the camera follows the user's position: [NONE] leaves it where the user puts it, [POSITION] keeps
+ * the user centred, [HEADING] also turns the map so the way the user faces is up.
+ */
+enum class CameraFollow { NONE, POSITION, HEADING }
+
+/**
+ * A camera move the user made on a following map: [PAN] a one-finger drag, [ROTATE] a two-finger turn.
+ * Zooming is not reported: it keeps following, around the user's dot. In heading mode the map's compass is
+ * hidden, since the locate button is the compass there.
+ */
+enum class MapGesture { PAN, ROTATE }
+
 data class MapViewport(val box: BoundingBox, val zoom: Double, val center: Point)
 
 /**
@@ -146,6 +159,8 @@ val LocalMapPureBlack = staticCompositionLocalOf { false }
  * search bar, a button in that corner; null keeps the SDK's margin. A caller that
  * places the credit itself (in its own overlay column) passes [attribution] false and shows [MapAttribution].
  * [user] is drawn above everything else and updates on its own, without touching [content].
+ * With [follow] other than [CameraFollow.NONE] the camera tracks [user]; [onFollowGesture] then reports each
+ * camera move the user makes, so the caller can end or change the following.
  */
 @Composable
 fun TransitMap(
@@ -161,9 +176,11 @@ fun TransitMap(
     compassTopMargin: Dp? = null,
     attribution: Boolean = true,
     user: UserLocation? = null,
+    follow: CameraFollow = CameraFollow.NONE,
+    onFollowGesture: (MapGesture) -> Unit = {},
 ) {
     Box(modifier) {
-        MapLibreTransitMap(content, Modifier.fillMaxSize(), camera, darkTheme, interactive, onMarkerClick, onViewportChanged, compassTopMargin, user)
+        MapLibreTransitMap(content, Modifier.fillMaxSize(), camera, darkTheme, interactive, onMarkerClick, onViewportChanged, compassTopMargin, user, follow, onFollowGesture)
         if (attribution) MapAttribution(darkTheme, Modifier.align(attributionAlignment).padding(attributionPadding))
     }
 }

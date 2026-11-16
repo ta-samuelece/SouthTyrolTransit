@@ -226,6 +226,8 @@
     <string name="map_menu_language">Sprache: %1$s</string>
     <string name="map_menu_theme">Design: %1$s</string>
     <string name="map_center_me">Meinen Standort zeigen</string>
+    <string name="map_follow_heading">Meiner Blickrichtung folgen</string>
+    <string name="map_follow_north">Karte nach Norden ausrichten</string>
     <string name="map_saved_stops_show">Gespeicherte Haltestellen zeigen</string>
     <string name="map_saved_stops_close">Gespeicherte Haltestellen schließen</string>
     <string name="map_saved_stops_hint">Tipp: Halte die Standort-Taste gedrückt, um zu deinen gespeicherten Haltestellen zu springen.</string>

@@ -31,6 +31,8 @@ import androidx.compose.material.icons.rounded.Directions
 import androidx.compose.material.icons.rounded.DirectionsBus
 import androidx.compose.material.icons.rounded.ElectricCar
 import androidx.compose.material.icons.rounded.LocalParking
+import androidx.compose.material.icons.rounded.Explore
+import androidx.compose.material.icons.rounded.LocationSearching
 import androidx.compose.material.icons.rounded.MyLocation
 import androidx.compose.material.icons.rounded.PedalBike
 import androidx.compose.material.icons.rounded.Place
@@ -64,6 +66,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -134,7 +137,9 @@ import org.southtyrol.transit.feature.search.MapSearchViewModel
 import org.southtyrol.transit.location.HeadingProvider
 import org.southtyrol.transit.location.LocationProvider
 import org.southtyrol.transit.location.LocationResult
+import org.southtyrol.transit.map.CameraFollow
 import org.southtyrol.transit.map.CameraRequest
+import org.southtyrol.transit.map.MapGesture
 import org.southtyrol.transit.map.MapContent
 import org.southtyrol.transit.map.MapMarker
 import org.southtyrol.transit.map.MapAttribution
@@ -205,6 +210,9 @@ class MapViewModel @Inject constructor(
     val locationProblem: StateFlow<LocationResult?> = _locationProblem.asStateFlow()
     private val _user = MutableStateFlow<UserLocation?>(null)
     val user: StateFlow<UserLocation?> = _user.asStateFlow()
+    /** Whether the camera follows the user; the locate button and the user's own camera moves change it ([FollowRules]). */
+    private val _follow = MutableStateFlow(CameraFollow.NONE)
+    val follow: StateFlow<CameraFollow> = _follow.asStateFlow()
     /** Whether the map shows the user: from the start when location is allowed, else once the locate button got a fix. */
     private val tracking = MutableStateFlow(location.hasPermission())
 
@@ -240,6 +248,8 @@ class MapViewModel @Inject constructor(
     suspend fun poll() { if (prefs.value.showVehicles) map.pollVehicles() }
 
     fun select(marker: MapMarker) {
+        // The sheet is about the marker: the camera stops pulling away from it.
+        _follow.value = CameraFollow.NONE
         when (marker.kind) {
             MarkerKind.VEHICLE -> {
                 val v = vehicles.value.firstOrNull { "v:" + it.vehicle.id == marker.id } ?: return
@@ -283,12 +293,14 @@ class MapViewModel @Inject constructor(
 
     /** From a full bike box site's sheet: fly to the nearest one with space and open its sheet. */
     fun focusMobility(point: MobilityPoint) {
+        _follow.value = CameraFollow.NONE
         _camera.value = CameraRequest.Center(point.point, 16.0, key = (_camera.value?.key ?: 0) + 1)
         selectMobility(point)
     }
 
     /** From the locate button's menu: fly to a saved stop and open its sheet. */
     fun focusStop(stop: Stop) {
+        _follow.value = CameraFollow.NONE
         _camera.value = CameraRequest.Center(stop.point, 16.0, key = (_camera.value?.key ?: 0) + 1)
         selectStop(stop)
     }
@@ -314,20 +326,30 @@ class MapViewModel @Inject constructor(
 
     fun clearSelection() { _selection.value = null }
 
+    /** The locate button's tap while following: on to heading mode, or back from it ([FollowRules.tap]). */
+    fun nextFollow() { _follow.update(FollowRules::tap) }
+
+    /** A drag, turn or compass tap the user made on the map while it follows. */
+    fun onFollowGesture(gesture: MapGesture) { _follow.update { FollowRules.gesture(it, gesture) } }
+
+    /** The locate button's tap on a free map: once there is a fix, the map flies there and follows. */
     fun centerOnMe() = viewModelScope.launch {
         when (val r = location.current()) {
             is LocationResult.Found -> {
                 _user.update { UserLocation(r.point, r.accuracyMeters, it?.heading) }
                 tracking.value = true
-                _camera.value = CameraRequest.Center(r.point, 15.0, key = (_camera.value?.key ?: 0) + 1)
+                _follow.value = CameraFollow.POSITION
             }
-            else -> _locationProblem.value = r
+            else -> {
+                _follow.value = CameraFollow.NONE
+                _locationProblem.value = r
+            }
         }
     }
 
     /**
      * While the map is on screen: moves the user's dot with every fix and turns its cone with the compass.
-     * The camera stays where the user put it; only the locate button moves it.
+     * The camera stays where the user put it, unless the locate button made it follow.
      */
     suspend fun trackUser() {
         tracking.collectLatest { on ->
@@ -339,7 +361,7 @@ class MapViewModel @Inject constructor(
                 launch {
                     var declination: Float? = null
                     // Small wobbles would redraw the map many times a second for nothing.
-                    compass.headings().distinctUntilChanged { a, b -> Geo.headingDelta(a, b) < 2f }.collect { magnetic ->
+                    compass.headings().distinctUntilChanged { a, b -> Geo.headingDelta(a, b) < 1f }.collect { magnetic ->
                         val at = _user.value?.point ?: return@collect
                         val offset = declination ?: compass.declination(at).also { declination = it }
                         _user.update { it?.copy(heading = (magnetic + offset + 360f) % 360f) }
@@ -373,6 +395,7 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel(), s
     val feed by viewModel.vehicleFeed.collectAsStateWithLifecycle()
     val problem by viewModel.locationProblem.collectAsStateWithLifecycle()
     val user by viewModel.user.collectAsStateWithLifecycle()
+    val follow by viewModel.follow.collectAsStateWithLifecycle()
     val savedStops by viewModel.savedStops.collectAsStateWithLifecycle()
     val stopModes by viewModel.stopModes.collectAsStateWithLifecycle()
     val alerts by viewModel.alerts.collectAsStateWithLifecycle()
@@ -485,6 +508,8 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel(), s
                 // (12 dp margin, 56 dp bar, 8 dp gap) when the bar is at the top.
                 compassTopMargin = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + if (barAtBottom) 12.dp else 76.dp,
                 user = user,
+                follow = follow,
+                onFollowGesture = viewModel::onFollowGesture,
             )
 
             Column(Modifier.statusBarsPadding().padding(12.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -536,7 +561,8 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel(), s
                     savedStops = savedStops,
                     expanded = menuOpen,
                     onExpandedChange = { menuOpen = it },
-                    onLocate = requestLocation,
+                    follow = follow,
+                    onLocate = { if (follow == CameraFollow.NONE) requestLocation() else viewModel.nextFollow() },
                     onNoSavedStops = { scope.launch { snackbar.showSnackbar(noSavedText, withDismissAction = true) } },
                     onStop = viewModel::focusStop,
                     modifier = Modifier
@@ -620,8 +646,9 @@ fun MapScreen(navigator: Navigator, viewModel: MapViewModel = hiltViewModel(), s
 }
 
 /**
- * The locate button as a FAB menu. Unlike the spec's menu, a tap keeps its long-standing job (centre on
- * the user); a long press opens the saved stops, and the button then turns into the menu's close button.
+ * The locate button as a FAB menu. Unlike the spec's menu, a tap keeps its long-standing job (find the
+ * user, then step through [follow]: following, following with heading, back); a long press opens the saved
+ * stops, and the button then turns into the menu's close button. While following it is in `primary`.
  */
 @Composable
 private fun LocateFabMenu(
@@ -629,6 +656,7 @@ private fun LocateFabMenu(
     savedStops: List<Stop>,
     expanded: Boolean,
     onExpandedChange: (Boolean) -> Unit,
+    follow: CameraFollow,
     onLocate: () -> Unit,
     onNoSavedStops: () -> Unit,
     onStop: (Stop) -> Unit,
@@ -653,8 +681,10 @@ private fun LocateFabMenu(
             ToggleFloatingActionButton(
                 checked = expanded,
                 onCheckedChange = { if (expanded) onExpandedChange(false) else onLocate() },
-                // A muted secondary tone: the map, not this button, is the content.
-                containerColor = ToggleFloatingActionButtonDefaults.containerColor(colors.secondaryContainer, colors.secondary),
+                // A muted secondary tone: the map, not this button, is the content. Following, it says so in primary.
+                containerColor = ToggleFloatingActionButtonDefaults.containerColor(
+                    if (follow == CameraFollow.NONE) colors.secondaryContainer else colors.primary, colors.secondary,
+                ),
                 modifier = Modifier
                     // Seen before the button's own click handling: after a long press the release is
                     // consumed here, so the button does not also take it as a tap.
@@ -673,12 +703,32 @@ private fun LocateFabMenu(
                     }
                     .semantics { if (!expanded) onLongClick(longPressLabel) { currentOpenMenu(); true } },
             ) {
-                val iconColor = ToggleFloatingActionButtonDefaults.iconColor(colors.onSecondaryContainer, colors.onSecondary)
-                Icon(
-                    if (checkedProgress > 0.5f) Icons.Rounded.Close else Icons.Rounded.MyLocation,
-                    contentDescription = stringResource(if (expanded) R.string.map_saved_stops_close else R.string.map_center_me),
-                    modifier = with(ToggleFloatingActionButtonDefaults) { Modifier.animateIcon({ checkedProgress }, color = iconColor) },
+                val iconColor = ToggleFloatingActionButtonDefaults.iconColor(
+                    if (follow == CameraFollow.NONE) colors.onSecondaryContainer else colors.onPrimary, colors.onSecondary,
                 )
+                val icon = when {
+                    checkedProgress > 0.5f -> Icons.Rounded.Close
+                    follow == CameraFollow.POSITION -> Icons.Rounded.MyLocation
+                    follow == CameraFollow.HEADING -> Icons.Rounded.Explore
+                    else -> Icons.Rounded.LocationSearching
+                }
+                // animateIcon records the icon into a cached layer that is redrawn only when its colour or
+                // size changes, so following to heading (same colour) kept the old icon: a new icon, a new layer.
+                key(icon) {
+                    Icon(
+                        icon,
+                        // What a tap does next.
+                        contentDescription = stringResource(
+                            when {
+                                expanded -> R.string.map_saved_stops_close
+                                follow == CameraFollow.POSITION -> R.string.map_follow_heading
+                                follow == CameraFollow.HEADING -> R.string.map_follow_north
+                                else -> R.string.map_center_me
+                            },
+                        ),
+                        modifier = with(ToggleFloatingActionButtonDefaults) { Modifier.animateIcon({ checkedProgress }, color = iconColor) },
+                    )
+                }
             }
         },
     ) {

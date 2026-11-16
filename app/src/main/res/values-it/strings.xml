@@ -233,6 +233,8 @@
     <string name="map_menu_language">Lingua: %1$s</string>
     <string name="map_menu_theme">Tema: %1$s</string>
     <string name="map_center_me">Mostra la mia posizione</string>
+    <string name="map_follow_heading">Segui la mia direzione</string>
+    <string name="map_follow_north">Orienta la mappa a nord</string>
     <string name="map_saved_stops_show">Mostra le fermate salvate</string>
     <string name="map_saved_stops_close">Chiudi le fermate salvate</string>
     <string name="map_saved_stops_hint">Suggerimento: tieni premuto il pulsante della posizione per passare alle fermate salvate.</string>

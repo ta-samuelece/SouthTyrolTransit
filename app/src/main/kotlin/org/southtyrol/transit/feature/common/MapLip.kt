@@ -92,8 +92,11 @@ fun rememberMapLipState(): MapLipState = rememberSaveable(saver = Saver({ it.ope
 
 /** The lip's row of buttons: 12 dp above and 16 dp below a 48 dp button, as in [org.southtyrol.transit.design.TopLip]. */
 private val ROW = 76.dp
-/** How much map shows below the row while the lip is closed and the sheet is at rest. */
-private val PEEK = 48.dp
+/**
+ * How much map shows below the row while the lip is closed and the sheet is at rest. With the row, the
+ * closed map is 186 dp tall below the status bar: half as much again as the 124 dp it started with.
+ */
+private val PEEK = 110.dp
 /** The height of the sheet's drag handle. */
 private val HANDLE = 32.dp
 /** How far the sheet's list must have scrolled under the header before the header shows the page's title. */

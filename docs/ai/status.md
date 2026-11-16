@@ -32,3 +32,13 @@ SDK. Later that day `assembleDebug` built them, and the cards, their one-line fo
 Plan's lip looked right on the API 36 emulator. Still to do: run the unit tests and `./gradlew lintDebug`,
 then try the card toggles, search focus and keyboard, Back and a line badge opening search. Clear this
 section once that is done.
+
+# Map follow-me and the taller map lip: built, not tried again on a device
+
+Branch `feature/map-follow-me`: the locate button's follow states and the closed map lip at 110 dp build,
+and the unit tests and lint pass. Device tries on 2026-11-16 found heading mode not sticking, no compass
+icon, the flight in stopping short, following ending by itself and the map lagging the phone's turn; all
+fixed that day. On the API 36 emulator the tap cycle, compass icon, zoom and tilt now work. Still to try
+on a phone: the map turning with the phone at once, drag lets go, pinch keeps following, a two-finger turn
+leaves heading mode, the map lies flat once free, and the lip's 110 dp strip with main's scroll header.
+Clear this section once that is done.

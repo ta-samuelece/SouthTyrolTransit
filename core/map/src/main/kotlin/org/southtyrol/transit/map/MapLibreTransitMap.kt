@@ -10,6 +10,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -19,8 +21,14 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.google.gson.JsonObject
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import org.maplibre.android.MapLibre
+import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdateFactory
+import org.maplibre.android.gestures.MoveGestureDetector
+import org.maplibre.android.gestures.RotateGestureDetector
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.geometry.LatLngBounds
 import org.maplibre.android.maps.MapLibreMap
@@ -107,7 +115,24 @@ private class MapHolder {
     var images: MarkerImages? = null
     /** Marker images the current style already holds; a new style starts empty. */
     val added = HashSet<String>()
+    /** The following the camera last applied; the gesture listeners report only while it is not NONE. */
+    var follow: CameraFollow = CameraFollow.NONE
+    /** A two-finger turn ended heading mode: the following that comes next keeps the user's angle. */
+    var keepBearing = false
+    /** Where a one-finger drag on the map started; null once reported, or for two fingers. */
+    var dragFrom: android.graphics.PointF? = null
 }
+
+/** In heading mode the user's dot sits this far down the map, so more of what lies ahead shows. */
+private const val HEADING_DOT_AT = 0.62
+/** Following zooms to this, unless the map is already closer in than [FOLLOW_KEEP_ZOOM]. */
+private const val FOLLOW_ZOOM = 17.0
+private const val FOLLOW_KEEP_ZOOM = 16.0
+/** In heading mode the map leans back this far, so the road ahead shows in perspective. */
+private const val HEADING_TILT = 45.0
+/** A new fix glides the camera over about the time between fixes. */
+private const val FOLLOW_FIX_MILLIS = 1_400
+private const val FOLLOW_START_MILLIS = 900
 
 @Composable
 internal fun MapLibreTransitMap(
@@ -120,6 +145,8 @@ internal fun MapLibreTransitMap(
     onViewportChanged: (MapViewport) -> Unit,
     compassTopMargin: Dp?,
     user: UserLocation?,
+    follow: CameraFollow,
+    onFollowGesture: (MapGesture) -> Unit,
 ) {
     val context = LocalContext.current
     val density = LocalDensity.current.density
@@ -135,6 +162,7 @@ internal fun MapLibreTransitMap(
     var styleVersion by remember { mutableStateOf(0) }
     val clickHandler by rememberUpdatedState(onMarkerClick)
     val viewportHandler by rememberUpdatedState(onViewportChanged)
+    val gestureHandler by rememberUpdatedState(onFollowGesture)
 
     val mapView = remember {
         MapLibre.getInstance(context)
@@ -180,7 +208,8 @@ internal fun MapLibreTransitMap(
             map.uiSettings.isRotateGesturesEnabled = interactive
             map.uiSettings.isScrollGesturesEnabled = interactive
             map.uiSettings.isZoomGesturesEnabled = interactive
-            map.uiSettings.isCompassEnabled = interactive
+            // In heading mode the locate button is the compass (see the following effect below).
+            map.uiSettings.isCompassEnabled = interactive && holder.follow != CameraFollow.HEADING
         }
     }
     LaunchedEffect(mapView) {
@@ -200,7 +229,38 @@ internal fun MapLibreTransitMap(
                         Point(target.latitude, target.longitude),
                     ),
                 )
+                // Following may have left the map tilted, and there is no tilt gesture: lay it flat again
+                // once the drag that let go of the user has ended.
+                if (holder.follow == CameraFollow.NONE && map.cameraPosition.tilt > 0.5) {
+                    map.easeCamera(CameraUpdateFactory.tiltTo(0.0), 400)
+                }
             }
+            // Only the user's own camera moves end or change following, and only a real one-finger drag lets
+            // go: a pinch moves its focal point too, and a finger resting on the map jitters a few pixels.
+            val dragSlop = 2f * android.view.ViewConfiguration.get(context).scaledTouchSlop
+            map.addOnMoveListener(object : MapLibreMap.OnMoveListener {
+                override fun onMoveBegin(detector: MoveGestureDetector) {
+                    holder.dragFrom = if (detector.pointersCount == 1) android.graphics.PointF(detector.focalPoint.x, detector.focalPoint.y) else null
+                }
+                override fun onMove(detector: MoveGestureDetector) {
+                    val from = holder.dragFrom ?: return
+                    if (detector.pointersCount != 1) { holder.dragFrom = null; return }
+                    if (holder.follow == CameraFollow.NONE) return
+                    if (kotlin.math.hypot(detector.focalPoint.x - from.x, detector.focalPoint.y - from.y) < dragSlop) return
+                    holder.dragFrom = null
+                    gestureHandler(MapGesture.PAN)
+                }
+                override fun onMoveEnd(detector: MoveGestureDetector) { holder.dragFrom = null }
+            })
+            map.addOnRotateListener(object : MapLibreMap.OnRotateListener {
+                override fun onRotateBegin(detector: RotateGestureDetector) {
+                    if (holder.follow == CameraFollow.NONE) return
+                    if (holder.follow == CameraFollow.HEADING) holder.keepBearing = true
+                    gestureHandler(MapGesture.ROTATE)
+                }
+                override fun onRotate(detector: RotateGestureDetector) = Unit
+                override fun onRotateEnd(detector: RotateGestureDetector) = Unit
+            })
             map.addOnMapClickListener { latLng ->
                 val screen = map.projection.toScreenLocation(latLng)
                 val box = android.graphics.RectF(screen.x - 24 * density, screen.y - 24 * density, screen.x + 24 * density, screen.y + 24 * density)
@@ -275,7 +335,16 @@ internal fun MapLibreTransitMap(
         if (request == holder.appliedCamera) return@LaunchedEffect
         holder.appliedCamera = request
         when (request) {
-            is CameraRequest.Center -> map.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(request.point.latitude, request.point.longitude), request.zoom), 600)
+            // Without the padding and tilt heading mode may have left, so the point lands in the middle.
+            is CameraRequest.Center -> {
+                map.animateCamera(
+                    CameraUpdateFactory.newCameraPosition(
+                        CameraPosition.Builder(map.cameraPosition).target(LatLng(request.point.latitude, request.point.longitude))
+                            .zoom(request.zoom).tilt(0.0).padding(0.0, 0.0, 0.0, 0.0).build(),
+                    ),
+                    600,
+                )
+            }
             is CameraRequest.Fit -> {
                 val valid = request.points.filter { it.isValid }
                 when {
@@ -287,9 +356,71 @@ internal fun MapLibreTransitMap(
                         else CameraUpdateFactory.newLatLngBounds(bounds, px(insets.side), px(insets.top), px(insets.side), px(insets.bottom))
                         runCatching { map.animateCamera(update, 600) }
                     }
-                    valid.size == 1 -> map.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(valid[0].latitude, valid[0].longitude), 15.0), 600)
+                    valid.size == 1 -> { map.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(valid[0].latitude, valid[0].longitude), 15.0), 600) }
                 }
             }
+        }
+    }
+
+    // Following: a flight onto the user, then the camera is moved every frame - the position glides from fix
+    // to fix, the bearing tracks the compass at once. Pinch zoom keeps following, around the dot (the focal
+    // point); the gesture listeners above report anything else the user does.
+    val currentUser by rememberUpdatedState(user)
+    LaunchedEffect(follow, styleVersion) {
+        val map = holder.map ?: return@LaunchedEffect
+        // In heading mode the locate button is the compass, as in Google Maps: tapping it turns the map north.
+        // The map's own compass would turn it behind the button's back, and MapLibre reports that turn only
+        // later, through a Handler, so it cannot be told apart from this code's own camera moves.
+        map.uiSettings.isCompassEnabled = follow != CameraFollow.HEADING && map.uiSettings.isScrollGesturesEnabled
+        if (follow == CameraFollow.NONE) {
+            holder.follow = CameraFollow.NONE
+            map.uiSettings.focalPoint = null
+            holder.keepBearing = false
+            return@LaunchedEffect
+        }
+        // Without a fix nothing has started yet: the first fix is the entry into following.
+        val first = snapshotFlow { currentUser }.filterNotNull().first()
+        val previous = holder.follow
+        holder.follow = follow
+        val heading = follow == CameraFollow.HEADING
+        val height = mapView.height.toDouble()
+        // Padding at the top moves the camera's centre, and with it the dot, down the map.
+        val top = if (heading) height * (2 * HEADING_DOT_AT - 1) else 0.0
+        val position = map.cameraPosition
+        val flight = CameraPosition.Builder(position).target(LatLng(first.point.latitude, first.point.longitude))
+            .padding(0.0, top, 0.0, 0.0).tilt(if (heading) HEADING_TILT else 0.0)
+        when {
+            heading && first.heading != null -> flight.bearing(first.heading.toDouble())
+            !holder.keepBearing -> flight.bearing(0.0)
+        }
+        if (previous == CameraFollow.NONE) flight.zoom(if (position.zoom > FOLLOW_KEEP_ZOOM) position.zoom else FOLLOW_ZOOM)
+        holder.keepBearing = false
+        map.easeCamera(CameraUpdateFactory.newCameraPosition(flight.build()), FOLLOW_START_MILLIS, true)
+        map.uiSettings.focalPoint = android.graphics.PointF(mapView.width / 2f, ((top + height) / 2).toFloat())
+        // Nothing moves the camera during the flight: easing again from mid-flight stops the zoom and tilt halfway.
+        delay(FOLLOW_START_MILLIS.toLong())
+
+        var shown = first.point
+        var from = shown
+        var to = shown
+        var glideStart = 0L
+        while (true) {
+            val now = withFrameMillis { it }
+            val at = currentUser ?: continue
+            if (at.point != to) { from = shown; to = at.point; glideStart = now }
+            // Linear over about the time between fixes, so the glides join into one movement.
+            val t = ((now - glideStart).toDouble() / FOLLOW_FIX_MILLIS).coerceIn(0.0, 1.0)
+            val target = Point(from.latitude + (to.latitude - from.latitude) * t, from.longitude + (to.longitude - from.longitude) * t)
+            val camera = map.cameraPosition
+            val bearing = if (heading && at.heading != null) at.heading.toDouble() else camera.bearing
+            val turn = ((bearing - camera.bearing + 540.0) % 360.0) - 180.0
+            if (target == shown && kotlin.math.abs(turn) < 0.1) continue
+            map.moveCamera(
+                CameraUpdateFactory.newCameraPosition(
+                    CameraPosition.Builder(camera).target(LatLng(target.latitude, target.longitude)).bearing(bearing).build(),
+                ),
+            )
+            shown = target
         }
     }
 

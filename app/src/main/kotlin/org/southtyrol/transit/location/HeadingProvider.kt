@@ -51,7 +51,7 @@ class AndroidHeadingProvider(context: Context) : HeadingProvider {
 
             override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) = Unit
         }
-        manager.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_UI)
+        manager.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_GAME)
         awaitClose { manager.unregisterListener(listener) }
     }
 

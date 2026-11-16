@@ -84,7 +84,7 @@ Fixtures live in `docs/fixtures`.
 
 ## Branches and pull requests
 
-`main` only changes through pull requests, and CI ("Tests and lint") must pass before one can be merged. Name your branch `<type>/<short-description>`: the type is `feature/`, `fix/`, `chore/` (build, tooling, CI, releases) or `docs/`, followed by a few lowercase words describing the change, joined by dashes, e.g. `feature/places-cards` or `fix/search-reload-loop`. CI fails a pull request from any other branch name; rename the branch (`git branch -m <new-name>`) and open a new pull request.
+`main` only changes through pull requests, and CI ("Tests and lint") must pass before one can be merged. Name your branch `<type>/<short-description>`: the type is `feature/`, `fix/`, `chore/` (build, tooling, CI, releases) or `docs/`, followed by a few lowercase words describing the change, joined by dashes (or dots, as in a version number), e.g. `feature/places-cards`, `fix/search-reload-loop` or `chore/release-0.2.1`. CI fails a pull request from any other branch name; rename the branch (`git branch -m <new-name>`) and open a new pull request.
 
 ## Architecture overview
 

@@ -30,8 +30,8 @@ jobs:
         env:
           BRANCH: ${{ github.head_ref }}
         run: |
-          if ! printf '%s' "$BRANCH" | grep -Eq '^(fix|chore|feature|docs)/[a-z0-9]+(-[a-z0-9]+)*$'; then
-            echo "::error::Branch \"$BRANCH\" must be fix/, chore/, feature/ or docs/ followed by lowercase words joined by dashes, e.g. feature/places-cards. Rename the branch and open a new pull request."
+          if ! printf '%s' "$BRANCH" | grep -Eq '^(fix|chore|feature|docs)/[a-z0-9]+([-.][a-z0-9]+)*$'; then
+            echo "::error::Branch \"$BRANCH\" must be fix/, chore/, feature/ or docs/ followed by lowercase words joined by dashes or dots, e.g. feature/places-cards or chore/release-0.2.1. Rename the branch and open a new pull request."
             exit 1
           fi
 

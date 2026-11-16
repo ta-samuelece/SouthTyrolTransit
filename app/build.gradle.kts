@@ -46,8 +46,8 @@ android {
         applicationId = "org.southtyrol.transit"
         minSdk = 26
         targetSdk = 37
-        versionCode = 21
-        versionName = "0.2.0"
+        versionCode = 22
+        versionName = "0.2.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "MAP_STYLE_LIGHT", "\"${setting("map.styleUrl", "TRANSIT_MAP_STYLE_URL")}\"")
         buildConfigField("String", "MAP_STYLE_DARK", "\"${setting("map.styleUrlDark", "TRANSIT_MAP_STYLE_URL_DARK")}\"")

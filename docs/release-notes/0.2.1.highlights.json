@@ -1,0 +1,20 @@
+{ "highlights": [
+  { "icon": "map",
+    "title": { "en": "Follow me on the map", "de": "Folge mir auf der Karte", "it": "Seguimi sulla mappa" },
+    "body": {
+      "en": "Tap the location button to follow where you go, and again to turn the map with the way you face.",
+      "de": "Tippe auf die Standorttaste, damit die Karte dir folgt, und noch einmal, damit sie sich mit deiner Blickrichtung dreht.",
+      "it": "Tocca il pulsante della posizione per farti seguire, e di nuovo per ruotare la mappa nella direzione in cui guardi." } },
+  { "icon": "layers",
+    "title": { "en": "The map on every page", "de": "Die Karte auf jeder Seite", "it": "La mappa in ogni pagina" },
+    "body": {
+      "en": "Journeys, stops and trips open with their map on top. Pull it down to see it large.",
+      "de": "Verbindungen, Haltestellen und Fahrten zeigen ihre Karte oben. Zieh sie nach unten, um sie groß zu sehen.",
+      "it": "Viaggi, fermate e corse si aprono con la loro mappa in alto. Trascinala in giù per vederla in grande." } },
+  { "icon": "speed",
+    "title": { "en": "Fastest trips first", "de": "Schnellste Verbindungen zuerst", "it": "Prima i viaggi più veloci" },
+    "body": {
+      "en": "Plan now looks for the fastest trips by default, and \"Fewer changes\" no longer hides a much faster one.",
+      "de": "Planen sucht jetzt standardmäßig die schnellsten Verbindungen, und „Wenig Umstiege“ verbirgt keine viel schnellere mehr.",
+      "it": "Pianifica ora cerca di default i viaggi più veloci, e \"Meno cambi\" non nasconde più quello molto più rapido." } }
+] }

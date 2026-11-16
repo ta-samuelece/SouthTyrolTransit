@@ -348,7 +348,16 @@ private fun TripContent(
 
     org.southtyrol.transit.feature.common.MapLipPage(
         org.southtyrol.transit.feature.common.rememberMapLipState(), hasMap, mapContent, camera, navigator::back,
-        slim = org.southtyrol.transit.feature.common.rememberLipSlim(listState),
+        listState = listState,
+        // Once the sheet covers the map and the run's heading has scrolled away, the header carries it.
+        title = {
+            LineBadge(detail.route.shortName.ifBlank { detail.route.longName }, detail.route.mode, color = detail.route.color, textColor = detail.route.textColor)
+            Text(
+                detail.trip.headsign, style = MaterialTheme.typography.titleLarge, maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                modifier = Modifier.padding(start = 12.dp).weight(1f),
+            )
+        },
         // How current the run's data is sits on the map.
         end = { FreshnessIndicator(detail.freshness, detail.observedAt, now, compact = true) },
     ) {

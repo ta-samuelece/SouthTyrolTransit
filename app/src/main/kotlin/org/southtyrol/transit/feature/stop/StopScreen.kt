@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.ui.semantics.heading
 import org.southtyrol.transit.feature.common.MapLipPage
-import org.southtyrol.transit.feature.common.rememberLipSlim
 import org.southtyrol.transit.feature.common.rememberMapLipState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -145,7 +144,17 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
     val camera = remember(points) { CameraRequest.Fit(points + points.take(1)) }
     MapLipPage(
         rememberMapLipState(), points.isNotEmpty(), mapContent, camera, navigator::back, modifier,
-        slim = rememberLipSlim(listState),
+        listState = listState,
+        // Once the sheet covers the map and the name has scrolled away, the header carries the name and the star.
+        title = {
+            Text(
+                state.name.ifBlank { stringResource(R.string.stop_title) }, style = MaterialTheme.typography.titleLarge,
+                maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f),
+            )
+            IconButton(onClick = { viewModel.toggleSaved() }) {
+                Icon(if (saved) Icons.Rounded.Star else Icons.Rounded.StarBorder, contentDescription = stringResource(if (saved) R.string.action_unsave_stop else R.string.action_save_stop))
+            }
+        },
         end = { board?.let { FreshnessIndicator(it.realtime, it.realtimeFetchedAt ?: state.loadedAt, now, compact = true) } },
     ) {
     PullToRefreshBox(

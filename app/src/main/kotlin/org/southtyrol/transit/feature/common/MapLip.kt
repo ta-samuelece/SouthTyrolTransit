@@ -99,8 +99,11 @@ fun rememberLipSlim(listState: LazyListState): Boolean {
 
 /** The lip's row of buttons: 12 dp above and 16 dp below a 48 dp button, as in [org.southtyrol.transit.design.TopLip]. */
 private val ROW = 76.dp
-/** How much map shows below the row while the lip is closed, and while the list has scrolled. */
-private val PEEK = 48.dp
+/**
+ * How much map shows below the row while the lip is closed, and while the list has scrolled. With the row,
+ * the closed map is 186 dp tall below the status bar: half as much again as the 124 dp it started with.
+ */
+private val PEEK = 110.dp
 private val PEEK_SLIM = 20.dp
 /** The sheet's rounded corners; the map runs on under them. */
 private val CORNER = 28.dp

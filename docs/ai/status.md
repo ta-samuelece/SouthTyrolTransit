@@ -32,3 +32,11 @@ SDK. Later that day `assembleDebug` built them, and the cards, their one-line fo
 Plan's lip looked right on the API 36 emulator. Still to do: run the unit tests and `./gradlew lintDebug`,
 then try the card toggles, search focus and keyboard, Back and a line badge opening search. Clear this
 section once that is done.
+
+# Map follow-me and the taller map lip: not built yet
+
+Branch `feature/map-follow-me` (2026-11-16, a cloud session without the Android SDK): the locate button's
+follow states (`FollowRules`, `CameraFollow`) and the closed map lip at 110 dp were written and checked
+against the MapLibre 13.6.1 classes only. Still to do: build, run the unit tests (`FollowRulesTest`) and
+lint, then try on a device: tap cycle, drag lets go, pinch keeps following, two-finger turn and compass
+leave heading mode. Clear this section once that is done.

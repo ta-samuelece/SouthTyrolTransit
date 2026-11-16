@@ -270,16 +270,27 @@ Settled on 2026-10-13 after a review of every screen against the Expressive guid
   It starts at once when location is already allowed, otherwise after the locate button's first fix.
   Other maps (pickers, the followed journey) still pass a `MarkerKind.USER` marker.
 - **Following the user** (2026-11-16, like Google Maps): `TransitMap(follow = CameraFollow...)` makes the
-  camera track `user` - `POSITION` keeps the dot centred, `HEADING` also sets the bearing to the heading
-  and puts the dot 62% down via camera top padding. Each fix eases the camera linearly over 1.4 s, a
-  compass turn alone over 0.3 s; entering from free zooms to 16 unless already past 14, and turns north
-  unless a two-finger turn ended heading mode. The focal point sits on the dot, so pinch zoom keeps
-  following. `onFollowGesture` reports `MapGesture.PAN` (`OnMoveListener`), `ROTATE` (`OnRotateListener`)
-  and `NORTH` (the compass); `FollowRules` (`feature/map/FollowRules.kt`, unit-tested) turns taps and
-  gestures into the next state, held in `MapViewModel.follow`. MapLibre reports its compass and this
-  code's own `animateCamera`/`easeCamera` with the same `REASON_API_ANIMATION`, synchronously, so every
-  own move runs inside `MapHolder.own { }` and the compass check skips those. A `CameraRequest.Center`
-  clears the padding heading mode left.
+  camera track `user` - `POSITION` keeps the dot centred and flat, `HEADING` also sets the bearing to the
+  heading, tilts 45° and puts the dot 62% down via camera top padding. Entering a state flies in over
+  0.9 s (from free to zoom 17 unless already past 16, north up unless a two-finger turn ended heading
+  mode), and nothing else moves the camera during that flight - easing again from mid-flight stopped the
+  zoom halfway. After it a `withFrameMillis` loop calls `moveCamera` each frame: the target glides
+  linearly from fix to fix over 1.4 s, the bearing is the latest compass reading at once (separate eases
+  per reading lagged visibly), and an unchanged frame is skipped so the map can go idle. Compass readings
+  come at `SENSOR_DELAY_GAME`, every 1°. The focal point sits on the dot, so pinch zoom keeps following.
+  `onFollowGesture` reports `MapGesture.PAN` - a one-finger drag past twice the touch slop, not a pinch,
+  whose focal point moves too - and `ROTATE` (`OnRotateListener`); `FollowRules`
+  (`feature/map/FollowRules.kt`, unit-tested) turns taps and gestures into the next state, held in
+  `MapViewModel.follow`. **The map's compass is hidden in heading mode**: the locate button is the compass
+  there (`Explore` icon), and tapping it turns north. The icon sits in `key(icon)`:
+  `ToggleFloatingActionButtonDefaults.animateIcon` records the icon into a cached graphics layer that is
+  redrawn only when its colour or size changes, so a new icon in the same colour (following to heading)
+  kept showing the old one. MapLibre's own compass cannot be told apart from
+  this code's camera moves - `CameraChangeDispatcher` delivers `onCameraMoveStarted` through a Handler,
+  after the call that started the move has returned, with `REASON_API_ANIMATION` for both - and treating
+  every own glide as a compass tap is what once kept heading mode from sticking. Once free again, the
+  camera-idle listener lays a tilted map flat (there is no tilt gesture); a `CameraRequest.Center` clears
+  the padding and tilt heading mode left.
 - **The map's locate button is a FAB menu opened by a long press** (`LocateFabMenu` in
   `feature/map/MapScreen.kt`). A tap still finds the user and then steps through following (above), in
   `primary` while following, against the spec's tap-to-open; a long press

@@ -33,10 +33,12 @@ Plan's lip looked right on the API 36 emulator. Still to do: run the unit tests 
 then try the card toggles, search focus and keyboard, Back and a line badge opening search. Clear this
 section once that is done.
 
-# Map follow-me and the taller map lip: not built yet
+# Map follow-me and the taller map lip: built, not tried again on a device
 
-Branch `feature/map-follow-me` (2026-11-16, a cloud session without the Android SDK): the locate button's
-follow states (`FollowRules`, `CameraFollow`) and the closed map lip at 110 dp were written and checked
-against the MapLibre 13.6.1 classes only. Still to do: build, run the unit tests (`FollowRulesTest`) and
-lint, then try on a device: tap cycle, drag lets go, pinch keeps following, two-finger turn and compass
-leave heading mode. Clear this section once that is done.
+Branch `feature/map-follow-me`: the locate button's follow states and the closed map lip at 110 dp build,
+and the unit tests and lint pass. Device tries on 2026-11-16 found heading mode not sticking, no compass
+icon, the flight in stopping short, following ending by itself and the map lagging the phone's turn; all
+fixed that day. On the API 36 emulator the tap cycle, compass icon, zoom and tilt now work. Still to try
+on a phone: the map turning with the phone at once, drag lets go, pinch keeps following, a two-finger turn
+leaves heading mode, the map lies flat once free, and the lip's 110 dp strip with main's scroll header.
+Clear this section once that is done.

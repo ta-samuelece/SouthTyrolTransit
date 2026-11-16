@@ -5,7 +5,6 @@ import org.junit.Test
 import org.southtyrol.transit.map.CameraFollow.HEADING
 import org.southtyrol.transit.map.CameraFollow.NONE
 import org.southtyrol.transit.map.CameraFollow.POSITION
-import org.southtyrol.transit.map.MapGesture.NORTH
 import org.southtyrol.transit.map.MapGesture.PAN
 import org.southtyrol.transit.map.MapGesture.ROTATE
 
@@ -21,16 +20,13 @@ class FollowRulesTest {
         assertEquals(NONE, FollowRules.gesture(HEADING, PAN))
     }
 
-    @Test fun aTurnOrTheCompassLeavesHeadingModeButKeepsFollowing() {
+    @Test fun aTurnLeavesHeadingModeButKeepsFollowing() {
         assertEquals(POSITION, FollowRules.gesture(HEADING, ROTATE))
-        assertEquals(POSITION, FollowRules.gesture(HEADING, NORTH))
         assertEquals(POSITION, FollowRules.gesture(POSITION, ROTATE))
-        assertEquals(POSITION, FollowRules.gesture(POSITION, NORTH))
     }
 
     @Test fun gesturesOnAFreeMapChangeNothing() {
         assertEquals(NONE, FollowRules.gesture(NONE, PAN))
         assertEquals(NONE, FollowRules.gesture(NONE, ROTATE))
-        assertEquals(NONE, FollowRules.gesture(NONE, NORTH))
     }
 }

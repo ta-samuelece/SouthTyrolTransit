@@ -66,6 +66,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -360,7 +361,7 @@ class MapViewModel @Inject constructor(
                 launch {
                     var declination: Float? = null
                     // Small wobbles would redraw the map many times a second for nothing.
-                    compass.headings().distinctUntilChanged { a, b -> Geo.headingDelta(a, b) < 2f }.collect { magnetic ->
+                    compass.headings().distinctUntilChanged { a, b -> Geo.headingDelta(a, b) < 1f }.collect { magnetic ->
                         val at = _user.value?.point ?: return@collect
                         val offset = declination ?: compass.declination(at).also { declination = it }
                         _user.update { it?.copy(heading = (magnetic + offset + 360f) % 360f) }
@@ -705,24 +706,29 @@ private fun LocateFabMenu(
                 val iconColor = ToggleFloatingActionButtonDefaults.iconColor(
                     if (follow == CameraFollow.NONE) colors.onSecondaryContainer else colors.onPrimary, colors.onSecondary,
                 )
-                Icon(
-                    when {
-                        checkedProgress > 0.5f -> Icons.Rounded.Close
-                        follow == CameraFollow.POSITION -> Icons.Rounded.MyLocation
-                        follow == CameraFollow.HEADING -> Icons.Rounded.Explore
-                        else -> Icons.Rounded.LocationSearching
-                    },
-                    // What a tap does next.
-                    contentDescription = stringResource(
-                        when {
-                            expanded -> R.string.map_saved_stops_close
-                            follow == CameraFollow.POSITION -> R.string.map_follow_heading
-                            follow == CameraFollow.HEADING -> R.string.map_follow_north
-                            else -> R.string.map_center_me
-                        },
-                    ),
-                    modifier = with(ToggleFloatingActionButtonDefaults) { Modifier.animateIcon({ checkedProgress }, color = iconColor) },
-                )
+                val icon = when {
+                    checkedProgress > 0.5f -> Icons.Rounded.Close
+                    follow == CameraFollow.POSITION -> Icons.Rounded.MyLocation
+                    follow == CameraFollow.HEADING -> Icons.Rounded.Explore
+                    else -> Icons.Rounded.LocationSearching
+                }
+                // animateIcon records the icon into a cached layer that is redrawn only when its colour or
+                // size changes, so following to heading (same colour) kept the old icon: a new icon, a new layer.
+                key(icon) {
+                    Icon(
+                        icon,
+                        // What a tap does next.
+                        contentDescription = stringResource(
+                            when {
+                                expanded -> R.string.map_saved_stops_close
+                                follow == CameraFollow.POSITION -> R.string.map_follow_heading
+                                follow == CameraFollow.HEADING -> R.string.map_follow_north
+                                else -> R.string.map_center_me
+                            },
+                        ),
+                        modifier = with(ToggleFloatingActionButtonDefaults) { Modifier.animateIcon({ checkedProgress }, color = iconColor) },
+                    )
+                }
             }
         },
     ) {

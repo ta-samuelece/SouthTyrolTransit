@@ -89,10 +89,11 @@ data class FitInsets(val top: Int, val bottom: Int, val side: Int)
 enum class CameraFollow { NONE, POSITION, HEADING }
 
 /**
- * A camera move the user made on a following map: [PAN] a drag, [ROTATE] a two-finger turn, [NORTH] a tap
- * on the map's compass. Zooming is not reported: it keeps following, around the user's dot.
+ * A camera move the user made on a following map: [PAN] a one-finger drag, [ROTATE] a two-finger turn.
+ * Zooming is not reported: it keeps following, around the user's dot. In heading mode the map's compass is
+ * hidden, since the locate button is the compass there.
  */
-enum class MapGesture { PAN, ROTATE, NORTH }
+enum class MapGesture { PAN, ROTATE }
 
 data class MapViewport(val box: BoundingBox, val zoom: Double, val center: Point)
 

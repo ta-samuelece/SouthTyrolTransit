@@ -15,7 +15,7 @@ object FollowRules {
         CameraFollow.HEADING -> CameraFollow.POSITION
     }
 
-    /** A camera move the user made: a drag lets go, a turn or the compass leaves heading mode. Zoom keeps following. */
+    /** A camera move the user made: a drag lets go, a two-finger turn leaves heading mode. Zoom keeps following. */
     fun gesture(current: CameraFollow, gesture: MapGesture): CameraFollow = when {
         current == CameraFollow.NONE -> CameraFollow.NONE
         gesture == MapGesture.PAN -> CameraFollow.NONE

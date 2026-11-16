@@ -94,7 +94,7 @@ status: stable
   following, stop and trip screens, in place of a top bar: the map fills the lip from under the status
   bar, the back button and the live pill sit on it in the surface tone, and the page is a `surface` sheet
   with 28 dp corners and a drag handle. No title in the lip (the sheet's first item says what the page
-  is). Closed, the map is a still 48 dp strip below the buttons (20 dp once the list scrolls, by the same
+  is). Closed, the map is a still 110 dp strip below the buttons (20 dp once the list scrolls, by the same
   latch as the Alerts dashboard, `rememberLipSlim`); the handle (drag or tap) or a tap on the map opens it
   at 65% of the page, live; a drag back, a touch on the sheet or Back closes it. The sheet moves in the
   layout phase, but the map is resized only when it settles (opening: at once; closing: after the sheet

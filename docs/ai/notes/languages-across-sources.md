@@ -1,11 +1,11 @@
 ---
 type: Reference
 title: Languages - how each source is asked, how texts fall back, and how to add a UI language
-description: The app speaks en, de and it (Ladin was removed as a UI language on 2026-10-21; its feed texts still normalise to lld); never pass the comma-separated textLanguages() to EFA; localized() prefers a language-neutral text over fallbacks; the seven places a new UI language must be registered.
+description: The app speaks en, de and it (Ladin was removed as a UI language on 2026-10-21; its feed texts still normalise to lld); names use a second, @NamesLanguage provider from the Stop names setting while alerts and notices keep the app language; never pass the comma-separated textLanguages() to EFA; localized() prefers a language-neutral text over fallbacks; the seven places a new UI language must be registered.
 tags: [localization, efa, gtfs, translations]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-09T15:00:00Z"
+  at: "2026-11-20T12:00:00Z"
 status: stable
 ---
 
@@ -13,15 +13,36 @@ status: stable
 
 # Per source (`Languages` in `core/model/.../Text.kt`)
 
-| App language | GTFS names (`translationLanguage`) | EFA requests (`Languages.efa`) | EFA StopFinder |
+| Language | GTFS names (`translationLanguage`) | EFA requests (`Languages.efa`) | EFA StopFinder |
 | --- | --- | --- | --- |
-| `de` | German | `en`* | `de` |
+| `de` | German | `de` | `de` |
 | `it` | Italian (base) | `it` | `it` |
 | `en` | Italian | `en` | `de` |
 
-\* `Languages.efa` maps `it` (and `lld`, a leftover of the removed Ladin UI) to `it` and everything else
-to `en`; "Known API limitations" in `docs/DEVELOPMENT.md` explains why StopFinder queries de and it in parallel. `Languages` in
+`Languages.efa` maps `de` to `de`, `it` (and `lld`, a leftover of the removed Ladin UI) to `it` and
+everything else to `en`; "Known API limitations" in `docs/DEVELOPMENT.md` explains why StopFinder queries de and it in parallel. `Languages` in
 `Text.kt` still knows `lld` because feeds carry Ladin texts; no UI choice produces it any more.
+
+# Two providers: app language and names language
+
+`LanguageProvider` has two bindings in `AppModule`. The unqualified one is `AppLanguage` (the UI
+language). The one qualified `@NamesLanguage` (`app/.../di/NamesLanguage.kt`) resolves the "Stop names"
+setting (`UserSettings.nameLanguage`: `APP`, `GERMAN`, `ITALIAN`) with `NameLanguage.resolve`: `APP`
+returns `AppLanguage.current()` unchanged, so the default changes nothing; the others return `de` or `it`.
+It keeps the choice in memory, follows the DataStore flow, and reads it once, blocking, on first use, so a
+cold widget or follow update gets the stored choice.
+
+- Names provider: every stop, place, line and trip lookup - Stop, Trip, Lines, Map, the pickers and
+  `SavedStopsFlow`, Places, MapSearch, Planner, the journey view models, `FollowEngine`, `RideEngine` and
+  `WidgetUpdateWorker`.
+- App language: `AlertsViewModel` (including stop names in alert scopes), the alert refresh in `Workers.kt`
+  and `TripViewModel`, alert cards (`textLanguages()`) and all `R.string` UI. `TripViewModel` gets both.
+- Journey notices: the trip request goes out in the names language, so `EfaXml.journeys` gets the app
+  language as `noticeLanguage` (passed down from `JourneyRepository.plan` and `EfaClient.plan`). A leg keeps
+  the untagged `infoLink`s and those tagged `Languages.efa(noticeLanguage)`; when none is tagged so, those
+  in the response's root `language`. Null, or the same EFA language as the response, gives the old result.
+
+# Language lists
 
 - `AppLanguage.current()` returns one tag; `textLanguages()` returns a list such as `en,de-DE,...` and is
   meant only for `localized()` on alert texts. **Never pass it to EFA**: `Languages.normalize` does not split
@@ -56,5 +77,6 @@ widget config may then see the system language (inferred, not tested).
 # What was checked
 
 Code read of `Text.kt`, `AppLanguage.kt`, `GtfsSchedule.translationLanguage` and `TextTest` on
-2026-10-09. Ladin removal (`AppLanguage.dropLadin` at app start moves `lld` users to German) on
+2026-10-09. The two providers and the notice rule were written on 2026-11-20 (`NameLanguageTest`); not
+tried on a device. Ladin removal (`AppLanguage.dropLadin` at app start moves `lld` users to German) on
 2026-10-21; not tried on a device.

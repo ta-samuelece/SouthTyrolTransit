@@ -256,19 +256,20 @@ private fun NoticeSheet(leg: Leg, notice: String, run: TripDetail?, alerts: List
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(Modifier.verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             if (match.kind == NoticeMatch.Kind.NONE) {
-                Row(Modifier.padding(horizontal = 8.dp), verticalAlignment = Alignment.Top) {
+                Row(verticalAlignment = Alignment.Top) {
                     Icon(Icons.Rounded.Warning, contentDescription = null, tint = LocalStatusColors.current.delayed)
                     Spacer(Modifier.width(12.dp))
                     Text(notice, style = MaterialTheme.typography.titleMedium)
                 }
                 Text(
                     stringResource(R.string.journey_notice_unavailable), style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 8.dp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             } else {
-                if (match.kind == NoticeMatch.Kind.LINE) Text(
+                // A leg matched only by its run's route id may have no line name to put in the heading.
+                if (match.kind == NoticeMatch.Kind.LINE && leg.line.isNotBlank()) Text(
                     stringResource(R.string.journey_notice_line_alerts, leg.line), style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.padding(horizontal = 8.dp).semantics { heading() },
+                    modifier = Modifier.semantics { heading() },
                 )
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     match.alerts.forEachIndexed { index, alert ->

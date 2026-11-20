@@ -13,6 +13,7 @@ import org.southtyrol.transit.data.LanguageProvider
 import org.southtyrol.transit.data.LiveTrip
 import org.southtyrol.transit.data.RealtimeRepository
 import org.southtyrol.transit.data.TripRepository
+import org.southtyrol.transit.di.NamesLanguage
 import org.southtyrol.transit.model.Freshness
 import org.southtyrol.transit.model.FreshnessPolicy
 import org.southtyrol.transit.model.RideFollow
@@ -34,7 +35,7 @@ class RideEngine @Inject constructor(
     @ApplicationContext private val context: Context,
     private val trips: TripRepository,
     private val realtime: RealtimeRepository,
-    private val language: LanguageProvider,
+    @NamesLanguage private val language: LanguageProvider,
     private val active: ActiveJourney,
 ) {
     suspend fun run(ride: RideSession) = coroutineScope {

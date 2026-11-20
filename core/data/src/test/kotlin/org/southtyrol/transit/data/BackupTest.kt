@@ -12,7 +12,7 @@ import org.junit.Test
 import org.southtyrol.transit.model.MapBase
 
 /** In memory: the file-backed DataStore cannot replace its file on Windows outside Android. */
-private class MemoryPreferences : DataStore<Preferences> {
+internal class MemoryPreferences : DataStore<Preferences> {
     private val state = MutableStateFlow(emptyPreferences())
     override val data = state
     override suspend fun updateData(transform: suspend (t: Preferences) -> Preferences) = transform(state.value).also { state.value = it }

@@ -87,6 +87,7 @@ import org.southtyrol.transit.design.ModeGlyph
 import org.southtyrol.transit.design.SectionHeader
 import org.southtyrol.transit.design.StatusBanner
 import org.southtyrol.transit.design.TransitLoading
+import org.southtyrol.transit.di.NamesLanguage
 import org.southtyrol.transit.feature.common.groupGap
 import org.southtyrol.transit.feature.common.groupedItemColors
 import org.southtyrol.transit.feature.common.rememberLocationPermission
@@ -125,7 +126,7 @@ class MapSearchViewModel @Inject constructor(
     private val stopSearch: StopSearchRepository,
     private val lines: LineRepository,
     private val location: LocationProvider,
-    private val language: LanguageProvider,
+    @NamesLanguage private val language: LanguageProvider,
     private val saved: SavedRepository,
     private val handle: SavedStateHandle,
 ) : ViewModel() {

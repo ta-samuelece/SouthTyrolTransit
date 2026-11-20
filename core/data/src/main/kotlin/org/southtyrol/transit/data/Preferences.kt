@@ -38,6 +38,16 @@ enum class LocateButtonPosition { BOTTOM_END, BOTTOM_START, HIDDEN }
 /** Where the map's search bar floats. At the bottom (the default) it shares the row with the locate button. */
 enum class SearchBarPosition { TOP, BOTTOM }
 
+/** The language of stop, place and line names: the app language, or German or Italian regardless of it. */
+enum class NameLanguage { APP, GERMAN, ITALIAN }
+
+/** The language tag name lookups use: [appLanguage] unchanged for APP, else `de` or `it`. */
+fun NameLanguage.resolve(appLanguage: String): String = when (this) {
+    NameLanguage.APP -> appLanguage
+    NameLanguage.GERMAN -> "de"
+    NameLanguage.ITALIAN -> "it"
+}
+
 data class UserSettings(
     val theme: ThemeMode = ThemeMode.SYSTEM,
     /** Off by default: the app's own palette, unless the user picks the wallpaper colours. */
@@ -76,6 +86,7 @@ data class UserSettings(
     val savedStopsHintShown: Boolean = false,
     /** The Play build's last version whose "New in X" was decided on, so it shows once per update. */
     val notesSeenVersion: String = "",
+    val nameLanguage: NameLanguage = NameLanguage.APP,
 )
 
 /** The app language currently in effect (per-app locale or system), as a BCP-47 tag. */
@@ -112,6 +123,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val onboarding = booleanPreferencesKey("onboardingDone")
         val savedStopsHint = booleanPreferencesKey("savedStopsHintShown")
         val notesSeen = stringPreferencesKey("notesSeenVersion")
+        val nameLanguage = stringPreferencesKey("nameLanguage")
     }
 
     val settings: Flow<UserSettings> = store.data
@@ -141,6 +153,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
                 onboardingDone = p[Keys.onboarding] ?: false,
                 savedStopsHintShown = p[Keys.savedStopsHint] ?: false,
                 notesSeenVersion = p[Keys.notesSeen] ?: "",
+                nameLanguage = p[Keys.nameLanguage]?.let { runCatching { NameLanguage.valueOf(it) }.getOrNull() } ?: NameLanguage.APP,
             )
         }
 
@@ -169,4 +182,5 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
     suspend fun setOnboardingDone(value: Boolean) { store.edit { it[Keys.onboarding] = value } }
     suspend fun setSavedStopsHintShown(value: Boolean) { store.edit { it[Keys.savedStopsHint] = value } }
     suspend fun setNotesSeenVersion(value: String) { store.edit { it[Keys.notesSeen] = value } }
+    suspend fun setNameLanguage(value: NameLanguage) { store.edit { it[Keys.nameLanguage] = value.name } }
 }

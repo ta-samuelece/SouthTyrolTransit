@@ -112,9 +112,9 @@ class EfaClient(
      * alone hides much faster trips with one more change - Vilpian to Vöran gave only a 1h51 bus trip, never
      * the 43-minute one via the Vöran cable car. The extra search failing leaves the main one's answer.
      */
-    override suspend fun plan(from: Place, to: Place, options: SearchOptions, language: String): List<Journey> = guarded {
+    override suspend fun plan(from: Place, to: Place, options: SearchOptions, language: String, noticeLanguage: String?): List<Journey> = guarded {
         suspend fun search(o: SearchOptions) = get("XML_TRIP_REQUEST2", tripParams(from, to, o, language)).let { bytes ->
-            withContext(Dispatchers.Default) { EfaXml.journeys(bytes) }
+            withContext(Dispatchers.Default) { EfaXml.journeys(bytes, noticeLanguage) }
         }
         val found = if (options.preference != RoutePreference.FEWEST_CHANGES) search(options) else coroutineScope {
             val fastest = async {
@@ -379,15 +379,24 @@ object EfaXml {
     private fun Element.isCancelled(): Boolean =
         listOf("realtimeStatus", "realtimeTripStatus").any { a(it).contains("CANCEL", ignoreCase = true) }
 
-    private fun notices(part: Element, language: String?): List<String> = part.children("infoLink").mapNotNull { link ->
-        val lang = link.a("language")
-        if (language != null && lang.isNotBlank() && lang != language) return@mapNotNull null
-        val info = link.child("infoText")
-        listOf(info?.text("subtitle"), link.text("infoLinkText"), info?.text("subject"))
-            .firstOrNull { !it.isNullOrBlank() && !it.equals("Information", ignoreCase = true) }
-    }.distinct()
+    /**
+     * A leg's notices in [noticeLanguage] (an EFA language) when it has any tagged so, else in the response's
+     * [language]; untagged ones always count.
+     */
+    private fun notices(part: Element, language: String?, noticeLanguage: String?): List<String> {
+        val links = part.children("infoLink")
+        val wanted = noticeLanguage?.takeIf { want -> links.any { it.a("language") == want } } ?: language
+        return links.mapNotNull { link ->
+            val lang = link.a("language")
+            if (wanted != null && lang.isNotBlank() && lang != wanted) return@mapNotNull null
+            val info = link.child("infoText")
+            listOf(info?.text("subtitle"), link.text("infoLinkText"), info?.text("subject"))
+                .firstOrNull { !it.isNullOrBlank() && !it.equals("Information", ignoreCase = true) }
+        }.distinct()
+    }
 
-    fun journeys(bytes: ByteArray): List<Journey> {
+    /** [noticeLanguage] is the app language for leg notices when the request went out in another (null: the request's). */
+    fun journeys(bytes: ByteArray, noticeLanguage: String? = null): List<Journey> {
         val root = root(bytes)
         val request = root.all("itdTripRequest").firstOrNull() ?: return emptyList()
         val routes = request.all("itdRoute")
@@ -402,8 +411,9 @@ object EfaXml {
             return emptyList()
         }
         val language = root.a("language").ifBlank { null }
+        val notices = noticeLanguage?.let { Languages.efa(it) }
         return routes.mapNotNull { route ->
-            val legs = route.all("itdPartialRoute").mapNotNull { part -> leg(part, language) }
+            val legs = route.all("itdPartialRoute").mapNotNull { part -> leg(part, language, notices) }
             if (legs.isEmpty()) return@mapNotNull null
             val transit = legs.count { it.mode.isTransit }
             Journey(
@@ -415,7 +425,7 @@ object EfaXml {
         }.distinctBy { it.id }
     }
 
-    private fun leg(part: Element, language: String?): Leg? {
+    private fun leg(part: Element, language: String?, noticeLanguage: String?): Leg? {
         val points = part.children("itdPoint")
         val from = points.firstOrNull { it.a("usage") == "departure" } ?: return null
         val to = points.firstOrNull { it.a("usage") == "arrival" } ?: return null
@@ -452,7 +462,7 @@ object EfaXml {
             intermediate = intermediate, geometry = geometry, operator = operator,
             departurePlatform = from.a("platformName"), arrivalPlatform = to.a("platformName"),
             realtime = realtime && mode.isTransit, cancelled = part.isCancelled() || (means?.isCancelled() ?: false),
-            notices = notices(part, language), distanceMeters = distance, lineName = if (mode == TransportMode.WALK) "" else lineName,
+            notices = notices(part, language, noticeLanguage), distanceMeters = distance, lineName = if (mode == TransportMode.WALK) "" else lineName,
             liveRef = liveRef,
         )
     }

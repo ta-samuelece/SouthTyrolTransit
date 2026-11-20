@@ -83,6 +83,7 @@ import org.southtyrol.transit.data.SettingsRepository
 import org.southtyrol.transit.data.ThemeMode
 import org.southtyrol.transit.design.StatusColors
 import org.southtyrol.transit.design.TransitTheme
+import org.southtyrol.transit.di.NamesLanguage
 import org.southtyrol.transit.model.ColorContrast
 import org.southtyrol.transit.model.ServiceState
 import org.southtyrol.transit.model.TransitZone
@@ -291,7 +292,7 @@ class WidgetUpdateWorker @AssistedInject constructor(
     private val departures: DepartureRepository,
     private val realtime: RealtimeRepository,
     private val alerts: AlertRepository,
-    private val language: LanguageProvider,
+    @NamesLanguage private val language: LanguageProvider,
 ) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
         val manager = GlanceAppWidgetManager(applicationContext)

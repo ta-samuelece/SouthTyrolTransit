@@ -376,6 +376,8 @@
 
     <string name="settings_title">Impostazioni</string>
     <string name="settings_language">Lingua</string>
+    <string name="settings_stop_names">Nomi delle fermate</string>
+    <string name="stop_names_same_as_app">Come l\'app</string>
     <string name="language_system">Lingua di sistema</string>
     <string name="language_system_short">Sistema</string>
     <string name="language_english">English</string>

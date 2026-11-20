@@ -669,6 +669,9 @@
     <string name="trip_next_stop_in">Nächster Halt in %s</string>
     <string name="planner_bike">Mit Fahrrad unterwegs</string>
     <string name="journey_bikes_unknown">Der Fahrplan sagt nicht, ob %s Fahrräder mitnimmt. Prüfe das vor der Fahrt.</string>
+    <string name="journey_notice_open">Meldung öffnen</string>
+    <string name="journey_notice_line_alerts">Meldungen für Linie %s</string>
+    <string name="journey_notice_unavailable">Die vollständige Meldung ist gerade nicht verfügbar.</string>
     <plurals name="results_hidden_no_bikes">
         <item quantity="one">%d Verbindung ausgeblendet: keine Fahrradmitnahme</item>
         <item quantity="other">%d Verbindungen ausgeblendet: keine Fahrradmitnahme</item>

@@ -23,6 +23,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.only
@@ -51,6 +53,7 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -58,6 +61,7 @@ import androidx.compose.material3.MediumFlexibleTopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -70,6 +74,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -78,7 +83,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.southtyrol.transit.R
+import org.southtyrol.transit.data.AlertMatcher
+import org.southtyrol.transit.data.NoticeMatch
+import org.southtyrol.transit.di.AppLanguage
+import org.southtyrol.transit.feature.common.AlertCard
 import org.southtyrol.transit.feature.common.LegStops
+import org.southtyrol.transit.feature.common.groupShape
 import org.southtyrol.transit.feature.common.PollWhileVisible
 import org.southtyrol.transit.feature.follow.StartFollowSheet
 import org.southtyrol.transit.design.DelayLabel
@@ -112,6 +122,7 @@ import org.southtyrol.transit.model.LegDistance
 import org.southtyrol.transit.model.RouteProgress
 import org.southtyrol.transit.model.RunPosition
 import org.southtyrol.transit.model.RunPositions
+import org.southtyrol.transit.model.ServiceAlert
 import org.southtyrol.transit.model.ServiceState
 import org.southtyrol.transit.model.TransportMode
 import org.southtyrol.transit.model.TripDetail
@@ -184,6 +195,9 @@ fun JourneyDetailContent(journey: Journey, navigator: Navigator, modifier: Modif
     PollWhileVisible(20_000) { live.poll() }
     val map = rememberJourneyMap(journey, legRuns, now)
     val listState = rememberLazyListState()
+    // The leg notice opened in the alert sheet; -1 and null while it is closed.
+    var noticeLeg by rememberSaveable { mutableIntStateOf(-1) }
+    var noticeText by rememberSaveable { mutableStateOf<String?>(null) }
     MapLipPage(
         rememberMapLipState(), map.hasLines, map.content, map.camera, onBack, modifier,
         listState = listState,
@@ -210,10 +224,67 @@ fun JourneyDetailContent(journey: Journey, navigator: Navigator, modifier: Modif
             val previous = journey.legs.getOrNull(index - 1)
             if (previous != null && previous.mode.isTransit && leg.mode.isTransit) TransferRow(Duration.between(previous.bestArrival, leg.bestDeparture))
             if (leg.mode == TransportMode.WALK) WalkLeg(leg, now)
-            else TransitLeg(leg, now, onStop = { gid -> navigator.stop(gid) }, run = legRuns[index], bikeWarning = withBike && matched && legRuns[index]?.trip?.bikes.let { it == null || it == Bikes.UNKNOWN })
+            else TransitLeg(
+                leg, now, onStop = { gid -> navigator.stop(gid) }, run = legRuns[index],
+                bikeWarning = withBike && matched && legRuns[index]?.trip?.bikes.let { it == null || it == Bikes.UNKNOWN },
+                onNotice = { notice -> noticeLeg = index; noticeText = notice },
+            )
         }
         item { FareSection(journey) }
     }
+    }
+    val openLeg = journey.legs.getOrNull(noticeLeg)
+    val openNotice = noticeText
+    if (openLeg != null && openNotice != null) {
+        val alerts by live.alerts.collectAsStateWithLifecycle()
+        val alertStops by live.alertStops.collectAsStateWithLifecycle()
+        NoticeSheet(openLeg, openNotice, legRuns[noticeLeg], alerts.alerts, alertStops, now, onDismiss = { noticeLeg = -1; noticeText = null })
+    }
+}
+
+/**
+ * The alert a leg [notice] refers to, opened in full over the journey: the alerts whose text matches it,
+ * else every alert on the leg's line, else the notice itself (see [AlertMatcher.forNotice]). [run] is the
+ * leg's matched timetable run, whose route and trip ids GTFS-RT alerts are scoped by.
+ */
+@Composable
+private fun NoticeSheet(leg: Leg, notice: String, run: TripDetail?, alerts: List<ServiceAlert>, alertStops: Map<String, List<String>>, now: Instant, onDismiss: () -> Unit) {
+    val routeIds = listOfNotNull(run?.route?.id)
+    val tripId = run?.trip?.id
+    val match = remember(alerts, leg, notice, run?.route?.id, tripId, now) { AlertMatcher.forNotice(alerts, leg, notice, routeIds, tripId, now) }
+    val language = AppLanguage.textLanguages()
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(Modifier.verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            if (match.kind == NoticeMatch.Kind.NONE) {
+                Row(Modifier.padding(horizontal = 8.dp), verticalAlignment = Alignment.Top) {
+                    Icon(Icons.Rounded.Warning, contentDescription = null, tint = LocalStatusColors.current.delayed)
+                    Spacer(Modifier.width(12.dp))
+                    Text(notice, style = MaterialTheme.typography.titleMedium)
+                }
+                Text(
+                    stringResource(R.string.journey_notice_unavailable), style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 8.dp),
+                )
+            } else {
+                if (match.kind == NoticeMatch.Kind.LINE) Text(
+                    stringResource(R.string.journey_notice_line_alerts, leg.line), style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.padding(horizontal = 8.dp).semantics { heading() },
+                )
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    match.alerts.forEachIndexed { index, alert ->
+                        // GTFS-RT alerts name their route only by id: give them the leg's line badge.
+                        val byId = alert.routes.any { it in routeIds } || (tripId != null && tripId in alert.trips)
+                        AlertCard(
+                            alert, language, now,
+                            lineNames = if (byId && leg.line.isNotBlank()) alert.lineNames + leg.line else alert.lineNames,
+                            stopNames = alertStops[alert.id].orEmpty(),
+                            shape = groupShape(index, match.alerts.size),
+                            initiallyExpanded = true,
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -345,10 +416,11 @@ internal fun WalkLeg(leg: Leg, now: Instant) {
 
 /**
  * A transit leg's card. [run] is the timetable run it was matched to, if any: it adds the train number,
- * the leg's distance and the bike rule. [bikeWarning] says the bike rule is not known.
+ * the leg's distance and the bike rule. [bikeWarning] says the bike rule is not known. [onNotice] makes
+ * each notice a button that opens it.
  */
 @Composable
-internal fun TransitLeg(leg: Leg, now: Instant, onStop: (String) -> Unit, run: TripDetail? = null, bikeWarning: Boolean = false) {
+internal fun TransitLeg(leg: Leg, now: Instant, onStop: (String) -> Unit, run: TripDetail? = null, bikeWarning: Boolean = false, onNotice: ((String) -> Unit)? = null) {
     var expanded by rememberSaveable(leg.departure.epochSecond, leg.line) { mutableStateOf(false) }
     val status = LocalStatusColors.current
     Card(
@@ -394,10 +466,20 @@ internal fun TransitLeg(leg: Leg, now: Instant, onStop: (String) -> Unit, run: T
             val stale = run?.vehicle?.let { FreshnessPolicy.vehicle(it.timestamp, now) == Freshness.STALE } ?: false
             LegStops(leg, now, expanded, onToggle = { expanded = !expanded }, onStop = onStop, before = before, beforeStale = stale)
             leg.notices.forEach { notice ->
-                Row(verticalAlignment = Alignment.Top) {
+                if (onNotice == null) Row(verticalAlignment = Alignment.Top) {
                     Icon(Icons.Rounded.Warning, contentDescription = null, tint = status.delayed, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
                     Text(notice, style = MaterialTheme.typography.bodySmall)
+                } else Row(
+                    Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                        .clickable(onClickLabel = stringResource(R.string.journey_notice_open), role = Role.Button) { onNotice(notice) }
+                        .heightIn(min = 48.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(Icons.Rounded.Warning, contentDescription = null, tint = status.delayed, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(notice, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
+                    Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }

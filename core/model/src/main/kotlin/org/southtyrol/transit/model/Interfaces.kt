@@ -58,7 +58,8 @@ interface GeocodingLocationDataSource {
 }
 
 interface JourneyPlannerDataSource {
-    suspend fun plan(from: Place, to: Place, options: SearchOptions, language: String): List<Journey>
+    /** Names come in [language]; leg notices in [noticeLanguage] where the planner has them (null: [language]). */
+    suspend fun plan(from: Place, to: Place, options: SearchOptions, language: String, noticeLanguage: String? = null): List<Journey>
 }
 
 /** Network departure board, used when no static schedule is cached yet. */

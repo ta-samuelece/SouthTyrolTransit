@@ -97,6 +97,7 @@ import org.southtyrol.transit.design.Format
 import org.southtyrol.transit.design.ModeGlyph
 import org.southtyrol.transit.design.StatusBanner
 import org.southtyrol.transit.design.TransitLoading
+import org.southtyrol.transit.di.NamesLanguage
 import org.southtyrol.transit.map.CameraRequest
 import org.southtyrol.transit.map.MapContent
 import org.southtyrol.transit.map.MapMarker
@@ -129,7 +130,7 @@ data class StopQueryState(val query: String = "", val loading: Boolean = false, 
 @HiltViewModel
 class StopSearchViewModel @Inject constructor(
     private val stops: StopSearchRepository,
-    private val language: LanguageProvider,
+    @NamesLanguage private val language: LanguageProvider,
 ) : ViewModel() {
     private val _state = MutableStateFlow(StopQueryState())
     val state: StateFlow<StopQueryState> = _state.asStateFlow()
@@ -253,7 +254,7 @@ fun LineSearchSheet(onPick: (org.southtyrol.transit.model.Line) -> Unit, onDismi
 class MapPickerViewModel @Inject constructor(
     private val map: MapRepository,
     saved: SavedRepository,
-    private val language: LanguageProvider,
+    @NamesLanguage private val language: LanguageProvider,
     schedule: TransitScheduleDataSource,
     private val location: org.southtyrol.transit.location.LocationProvider,
 ) : ViewModel() {

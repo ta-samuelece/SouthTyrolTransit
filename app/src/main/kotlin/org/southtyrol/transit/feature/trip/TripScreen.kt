@@ -95,6 +95,7 @@ import org.southtyrol.transit.R
 import org.southtyrol.transit.data.LanguageProvider
 import org.southtyrol.transit.data.RealtimeRepository
 import org.southtyrol.transit.data.TripRepository
+import org.southtyrol.transit.di.NamesLanguage
 import org.southtyrol.transit.design.DelayLabel
 import org.southtyrol.transit.design.ErrorState
 import org.southtyrol.transit.design.Format
@@ -139,6 +140,7 @@ class TripViewModel @AssistedInject constructor(
     private val trips: TripRepository,
     private val realtime: RealtimeRepository,
     private val language: LanguageProvider,
+    @NamesLanguage private val names: LanguageProvider,
     private val alerts: org.southtyrol.transit.data.AlertRepository,
 ) : ViewModel() {
     @AssistedFactory
@@ -178,7 +180,7 @@ class TripViewModel @AssistedInject constructor(
 
     fun load() = viewModelScope.launch {
         base.value = try {
-            val detail = trips.trip(tripId, runCatching { LocalDate.parse(date) }.getOrElse { LocalDate.now(org.southtyrol.transit.model.TransitZone) }, language.current())
+            val detail = trips.trip(tripId, runCatching { LocalDate.parse(date) }.getOrElse { LocalDate.now(org.southtyrol.transit.model.TransitZone) }, names.current())
             if (detail == null) TripLoad.NotFound else TripLoad.Ready(detail)
         } catch (e: DataException) {
             TripLoad.Error(e.error)
@@ -206,7 +208,7 @@ class TripViewModel @AssistedInject constructor(
         if (realtime.snapshot.value.update(detail.trip.id, detail.serviceDate) != null) return ""
         if (lastLookup?.let { java.time.Duration.between(it, now) < java.time.Duration.ofMinutes(2) } == true) return ""
         lastLookup = now
-        return trips.findLiveRef(detail, language.current(), now)
+        return trips.findLiveRef(detail, names.current(), now)
     }
 }
 

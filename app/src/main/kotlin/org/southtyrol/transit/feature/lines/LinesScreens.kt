@@ -90,6 +90,7 @@ import org.southtyrol.transit.design.SectionHeader
 import org.southtyrol.transit.design.TransitLoading
 import org.southtyrol.transit.design.rememberNow
 import org.southtyrol.transit.di.AppLanguage
+import org.southtyrol.transit.di.NamesLanguage
 import org.southtyrol.transit.feature.common.AlertCard
 import org.southtyrol.transit.feature.common.DepartureRow
 import org.southtyrol.transit.feature.common.PollWhileVisible
@@ -193,7 +194,7 @@ class LineViewModel @AssistedInject constructor(
     private val realtime: RealtimeRepository,
     private val saved: SavedRepository,
     alerts: AlertRepository,
-    private val language: LanguageProvider,
+    @NamesLanguage private val language: LanguageProvider,
 ) : ViewModel() {
     @AssistedFactory
     interface Factory { fun create(key: String): LineViewModel }

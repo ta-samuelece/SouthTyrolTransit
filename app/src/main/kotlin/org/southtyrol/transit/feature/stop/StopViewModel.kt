@@ -24,6 +24,7 @@ import org.southtyrol.transit.data.LineRepository
 import org.southtyrol.transit.data.RealtimeRepository
 import org.southtyrol.transit.data.SavedKind
 import org.southtyrol.transit.data.SavedRepository
+import org.southtyrol.transit.di.NamesLanguage
 import org.southtyrol.transit.model.DataError
 import org.southtyrol.transit.model.DataException
 import org.southtyrol.transit.model.Departure
@@ -86,7 +87,7 @@ class StopViewModel @AssistedInject constructor(
     private val lines: LineRepository,
     private val saved: SavedRepository,
     alerts: AlertRepository,
-    private val language: LanguageProvider,
+    @NamesLanguage private val language: LanguageProvider,
 ) : ViewModel() {
     @AssistedFactory
     interface Factory { fun create(@Assisted("key") stationKey: String, @Assisted("name") name: String): StopViewModel }

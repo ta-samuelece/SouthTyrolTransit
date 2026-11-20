@@ -32,6 +32,7 @@ import org.southtyrol.transit.data.RecentItem
 import org.southtyrol.transit.data.SavedItem
 import org.southtyrol.transit.data.SavedKind
 import org.southtyrol.transit.data.SavedRepository
+import org.southtyrol.transit.di.NamesLanguage
 import org.southtyrol.transit.feature.common.placesInOrder
 import org.southtyrol.transit.data.ScheduleRepository
 import org.southtyrol.transit.data.SettingsRepository
@@ -116,7 +117,7 @@ class PlannerViewModel @Inject constructor(
     private val saved: SavedRepository,
     private val settings: SettingsRepository,
     private val location: LocationProvider,
-    private val language: LanguageProvider,
+    @NamesLanguage private val language: LanguageProvider,
     timetable: ScheduleRepository,
     private val handle: SavedStateHandle,
 ) : ViewModel() {

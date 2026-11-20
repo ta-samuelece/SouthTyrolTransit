@@ -46,6 +46,7 @@ import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.FilledTonalIconToggleButton
+import org.southtyrol.transit.di.NamesLanguage
 import org.southtyrol.transit.feature.follow.canFollow
 import org.southtyrol.transit.feature.follow.rideSession
 import androidx.compose.material3.MaterialTheme
@@ -180,7 +181,7 @@ class MapViewModel @Inject constructor(
     private val settings: SettingsRepository,
     private val location: LocationProvider,
     private val compass: HeadingProvider,
-    private val language: LanguageProvider,
+    @NamesLanguage private val language: LanguageProvider,
     private val departures: org.southtyrol.transit.data.DepartureRepository,
     alerts: org.southtyrol.transit.data.AlertRepository,
     saved: org.southtyrol.transit.data.SavedRepository,

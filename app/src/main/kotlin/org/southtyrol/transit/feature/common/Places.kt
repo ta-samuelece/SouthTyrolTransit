@@ -107,6 +107,7 @@ import org.southtyrol.transit.design.SectionHeader
 import org.southtyrol.transit.design.StatusBanner
 import org.southtyrol.transit.design.TransitLoading
 import org.southtyrol.transit.design.icon
+import org.southtyrol.transit.di.NamesLanguage
 import org.southtyrol.transit.model.DataError
 import org.southtyrol.transit.model.Place
 import org.southtyrol.transit.model.PlaceType
@@ -192,7 +193,7 @@ internal fun searchPending(loading: Boolean, old: String, new: String): Boolean 
 class PlacesViewModel @Inject constructor(
     private val places: PlacesRepository,
     private val saved: SavedRepository,
-    private val language: LanguageProvider,
+    @NamesLanguage private val language: LanguageProvider,
 ) : ViewModel() {
     private val _state = MutableStateFlow(PlaceQueryState())
     val state: StateFlow<PlaceQueryState> = _state.asStateFlow()

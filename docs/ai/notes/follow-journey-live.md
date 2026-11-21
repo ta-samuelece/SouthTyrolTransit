@@ -103,10 +103,11 @@ every 5 s and posts only when the words, chip, freshness or progress percent cha
 
 On Android 16+ (`SDK_INT >= 36`) it is a Live Update: `NotificationCompat.ProgressStyle` with a segment
 per transit leg in its mode colour and one grey stretch for the walking and waiting between; the
-system's gap between segments and the change of colour mark the junctions. **No points, by decision
-(2026-10-18)**: the platform draws a point as a rounded square only - `NotificationProgressBar` always
-builds `new Point(null, color, ...)`, so no app can give it an icon or a ring, and the user preferred no
-points to boxes. Start and end icons were tried and dropped as noise. The only icon on the bar is the
+system's gap between segments and the change of colour mark the junctions. **No points on the journey
+bar, by decision (2026-10-18)**: the platform draws a point as a rounded square only -
+`NotificationProgressBar` always builds `new Point(null, color, ...)`, so no app can give it an icon or a
+ring, and the user preferred no points to boxes. A followed ride's bar has one point, at the stop marked
+from a board (issue #74 asked for it; see [following a ride](./follow-ride.md)). Start and end icons were tried and dropped as noise. The only icon on the bar is the
 tracker: the current step's mode, white on a circle of its colour (drawn to a bitmap). A bar drawn like
 the design (rings at junctions) would need a custom layout, which Android refuses to promote: no chip.
 Plus

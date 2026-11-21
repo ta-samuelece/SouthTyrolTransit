@@ -47,6 +47,20 @@ Kotlin compiler, `RideFollowTest` 9 cases plus `JourneyFollowTest` and `RunLocat
   GPS fix without predictions is not live. A stale fix shows "Last seen near" with the age, the badge grey.
 - Entry points: `rememberRideFollower` (replace dialog, notification permission, start) on the trip
   screen (extended FAB, then a snackbar with Undo) and on the map's vehicle sheet. Hidden for a cancelled
-  run or one past its last arrival.
+  run or one past its last arrival. Only the stop board's hero card and rows open the trip with
+  `TripRoute.fromStation` (the board's station key) and `fromTime` (the departure's `scheduled`, epoch
+  seconds); `TripScreen` resolves them with `RideFollow.callAt` (station key plus scheduled departure or
+  arrival, so a loop resolves by time) and the FAB stores that call's `TripStop.sequence` as
+  `RideSession.markedSequence`. Every other path (lines page, map sheets, strip, notification) leaves it
+  null. In memory only, like the session.
+- The marked stop: `RideFollow.markedTarget` gives the moment to count down to (the call's arrival, its
+  departure when it is the first call, `now` while the run stands there) or null once the run has left
+  it, arrived or been cancelled. `FollowText.rideNotificationText` and `rideChip` say "At <stop> in N min"
+  and count down to it then, else fall back to `rideText` and the step's chip; the notification and the
+  service's `Shown` re-post check use them, while the strip and `FollowingRideCard` keep `rideText`. The
+  trip screen's timeline highlights the call whose sequence is `markedSequence` while the ride is
+  followed ("Your stop" for TalkBack).
 - The notification on Android 16+ is a Live Update with one segment in the mode colour and the vehicle as
-  tracker, as the journey's (see [following a journey](./follow-journey-live.md) for why there are no points).
+  tracker, as the journey's; a ride with a marked stop adds one white point there
+  (`RideFollow.offsetSeconds`), which stays, dimmed, once passed (see
+  [following a journey](./follow-journey-live.md) for points).

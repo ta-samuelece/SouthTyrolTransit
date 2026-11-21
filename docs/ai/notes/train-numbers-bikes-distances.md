@@ -1,7 +1,7 @@
 ---
 type: Reference
 title: Train numbers, bikes on board and distances along a run
-description: trip_short_name, bikes_allowed and shape_dist_traveled are imported (schedule database version 2) and shown on boards, the trip screen and journey legs only when the feed fills them (the trip screen shows bikes and per-stop distances, no train number or run length); distances are taken as metres; "next stop in" needs a fresh GPS fix; "travelling with a bike" filters results by the timetable runs the legs were matched to, not by the planner.
+description: trip_short_name, bikes_allowed and shape_dist_traveled are imported (schedule database version 2) and shown on boards and journey legs only when the feed fills them; the trip screen shows the bike rule, per-stop distances and, with a fresh GPS fix only, "next stop in"; distances are taken as metres; "travelling with a bike" filters results by the timetable runs the legs were matched to, not by the planner.
 tags: [gtfs, importer, trip, journey, bikes, distance, ui]
 generated:
   by: claude-code/claude-opus-5-5
@@ -38,9 +38,9 @@ number, no bike symbol, no warning except in the bike search below.
 - `RouteDistance.of` (`core/model/.../Progress.kt`) gives travelled / to go / to the next stop only for a
   GPS fix between two calls, and the trip screen only passes it while the fix is `Freshness.LIVE`: an
   estimate or a stale fix would claim a precision the app does not have. The trip screen reads only the
-  distance to the next stop, for "next stop in"; since 2026-11-21 it shows no progress bar and no
-  travelled / to go distances, and no run length or train number in its header. The stretch to the next stop is
-  measured on the shape and clamped to the timetable's gap, so it never contradicts the stop list.
+  distance to the next stop, for "next stop in": it shows no progress bar, no travelled / to go
+  distances, and no run length or train number. The stretch to the next stop is measured on the shape
+  and clamped to the timetable's gap, so it never contradicts the stop list.
 - Distances per stop on the trip screen are relative to the run's first stop.
 - The stop board's next-departure card does **not** show the distance to the run's last stop: it was
   removed on 2026-10-24 at the user's request. `Departure.remainingMeters` is still imported but no

@@ -5,7 +5,7 @@ description: The app speaks en, de and it (Ladin was removed as a UI language on
 tags: [localization, efa, gtfs, translations]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-11-20T12:00:00Z"
+  at: "2026-11-21T12:00:00Z"
 status: stable
 ---
 
@@ -29,12 +29,18 @@ everything else to `en`; "Known API limitations" in `docs/DEVELOPMENT.md` explai
 language). The one qualified `@NamesLanguage` (`app/.../di/NamesLanguage.kt`) resolves the "Stop names"
 setting (`UserSettings.nameLanguage`: `APP`, `GERMAN`, `ITALIAN`) with `NameLanguage.resolve`: `APP`
 returns `AppLanguage.current()` unchanged, so the default changes nothing; the others return `de` or `it`.
-It keeps the choice in memory, follows the DataStore flow, and reads it once, blocking, on first use, so a
-cold widget or follow update gets the stored choice.
+The binding is the singleton `NamesLanguageProvider`: it keeps the choice in a `StateFlow` that follows
+DataStore, and reads it, blocking, when called before the first value arrives, so a cold widget or follow
+update gets the stored choice. Its `changes` flow is what open screens observe: the stop board, the line
+page and the trip screen reload on a change, and the map refetches its stops on any settings change.
 
 - Names provider: every stop, place, line and trip lookup - Stop, Trip, Lines, Map, the pickers and
   `SavedStopsFlow`, Places, MapSearch, Planner, the journey view models, `FollowEngine`, `RideEngine` and
   `WidgetUpdateWorker`.
+- Stored names: saved-stop labels and the name a board is opened with (from a saved stop, the widget or a
+  search) are snapshots. With a chosen names language (not `APP`), `NameLanguage.stopName` replaces them by
+  the timetable's name in that language when the timetable has the stop: `SavedNamesFlow` (saved list, map
+  pins, the search's saved stops) and `boardTitle`. The stored label itself never changes.
 - App language: `AlertsViewModel` (including stop names in alert scopes), the alert refresh in `Workers.kt`
   and `TripViewModel`, alert cards (`textLanguages()`) and all `R.string` UI. `TripViewModel` gets both.
 - Journey notices: the trip request goes out in the names language, so `EfaXml.journeys` gets the app

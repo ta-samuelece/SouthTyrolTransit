@@ -108,6 +108,19 @@ class EfaClient(
     }
 
     /**
+     * Every stop in and around South Tyrol with its name in [language], by station key (EFA's global id,
+     * the same as [GtfsFiles.stationKey]). One coordinate request covers the region (~3,500 stops, ~5 MB);
+     * it supplies the German names the timetable lacks ([ScheduleStore.fillStopNames]).
+     */
+    suspend fun regionStopNames(language: String): Map<String, String> = guarded {
+        val bytes = get(
+            "XML_COORD_REQUEST",
+            mapOf("language" to Languages.efa(language), "coord" to coordinate(REGION_CENTER), "inclFilter" to "1", "type_1" to "STOP", "radius_1" to REGION_RADIUS_METERS.toString(), "max" to "20000"),
+        )
+        withContext(Dispatchers.Default) { EfaXml.stopNames(bytes) }
+    }
+
+    /**
      * A fewest-changes search also asks for the fastest trips and merges both answers. EFA's LEASTINTERCHANGE
      * alone hides much faster trips with one more change - Vilpian to Vöran gave only a 1h51 bus trip, never
      * the 43-minute one via the Vöran cable car. The extra search failing leaves the main one's answer.
@@ -172,6 +185,10 @@ class EfaClient(
             return if (options.arriveBy) journeys.filter { !it.bestArrival.isAfter(at.plusSeconds(60)) }
             else journeys.filter { !it.bestDeparture.isBefore(at.minusSeconds(60)) }
         }
+
+        /** The region request's centre and reach: all of South Tyrol, with room for the stops just past its borders. */
+        val REGION_CENTER = Point(46.65, 11.40)
+        const val REGION_RADIUS_METERS = 120_000
 
         fun coordinate(p: Point) ="%.6f:%.6f:WGS84[DD.DDDDD]".format(java.util.Locale.ROOT, p.longitude, p.latitude)
 
@@ -334,6 +351,11 @@ object EfaXml {
         val locality = e.a("locality")
         Place(e.a("stateless").ifBlank { e.a("id") }, listOf(locality, e.a("name")).filter { it.isNotBlank() }.joinToString(", "), PlaceType.STOP, p, locality, gid)
     }
+
+    /** A coordinate answer's stop names by station key ("Bozen, Waltherplatz" for `it:22021:2084`); stops without a global id are skipped. */
+    fun stopNames(bytes: ByteArray): Map<String, String> = coordStops(bytes)
+        .filter { it.stopGlobalId.isNotBlank() && it.name.isNotBlank() }
+        .associate { it.stopGlobalId to it.name }
 
     private fun dateTime(e: Element?): Instant? {
         e ?: return null

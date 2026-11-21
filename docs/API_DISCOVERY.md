@@ -29,7 +29,7 @@ Every source below is used without authentication. Classification:
 
 **Files actually present** (4 Oct 2026): `agency`, `calendar`, `calendar_dates`, `routes`, `trips`,
 `stop_times` (1,101,984 rows), `stops` (6,436), `shapes` (8,628,981 points / 8,827 shapes, 570 MB raw),
-`translations` (German stop names and trip headsigns only).
+`translations` (German stop names and trip headsigns only). Since November 2026 STA ships `translations.txt` empty (0 bytes, from both Open Data Hub and the FTP server, checked on 21 Nov 2026), so the app fills German stop names from EFA (see "EFA region stop names" below).
 **Not present:** `feed_info`, `transfers`, `frequencies`, `fare_*`, `pathways`, `levels`, route colours.
 
 Fields used:
@@ -41,6 +41,8 @@ Fields used:
 - `calendar` and `calendar_dates`.
 - `shapes`: simplified with Douglas–Peucker at 4 m and stored as encoded polylines (96 MB database in total).
 - `translations`: `table_name`, `field_name`, `language`, `translation`, `record_id`. Only ~80 % of trips have headsign translations, so the importer derives a headsign-text dictionary for the rest.
+
+**EFA region stop names.** `XML_COORD_REQUEST` with `language=de`, centre 46.65 N 11.40 E, `radius_1=120000`, `type_1=STOP`, `max=20000` returns every stop of the region in one answer (3,524 stops, about 5 MB, 2 s on 21 Nov 2026). Each `coordInfoItem` has `locality`, `name` and a `STOP_GLOBAL_ID` equal to the GTFS station key; 3,435 of the timetable's 3,517 stations were in it, the rest mostly in Austria. About a dozen stops, mostly railway stations and cable cars, keep an Italian `locality` ("Bolzano" with "Bahnhof Bozen"); the app corrects those (`GermanStopNames`). After each timetable import, and at app start for a timetable that has none yet, the app adds these names as German translations where the feed has none (`ScheduleStore.fillStopNames`).
 
 FTP fallback notes:
 

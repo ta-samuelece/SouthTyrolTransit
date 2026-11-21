@@ -143,6 +143,7 @@ class ScheduleSyncWorker @AssistedInject constructor(
     @Assisted params: WorkerParameters,
     private val store: ScheduleStore,
     private val settings: SettingsRepository,
+    private val efa: org.southtyrol.transit.data.EfaClient,
 ) : CoroutineWorker(context, params) {
 
     override suspend fun getForegroundInfo(): ForegroundInfo = foreground(applicationContext.getString(R.string.sync_downloading), 0, 0)
@@ -168,6 +169,10 @@ class ScheduleSyncWorker @AssistedInject constructor(
         runCatching { setForeground(getForegroundInfo()) }
         return try {
             store.refresh(allowFtp = prefs.ftpFallback)
+            // The feed may lack German stop names (STA's translations.txt came empty); a failure here only
+            // leaves them Italian until the next run, so it never fails the sync.
+            runCatching { store.fillStopNames { efa.regionStopNames("de") } }
+                .onFailure { if (it is CancellationException) throw it }
             Result.success()
         } catch (e: CancellationException) {
             throw e

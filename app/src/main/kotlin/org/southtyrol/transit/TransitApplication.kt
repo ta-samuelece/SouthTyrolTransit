@@ -16,6 +16,7 @@ class TransitApplication : Application(), Configuration.Provider {
     @Inject lateinit var settings: org.southtyrol.transit.data.SettingsRepository
     @Inject lateinit var scheduleStore: org.southtyrol.transit.data.ScheduleStore
     @Inject lateinit var userDao: org.southtyrol.transit.data.UserDao
+    @Inject lateinit var efa: org.southtyrol.transit.data.EfaClient
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder().setWorkerFactory(workerFactory).build()
@@ -36,6 +37,9 @@ class TransitApplication : Application(), Configuration.Provider {
                 allowMetered = settings.current().scheduleOnMetered,
                 initialSync = scheduleStore.activeName() == null,
             )
+            // A timetable imported before the German-name fill existed (or while offline) gets it now;
+            // once done for a timetable this is a single meta lookup.
+            runCatching { scheduleStore.fillStopNames { efa.regionStopNames("de") } }
         }
     }
 

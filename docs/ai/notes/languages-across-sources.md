@@ -5,7 +5,7 @@ description: The app speaks en, de and it (Ladin was removed as a UI language on
 tags: [localization, efa, gtfs, translations]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-11-21T12:00:00Z"
+  at: "2026-11-21T23:40:00Z"
 status: stable
 ---
 
@@ -18,6 +18,14 @@ status: stable
 | `de` | German | `de` | `de` |
 | `it` | Italian (base) | `it` | `it` |
 | `en` | Italian | `en` | `de` |
+
+German GTFS stop names live in the `translations` table. STA's feed filled it until November 2026 and
+has shipped `translations.txt` empty since (both sources, checked 2026-11-21), so `ScheduleStore.fillStopNames`
+adds them from one EFA region request (`EfaClient.regionStopNames`) after each import and at app start,
+once per timetable (meta key `efaStopNames`); feed translations win (`INSERT OR IGNORE`), the names also
+go into `stop_search`, and `GermanStopNames.corrected` fixes the dozen EFA names whose locality stayed
+Italian. Trip headsigns have no such source and stay Italian. Without this, the Stop names setting had
+nothing German to show outside online search.
 
 `Languages.efa` maps `de` to `de`, `it` (and `lld`, a leftover of the removed Ladin UI) to `it` and
 everything else to `en`; "Known API limitations" in `docs/DEVELOPMENT.md` explains why StopFinder queries de and it in parallel. `Languages` in

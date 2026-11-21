@@ -128,7 +128,7 @@ object AppModule {
     fun language(): LanguageProvider = AppLanguage
 
     @Provides @Singleton @NamesLanguage
-    fun namesLanguage(settings: SettingsRepository): LanguageProvider = NamesLanguageProvider(settings)
+    fun namesLanguage(names: NamesLanguageProvider): LanguageProvider = names
 
     @Provides @Singleton
     fun ticketing(): TicketingProvider = OfficialTicketingLink()

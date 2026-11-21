@@ -48,6 +48,13 @@ fun NameLanguage.resolve(appLanguage: String): String = when (this) {
     NameLanguage.ITALIAN -> "it"
 }
 
+/**
+ * The stop name to show instead of a [stored] one (a saved label, the name a board was opened with): with
+ * a chosen names language the timetable's name in it wins, so saved stops follow the setting.
+ */
+fun NameLanguage.stopName(stored: String, timetable: String?): String =
+    if (this != NameLanguage.APP && !timetable.isNullOrBlank()) timetable else stored
+
 data class UserSettings(
     val theme: ThemeMode = ThemeMode.SYSTEM,
     /** Off by default: the app's own palette, unless the user picks the wallpaper colours. */

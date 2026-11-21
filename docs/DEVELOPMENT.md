@@ -173,7 +173,7 @@ Place search falls back to timetable stops. Journey planning needs the EFA servi
 
 - UI in **English, German and Italian**, using Android resources only and per-app language selection (Android 13+ system UI; AppCompat storage on older versions).
 - Ladin is not a UI language (it was up to 0.1.6-preview.4, with the UI in German); anyone who had chosen it is switched to German. Alert texts in Ladin from the feeds (GTFS-RT `lld`, EFA `ld1/ld2`) are still understood, but shown only as a fallback.
-- Stop, place and line names follow the **Stop names** setting in Settings > General: the app language (the default), German or Italian. GTFS stop names and headsigns use German translations for de and the Italian base names otherwise; EFA name requests (departures, trips, journeys, places) are sent in the names language (StopFinder uses de/it; see API quirks). Alerts and journey notices follow the app language.
+- Stop, place and line names follow the **Stop names** setting in Settings > General: the app language (the default), German or Italian. GTFS stop names and headsigns use German translations for de and the Italian base names otherwise; EFA name requests (departures, trips, journeys, places) are sent in the names language (StopFinder uses de/it; see API quirks). With German or Italian chosen, saved stops and stop boards show the timetable's name in that language instead of the name they were saved or opened with, and open screens reload their names when the setting changes. Alerts and journey notices follow the app language.
 - All clock times are shown in Europe/Rome.
 
 ## Known API limitations

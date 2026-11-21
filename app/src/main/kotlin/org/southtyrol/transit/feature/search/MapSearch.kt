@@ -73,7 +73,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.southtyrol.transit.R
 import org.southtyrol.transit.data.StopSearchRepository
-import org.southtyrol.transit.data.LanguageProvider
 import org.southtyrol.transit.data.LineRepository
 import org.southtyrol.transit.data.SavedItem
 import org.southtyrol.transit.data.SavedKind
@@ -87,7 +86,8 @@ import org.southtyrol.transit.design.ModeGlyph
 import org.southtyrol.transit.design.SectionHeader
 import org.southtyrol.transit.design.StatusBanner
 import org.southtyrol.transit.design.TransitLoading
-import org.southtyrol.transit.di.NamesLanguage
+import org.southtyrol.transit.di.NamesLanguageProvider
+import org.southtyrol.transit.feature.common.SavedNamesFlow
 import org.southtyrol.transit.feature.common.groupGap
 import org.southtyrol.transit.feature.common.groupedItemColors
 import org.southtyrol.transit.feature.common.rememberLocationPermission
@@ -99,6 +99,7 @@ import org.southtyrol.transit.model.DataException
 import org.southtyrol.transit.model.Line
 import org.southtyrol.transit.model.Point
 import org.southtyrol.transit.model.Stop
+import org.southtyrol.transit.model.TransitScheduleDataSource
 import org.southtyrol.transit.model.TransportMode
 import org.southtyrol.transit.ui.Navigator
 import javax.inject.Inject
@@ -126,8 +127,9 @@ class MapSearchViewModel @Inject constructor(
     private val stopSearch: StopSearchRepository,
     private val lines: LineRepository,
     private val location: LocationProvider,
-    @NamesLanguage private val language: LanguageProvider,
+    private val language: NamesLanguageProvider,
     private val saved: SavedRepository,
+    schedule: TransitScheduleDataSource,
     private val handle: SavedStateHandle,
 ) : ViewModel() {
     private val _search = MutableStateFlow(handle.get<String>("q").orEmpty().let { SearchState(it, loading = searchPending(false, "", it)) })
@@ -137,7 +139,7 @@ class MapSearchViewModel @Inject constructor(
     private val _open = MutableStateFlow(handle.get<Boolean>("open") ?: false)
     val open: StateFlow<Boolean> = _open.asStateFlow()
 
-    val savedStops: StateFlow<List<SavedItem>> = saved.saved.map { list -> list.filter { it.kind == SavedKind.STOP } }
+    val savedStops: StateFlow<List<SavedItem>> = SavedNamesFlow(saved, schedule, language).map { list -> list.filter { it.kind == SavedKind.STOP } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     /** Stops and lines opened from here before; a stop that is saved already shows under saved instead. */

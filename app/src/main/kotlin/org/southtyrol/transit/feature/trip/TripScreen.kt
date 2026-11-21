@@ -88,6 +88,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.southtyrol.transit.LocalDarkTheme
@@ -95,7 +96,7 @@ import org.southtyrol.transit.R
 import org.southtyrol.transit.data.LanguageProvider
 import org.southtyrol.transit.data.RealtimeRepository
 import org.southtyrol.transit.data.TripRepository
-import org.southtyrol.transit.di.NamesLanguage
+import org.southtyrol.transit.di.NamesLanguageProvider
 import org.southtyrol.transit.design.DelayLabel
 import org.southtyrol.transit.design.ErrorState
 import org.southtyrol.transit.design.Format
@@ -140,7 +141,7 @@ class TripViewModel @AssistedInject constructor(
     private val trips: TripRepository,
     private val realtime: RealtimeRepository,
     private val language: LanguageProvider,
-    @NamesLanguage private val names: LanguageProvider,
+    private val names: NamesLanguageProvider,
     private val alerts: org.southtyrol.transit.data.AlertRepository,
 ) : ViewModel() {
     @AssistedFactory
@@ -176,6 +177,8 @@ class TripViewModel @AssistedInject constructor(
     init {
         load()
         viewModelScope.launch { runCatching { alerts.refresh(language.current()) } }
+        // A change of the Stop names setting reloads the stops in the new language.
+        viewModelScope.launch { names.changes.drop(1).collect { load() } }
     }
 
     fun load() = viewModelScope.launch {

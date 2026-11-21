@@ -13,6 +13,14 @@ class NameLanguageTest {
         assertEquals("it", NameLanguage.ITALIAN.resolve("de-DE"))
     }
 
+    @Test fun aChosenNamesLanguageTakesTheTimetableNameOverAStoredOne() {
+        assertEquals("Bolzano, Stazione di Bolzano", NameLanguage.APP.stopName("Bolzano, Stazione di Bolzano", "Bozen, Bahnhof Bozen"))
+        assertEquals("Bozen, Bahnhof Bozen", NameLanguage.GERMAN.stopName("Bolzano, Stazione di Bolzano", "Bozen, Bahnhof Bozen"))
+        assertEquals("Bolzano, Stazione di Bolzano", NameLanguage.ITALIAN.stopName("Bozen, Bahnhof Bozen", "Bolzano, Stazione di Bolzano"))
+        assertEquals("Bozen, Bahnhof Bozen", NameLanguage.ITALIAN.stopName("Bozen, Bahnhof Bozen", null))
+        assertEquals("Bozen, Bahnhof Bozen", NameLanguage.GERMAN.stopName("Bozen, Bahnhof Bozen", ""))
+    }
+
     @Test fun settingRoundTripsAndUnknownValuesFallBackToApp() = runBlocking {
         val store = MemoryPreferences()
         val settings = SettingsRepository(store)

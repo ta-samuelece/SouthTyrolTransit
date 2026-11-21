@@ -60,6 +60,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.stateIn
@@ -74,7 +75,6 @@ import org.southtyrol.transit.data.AlertRepository
 import org.southtyrol.transit.data.AlertsState
 import org.southtyrol.transit.data.DepartureRepository
 import org.southtyrol.transit.data.BoardSource
-import org.southtyrol.transit.data.LanguageProvider
 import org.southtyrol.transit.data.LineRepository
 import org.southtyrol.transit.data.MapRepository
 import org.southtyrol.transit.data.RealtimeRepository
@@ -90,7 +90,7 @@ import org.southtyrol.transit.design.SectionHeader
 import org.southtyrol.transit.design.TransitLoading
 import org.southtyrol.transit.design.rememberNow
 import org.southtyrol.transit.di.AppLanguage
-import org.southtyrol.transit.di.NamesLanguage
+import org.southtyrol.transit.di.NamesLanguageProvider
 import org.southtyrol.transit.feature.common.AlertCard
 import org.southtyrol.transit.feature.common.DepartureRow
 import org.southtyrol.transit.feature.common.PollWhileVisible
@@ -194,7 +194,7 @@ class LineViewModel @AssistedInject constructor(
     private val realtime: RealtimeRepository,
     private val saved: SavedRepository,
     alerts: AlertRepository,
-    @NamesLanguage private val language: LanguageProvider,
+    private val language: NamesLanguageProvider,
 ) : ViewModel() {
     @AssistedFactory
     interface Factory { fun create(key: String): LineViewModel }
@@ -216,7 +216,11 @@ class LineViewModel @AssistedInject constructor(
         Triple(trips, if (line == null) emptyList() else map.vehiclesForLine(line, snapshot), snapshot.vehiclesFetchedAt)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
-    init { load() }
+    init {
+        load()
+        // A change of the Stop names setting reloads the variants and trips in the new language.
+        viewModelScope.launch { language.changes.drop(1).collect { load() } }
+    }
 
     fun load() = viewModelScope.launch {
         try {

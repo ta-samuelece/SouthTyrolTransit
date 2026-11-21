@@ -68,8 +68,12 @@ import org.southtyrol.transit.ui.Navigator
 import javax.inject.Inject
 
 @HiltViewModel
-class SavedViewModel @Inject constructor(private val repo: SavedRepository) : ViewModel() {
-    val saved: StateFlow<List<SavedItem>?> = repo.saved.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+class SavedViewModel @Inject constructor(
+    private val repo: SavedRepository,
+    schedule: org.southtyrol.transit.model.TransitScheduleDataSource,
+    names: org.southtyrol.transit.di.NamesLanguageProvider,
+) : ViewModel() {
+    val saved: StateFlow<List<SavedItem>?> = org.southtyrol.transit.feature.common.SavedNamesFlow(repo, schedule, names).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
     val recent: StateFlow<List<RecentItem>> = repo.recentJourneys(10).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     fun remove(item: SavedItem) = viewModelScope.launch { repo.remove(item.kind, item.id) }
     fun addStop(stop: org.southtyrol.transit.model.Stop) = viewModelScope.launch { repo.saveStop(stop) }

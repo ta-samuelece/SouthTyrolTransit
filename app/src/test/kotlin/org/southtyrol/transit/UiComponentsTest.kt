@@ -20,6 +20,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.southtyrol.transit.data.JourneyRequest
+import org.southtyrol.transit.data.NameLanguage
 import org.southtyrol.transit.design.ErrorState
 import org.southtyrol.transit.design.MessageState
 import org.southtyrol.transit.design.TransitTheme
@@ -127,9 +128,17 @@ class UiComponentsTest {
     }
 
     @Test fun boardKeepsTheNameItWasOpenedWith() {
-        assertEquals("Bahnhof Meran Untermais", boardTitle("Bahnhof Meran Untermais", "Merano, Stazione di Merano Maia Bassa"))
-        assertEquals("Merano, Stazione di Merano Maia Bassa", boardTitle("", "Merano, Stazione di Merano Maia Bassa"))
-        assertEquals("", boardTitle("", null))
+        assertEquals("Bahnhof Meran Untermais", boardTitle("Bahnhof Meran Untermais", "Merano, Stazione di Merano Maia Bassa", NameLanguage.APP))
+        assertEquals("Merano, Stazione di Merano Maia Bassa", boardTitle("", "Merano, Stazione di Merano Maia Bassa", NameLanguage.APP))
+        assertEquals("", boardTitle("", null, NameLanguage.APP))
+    }
+
+    @Test fun boardTakesTheTimetableNameInAChosenNamesLanguage() {
+        assertEquals("Merano, Stazione di Merano Maia Bassa", boardTitle("Bahnhof Meran Untermais", "Merano, Stazione di Merano Maia Bassa", NameLanguage.ITALIAN))
+        assertEquals("Bozen, Bahnhof Bozen", boardTitle("Bolzano, Stazione di Bolzano", "Bozen, Bahnhof Bozen", NameLanguage.GERMAN))
+        // Not in the timetable: the name it was opened with stays.
+        assertEquals("Bozen, Bahnhof Bozen", boardTitle("Bozen, Bahnhof Bozen", null, NameLanguage.ITALIAN))
+        assertEquals("", boardTitle("", null, NameLanguage.GERMAN))
     }
 
     @Test fun stopDepartureShowsCountdownDelayAndOpensTrip() {

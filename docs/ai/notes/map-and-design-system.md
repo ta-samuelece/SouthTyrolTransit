@@ -5,7 +5,7 @@ description: Map content is one immutable value pushed layer by layer and marker
 tags: [map, maplibre, design-system, colors, accessibility]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-11-16T19:40:00Z"
+  at: "2026-11-21T12:00:00Z"
 status: stable
 ---
 
@@ -192,7 +192,7 @@ Settled on 2026-10-13 after a review of every screen against the Expressive guid
 - Unselected `ConnectedToggleGroup` buttons default to `surfaceContainer`. On a surface of that colour
   they vanish: pass `uncheckedContainerColor` (the Settings theme group uses `surfaceContainerHighest`;
   the planner's routing options, inside the top lip, use `surface`). The `ToggleButtonDefaults` colour
-  factory is `colors(...)` in this alpha, not `toggleButtonColors`.
+  factory is `colors(...)` in material3 1.5.0, not `toggleButtonColors`.
 - **Plan's top is a `TopLip`** (`core/designsystem/.../TopLip.kt`), not a `TopAppBar`: a
   `secondaryContainer` band from under the status bar (the Scaffold's content insets drop the top side)
   with the title between the routing-options icon toggle and the Settings gear, and the page as a

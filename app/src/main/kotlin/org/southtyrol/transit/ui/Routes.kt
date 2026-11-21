@@ -13,7 +13,8 @@ import kotlinx.serialization.Serializable
 /** The journey being followed; it lives in [org.southtyrol.transit.follow.ActiveJourney], not in the route. */
 @Serializable object FollowRoute
 @Serializable data class StopRoute(val stationKey: String, val name: String = "")
-@Serializable data class TripRoute(val tripId: String, val serviceDate: String, val liveRef: String = "")
+/** [fromStation] and [fromTime] (epoch seconds of the departure's `scheduled`) name the call picked on a stop's board. */
+@Serializable data class TripRoute(val tripId: String, val serviceDate: String, val liveRef: String = "", val fromStation: String = "", val fromTime: Long = 0)
 @Serializable object LinesRoute
 @Serializable data class LineRoute(val key: String)
 @Serializable object SettingsRoute

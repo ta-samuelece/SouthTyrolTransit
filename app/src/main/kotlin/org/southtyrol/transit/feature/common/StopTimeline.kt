@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ExpandLess
 import androidx.compose.material.icons.rounded.ExpandMore
@@ -309,6 +310,8 @@ fun StopTimelineRow(
     vehicle: VehicleMarker, mode: TransportMode, estimated: Boolean, onClick: () -> Unit,
     note: String? = null, live: Boolean = true, distance: String? = null,
     dashedAbove: Boolean = false, dashedBelow: Boolean = false,
+    /** The stop the followed ride was picked at on a board: highlighted, and read as "Your stop". */
+    marked: Boolean = false,
 ) {
     val lineColor = Color(0xFF000000 or color)
     val skipped = stop.state == ServiceState.SKIPPED || stop.state == ServiceState.CANCELLED
@@ -319,11 +322,14 @@ fun StopTimelineRow(
     val delayText = delayDescription(delaySeconds, stop.state)
     val vehicleText = if (vehicle != VehicleMarker.NONE) stringResource(if (vehicle == VehicleMarker.AT_STOP) R.string.trip_vehicle_at_stop else R.string.trip_vehicle_approaching) else null
     val passedText = if (passed) stringResource(R.string.stop_passed) else null
+    val markedText = if (marked) stringResource(R.string.trip_your_stop) else null
     val railAlpha = if (passed) Progress.PASSED_ALPHA else 1f
     Row(
-        Modifier.fillMaxWidth().height(IntrinsicSize.Min).clickable(role = Role.Button, onClick = onClick).heightIn(min = 52.dp)
+        Modifier.fillMaxWidth().height(IntrinsicSize.Min)
+            .then(if (marked) Modifier.clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.secondaryContainer) else Modifier)
+            .clickable(role = Role.Button, onClick = onClick).heightIn(min = 52.dp)
             .semantics(mergeDescendants = true) {
-                contentDescription = listOfNotNull(stop.stop.name, timeText, delayText, note, vehicleText, distance).joinToString(", ")
+                contentDescription = listOfNotNull(stop.stop.name, markedText, timeText, delayText, note, vehicleText, distance).joinToString(", ")
                 if (passedText != null) stateDescription = passedText
             },
     ) {

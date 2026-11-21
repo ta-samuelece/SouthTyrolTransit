@@ -128,7 +128,7 @@ class Navigator(private val nav: NavHostController, start: TopLevel) {
     fun journey(request: String, id: String) = nav.navigate(JourneyRoute(request, id))
     fun follow() = nav.navigate(FollowRoute) { launchSingleTop = true }
     fun stop(stationKey: String, name: String = "") = nav.navigate(StopRoute(stationKey, name)) { launchSingleTop = true }
-    fun trip(tripId: String, serviceDate: String, liveRef: String = "") = nav.navigate(TripRoute(tripId, serviceDate, liveRef)) { launchSingleTop = true }
+    fun trip(tripId: String, serviceDate: String, liveRef: String = "", fromStation: String = "", fromTime: Long = 0) = nav.navigate(TripRoute(tripId, serviceDate, liveRef, fromStation, fromTime)) { launchSingleTop = true }
     fun lines() = nav.navigate(LinesRoute)
     fun line(key: String) = nav.navigate(LineRoute(key)) { launchSingleTop = true }
     fun saved() = nav.navigate(SavedRoute) { launchSingleTop = true }
@@ -296,7 +296,7 @@ fun TransitApp(
                 screen<JourneyRoute> { JourneyDetailScreen(navigator) }
                 screen<FollowRoute> { org.southtyrol.transit.feature.follow.FollowScreen(navigator) }
                 screen<StopRoute> { e -> e.toRoute<StopRoute>().let { StopScreen(navigator, it.stationKey, it.name) } }
-                screen<TripRoute> { e -> e.toRoute<TripRoute>().let { TripScreen(navigator, it.tripId, it.serviceDate, it.liveRef) } }
+                screen<TripRoute> { e -> e.toRoute<TripRoute>().let { TripScreen(navigator, it.tripId, it.serviceDate, it.liveRef, it.fromStation, it.fromTime) } }
                 screen<LinesRoute> { LinesScreen(navigator) }
                 screen<LineRoute> { e -> LineScreen(navigator, e.toRoute<LineRoute>().key) }
                 screen<AboutRoute> { AboutScreen(navigator) }

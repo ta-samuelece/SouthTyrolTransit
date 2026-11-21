@@ -259,7 +259,7 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
                     if (hero != null) item(key = "hero:" + hero.key) {
                         org.southtyrol.transit.feature.common.NextDepartureCard(
                             hero, now,
-                            onClick = if (hero.tripLinked) ({ navigator.trip(hero.tripId, hero.serviceDate.toString(), hero.liveRef) }) else null,
+                            onClick = if (hero.tripLinked) ({ navigator.trip(hero.tripId, hero.serviceDate.toString(), hero.liveRef, viewModel.stationKey, hero.scheduled.epochSecond) }) else null,
                             joined = rest.isNotEmpty(),
                             modifier = Modifier.padding(horizontal = 16.dp).animateItem(),
                         )
@@ -267,7 +267,7 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
                     itemsIndexed(rest, key = { _, d -> d.key }, contentType = { _, _ -> "departure" }) { index, d ->
                         DepartureRow(
                             d, now, index + offset, rest.size + offset,
-                            onClick = if (d.tripLinked) ({ navigator.trip(d.tripId, d.serviceDate.toString(), d.liveRef) }) else null,
+                            onClick = if (d.tripLinked) ({ navigator.trip(d.tripId, d.serviceDate.toString(), d.liveRef, viewModel.stationKey, d.scheduled.epochSecond) }) else null,
                             modifier = Modifier.padding(horizontal = 16.dp).animateItem(),
                         )
                     }

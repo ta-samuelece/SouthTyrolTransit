@@ -533,6 +533,7 @@
     <string name="trip_position_estimated_live">Posizione stimata dagli orari in tempo reale</string>
     <string name="trip_position_estimated_schedule">Posizione stimata dall\'orario</string>
     <string name="trip_vehicle_at_stop">Il mezzo è a questa fermata</string>
+    <string name="trip_your_stop">La tua fermata</string>
     <string name="trip_vehicle_approaching">Il mezzo è in arrivo a questa fermata</string>
     <string name="trip_map_expand">Ingrandisci la mappa</string>
     <string name="trip_map_collapse">Riduci la mappa</string>
@@ -706,6 +707,7 @@
     <string name="ride_last_stop">Capolinea %s</string>
     <string name="ride_n_next">Prossima fermata %1$s %2$s</string>
     <string name="ride_n_at">A %1$s, parte %2$s</string>
+    <string name="ride_n_mark">A %1$s %2$s</string>
     <string name="ride_n_reached">%1$s ha raggiunto %2$s</string>
     <string name="ride_n_arrived">Arrivato alle %s.</string>
     <string name="ride_n_last_seen">Visto l\'ultima volta vicino a %s</string>

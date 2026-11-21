@@ -98,6 +98,44 @@ object RideFollow {
         return Duration.between(first.predictedDeparture ?: first.scheduledDeparture, last.predictedArrival ?: last.scheduledArrival).seconds.coerceAtLeast(1)
     }
 
+    /**
+     * The call of [stops] the user picked on a board: the first one at [stationKey] whose scheduled departure
+     * or arrival is [scheduled] (a run serving the station twice resolves by its time). Null when [stationKey]
+     * is blank or no call matches.
+     */
+    fun callAt(stops: List<TripStop>, stationKey: String, scheduled: Instant): Int? {
+        if (stationKey.isBlank()) return null
+        return stops.indexOfFirst { it.stop.stationKey == stationKey && (it.scheduledDeparture == scheduled || it.scheduledArrival == scheduled) }
+            .takeIf { it >= 0 }
+    }
+
+    /**
+     * When the run reaches the marked call [index] (its departure when it is the first call), [now] while it
+     * stands there, or null once that call is behind it, arrived or cancelled.
+     */
+    fun markedTarget(detail: TripDetail, step: RideStep, index: Int, now: Instant): Instant? {
+        val call = detail.stops.getOrNull(index) ?: return null
+        val arrival = call.predictedArrival ?: call.scheduledArrival
+        return when (step.stage) {
+            RideStage.CANCELLED, RideStage.ARRIVED -> null
+            RideStage.WAITING -> if (index == 0) call.predictedDeparture ?: call.scheduledDeparture else arrival
+            RideStage.MOVING -> arrival.takeIf { step.stopIndex <= index }
+            RideStage.AT_STOP -> when {
+                step.stopIndex < index -> arrival
+                step.stopIndex == index -> now
+                else -> null
+            }
+        }
+    }
+
+    /** Where the marked call [index] lies on the [totalSeconds] scale: its arrival (departure for the first call), clamped. */
+    fun offsetSeconds(detail: TripDetail, index: Int): Long {
+        val first = detail.stops.firstOrNull() ?: return 0
+        val call = detail.stops.getOrNull(index) ?: return 0
+        val at = if (index == 0) call.predictedDeparture ?: call.scheduledDeparture else call.predictedArrival ?: call.scheduledArrival
+        return Duration.between(first.predictedDeparture ?: first.scheduledDeparture, at).seconds.coerceIn(0, totalSeconds(detail))
+    }
+
     /** Seconds of the run behind at [now], within 0..[totalSeconds]. */
     fun elapsedSeconds(detail: TripDetail, now: Instant): Long {
         val first = detail.stops.firstOrNull() ?: return 0

@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
-
 package org.southtyrol.transit.feature.common
 
 import android.Manifest
@@ -27,8 +25,6 @@ import androidx.compose.material.icons.rounded.PedalBike
 import androidx.compose.material.icons.rounded.ReportProblem
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.minimumInteractiveComponentSize
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
@@ -366,7 +362,7 @@ fun groupShape(index: Int, count: Int): androidx.compose.ui.graphics.Shape {
 /**
  * Expandable service alert card with validity, scope and multilingual text. Severity shows as the
  * icon's container (error for disruptions, tertiary for other notices); affected lines are real line
- * badges where [lineRoutes] knows their mode and colour.
+ * badges where [lineRoutes] knows their mode and colour. [initiallyExpanded] opens it with its full text.
  */
 @Composable
 fun AlertCard(
@@ -379,8 +375,9 @@ fun AlertCard(
     stopNames: List<String> = emptyList(),
     lineRoutes: Map<String, org.southtyrol.transit.model.Route> = emptyMap(),
     shape: androidx.compose.ui.graphics.Shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
+    initiallyExpanded: Boolean = false,
 ) {
-    var expanded by rememberSaveable(alert.id) { mutableStateOf(false) }
+    var expanded by rememberSaveable(alert.id) { mutableStateOf(initiallyExpanded) }
     // Keyed by the app language too: after switching language in Settings the restored state must not
     // keep showing the previous one.
     var shownLanguage by rememberSaveable(alert.id, language) { mutableStateOf(language) }

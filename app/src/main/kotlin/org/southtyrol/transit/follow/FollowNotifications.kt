@@ -68,6 +68,8 @@ object FollowNotifications {
      * The ongoing notification of a followed ride: where the run is (the next stop, the stop it stands at,
      * its departure), a Stop action, and a tap that opens its trip. On Android 16+ a Live Update with one
      * segment in the mode's colour, the vehicle riding it, and the chip counting down to the next stop.
+     * A ride followed from a stop's board counts down to that stop until it leaves it, and its bar has a
+     * point there.
      */
     fun ride(context: Context, ride: RideSession, view: RideView?, now: Instant = Instant.now()): Notification {
         val res = context.resources
@@ -76,13 +78,13 @@ object FollowNotifications {
             .setColor(modeColor(ride.mode))
             .setContentTitle(FollowText.rideTitle(res, ride, view))
         if (view == null) return builder.build()
-        val text = FollowText.rideText(res, ride, view, now)
+        val text = FollowText.rideNotificationText(res, ride, view, now)
         val total = RideFollow.totalSeconds(view.detail).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
         val elapsed = RideFollow.elapsedSeconds(view.detail, now).toInt()
         builder
             .setContentText(text)
             .setSubText(FollowText.rideSource(res, view))
-            .setShortCriticalText(FollowText.chip(res, view.step.at, now))
+            .setShortCriticalText(FollowText.rideChip(res, ride, view, now))
             .setRequestPromotedOngoing(true)
         if (Build.VERSION.SDK_INT >= 36) {
             val style = NotificationCompat.ProgressStyle()
@@ -90,6 +92,10 @@ object FollowNotifications {
                 .setProgressTrackerIcon(badge(context, modeIcon(ride.mode), modeColor(ride.mode)))
                 .addProgressSegment(NotificationCompat.ProgressStyle.Segment(total).setColor(modeColor(ride.mode)))
                 .setProgress(elapsed)
+            // The stop picked on a board; it stays once passed, dimmed by the progress.
+            FollowText.markedIndex(ride, view)?.let {
+                style.addProgressPoint(NotificationCompat.ProgressStyle.Point(RideFollow.offsetSeconds(view.detail, it).toInt()).setColor(MARK_COLOR))
+            }
             builder.setStyle(style)
         } else {
             builder.setStyle(NotificationCompat.BigTextStyle().bigText(text)).setProgress(total, elapsed, false)
@@ -223,5 +229,7 @@ object FollowNotifications {
     private const val REQUEST_STOP = 21
     private const val REQUEST_DISMISSED = 22
     private const val GREY = 0xFF90A4AE.toInt()
+    /** The marked stop's point on a ride's bar: white contrasts with every mode colour. */
+    private const val MARK_COLOR = 0xFFFFFFFF.toInt()
     private const val BADGE_DP = 24
 }

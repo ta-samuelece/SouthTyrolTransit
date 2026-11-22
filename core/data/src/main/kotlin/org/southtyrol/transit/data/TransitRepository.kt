@@ -46,6 +46,7 @@ import org.southtyrol.transit.model.VehicleHeadings
 import org.southtyrol.transit.model.GeocodingLocationDataSource
 import org.southtyrol.transit.model.Journey
 import org.southtyrol.transit.model.JourneyPlannerDataSource
+import org.southtyrol.transit.model.Leg
 import org.southtyrol.transit.model.Line
 import org.southtyrol.transit.model.LineVariant
 import org.southtyrol.transit.model.Place
@@ -163,6 +164,29 @@ object AlertMatcher {
 
     fun affectsLine(alert: ServiceAlert, line: Line): Boolean =
         alert.routes.any { it in line.routeIds } || (line.name.isNotBlank() && line.name in alert.lineNames)
+
+    /**
+     * The alerts a journey [leg]'s planner [notice] refers to. Notices carry no alert id, so: the leg's
+     * line's alerts (by name, by [routeIds] of its matched run, or by its run's [tripId]) that have not
+     * expired, narrowed to those whose text contains the notice or is contained in it ([TextNormalizer.key],
+     * keys longer than 3 characters, any language); all of the line's alerts when none does.
+     */
+    fun forNotice(alerts: List<ServiceAlert>, leg: Leg, notice: String, routeIds: Collection<String>, tripId: String?, now: Instant): NoticeMatch {
+        if (leg.mode == TransportMode.WALK || (leg.line.isBlank() && routeIds.isEmpty())) return NoticeMatch(emptyList(), NoticeMatch.Kind.NONE)
+        val line = Line(key = "", name = leg.line, mode = leg.mode, routeIds = routeIds.toList())
+        val candidates = alerts.filter { !it.expired(now) && (affectsLine(it, line) || (tripId != null && tripId in it.trips)) }
+        if (candidates.isEmpty()) return NoticeMatch(emptyList(), NoticeMatch.Kind.NONE)
+        val key = TextNormalizer.key(notice)
+        val byText = if (key.length <= 3) emptyList() else candidates.filter { alert ->
+            (alert.headers.values + alert.descriptions.values).map(TextNormalizer::key).any { it.length > 3 && (key in it || it in key) }
+        }
+        return if (byText.isNotEmpty()) NoticeMatch(byText, NoticeMatch.Kind.TEXT) else NoticeMatch(candidates, NoticeMatch.Kind.LINE)
+    }
+}
+
+/** What [AlertMatcher.forNotice] found: the alerts to show, matched by [Kind.TEXT] or only by [Kind.LINE], or none. */
+data class NoticeMatch(val alerts: List<ServiceAlert>, val kind: Kind) {
+    enum class Kind { TEXT, LINE, NONE }
 }
 
 /**

@@ -79,9 +79,12 @@ fun TripDetail.canFollow(now: Instant): Boolean {
     return state != ServiceState.CANCELLED && (last.predictedArrival ?: last.scheduledArrival).isAfter(now)
 }
 
-/** The [RideSession] that follows this run; [liveRef] is the journey planner's reference it was opened with, if any. */
-fun TripDetail.rideSession(liveRef: String = ""): RideSession =
-    RideSession(trip.id, serviceDate, liveRef, route.shortName.ifBlank { route.longName }, route.mode, trip.headsign)
+/**
+ * The [RideSession] that follows this run; [liveRef] is the journey planner's reference it was opened with,
+ * if any, and [marked] the index in [TripDetail.stops] of the call picked on a stop's board.
+ */
+fun TripDetail.rideSession(liveRef: String = "", marked: Int? = null): RideSession =
+    RideSession(trip.id, serviceDate, liveRef, route.shortName.ifBlank { route.longName }, route.mode, trip.headsign, marked?.let { stops.getOrNull(it)?.sequence })
 
 /** Following a ride from a screen: the ride followed now, [request] to start one, [stop]. */
 class RideFollower(val ride: RideSession?, val request: (RideSession) -> Unit, val stop: () -> Unit)

@@ -33,7 +33,8 @@ data class FollowSession(val journey: Journey, val request: String, val useLocat
 /**
  * One run the user follows to its last stop, picked on the map or on a board. [line], [mode] and
  * [headsign] are what the notification says until the run is loaded; [liveRef] is the journey planner's
- * reference when the run was opened with one.
+ * reference when the run was opened with one. [markedSequence] is the [TripDetail.stops] call (its
+ * `sequence`) the user picked on a stop's board, counted down to until the run leaves it.
  */
 data class RideSession(
     val tripId: String,
@@ -42,6 +43,7 @@ data class RideSession(
     val line: String,
     val mode: TransportMode,
     val headsign: String,
+    val markedSequence: Int? = null,
 ) : Followed {
     fun isRun(tripId: String, serviceDate: String): Boolean = this.tripId == tripId && this.serviceDate.toString() == serviceDate
 }

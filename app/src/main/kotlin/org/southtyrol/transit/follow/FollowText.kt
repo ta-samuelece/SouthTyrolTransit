@@ -7,6 +7,7 @@ import org.southtyrol.transit.model.Journey
 import org.southtyrol.transit.model.Leg
 import org.southtyrol.transit.model.LineNames
 import org.southtyrol.transit.model.OffPlan
+import org.southtyrol.transit.model.RideFollow
 import org.southtyrol.transit.model.RideStage
 import org.southtyrol.transit.model.StepKind
 import org.southtyrol.transit.model.TransportMode
@@ -112,6 +113,23 @@ object FollowText {
             RideStage.CANCELLED -> res.getString(R.string.follow_off_cancelled, line(res, ride), time(res, step.at))
         }
     }
+
+    /** The notification's text of a ride: "At Lahn - Plattl in 4 min" while the marked stop is ahead, else [rideText]. */
+    fun rideNotificationText(res: Resources, ride: RideSession, view: RideView, now: Instant): String {
+        val index = markedIndex(ride, view) ?: return rideText(res, ride, view, now)
+        val target = RideFollow.markedTarget(view.detail, view.step, index, now) ?: return rideText(res, ride, view, now)
+        return res.getString(R.string.ride_n_mark, view.detail.stops[index].stop.name, inTime(res, target, now))
+    }
+
+    /** The status bar chip of a ride: counting down to the marked stop while it is ahead, else to the step. */
+    fun rideChip(res: Resources, ride: RideSession, view: RideView, now: Instant): String {
+        val target = markedIndex(ride, view)?.let { RideFollow.markedTarget(view.detail, view.step, it, now) } ?: view.step.at
+        return chip(res, target, now)
+    }
+
+    /** The index in the run of the ride's marked call, when it has one and the run still has it. */
+    fun markedIndex(ride: RideSession, view: RideView): Int? =
+        ride.markedSequence?.let { sequence -> view.detail.stops.indexOfFirst { it.sequence == sequence }.takeIf { it >= 0 } }
 
     /** The in-app strip's one line for a ride, without the countdown it shows beside it. */
     fun rideStrip(res: Resources, ride: RideSession, view: RideView): String {

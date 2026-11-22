@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ExpandLess
 import androidx.compose.material.icons.rounded.ExpandMore
@@ -309,6 +310,8 @@ fun StopTimelineRow(
     vehicle: VehicleMarker, mode: TransportMode, estimated: Boolean, onClick: () -> Unit,
     note: String? = null, live: Boolean = true, distance: String? = null,
     dashedAbove: Boolean = false, dashedBelow: Boolean = false,
+    /** The stop the followed ride was picked at on a board: highlighted, and read as "Your stop". */
+    marked: Boolean = false,
 ) {
     val lineColor = Color(0xFF000000 or color)
     val skipped = stop.state == ServiceState.SKIPPED || stop.state == ServiceState.CANCELLED
@@ -319,17 +322,24 @@ fun StopTimelineRow(
     val delayText = delayDescription(delaySeconds, stop.state)
     val vehicleText = if (vehicle != VehicleMarker.NONE) stringResource(if (vehicle == VehicleMarker.AT_STOP) R.string.trip_vehicle_at_stop else R.string.trip_vehicle_approaching) else null
     val passedText = if (passed) stringResource(R.string.stop_passed) else null
+    val markedText = if (marked) stringResource(R.string.trip_your_stop) else null
     val railAlpha = if (passed) Progress.PASSED_ALPHA else 1f
+    // Text on the marked row's highlight pairs with it, as on the following card.
+    val onMarked = MaterialTheme.colorScheme.onSecondaryContainer
+    val textColor = if (marked) onMarked else Color.Unspecified
     Row(
-        Modifier.fillMaxWidth().height(IntrinsicSize.Min).clickable(role = Role.Button, onClick = onClick).heightIn(min = 52.dp)
+        Modifier.fillMaxWidth().height(IntrinsicSize.Min)
+            // A shaped fill, not a clip: the vehicle bubble above the stop draws past the row's top.
+            .then(if (marked) Modifier.background(MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(16.dp)) else Modifier)
+            .clickable(role = Role.Button, onClick = onClick).heightIn(min = 52.dp)
             .semantics(mergeDescendants = true) {
-                contentDescription = listOfNotNull(stop.stop.name, timeText, delayText, note, vehicleText, distance).joinToString(", ")
+                contentDescription = listOfNotNull(stop.stop.name, markedText, timeText, delayText, note, vehicleText, distance).joinToString(", ")
                 if (passedText != null) stateDescription = passedText
             },
     ) {
         Column(Modifier.width(88.dp).padding(vertical = 8.dp)) {
-            Text(timeText, style = TimeStyles.medium, maxLines = 1, softWrap = false, textDecoration = if (skipped) TextDecoration.LineThrough else null)
-            if (predicted != null && predicted != scheduled) Text(Format.time(scheduled), style = MaterialTheme.typography.labelSmall, textDecoration = TextDecoration.LineThrough)
+            Text(timeText, style = TimeStyles.medium, color = textColor, maxLines = 1, softWrap = false, textDecoration = if (skipped) TextDecoration.LineThrough else null)
+            if (predicted != null && predicted != scheduled) Text(Format.time(scheduled), style = MaterialTheme.typography.labelSmall, color = textColor, textDecoration = TextDecoration.LineThrough)
         }
         Box(Modifier.width(28.dp).fillMaxHeight(), contentAlignment = Alignment.Center) {
             Column(Modifier.fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -359,15 +369,15 @@ fun StopTimelineRow(
         }
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f).padding(vertical = 8.dp)) {
-            Text(stop.stop.name, style = MaterialTheme.typography.bodyLarge, fontWeight = if (next) FontWeight.SemiBold else FontWeight.Normal, color = if (passed) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface)
-            if (note != null) Text(note, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+            Text(stop.stop.name, style = MaterialTheme.typography.bodyLarge, fontWeight = if (next) FontWeight.SemiBold else FontWeight.Normal, color = if (marked) onMarked else if (passed) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface)
+            if (note != null) Text(note, style = MaterialTheme.typography.labelMedium, color = if (marked) onMarked else MaterialTheme.colorScheme.primary)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (stop.stop.platform.isNotBlank()) Text(stringResource(DesignR.string.ds_platform_short, stop.stop.platform), style = MaterialTheme.typography.labelMedium)
+                if (stop.stop.platform.isNotBlank()) Text(stringResource(DesignR.string.ds_platform_short, stop.stop.platform), style = MaterialTheme.typography.labelMedium, color = textColor)
                 DelayLabel(delaySeconds, stop.state, if (predicted != null && live) Freshness.LIVE else Freshness.SCHEDULED)
             }
         }
         if (distance != null) Text(
-            distance, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1,
+            distance, style = MaterialTheme.typography.labelMedium, color = if (marked) onMarked.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1,
             modifier = Modifier.padding(start = 8.dp, top = 10.dp),
         )
     }

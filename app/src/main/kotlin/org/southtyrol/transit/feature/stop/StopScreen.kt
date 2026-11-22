@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class, ExperimentalLayoutApi::class)
+@file:OptIn(ExperimentalLayoutApi::class)
 
 package org.southtyrol.transit.feature.stop
 
@@ -26,8 +26,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.StarBorder
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeFlexibleTopAppBar
@@ -257,7 +255,7 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
                     if (hero != null) item(key = "hero:" + hero.key) {
                         org.southtyrol.transit.feature.common.NextDepartureCard(
                             hero, now,
-                            onClick = if (hero.tripLinked) ({ navigator.trip(hero.tripId, hero.serviceDate.toString(), hero.liveRef) }) else null,
+                            onClick = if (hero.tripLinked) ({ navigator.trip(hero.tripId, hero.serviceDate.toString(), hero.liveRef, viewModel.stationKey, hero.scheduled.epochSecond) }) else null,
                             joined = rest.isNotEmpty(),
                             modifier = Modifier.padding(horizontal = 16.dp).animateItem(),
                         )
@@ -265,7 +263,7 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
                     itemsIndexed(rest, key = { _, d -> d.key }, contentType = { _, _ -> "departure" }) { index, d ->
                         DepartureRow(
                             d, now, index + offset, rest.size + offset,
-                            onClick = if (d.tripLinked) ({ navigator.trip(d.tripId, d.serviceDate.toString(), d.liveRef) }) else null,
+                            onClick = if (d.tripLinked) ({ navigator.trip(d.tripId, d.serviceDate.toString(), d.liveRef, viewModel.stationKey, d.scheduled.epochSecond) }) else null,
                             modifier = Modifier.padding(horizontal = 16.dp).animateItem(),
                         )
                     }

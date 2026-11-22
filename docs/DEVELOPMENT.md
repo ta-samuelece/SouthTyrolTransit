@@ -150,7 +150,7 @@ See **[docs/API_DISCOVERY.md](API_DISCOVERY.md)** for endpoints, fields, refresh
 
 - Trip updates and vehicle positions are fetched as protobuf **only while a live screen is visible**: 30 s on boards and lines, 20 s on map and trips. They are throttled to at most every 20 s per feed across screens.
 - Where GTFS-RT has no prediction, boards and trips fall back to the live times of the STA journey planner (EFA). This is the only live source for trains: STA's GTFS-RT feeds carry buses only (checked 24 Oct 2026). A trip opened without a planner reference (from a line page, for example) finds its run on the planner's board at its next station, at most every 2 min while the planner has nothing for it and never while GTFS-RT covers it.
-- No open source gives train positions, so trains never appear as vehicles on the map. The trip screen places a train by its live or scheduled times and says it is an estimate.
+- No open source gives train positions, so trains never appear as vehicles on the map. The trip screen places a train by its live or scheduled times and shows that estimate only as a dimmed vehicle marker on the map and in the timeline.
 - Alerts are fetched at most every 2 min (GTFS-RT) and 10 min (EFA AddInfo), and cached on disk.
 - Freshness rules (`FreshnessPolicy`):
   - Trip predictions older than 5 min are ignored.
@@ -205,9 +205,9 @@ Background notifications are an **opt-in periodic check (about 30 min, best effo
 
 ## Material 3 Expressive dependency status
 
-- Expressive APIs (`MaterialExpressiveTheme`, `MotionScheme.expressive()`, `LoadingIndicator`/`ContainedLoadingIndicator`, `ToggleButton` connected groups, `SegmentedListItem`, `HorizontalFloatingToolbar`, `LargeFlexibleTopAppBar`, `MaterialShapes`, `LinearWavyProgressIndicator`, expressive `NavigationSuiteScaffold`/`NavigationSuiteItem`) exist only in the **prerelease** line.
-- The project pins `androidx.compose.material3:material3:1.5.0-alpha29` and Compose `1.13.0-alpha01`, the version material3 is built against. Stable 1.4.0 lacks these APIs.
-- Opt-ins are explicit per file (`@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)`), and most usage is wrapped in `core:designsystem`.
+- Expressive APIs (`MaterialExpressiveTheme`, `MotionScheme.expressive()`, `LoadingIndicator`/`ContainedLoadingIndicator`, `ToggleButton` connected groups, `SegmentedListItem`, `HorizontalFloatingToolbar`, `LargeFlexibleTopAppBar`, `MaterialShapes`, `LinearWavyProgressIndicator`, expressive `NavigationSuiteScaffold`/`NavigationSuiteItem`) are part of the stable line.
+- The project uses `androidx.compose.material3:material3:1.5.0` and Compose `1.13.0`, the version it is built for.
+- The APIs still marked experimental need explicit per-file opt-ins: `ExperimentalMaterial3ExpressiveApi` for `MaterialShapes` and `LoadingIndicator`/`ContainedLoadingIndicator`, `ExperimentalMaterial3Api` for `ModalBottomSheet`. Most Expressive usage is wrapped in `core:designsystem`.
 - When animations are disabled system-wide, the theme switches to the standard motion scheme and static progress.
 
 Toolchain: AGP 9.4.1, Kotlin 2.4.20, Gradle 9.8.0, compileSdk 37.1, targetSdk 37, minSdk 26.

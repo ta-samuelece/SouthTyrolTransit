@@ -8,12 +8,14 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -39,6 +41,7 @@ import org.southtyrol.transit.model.DataException
 import org.southtyrol.transit.model.Journey
 import org.southtyrol.transit.model.JourneyBikes
 import org.southtyrol.transit.model.TicketingProvider
+import org.southtyrol.transit.model.TransitScheduleDataSource
 import org.southtyrol.transit.model.TripDetail
 import org.southtyrol.transit.ui.JourneyRoute
 import org.southtyrol.transit.ui.ResultsRoute
@@ -158,7 +161,6 @@ class JourneyDetailViewModel @Inject constructor(
     handle: SavedStateHandle,
     private val journeys: JourneyRepository,
     @NamesLanguage private val language: LanguageProvider,
-    alerts: AlertRepository,
     val ticketing: TicketingProvider,
     private val follow: FollowController,
     active: ActiveJourney,
@@ -176,7 +178,6 @@ class JourneyDetailViewModel @Inject constructor(
         follow.start(FollowSession(journey, route.request, useLocation))
     private val _state = MutableStateFlow<DetailState>(DetailState.Loading)
     val state: StateFlow<DetailState> = _state.asStateFlow()
-    val alerts: StateFlow<AlertsState> = alerts.state.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AlertsState())
 
     init { load() }
 
@@ -206,9 +207,28 @@ class JourneyLiveViewModel @AssistedInject constructor(
     private val trips: TripRepository,
     realtime: RealtimeRepository,
     @NamesLanguage private val language: LanguageProvider,
+    /** Alerts stay in the app language; names follow the Stop names setting. */
+    private val appLanguage: LanguageProvider,
+    alertRepository: AlertRepository,
+    private val schedule: TransitScheduleDataSource,
 ) : ViewModel() {
     @AssistedFactory
     interface Factory { fun create(journey: Journey): JourneyLiveViewModel }
+
+    /** Service alerts, for the sheet a leg notice opens. */
+    val alerts: StateFlow<AlertsState> = alertRepository.state.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AlertsState())
+
+    private val stopNames = HashMap<String, String?>()
+
+    /** Names of each alert's stations by alert id, as on the Alerts tab; empty without the timetable. */
+    val alertStops: StateFlow<Map<String, List<String>>> = alertRepository.state.map { state ->
+        val lang = language.current()
+        state.alerts.associate { alert ->
+            val stations = alert.stops.filter { it.count { c -> c == ':' } == 2 }
+            for (key in stations) if (key !in stopNames) stopNames[key] = runCatching { schedule.stop(key, lang)?.name }.getOrNull()
+            alert.id to stations.mapNotNull { stopNames[it] }.distinct().sorted()
+        }
+    }.flowOn(Dispatchers.IO).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
     /** Static runs by leg index; legs without a match are absent. */
     private val runs = MutableStateFlow<Map<Int, TripDetail>>(emptyMap())
@@ -227,6 +247,7 @@ class JourneyLiveViewModel @AssistedInject constructor(
             runs.value = trips.forJourney(journey, language.current())
             _matched.value = true
         }
+        viewModelScope.launch { runCatching { alertRepository.refresh(appLanguage.current()) } }
     }
 
     /** Refreshes trip updates and vehicle positions; throttled by the repository. */

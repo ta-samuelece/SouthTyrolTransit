@@ -200,8 +200,6 @@
 
     <string name="trip_title">Fahrt</string>
     <string name="trip_not_found">Diese Fahrt ist nicht im heruntergeladenen Fahrplan enthalten.</string>
-    <string name="trip_vehicle_seen">Fahrzeugposition %s</string>
-    <string name="trip_no_vehicle">Für diese Fahrt gibt es keine Live-Fahrzeugposition.</string>
     <string name="lines_title">Linien</string>
     <string name="lines_search_hint">Liniennummer oder -name</string>
     <string name="line_alerts">Hinweise zum Betrieb</string>
@@ -518,8 +516,6 @@
     <string name="widget_load_failed">Abfahrten nicht geladen · ↻ tippen zum Wiederholen</string>
     <string name="widget_refresh">Aktualisieren</string>
     <string name="widget_on_time">pünktlich</string>
-    <string name="trip_position_estimated_live">Position aus Echtzeitdaten geschätzt</string>
-    <string name="trip_position_estimated_schedule">Position laut Fahrplan geschätzt</string>
     <string name="trip_vehicle_at_stop">Fahrzeug an dieser Haltestelle</string>
     <string name="trip_vehicle_approaching">Fahrzeug ist unterwegs zu dieser Haltestelle</string>
     <string name="trip_map_expand">Karte vergrößern</string>
@@ -661,11 +657,6 @@
     <!-- Train numbers, bikes and distances from the timetable -->
     <string name="bikes_allowed">Fahrradmitnahme möglich</string>
     <string name="bikes_not_allowed">Keine Fahrräder</string>
-    <plurals name="trip_length">
-        <item quantity="one">%1$s · %2$d Halt</item>
-        <item quantity="other">%1$s · %2$d Halte</item>
-    </plurals>
-    <string name="trip_distance_progress">%1$s zurückgelegt · noch %2$s</string>
     <string name="trip_next_stop_in">Nächster Halt in %s</string>
     <string name="planner_bike">Mit Fahrrad unterwegs</string>
     <string name="journey_bikes_unknown">Der Fahrplan sagt nicht, ob %s Fahrräder mitnimmt. Prüfe das vor der Fahrt.</string>

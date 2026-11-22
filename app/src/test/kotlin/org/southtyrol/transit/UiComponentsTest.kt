@@ -27,6 +27,7 @@ import org.southtyrol.transit.feature.common.AlertCard
 import org.southtyrol.transit.feature.common.DepartureRow
 import org.southtyrol.transit.feature.common.searchPending
 import org.southtyrol.transit.feature.stop.boardTitle
+import org.southtyrol.transit.feature.trip.TripNoticesCard
 import org.southtyrol.transit.feature.journey.JourneyCard
 import org.southtyrol.transit.feature.onboarding.OnboardingContent
 import org.southtyrol.transit.feature.onboarding.OnboardingStep
@@ -161,6 +162,19 @@ class UiComponentsTest {
         compose.onNodeWithText("Diversion via Gries").assertIsDisplayed()
         compose.onNodeWithText("DE").performClick()
         compose.onNodeWithText("Umleitung über Gries").assertIsDisplayed()
+    }
+
+    @Test fun tripNoticesCollapseToTheCount() {
+        val headline = "Construction line 201"
+        val alert = ServiceAlert(
+            "a1", mapOf("de" to headline, "it" to headline, "en" to headline), mapOf("en" to "Diversion via Gries"),
+            lineNames = setOf("201"), periods = listOf(now.minusSeconds(3600) to now.plusSeconds(86_400)), observedAt = now, effect = "DETOUR",
+        )
+        compose.setContent { TransitTheme(dynamicColor = false) { TripNoticesCard(listOf(alert), now) } }
+        compose.onNodeWithText("1 service notice").assertIsDisplayed()
+        assertTrue(compose.onAllNodesWithText(headline).fetchSemanticsNodes().isEmpty())
+        compose.onNodeWithText("1 service notice").performClick()
+        compose.onNodeWithText(headline).assertIsDisplayed()
     }
 
     @Test fun offlineStateExplainsAndRetries() {

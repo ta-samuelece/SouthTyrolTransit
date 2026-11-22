@@ -5,7 +5,7 @@ description: Where GTFS-RT has no prediction (often), boards, the map stop sheet
 tags: [realtime, gtfs-rt, efa, departures, freshness, trains]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-24T18:30:00Z"
+  at: "2026-11-21T13:00:00Z"
 verified:
   by: claude-code/claude-opus-5-5
   at: "2026-10-09T12:00:00Z"
@@ -59,9 +59,10 @@ at most every 2 minutes, and keeps the first reference found.
 STA's GTFS-RT feeds carry **buses only**: on 2026-10-24 at 18:16 the live vehicle feed had 135 line labels
 and the trip-updates feed 183 updates, none of them a train. So for trains the planner is the only live
 source, and no open source gives their positions (the Open Data Hub mobility API has no train type either).
-The trip screen places a train by its stop times (`RunPositions.estimate`) and labels it as estimated. The
-user decided on 2026-10-24 that trains must **not** be drawn on the main map from such estimates: map
-vehicles are GPS fixes, and an estimated train would not be an actual live entry.
+The trip screen places a train by its stop times (`RunPositions.estimate`) and shows that estimate only as
+the dimmed vehicle marker on its map and in the timeline, with no words. The user decided on 2026-10-24
+that trains must **not** be drawn on the main map from such estimates: map vehicles are GPS fixes, and an
+estimated train would not be an actual live entry.
 
 # How GTFS-RT predictions propagate
 

@@ -244,6 +244,23 @@ class EfaXmlTest {
         assertTrue(alerts.any { it.effect == "NO_SERVICE" })
     }
 
+    @Test fun untitledAddInfoTakesItsSubjectAsTitleAndRepeatsMergeIntoOne() {
+        // Captured 2026-11-22: STA leaves subtitle and link text empty, and repeats the football-match
+        // diversion once per match date with only the infoID differing.
+        val alerts = EfaXml.alerts(fixture("efa_addinfo_untitled.xml"), Instant.parse("2026-11-21T10:00:00Z"))
+        assertEquals(4, alerts.size)
+        val football = alerts.filter { "10B" in it.lineNames && "120" in it.lineNames }
+        assertEquals(3, football.size)
+        assertTrue(football.first().headers.localized("en").startsWith("Bozen: Routes changed due to football match"))
+        assertTrue(football.first().headers.localized("it").startsWith("Bolzano: Percorsi modificati per partita di calcio"))
+        assertTrue(football.first().descriptions.localized("en").startsWith("Due to the football matches"))
+        assertFalse(football.first().descriptions.localized("en").contains("Routes changed due to football match"))
+
+        val merged = org.southtyrol.transit.model.AlertDeduplicator.merge(alerts)
+        assertEquals(2, merged.size)
+        assertEquals(1, merged.count { "10B" in it.lineNames && "120" in it.lineNames })
+    }
+
     @Test fun rejectsDoctype() {
         assertThrows(IllegalArgumentException::class.java) {
             EfaXml.places("""<?xml version="1.0"?><!DOCTYPE x [<!ENTITY e SYSTEM "file:///etc/passwd">]><itdRequest>&e;</itdRequest>""".toByteArray())

@@ -578,9 +578,14 @@ object EfaXml {
             for (link in info.children("infoLink")) {
                 val lang = Languages.normalize(link.a("language"))
                 val text = link.child("infoText")
-                val header = listOf(text?.text("subtitle"), link.text("infoLinkText")).firstOrNull { !it.isNullOrBlank() && !it.equals("Information", true) }
+                val subject = text?.text("subject")?.takeIf { it.isNotBlank() }
+                val content = text?.text("content")?.let(TextNormalizer::stripHtml)?.takeIf { it.isNotBlank() }
+                // STA leaves subtitle and link text empty (on all its notices in November 2026): the subject
+                // line is then the title, so a card does not just say "Service notice".
+                val titled = listOf(text?.text("subtitle"), link.text("infoLinkText")).firstOrNull { !it.isNullOrBlank() && !it.equals("Information", true) }
+                val header = titled ?: subject?.takeIf { content != null }
                 if (header != null) headers[lang] = TextNormalizer.stripHtml(header)
-                val body = listOfNotNull(text?.text("subject")?.takeIf { it.isNotBlank() }, text?.text("content")?.let(TextNormalizer::stripHtml)?.takeIf { it.isNotBlank() }).joinToString("\n\n")
+                val body = listOfNotNull(subject.takeIf { titled != null || content == null }, content).joinToString("\n\n")
                 if (body.isNotBlank()) descriptions[lang] = body
             }
             if (headers.isEmpty() && descriptions.isEmpty()) return@mapNotNull null

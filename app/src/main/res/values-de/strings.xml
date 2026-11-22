@@ -517,6 +517,7 @@
     <string name="widget_refresh">Aktualisieren</string>
     <string name="widget_on_time">pünktlich</string>
     <string name="trip_vehicle_at_stop">Fahrzeug an dieser Haltestelle</string>
+    <string name="trip_your_stop">Deine Haltestelle</string>
     <string name="trip_vehicle_approaching">Fahrzeug ist unterwegs zu dieser Haltestelle</string>
     <string name="trip_map_expand">Karte vergrößern</string>
     <string name="trip_map_collapse">Karte verkleinern</string>
@@ -686,6 +687,7 @@
     <string name="ride_last_stop">Endhaltestelle %s</string>
     <string name="ride_n_next">Nächste Haltestelle %1$s %2$s</string>
     <string name="ride_n_at">An %1$s, Abfahrt %2$s</string>
+    <string name="ride_n_mark">An %1$s %2$s</string>
     <string name="ride_n_reached">%1$s hat %2$s erreicht</string>
     <string name="ride_n_arrived">Angekommen um %s.</string>
     <string name="ride_n_last_seen">Zuletzt gesehen bei %s</string>

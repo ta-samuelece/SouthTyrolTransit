@@ -100,7 +100,7 @@ class FollowJourneyService : Service() {
                 }
                 is RideSession -> active.rideView.value?.let {
                     Shown(
-                        followed, FollowText.rideTitle(resources, followed, it), FollowText.rideText(resources, followed, it, now), FollowText.chip(resources, it.step.at, now),
+                        followed, FollowText.rideTitle(resources, followed, it), FollowText.rideNotificationText(resources, followed, it, now), FollowText.rideChip(resources, followed, it, now),
                         FollowText.rideSource(resources, it), RideFollow.elapsedSeconds(it.detail, now) * 100 / RideFollow.totalSeconds(it.detail),
                     )
                 }

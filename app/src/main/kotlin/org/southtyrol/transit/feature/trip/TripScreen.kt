@@ -112,6 +112,7 @@ import org.southtyrol.transit.model.DataError
 import org.southtyrol.transit.model.DataException
 import org.southtyrol.transit.model.Freshness
 import org.southtyrol.transit.model.FreshnessPolicy
+import org.southtyrol.transit.model.RideFollow
 import org.southtyrol.transit.model.ServiceState
 import org.southtyrol.transit.model.TripDetail
 import org.southtyrol.transit.model.TripStop
@@ -206,7 +207,7 @@ class TripViewModel @AssistedInject constructor(
 }
 
 @Composable
-fun TripScreen(navigator: Navigator, tripId: String, serviceDate: String, liveRef: String = "") {
+fun TripScreen(navigator: Navigator, tripId: String, serviceDate: String, liveRef: String = "", fromStation: String = "", fromTime: Long = 0) {
     val viewModel = hiltViewModel<TripViewModel, TripViewModel.Factory>(key = "$tripId|$serviceDate") { it.create(tripId, serviceDate, liveRef) }
     val state by viewModel.state.collectAsStateWithLifecycle()
     val headerNow = rememberNow()
@@ -232,11 +233,13 @@ fun TripScreen(navigator: Navigator, tripId: String, serviceDate: String, liveRe
     val followed = follower.ride?.takeIf { it.isRun(tripId, serviceDate) }
     val followedView = followModel.rideView.collectAsStateWithLifecycle().value?.takeIf { followed != null }
     val ready = (state as? TripLoad.Ready)?.detail
+    // The call picked on a stop's board, marked when following starts here.
+    val marked = ready?.let { RideFollow.callAt(it.stops, fromStation, java.time.Instant.ofEpochSecond(fromTime)) }
     Scaffold(
         snackbarHost = { androidx.compose.material3.SnackbarHost(snackbar) },
         floatingActionButton = {
             if (ready != null && followed == null && ready.canFollow(headerNow)) androidx.compose.material3.ExtendedFloatingActionButton(
-                onClick = { follower.request(ready.rideSession(liveRef)) },
+                onClick = { follower.request(ready.rideSession(liveRef, marked)) },
                 icon = { Icon(Icons.Rounded.PushPin, contentDescription = null) },
                 text = { Text(stringResource(R.string.ride_follow)) },
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -397,6 +400,7 @@ private fun TripContent(
                 stop, first = index == 0, last = index == detail.stops.lastIndex,
                 passed = nextIndex >= 0 && index < nextIndex || nextIndex < 0, next = index == nextIndex, color = color,
                 vehicle = marker, mode = detail.route.mode, estimated = position?.estimated ?: true,
+                marked = following != null && stop.sequence == following.first.markedSequence,
                 onClick = { navigator.stop(stop.stop.stationKey, stop.stop.name) },
                 note = if (runDistance != null && marker == VehicleMarker.BEFORE_STOP) stringResource(R.string.trip_next_stop_in, Format.distance(runDistance.toNextStopMeters)) else null,
                 distance = if (index > 0 && firstDistance != null) stop.distanceMeters?.let { Format.distance(it - firstDistance) } else null,

@@ -180,7 +180,7 @@ class ScheduleTest {
     @Test fun missingGermanStopNamesAreFilledOnceAndFeedNamesWin() = runTest {
         assertTrue(store.importFile(SyntheticGtfs.zip(context.cacheDir), emptyMap()))
         assertEquals("Merano, Stazione", schedule.stop("it:1:200", "de")?.name)
-        val names = mapOf("it:1:100" to "Bozen, Busbahnhof", "it:1:200" to "Meran, Bahnhof", "it:9:999" to "Nowhere")
+        val names = mapOf("it:1:100" to "Bozen, Busbahnhof", "it:1:200" to "Meran, Bahnhof", "it:1:300" to "Brixen, Bahnhof", "it:9:999" to "Nowhere")
         assertTrue(store.fillStopNames { names })
         // Filled where the feed has no German name; the feed's own translation is kept.
         assertEquals("Meran, Bahnhof", schedule.stop("it:1:200", "de")?.name)
@@ -188,6 +188,9 @@ class ScheduleTest {
         assertEquals("Bozen, Bahnhof", schedule.stop("it:1:100", "de")?.name)
         // The filled name is searchable offline.
         assertEquals(listOf("it:1:200"), schedule.searchStops("meran bahn", "de").map { it.id })
+        // The untranslated destination "Bressanone" follows its trip's last stop.
+        val sunday = schedule.scheduledDepartures(listOf("it:1:100"), at("2026-10-04", "07:00"), at("2026-10-05", "02:00"), false, "de", 50)
+        assertEquals("Brixen", sunday.single { it.tripId == "t3" }.destination)
         // Once per timetable: the names are not asked for again.
         assertFalse(store.fillStopNames { error("asked again") })
         // A new timetable gets its own fill.

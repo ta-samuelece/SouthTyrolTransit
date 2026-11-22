@@ -337,6 +337,23 @@ class ScheduleStore(
                         if (translation.executeInsert() != -1L) count++
                         if (indexed.add(key)) { search.bindString(1, key); search.bindString(2, TextNormalizer.key(name)); search.executeInsert() }
                     }
+                    // Destinations: the feed's headsign translations went with the rest; derive them from the
+                    // German names of each headsign's stops (GermanStopNames.headsigns), into the text dictionary.
+                    val served = ArrayList<GermanStopNames.HeadsignStop>()
+                    sql.query(
+                        """
+                        SELECT t.headsign, s.name, tr.text,
+                               MAX(st.sequence = (SELECT MAX(sequence) FROM stop_times x WHERE x.tripIdx = t.idx)), COUNT(*)
+                        FROM trips t JOIN stop_times st ON st.tripIdx = t.idx JOIN stops s ON s.idx = st.stopIdx
+                        JOIN translations tr ON tr.tableName = 'stops' AND tr.recordId = s.id AND tr.language = 'de'
+                        WHERE t.headsign != '' GROUP BY t.headsign, s.id
+                        """.trimIndent(),
+                    ).use { c -> while (c.moveToNext()) served += GermanStopNames.HeadsignStop(c.getString(0), c.getString(1), c.getString(2), c.getInt(3) == 1, c.getInt(4)) }
+                    val renamed = GermanStopNames.renamedLocalities(italian.mapNotNull { (key, it) -> german[key]?.let { de -> it to de } })
+                    val headsign = sql.compileStatement("INSERT OR IGNORE INTO translations (tableName, recordId, language, text) VALUES ('headsign', ?, 'de', ?)")
+                    for ((text, de) in GermanStopNames.headsigns(served, renamed)) {
+                        headsign.bindString(1, text); headsign.bindString(2, de); headsign.executeInsert()
+                    }
                     sql.execSQL("INSERT OR REPLACE INTO meta (`key`, value) VALUES (?, ?)", arrayOf<Any>(META_STOP_NAMES, count.toString()))
                     sql.setTransactionSuccessful()
                 } finally {

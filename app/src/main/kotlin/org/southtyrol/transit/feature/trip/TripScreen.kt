@@ -40,7 +40,6 @@ import org.southtyrol.transit.follow.RideView
 import androidx.compose.material.icons.rounded.CloseFullscreen
 import androidx.compose.material.icons.rounded.OpenInFull
 import androidx.compose.material.icons.rounded.ExpandMore
-import androidx.compose.material.icons.rounded.Straighten
 import androidx.compose.material.icons.rounded.ExpandLess
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material.icons.rounded.ReportProblem
@@ -313,10 +312,13 @@ private fun TripContent(
     val firstDistance = detail.stops.firstOrNull()?.distanceMeters
     val routeLine = detail.shape.takeIf { it.size >= 2 } ?: detail.stops.map { it.stop.point }.filter { it.isValid }
     val hasMap = routeLine.size >= 2
+    // Bikes, from the timetable only when it is published, and a cancelled run sit under the header.
+    val bikes = detail.trip.bikes != org.southtyrol.transit.model.Bikes.UNKNOWN
+    val cancelled = detail.state == ServiceState.CANCELLED
     // Bring the next stop into view once, below the header, with the stop before it on top.
     androidx.compose.runtime.LaunchedEffect(detail.trip.id) {
         // Not while following: the card on top already says where it is.
-        if (nextIndex > 3 && following == null) listState.scrollToItem(nextIndex)
+        if (nextIndex > 3 && following == null) listState.scrollToItem(nextIndex + if (bikes || cancelled) 1 else 0)
     }
     val mapContent = remember(detail, position, color, nextIndex) {
         // Same split as the timeline: passed calls and the stretch already travelled are dimmed.
@@ -371,56 +373,24 @@ private fun TripContent(
     // list scrolls to the next stop; expanding it reveals every notice in full.
     if (alerts.isNotEmpty()) TripNoticesCard(alerts, now, Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp).heightIn(max = 480.dp))
     LazyColumn(state = listState, contentPadding = PaddingValues(start = 16.dp, top = 8.dp, end = 16.dp, bottom = bottom), verticalArrangement = Arrangement.spacedBy(0.dp), modifier = Modifier.fillMaxWidth().weight(1f)) {
+        // The run's line and where it goes head the sheet.
+        item(key = "header") {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(bottom = 12.dp)) {
+                LineBadge(detail.route.shortName.ifBlank { detail.route.longName }, detail.route.mode, color = detail.route.color, textColor = detail.route.textColor)
+                Text(
+                    detail.trip.headsign, style = MaterialTheme.typography.titleLarge, maxLines = 2,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    modifier = Modifier.semantics { heading() },
+                )
+            }
+        }
         if (following != null) item(key = "following") {
             FollowingRideCard(following.first, following.second, Modifier.padding(bottom = 16.dp))
         }
-        item {
+        if (bikes || cancelled) item(key = "facts") {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 12.dp)) {
-                // The run's line and where it goes head the sheet.
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    LineBadge(detail.route.shortName.ifBlank { detail.route.longName }, detail.route.mode, color = detail.route.color, textColor = detail.route.textColor)
-                    Text(
-                        detail.trip.headsign, style = MaterialTheme.typography.titleLarge, maxLines = 2,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                        modifier = Modifier.semantics { heading() },
-                    )
-                }
-                Text(
-                    listOfNotNull(detail.trip.shortName.ifBlank { null }, Format.mode(detail.route.mode), detail.route.operator?.name, Format.date(detail.serviceDate)).joinToString(" · "),
-                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                // Length and bikes, from the timetable; each only when it is published.
-                val length = detail.lengthMeters
-                if (length != null || detail.trip.bikes != org.southtyrol.transit.model.Bikes.UNKNOWN) {
-                    val pill = MaterialTheme.colorScheme.surfaceContainerHighest
-                    androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        if (length != null) org.southtyrol.transit.feature.common.InfoPill(
-                            pluralStringResource(R.plurals.trip_length, detail.stops.size, Format.distance(length), detail.stops.size), pill,
-                            icon = androidx.compose.material.icons.Icons.Rounded.Straighten,
-                        )
-                        org.southtyrol.transit.feature.common.BikesPill(detail.trip.bikes, pill)
-                    }
-                }
-                // How far the vehicle has come, only from a live GPS fix.
-                if (runDistance != null && length != null) {
-                    androidx.compose.material3.LinearProgressIndicator(
-                        progress = { (runDistance.travelledMeters / length).toFloat().coerceIn(0f, 1f) },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    Text(
-                        stringResource(R.string.trip_distance_progress, Format.distance(runDistance.travelledMeters), Format.distance(runDistance.remainingMeters)),
-                        style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                if (detail.state == ServiceState.CANCELLED) Text(stringResource(org.southtyrol.transit.design.R.string.ds_cancelled), color = LocalStatusColors.current.cancelled, style = MaterialTheme.typography.titleMedium)
-                val positionText = when {
-                    vehicle != null -> stringResource(R.string.trip_vehicle_seen, Format.age(vehicle.timestamp, now)) + if (vehicleFreshness == Freshness.STALE) " · " + stringResource(org.southtyrol.transit.design.R.string.ds_stale) else ""
-                    position != null && detail.freshness == Freshness.LIVE -> stringResource(R.string.trip_position_estimated_live)
-                    position != null -> stringResource(R.string.trip_position_estimated_schedule)
-                    else -> null
-                }
-                if (positionText != null) Text(positionText, style = MaterialTheme.typography.labelLarge)
-                else Text(stringResource(R.string.trip_no_vehicle), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (bikes) org.southtyrol.transit.feature.common.BikesPill(detail.trip.bikes, MaterialTheme.colorScheme.surfaceContainerHighest)
+                if (cancelled) Text(stringResource(org.southtyrol.transit.design.R.string.ds_cancelled), color = LocalStatusColors.current.cancelled, style = MaterialTheme.typography.titleMedium)
             }
         }
         itemsIndexed(detail.stops, key = { _, s -> s.sequence }, contentType = { _, _ -> "stop" }) { index, stop ->
@@ -447,7 +417,7 @@ private fun TripContent(
 
 /** Collapsed summary of this run's service notices; tap to expand all of them with their full text. */
 @Composable
-private fun TripNoticesCard(alerts: List<org.southtyrol.transit.model.ServiceAlert>, now: java.time.Instant, modifier: Modifier = Modifier) {
+internal fun TripNoticesCard(alerts: List<org.southtyrol.transit.model.ServiceAlert>, now: java.time.Instant, modifier: Modifier = Modifier) {
     var expanded by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(false) }
     val language = org.southtyrol.transit.di.AppLanguage.textLanguages()
     val status = org.southtyrol.transit.design.LocalStatusColors.current
@@ -457,7 +427,8 @@ private fun TripNoticesCard(alerts: List<org.southtyrol.transit.model.ServiceAle
         colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
         modifier = modifier.fillMaxWidth().animateContentSize(),
     ) {
-        Column(Modifier.padding(16.dp).then(if (expanded) Modifier.verticalScroll(androidx.compose.foundation.rememberScrollState()) else Modifier)) {
+        // Collapsed it is one slim row; the headlines only show once expanded.
+        Column(Modifier.padding(horizontal = 16.dp, vertical = 10.dp).then(if (expanded) Modifier.verticalScroll(androidx.compose.foundation.rememberScrollState()) else Modifier)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 androidx.compose.material3.Icon(
                     if (disruption) androidx.compose.material.icons.Icons.Rounded.ReportProblem else androidx.compose.material.icons.Icons.Rounded.Warning,
@@ -465,14 +436,7 @@ private fun TripNoticesCard(alerts: List<org.southtyrol.transit.model.ServiceAle
                     tint = if (disruption) status.cancelled else status.delayed,
                 )
                 Spacer(Modifier.width(12.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(pluralStringResource(R.plurals.trip_notices, alerts.size, alerts.size), style = MaterialTheme.typography.titleMedium)
-                    if (!expanded) Text(
-                        alerts.first().headers.localized(language),
-                        style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                    )
-                }
+                Text(pluralStringResource(R.plurals.trip_notices, alerts.size, alerts.size), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
                 androidx.compose.material3.Icon(
                     if (expanded) androidx.compose.material.icons.Icons.Rounded.ExpandLess else androidx.compose.material.icons.Icons.Rounded.ExpandMore,
                     contentDescription = stringResource(if (expanded) R.string.action_collapse else R.string.action_expand),

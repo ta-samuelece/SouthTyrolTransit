@@ -5,7 +5,7 @@ description: GTFS-RT and EFA alerts merge on one identical normalised header plu
 tags: [alerts, gtfs-rt, efa, dedupe, cache]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-11T12:00:00Z"
+  at: "2026-11-20T12:00:00Z"
 verified:
   by: claude-code/claude-opus-5-5
   at: "2026-10-11T12:00:00Z"
@@ -44,6 +44,22 @@ d.routeId in alert.routes || d.tripId in alert.trips || (alert.lineNames.isNotEm
   ([identifiers](./identifiers-across-sources.md)).
 - GTFS-RT alert stops store both the platform id and its station key; EFA stops are station-level only.
   Keep both forms, or station views lose matches.
+
+# Leg notices (`AlertMatcher.forNotice`)
+
+Planner leg notices (`Leg.notices`) are plain strings with no alert id. Tapping one on the journey page
+opens a sheet (`NoticeSheet` in `app/.../feature/journey/JourneyDetailScreen.kt`) whose alerts come from
+`forNotice` in `core/data/.../TransitRepository.kt`:
+
+- a walking leg, or a leg with a blank line and no route ids, gives `NONE`;
+- candidates are alerts not `expired(now)` that `affectsLine` the leg's line (its name, plus the route id
+  of the leg's matched timetable run) or list the run's trip id; stop-only alerts never count;
+- a candidate matches by text when any header or description, in any language, contains the notice or is
+  contained in it after `TextNormalizer.key` (keys longer than 3 characters) - `TEXT` with only those;
+- otherwise every candidate (`LINE`), else `NONE`; input order is kept.
+
+Route and trip ids come from `JourneyLiveViewModel.legRuns`, so without the timetable only EFA alerts
+(`lineNames`) can match. The sheet shows the cards expanded (`AlertCard(initiallyExpanded = true)`).
 
 # Freshness, errors and cache
 

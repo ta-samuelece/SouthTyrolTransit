@@ -372,7 +372,8 @@ fun PlaceEditorSheet(place: Place, existing: SavedItem?, onDismiss: () -> Unit, 
     val fixed = existing?.isHomeOrWork == true
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(
-            Modifier.padding(start = 16.dp, end = 16.dp, bottom = 24.dp).verticalScroll(rememberScrollState()).imePadding(),
+            // The keyboard shrinks the scrolling area before it scrolls, so a focused field is never left under it.
+            Modifier.imePadding().padding(start = 16.dp, end = 16.dp, bottom = 24.dp).verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text(stringResource(R.string.place_save_title), style = MaterialTheme.typography.titleLarge)

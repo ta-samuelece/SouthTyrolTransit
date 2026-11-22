@@ -14,6 +14,9 @@ import androidx.compose.foundation.layout.FlexBox
 import androidx.compose.foundation.layout.FlexWrap
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -46,6 +49,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -53,6 +57,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -74,6 +79,20 @@ import org.southtyrol.transit.model.Languages
 import org.southtyrol.transit.model.localized
 import org.southtyrol.transit.model.localizedLanguage
 import java.time.Instant
+
+/**
+ * A Scaffold's inner padding with extra space on each side, for a list's `contentPadding`. Given to the
+ * list's content, not as a padding around the list, the insets let it scroll behind the app bar and the
+ * system bars, while its first and last items still rest clear of them.
+ */
+@Composable
+fun PaddingValues.withPadding(start: Dp = 0.dp, top: Dp = 0.dp, end: Dp = 0.dp, bottom: Dp = 0.dp): PaddingValues {
+    val direction = LocalLayoutDirection.current
+    return PaddingValues(
+        start = calculateStartPadding(direction) + start, top = calculateTopPadding() + top,
+        end = calculateEndPadding(direction) + end, bottom = calculateBottomPadding() + bottom,
+    )
+}
 
 /**
  * Runs [action] immediately and then every [periodMillis] while the screen is at least STARTED.

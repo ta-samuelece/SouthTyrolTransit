@@ -7,6 +7,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.imePadding
+import org.southtyrol.transit.feature.common.withPadding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -150,7 +153,11 @@ fun LinesScreen(navigator: Navigator, viewModel: LinesViewModel = hiltViewModel(
             )
         },
     ) { padding ->
-        LazyColumn(Modifier.padding(padding), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        // The search field sits in the list: the keyboard shrinks the list from below, so every line can be scrolled to.
+        LazyColumn(
+            Modifier.consumeWindowInsets(padding).imePadding(),
+            contentPadding = padding.withPadding(start = 16.dp, end = 16.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
             item {
                 val field = rememberQueryFieldState(state.query, viewModel::query)
                 OutlinedTextField(

@@ -1,0 +1,78 @@
+name: Release
+description: Track one published version of the app, preview or stable, from version bump to the GitHub release
+title: "[Release] v"
+labels: ["release"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        One issue per published version. A GitHub release is the deploy: the in-app updater offers it to every phone on the matching channel. The procedure is in `docs/RELEASING.md`. Link the release pull request to this issue, and close the issue once the release is published.
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The `versionName`. A preview ends in `-preview.N`.
+      placeholder: 0.2.2-preview.1
+    validations:
+      required: true
+
+  - type: dropdown
+    id: channel
+    attributes:
+      label: Channel
+      options:
+        - Preview (pre-release, Preview channel only)
+        - Stable (release marked latest, every user)
+    validations:
+      required: true
+
+  - type: input
+    id: version-code
+    attributes:
+      label: versionCode
+      description: Exactly one higher than the last published build, preview or stable.
+      placeholder: "12"
+    validations:
+      required: true
+
+  - type: input
+    id: previous
+    attributes:
+      label: Previous release
+      description: The tag this release follows; the notes cover what changed since.
+      placeholder: v0.2.1
+
+  - type: textarea
+    id: contents
+    attributes:
+      label: What goes in
+      description: The user-visible changes, with issue and pull request numbers. This is the outline of the release notes.
+      placeholder: |
+        - Stops can be ... (#70)
+        - Fixed ... (#72)
+    validations:
+      required: true
+
+  - type: textarea
+    id: checklist
+    attributes:
+      label: Checklist
+      description: Tick each step as it is done.
+      value: |
+        - [ ] `versionCode` and `versionName` bumped in `app/build.gradle.kts`
+        - [ ] Release notes in `docs/release-notes/<version>.md` (stable: also `.de.md`, `.it.md`, `.highlights.json`)
+        - [ ] `tools/release.py --check-notes` passes
+        - [ ] Unit tests and lint of both flavors green
+        - [ ] Release pull request merged into `main`
+        - [ ] Release workflow run and its `release` deployment approved
+        - [ ] Release published on GitHub; URL added below
+        - [ ] Stable only: Play bundle uploaded to the Play Console
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Anything else - known issues shipped on purpose, devices tested, follow-ups.

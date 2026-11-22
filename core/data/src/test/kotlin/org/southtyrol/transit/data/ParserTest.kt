@@ -210,6 +210,13 @@ class EfaXmlTest {
         assertNotNull(stops.first().point)
     }
 
+    @Test fun regionStopNamesAreKeyedByStation() {
+        val names = EfaXml.stopNames(fixture("efa_coord.xml"))
+        assertEquals(17, names.size)
+        assertEquals("Bozen, Waltherplatz", names["it:22021:2084"])
+        assertEquals("Bozen, Südtiroler Straße", names["it:22021:3511"])
+    }
+
     @Test fun onlineStopSearchKeysStopsByStation() {
         val stops = StopSearchRepository.namedStops(EfaXml.places(fixture("efa_stopfinder_list.xml")))
         assertEquals(listOf("it:22021:998"), stops.map { it.id })

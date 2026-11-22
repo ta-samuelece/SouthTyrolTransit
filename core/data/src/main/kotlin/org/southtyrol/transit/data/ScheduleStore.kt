@@ -16,10 +16,14 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.southtyrol.transit.model.DataError
 import org.southtyrol.transit.model.DataException
+import org.southtyrol.transit.model.TextNormalizer
 import java.io.File
 import java.io.IOException
 import java.time.Instant
 import java.util.UUID
+
+/** Meta key set once a timetable got its missing German stop names from EFA ([ScheduleStore.fillStopNames]). */
+private const val META_STOP_NAMES = "efaStopNames"
 
 /** Metadata about the schedule currently in use. */
 data class ScheduleInfo(
@@ -293,6 +297,73 @@ class ScheduleStore(
             withContext(NonCancellable) { deleteDatabase(target) }
             throw e
         }
+    }
+
+    /**
+     * Adds the German stop names the active timetable lacks, from [names] (station key to name; EFA's
+     * region stop list). STA's feed carries German names only in `translations.txt`, and its export of
+     * 2026-11-21 shipped that file empty, which left every stop Italian. Names the feed has win (the rows
+     * are inserted or ignored), and the names also go into the search index. Runs once per timetable:
+     * false when there is none, it already ran for this one, or [names] gave nothing.
+     */
+    suspend fun fillStopNames(names: suspend () -> Map<String, String>): Boolean = lock.withLock {
+        if (loadActiveName() == null) return@withLock false
+        val done = withContext(Dispatchers.IO) { withDatabase { it.schedule().meta(META_STOP_NAMES) } }
+        if (done != null) return@withLock false
+        val byStation = names().filterValues { it.isNotBlank() }
+        if (byStation.isEmpty()) return@withLock false
+        val added = withContext(Dispatchers.IO) {
+            withDatabase { db ->
+                val sql = db.openHelper.writableDatabase
+                var count = 0
+                sql.beginTransaction()
+                try {
+                    val stops = ArrayList<Pair<String, String>>()
+                    val italian = HashMap<String, String>()
+                    sql.query("SELECT id, stationKey, name FROM stops").use { c ->
+                        while (c.moveToNext()) {
+                            stops += c.getString(0) to c.getString(1)
+                            // A station's own row is often just "Bolzano"; any platform's "Bolzano, ..." gives the locality.
+                            c.getString(2).takeIf { ", " in it }?.let { italian.putIfAbsent(c.getString(1), it) }
+                        }
+                    }
+                    val german = GermanStopNames.corrected(italian, byStation)
+                    val translation = sql.compileStatement("INSERT OR IGNORE INTO translations (tableName, recordId, language, text) VALUES ('stops', ?, 'de', ?)")
+                    val search = sql.compileStatement("INSERT INTO stop_search (stationKey, text) VALUES (?, ?)")
+                    val indexed = HashSet<String>()
+                    for ((id, key) in stops) {
+                        val name = german[key] ?: continue
+                        translation.bindString(1, id); translation.bindString(2, name)
+                        if (translation.executeInsert() != -1L) count++
+                        if (indexed.add(key)) { search.bindString(1, key); search.bindString(2, TextNormalizer.key(name)); search.executeInsert() }
+                    }
+                    // Destinations: the feed's headsign translations went with the rest; derive them from the
+                    // German names of each headsign's stops (GermanStopNames.headsigns), into the text dictionary.
+                    val served = ArrayList<GermanStopNames.HeadsignStop>()
+                    sql.query(
+                        """
+                        SELECT t.headsign, s.name, tr.text,
+                               MAX(st.sequence = (SELECT MAX(sequence) FROM stop_times x WHERE x.tripIdx = t.idx)), COUNT(*)
+                        FROM trips t JOIN stop_times st ON st.tripIdx = t.idx JOIN stops s ON s.idx = st.stopIdx
+                        JOIN translations tr ON tr.tableName = 'stops' AND tr.recordId = s.id AND tr.language = 'de'
+                        WHERE t.headsign != '' GROUP BY t.headsign, s.id
+                        """.trimIndent(),
+                    ).use { c -> while (c.moveToNext()) served += GermanStopNames.HeadsignStop(c.getString(0), c.getString(1), c.getString(2), c.getInt(3) == 1, c.getInt(4)) }
+                    val renamed = GermanStopNames.renamedLocalities(italian.mapNotNull { (key, it) -> german[key]?.let { de -> it to de } })
+                    val headsign = sql.compileStatement("INSERT OR IGNORE INTO translations (tableName, recordId, language, text) VALUES ('headsign', ?, 'de', ?)")
+                    for ((text, de) in GermanStopNames.headsigns(served, renamed)) {
+                        headsign.bindString(1, text); headsign.bindString(2, de); headsign.executeInsert()
+                    }
+                    sql.execSQL("INSERT OR REPLACE INTO meta (`key`, value) VALUES (?, ?)", arrayOf<Any>(META_STOP_NAMES, count.toString()))
+                    sql.setTransactionSuccessful()
+                } finally {
+                    sql.endTransaction()
+                }
+                count
+            }
+        }
+        _version.value++
+        added > 0
     }
 
     private fun activate(name: String) {

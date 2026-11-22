@@ -66,7 +66,8 @@ must be read before `stops.txt`.
 
 # Caches must follow the feed
 
-`ScheduleStore.version` is bumped only by `importFile`; `GtfsSchedule.prepare` keys its calendar, agency
+`ScheduleStore.version` is bumped by `importFile` and by `fillStopNames` (the one write to an active
+timetable after its import: German stop names from EFA, see the languages note); `GtfsSchedule.prepare` keys its calendar, agency
 and 10-day service caches on it. Any new cache of schedule data must check `version` too, or it serves
 the previous feed after a swap. `ScheduleStore` must stay the only writer (a `@Singleton`): it caches the
 pointer file on first read.

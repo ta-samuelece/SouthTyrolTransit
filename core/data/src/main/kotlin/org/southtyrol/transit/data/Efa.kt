@@ -108,13 +108,26 @@ class EfaClient(
     }
 
     /**
+     * Every stop in and around South Tyrol with its name in [language], by station key (EFA's global id,
+     * the same as [GtfsFiles.stationKey]). One coordinate request covers the region (~3,500 stops, ~5 MB);
+     * it supplies the German names the timetable lacks ([ScheduleStore.fillStopNames]).
+     */
+    suspend fun regionStopNames(language: String): Map<String, String> = guarded {
+        val bytes = get(
+            "XML_COORD_REQUEST",
+            mapOf("language" to Languages.efa(language), "coord" to coordinate(REGION_CENTER), "inclFilter" to "1", "type_1" to "STOP", "radius_1" to REGION_RADIUS_METERS.toString(), "max" to "20000"),
+        )
+        withContext(Dispatchers.Default) { EfaXml.stopNames(bytes) }
+    }
+
+    /**
      * A fewest-changes search also asks for the fastest trips and merges both answers. EFA's LEASTINTERCHANGE
      * alone hides much faster trips with one more change - Vilpian to Vöran gave only a 1h51 bus trip, never
      * the 43-minute one via the Vöran cable car. The extra search failing leaves the main one's answer.
      */
-    override suspend fun plan(from: Place, to: Place, options: SearchOptions, language: String): List<Journey> = guarded {
+    override suspend fun plan(from: Place, to: Place, options: SearchOptions, language: String, noticeLanguage: String?): List<Journey> = guarded {
         suspend fun search(o: SearchOptions) = get("XML_TRIP_REQUEST2", tripParams(from, to, o, language)).let { bytes ->
-            withContext(Dispatchers.Default) { EfaXml.journeys(bytes) }
+            withContext(Dispatchers.Default) { EfaXml.journeys(bytes, noticeLanguage) }
         }
         val found = if (options.preference != RoutePreference.FEWEST_CHANGES) search(options) else coroutineScope {
             val fastest = async {
@@ -172,6 +185,10 @@ class EfaClient(
             return if (options.arriveBy) journeys.filter { !it.bestArrival.isAfter(at.plusSeconds(60)) }
             else journeys.filter { !it.bestDeparture.isBefore(at.minusSeconds(60)) }
         }
+
+        /** The region request's centre and reach: all of South Tyrol, with room for the stops just past its borders. */
+        val REGION_CENTER = Point(46.65, 11.40)
+        const val REGION_RADIUS_METERS = 120_000
 
         fun coordinate(p: Point) ="%.6f:%.6f:WGS84[DD.DDDDD]".format(java.util.Locale.ROOT, p.longitude, p.latitude)
 
@@ -335,6 +352,11 @@ object EfaXml {
         Place(e.a("stateless").ifBlank { e.a("id") }, listOf(locality, e.a("name")).filter { it.isNotBlank() }.joinToString(", "), PlaceType.STOP, p, locality, gid)
     }
 
+    /** A coordinate answer's stop names by station key ("Bozen, Waltherplatz" for `it:22021:2084`); stops without a global id are skipped. */
+    fun stopNames(bytes: ByteArray): Map<String, String> = coordStops(bytes)
+        .filter { it.stopGlobalId.isNotBlank() && it.name.isNotBlank() }
+        .associate { it.stopGlobalId to it.name }
+
     private fun dateTime(e: Element?): Instant? {
         e ?: return null
         val date = e.child("itdDate") ?: return null
@@ -379,15 +401,24 @@ object EfaXml {
     private fun Element.isCancelled(): Boolean =
         listOf("realtimeStatus", "realtimeTripStatus").any { a(it).contains("CANCEL", ignoreCase = true) }
 
-    private fun notices(part: Element, language: String?): List<String> = part.children("infoLink").mapNotNull { link ->
-        val lang = link.a("language")
-        if (language != null && lang.isNotBlank() && lang != language) return@mapNotNull null
-        val info = link.child("infoText")
-        listOf(info?.text("subtitle"), link.text("infoLinkText"), info?.text("subject"))
-            .firstOrNull { !it.isNullOrBlank() && !it.equals("Information", ignoreCase = true) }
-    }.distinct()
+    /**
+     * A leg's notices in [noticeLanguage] (an EFA language) when it has any tagged so, else in the response's
+     * [language]; untagged ones always count.
+     */
+    private fun notices(part: Element, language: String?, noticeLanguage: String?): List<String> {
+        val links = part.children("infoLink")
+        val wanted = noticeLanguage?.takeIf { want -> links.any { it.a("language") == want } } ?: language
+        return links.mapNotNull { link ->
+            val lang = link.a("language")
+            if (wanted != null && lang.isNotBlank() && lang != wanted) return@mapNotNull null
+            val info = link.child("infoText")
+            listOf(info?.text("subtitle"), link.text("infoLinkText"), info?.text("subject"))
+                .firstOrNull { !it.isNullOrBlank() && !it.equals("Information", ignoreCase = true) }
+        }.distinct()
+    }
 
-    fun journeys(bytes: ByteArray): List<Journey> {
+    /** [noticeLanguage] is the app language for leg notices when the request went out in another (null: the request's). */
+    fun journeys(bytes: ByteArray, noticeLanguage: String? = null): List<Journey> {
         val root = root(bytes)
         val request = root.all("itdTripRequest").firstOrNull() ?: return emptyList()
         val routes = request.all("itdRoute")
@@ -402,8 +433,9 @@ object EfaXml {
             return emptyList()
         }
         val language = root.a("language").ifBlank { null }
+        val notices = noticeLanguage?.let { Languages.efa(it) }
         return routes.mapNotNull { route ->
-            val legs = route.all("itdPartialRoute").mapNotNull { part -> leg(part, language) }
+            val legs = route.all("itdPartialRoute").mapNotNull { part -> leg(part, language, notices) }
             if (legs.isEmpty()) return@mapNotNull null
             val transit = legs.count { it.mode.isTransit }
             Journey(
@@ -415,7 +447,7 @@ object EfaXml {
         }.distinctBy { it.id }
     }
 
-    private fun leg(part: Element, language: String?): Leg? {
+    private fun leg(part: Element, language: String?, noticeLanguage: String?): Leg? {
         val points = part.children("itdPoint")
         val from = points.firstOrNull { it.a("usage") == "departure" } ?: return null
         val to = points.firstOrNull { it.a("usage") == "arrival" } ?: return null
@@ -452,7 +484,7 @@ object EfaXml {
             intermediate = intermediate, geometry = geometry, operator = operator,
             departurePlatform = from.a("platformName"), arrivalPlatform = to.a("platformName"),
             realtime = realtime && mode.isTransit, cancelled = part.isCancelled() || (means?.isCancelled() ?: false),
-            notices = notices(part, language), distanceMeters = distance, lineName = if (mode == TransportMode.WALK) "" else lineName,
+            notices = notices(part, language, noticeLanguage), distanceMeters = distance, lineName = if (mode == TransportMode.WALK) "" else lineName,
             liveRef = liveRef,
         )
     }

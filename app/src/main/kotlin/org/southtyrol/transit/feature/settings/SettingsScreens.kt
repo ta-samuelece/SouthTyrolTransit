@@ -91,6 +91,7 @@ import org.southtyrol.transit.data.ThemeMode
 import org.southtyrol.transit.data.StartTab
 import org.southtyrol.transit.data.LocateButtonPosition
 import org.southtyrol.transit.data.SearchBarPosition
+import org.southtyrol.transit.data.NameLanguage
 import org.southtyrol.transit.model.MobilityKind
 import org.southtyrol.transit.data.UserSettings
 import org.southtyrol.transit.design.Format
@@ -158,6 +159,7 @@ class SettingsViewModel @Inject constructor(
     }
     fun locateButton(value: LocateButtonPosition) = viewModelScope.launch { settings.setLocateButton(value) }
     fun searchBar(value: SearchBarPosition) = viewModelScope.launch { settings.setSearchBar(value) }
+    fun nameLanguage(value: NameLanguage) = viewModelScope.launch { settings.setNameLanguage(value) }
     fun mapBase(value: MapBase) = viewModelScope.launch { settings.setMapBase(value) }
     fun showLayersButton(value: Boolean) = viewModelScope.launch { settings.setShowLayersButton(value) }
 }
@@ -203,6 +205,10 @@ fun SettingsScreen(navigator: Navigator, viewModel: SettingsViewModel = hiltView
             stringResource(R.string.settings_language), AppLanguage.Option.entries, language,
             { stringResource(languageLabel(it)) }, { language = it; dismiss(); AppLanguage.select(it) }, dismiss,
         )
+        CHOICE_NAME_LANGUAGE -> ChoiceFlyout(
+            stringResource(R.string.settings_stop_names), NameLanguage.entries, prefs.nameLanguage,
+            { stringResource(nameLanguageLabel(it)) }, { viewModel.nameLanguage(it); dismiss() }, dismiss,
+        )
         CHOICE_LOCATE -> ChoiceFlyout(
             stringResource(R.string.settings_locate_button), LocateButtonPosition.entries, prefs.locateButton,
             { stringResource(locateLabel(it)) }, { viewModel.locateButton(it); dismiss() }, dismiss,
@@ -240,6 +246,9 @@ fun SettingsScreen(navigator: Navigator, viewModel: SettingsViewModel = hiltView
                 }
                 item {
                     ChoiceRow(stringResource(R.string.settings_language), stringResource(languageLabel(language))) { choice = CHOICE_LANGUAGE }
+                }
+                item {
+                    ChoiceRow(stringResource(R.string.settings_stop_names), stringResource(nameLanguageLabel(prefs.nameLanguage))) { choice = CHOICE_NAME_LANGUAGE }
                 }
             }
         }
@@ -364,6 +373,7 @@ fun SettingsScreen(navigator: Navigator, viewModel: SettingsViewModel = hiltView
 
 private const val CHOICE_START = "start"
 private const val CHOICE_LANGUAGE = "language"
+private const val CHOICE_NAME_LANGUAGE = "nameLanguage"
 private const val CHOICE_LOCATE = "locate"
 private const val CHOICE_SEARCH_BAR = "searchBar"
 private const val CHOICE_ICON = "icon"
@@ -495,6 +505,12 @@ private fun languageLabel(option: AppLanguage.Option) = when (option) {
     AppLanguage.Option.ENGLISH -> R.string.language_english
     AppLanguage.Option.GERMAN -> R.string.language_german
     AppLanguage.Option.ITALIAN -> R.string.language_italian
+}
+
+private fun nameLanguageLabel(option: NameLanguage) = when (option) {
+    NameLanguage.APP -> R.string.stop_names_same_as_app
+    NameLanguage.GERMAN -> R.string.language_german
+    NameLanguage.ITALIAN -> R.string.language_italian
 }
 
 @Composable

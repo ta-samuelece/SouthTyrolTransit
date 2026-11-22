@@ -80,7 +80,6 @@ import org.southtyrol.transit.design.StatusBanner
 import org.southtyrol.transit.design.TransitLoading
 import org.southtyrol.transit.design.WheelchairIcon
 import org.southtyrol.transit.design.rememberNow
-import org.southtyrol.transit.di.AppLanguage
 import org.southtyrol.transit.feature.common.DepartureRow
 import org.southtyrol.transit.feature.common.PageButton
 import org.southtyrol.transit.feature.common.PollWhileVisible
@@ -120,7 +119,6 @@ fun StopContent(viewModel: StopViewModel, navigator: Navigator, modifier: Modifi
     val scope = rememberCoroutineScope()
     var refreshing by remember { mutableStateOf(false) }
     val dark = LocalDarkTheme.current
-    val language = AppLanguage.current()
 
     // Live screens refresh every 30 s only while visible.
     PollWhileVisible(30_000, key = state.arrivals) { viewModel.refresh() }

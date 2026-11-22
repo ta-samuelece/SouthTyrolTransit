@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -19,11 +20,13 @@ import org.southtyrol.transit.data.AlertRepository
 import org.southtyrol.transit.data.Board
 import org.southtyrol.transit.data.BoardSource
 import org.southtyrol.transit.data.DepartureRepository
-import org.southtyrol.transit.data.LanguageProvider
 import org.southtyrol.transit.data.LineRepository
+import org.southtyrol.transit.data.NameLanguage
 import org.southtyrol.transit.data.RealtimeRepository
 import org.southtyrol.transit.data.SavedKind
 import org.southtyrol.transit.data.SavedRepository
+import org.southtyrol.transit.data.stopName
+import org.southtyrol.transit.di.NamesLanguageProvider
 import org.southtyrol.transit.model.DataError
 import org.southtyrol.transit.model.DataException
 import org.southtyrol.transit.model.Departure
@@ -69,9 +72,11 @@ data class StopState(
 /**
  * The board keeps the name it was opened with, so it reads like the result that was tapped: search names
  * follow the app's language where the timetable may only have the Italian one. The timetable's name is for
- * boards opened without a name, such as from a journey's stops.
+ * boards opened without a name, such as from a journey's stops, and wins when the user chose a names
+ * language ([stopName]), so a board opened from a saved stop or the widget follows the setting.
  */
-internal fun boardTitle(opened: String, timetable: String?): String = opened.ifBlank { timetable.orEmpty() }
+internal fun boardTitle(opened: String, timetable: String?, names: NameLanguage): String =
+    names.stopName(opened, timetable).ifBlank { timetable.orEmpty() }
 
 private val DEFAULT_WINDOW: Duration = Duration.ofHours(4)
 private val STEP: Duration = Duration.ofHours(1)
@@ -79,14 +84,14 @@ private val STEP: Duration = Duration.ofHours(1)
 @HiltViewModel(assistedFactory = StopViewModel.Factory::class)
 class StopViewModel @AssistedInject constructor(
     @Assisted("key") val stationKey: String,
-    @Assisted("name") initialName: String,
+    @Assisted("name") private val initialName: String,
     private val schedule: TransitScheduleDataSource,
     private val departures: DepartureRepository,
     private val realtime: RealtimeRepository,
     private val lines: LineRepository,
     private val saved: SavedRepository,
     alerts: AlertRepository,
-    private val language: LanguageProvider,
+    private val language: NamesLanguageProvider,
 ) : ViewModel() {
     @AssistedFactory
     interface Factory { fun create(@Assisted("key") stationKey: String, @Assisted("name") name: String): StopViewModel }
@@ -116,14 +121,25 @@ class StopViewModel @AssistedInject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     init {
+        // Loads the stop in the names language, and again (with the board) when the Stop names setting changes.
         viewModelScope.launch {
-            val lang = language.current()
-            val stop = runCatching { schedule.stop(stationKey, lang) }.getOrNull()
-            val platforms = runCatching { schedule.stationStops(stationKey, lang) }.getOrDefault(emptyList())
-            val served = runCatching { lines.atStop(stationKey) }.getOrDefault(emptyList())
-            val toggle = departures.arrivalsDiffer(stationKey)
-            val directions = departures.directions(stationKey, lang)
-            _state.update { it.copy(stop = stop, name = boardTitle(it.name, stop?.name), platforms = platforms, lines = served, showArrivalsToggle = toggle, directions = directions) }
+            var first = true
+            language.changes.collectLatest { choice ->
+                val lang = language.language(choice)
+                val stop = runCatching { schedule.stop(stationKey, lang) }.getOrNull()
+                val platforms = runCatching { schedule.stationStops(stationKey, lang) }.getOrDefault(emptyList())
+                val served = runCatching { lines.atStop(stationKey) }.getOrDefault(emptyList())
+                val toggle = departures.arrivalsDiffer(stationKey)
+                val directions = departures.directions(stationKey, lang)
+                _state.update {
+                    it.copy(
+                        stop = stop, name = boardTitle(initialName, stop?.name, choice), platforms = platforms, lines = served, showArrivalsToggle = toggle,
+                        directions = directions, direction = it.direction?.let { d -> directions.firstOrNull { o -> o.platformIds == d.platformIds } },
+                    )
+                }
+                if (!first) refresh(force = true)
+                first = false
+            }
         }
     }
 

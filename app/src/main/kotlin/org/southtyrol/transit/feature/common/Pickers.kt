@@ -81,6 +81,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -91,13 +92,18 @@ import org.southtyrol.transit.R
 import org.southtyrol.transit.data.StopSearchRepository
 import org.southtyrol.transit.data.LanguageProvider
 import org.southtyrol.transit.data.MapRepository
+import org.southtyrol.transit.data.NameLanguage
+import org.southtyrol.transit.data.SavedItem
 import org.southtyrol.transit.data.SavedKind
 import org.southtyrol.transit.data.SavedRepository
+import org.southtyrol.transit.data.stopName
 import org.southtyrol.transit.design.BannerKind
 import org.southtyrol.transit.design.Format
 import org.southtyrol.transit.design.ModeGlyph
 import org.southtyrol.transit.design.StatusBanner
 import org.southtyrol.transit.design.TransitLoading
+import org.southtyrol.transit.di.NamesLanguage
+import org.southtyrol.transit.di.NamesLanguageProvider
 import org.southtyrol.transit.map.CameraRequest
 import org.southtyrol.transit.map.MapContent
 import org.southtyrol.transit.map.MapMarker
@@ -113,13 +119,27 @@ import org.southtyrol.transit.model.TransitScheduleDataSource
 import org.southtyrol.transit.model.TransportMode
 import javax.inject.Inject
 
+/**
+ * Saved items as shown: with a chosen Stop names language, each stop's label is the timetable's name in it
+ * ([stopName]). The stored labels never change; a change of the setting re-emits.
+ */
+fun SavedNamesFlow(repo: SavedRepository, schedule: TransitScheduleDataSource, names: NamesLanguageProvider): kotlinx.coroutines.flow.Flow<List<SavedItem>> =
+    combine(repo.saved, names.changes) { items, choice ->
+        if (choice == NameLanguage.APP) return@combine items
+        val language = names.language(choice)
+        items.map { item ->
+            if (item.kind != SavedKind.STOP) item
+            else item.copy(label = choice.stopName(item.label, runCatching { schedule.stop(item.id, language)?.name }.getOrNull()))
+        }
+    }
+
 /** Saved stops highlighted on maps (station key → stop). */
 /** Saved stops with coordinates; stops saved without a location are looked up in the timetable. */
-fun SavedStopsFlow(repo: SavedRepository, schedule: TransitScheduleDataSource, language: LanguageProvider): kotlinx.coroutines.flow.Flow<List<Stop>> =
-    repo.saved.map { items ->
+fun SavedStopsFlow(repo: SavedRepository, schedule: TransitScheduleDataSource, names: NamesLanguageProvider): kotlinx.coroutines.flow.Flow<List<Stop>> =
+    SavedNamesFlow(repo, schedule, names).map { items ->
         items.filter { it.kind == SavedKind.STOP }.mapNotNull { item ->
             val point = item.place?.point?.takeIf { it.isValid }
-                ?: runCatching { schedule.stop(item.id, language.current())?.point }.getOrNull()?.takeIf { it.isValid }
+                ?: runCatching { schedule.stop(item.id, names.current())?.point }.getOrNull()?.takeIf { it.isValid }
             point?.let { Stop(item.id, item.label, it, stationKey = item.id) }
         }
     }
@@ -130,7 +150,7 @@ data class StopQueryState(val query: String = "", val loading: Boolean = false, 
 @HiltViewModel
 class StopSearchViewModel @Inject constructor(
     private val stops: StopSearchRepository,
-    private val language: LanguageProvider,
+    @NamesLanguage private val language: LanguageProvider,
 ) : ViewModel() {
     private val _state = MutableStateFlow(StopQueryState())
     val state: StateFlow<StopQueryState> = _state.asStateFlow()
@@ -256,7 +276,7 @@ fun LineSearchSheet(onPick: (org.southtyrol.transit.model.Line) -> Unit, onDismi
 class MapPickerViewModel @Inject constructor(
     private val map: MapRepository,
     saved: SavedRepository,
-    private val language: LanguageProvider,
+    private val language: NamesLanguageProvider,
     schedule: TransitScheduleDataSource,
     private val location: org.southtyrol.transit.location.LocationProvider,
 ) : ViewModel() {

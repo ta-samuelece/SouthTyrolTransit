@@ -29,6 +29,8 @@ import org.southtyrol.transit.data.RealtimeRepository
 import org.southtyrol.transit.data.SavedKind
 import org.southtyrol.transit.data.SavedRepository
 import org.southtyrol.transit.data.TripRepository
+import org.southtyrol.transit.di.AppLanguage
+import org.southtyrol.transit.di.NamesLanguage
 import org.southtyrol.transit.feature.planner.RequestCodec
 import org.southtyrol.transit.follow.ActiveJourney
 import org.southtyrol.transit.follow.FollowController
@@ -84,7 +86,7 @@ class ResultsViewModel @Inject constructor(
     handle: SavedStateHandle,
     private val journeys: JourneyRepository,
     private val saved: SavedRepository,
-    private val language: LanguageProvider,
+    @NamesLanguage private val language: LanguageProvider,
     private val trips: TripRepository,
 ) : ViewModel() {
     val encoded: String = handle.toRoute<ResultsRoute>().request
@@ -107,7 +109,7 @@ class ResultsViewModel @Inject constructor(
         job = viewModelScope.launch {
             _state.update { it.copy(loading = true, error = null, request = request) }
             try {
-                val result = journeys.plan(request, language.current())
+                val result = journeys.plan(request, language.current(), noticeLanguage = AppLanguage.current())
                 // With a bike: match every leg to its timetable run first, so a journey without bike
                 // transport never shows up and then disappears.
                 val bikes = if (request.options.withBike) {
@@ -158,7 +160,7 @@ sealed class DetailState {
 class JourneyDetailViewModel @Inject constructor(
     handle: SavedStateHandle,
     private val journeys: JourneyRepository,
-    private val language: LanguageProvider,
+    @NamesLanguage private val language: LanguageProvider,
     val ticketing: TicketingProvider,
     private val follow: FollowController,
     active: ActiveJourney,
@@ -185,7 +187,7 @@ class JourneyDetailViewModel @Inject constructor(
         viewModelScope.launch {
             val request = RequestCodec.decode(route.request) ?: run { _state.value = DetailState.Missing; return@launch }
             try {
-                val found = journeys.plan(request, language.current()).firstOrNull { it.id == route.journeyId }
+                val found = journeys.plan(request, language.current(), noticeLanguage = AppLanguage.current()).firstOrNull { it.id == route.journeyId }
                 _state.value = found?.let { DetailState.Found(it) } ?: DetailState.Missing
             } catch (e: DataException) {
                 _state.value = DetailState.Error(e.error)
@@ -204,7 +206,9 @@ class JourneyLiveViewModel @AssistedInject constructor(
     @Assisted private val journey: Journey,
     private val trips: TripRepository,
     realtime: RealtimeRepository,
-    private val language: LanguageProvider,
+    @NamesLanguage private val language: LanguageProvider,
+    /** Alerts stay in the app language; names follow the Stop names setting. */
+    private val appLanguage: LanguageProvider,
     alertRepository: AlertRepository,
     private val schedule: TransitScheduleDataSource,
 ) : ViewModel() {
@@ -243,7 +247,7 @@ class JourneyLiveViewModel @AssistedInject constructor(
             runs.value = trips.forJourney(journey, language.current())
             _matched.value = true
         }
-        viewModelScope.launch { runCatching { alertRepository.refresh(language.current()) } }
+        viewModelScope.launch { runCatching { alertRepository.refresh(appLanguage.current()) } }
     }
 
     /** Refreshes trip updates and vehicle positions; throttled by the repository. */

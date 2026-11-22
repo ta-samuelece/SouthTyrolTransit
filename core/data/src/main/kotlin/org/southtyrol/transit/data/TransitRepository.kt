@@ -353,9 +353,9 @@ class JourneyRepository(private val planner: JourneyPlannerDataSource, private v
     private val _results = MutableStateFlow<Map<String, Journey>>(emptyMap())
     private var lastRequest: JourneyRequest? = null
 
-    suspend fun plan(request: JourneyRequest, language: String): List<Journey> {
+    suspend fun plan(request: JourneyRequest, language: String, noticeLanguage: String? = null): List<Journey> {
         if (request.from.name == request.to.name && request.from.id == request.to.id) throw DataException(DataError.Planner(EfaCodes.SAME_PLACE))
-        val journeys = planner.plan(request.from, request.to, request.options, language)
+        val journeys = planner.plan(request.from, request.to, request.options, language, noticeLanguage)
         lastRequest = request
         _results.update { it + journeys.associateBy { j -> j.id } }
         saved.addRecentJourney(request.from, request.to)

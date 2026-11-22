@@ -5,7 +5,7 @@ description: GTFS-RT and EFA alerts merge on one identical normalised header plu
 tags: [alerts, gtfs-rt, efa, dedupe, cache]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-11-20T12:00:00Z"
+  at: "2026-11-22T12:30:00Z"
 verified:
   by: claude-code/claude-opus-5-5
   at: "2026-10-11T12:00:00Z"
@@ -17,7 +17,7 @@ status: stable
 Two alerts merge when their ids are equal, **or** when all of these hold:
 
 - one whole header is identical after `TextNormalizer.key` (keys longer than 3 characters; not word
-  overlap);
+  overlap) - for an alert without any header, one whole description instead;
 - their validity periods overlap;
 - `sameScope`: either has no scope, or they share a route, stop or line name, **or they come from
   different sources** (`a.source != b.source`) - because GTFS-RT `routes` (route_id) and EFA `lineNames`

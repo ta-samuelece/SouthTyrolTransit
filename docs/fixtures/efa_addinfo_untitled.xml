@@ -1,0 +1,2029 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<itdRequest version="10.6.34.8" language="en" lengthUnit="METER" sessionID="0" client="curl/8.7.1" clientIP="" serverID="" virtDir="apb" calcTime="34.709" now="2026-11-22T13:05:35" nowWD="1" logRequestId="0abf8a8b19e72946">
+<itdAdditionalTravelInformationList>
+<itdAdditionalTravelInformation type="lineInfo" providerCode="sta-ddip" infoID="sta-ddip-2026-4571510-2026-4571511" seqID="3" deactivated="false" priority="normal" publish="1" valid="1" affectTimetable="true" affectAIRequest="true" affectTripRequest="true" affectDMRequest="true" affectPTKernel="false">
+        <sourceSystem>
+          <systemID>STA_EMS_prod</systemID>
+          <systemName>STA_Prod_EMS</systemName>
+          <systemType>EMS</systemType>
+        </sourceSystem>
+        <creationTime>
+          <itdDateTime>
+            <itdDate year="2026" month="11" day="11" weekday="4"/>
+            <itdTime hour="15" minute="08"/>
+          </itdDateTime>
+        </creationTime>
+        <lastModificationTime>
+          <itdDateTime>
+            <itdDate year="2026" month="11" day="18" weekday="4"/>
+            <itdTime hour="14" minute="13"/>
+          </itdDateTime>
+        </lastModificationTime>
+        <publicationDuration>
+          <itdDateTime>
+            <itdDate year="2026" month="11" day="11" weekday="4"/>
+            <itdTime hour="09" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="05" day="08" weekday="7"/>
+            <itdTime hour="23" minute="58" second="00"/>
+          </itdDateTime>
+        </publicationDuration>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2026" month="11" day="21" weekday="7"/>
+            <itdTime hour="12" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="05" day="08" weekday="7"/>
+            <itdTime hour="23" minute="58" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <expirationDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="05" day="08" weekday="7"/>
+            <itdTime hour="23" minute="58"/>
+          </itdDateTime>
+        </expirationDateTime>
+        <infoLink language="de" rtStatus="owd">
+          <paramList>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>publisher</name>
+              <value>ems.comm.addinfo</value>
+            </param>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>infoType</name>
+              <value>lineInfo</value>
+            </param>
+            <param edit="0">
+              <type>system</type>
+              <name>infoID</name>
+              <value>sta-ddip-2026-4571510-2026-4571511</value>
+            </param>
+            <param edit="0">
+              <type>system</type>
+              <name>seqID</name>
+              <value>3</value>
+            </param>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>priority</name>
+              <value>normal</value>
+            </param>
+          </paramList>
+          <infoLinkText></infoLinkText>
+          <infoLinkURL>http://nohost</infoLinkURL>
+          <infoText>
+            <content>Wegen der Fußballspiele des FC Südtirol ist an den betroffenen Tagen die Trienter Straße gesperrt. Dauer der Sperre: 3 Stunden vor Spielbeginn bis zum Ende der Veranstaltung.
+
+Die Streckenführung ist wie folgt:
+
+Stadteinwärts: unverändert bis in die C.-Augusta-Str., Virgltunnel, Innsbrucker Straße, Virglbrücke, Mayr-Nusser-Str. und Verdiplatz.
+Die Haltestellen „Parkstraße“, „Angela-Nikoletti-Platz“, „Untervirgl“, „Trienter Straße“, „Brüder-Bronzetti-Straße“ und „Romstraße Unterführung“ stadteinwärts werden nicht bedient.
+
+Ausnahme: Die Linie 10A bedient die Ersatzhaltestelle „Angela-Nikoletti-Platz“.
+
+Stadtauswärts: unverändert bis Verdiplatz, dann Mayr-Nusser-Str., Virglbrücke, Innsbrucker Straße., Virgltunnel, Ausfahrt Rombrücke, Romstraße, C.-Augusta-Str. usw.
+
+Die Haltestellen „Parkstraße“, „Angela-Nikoletti-Platz“, „Untervirgl“, „Trienter Straße“, „Brüder-Bronzetti-Straße“ und „Romstraße Unterführung“ werden nicht bedient.</content>
+            <subtitle></subtitle>
+            <subject>Bozen: Strecken wegen Fußballspiel geändert / Haltestellen nicht bedient</subject>
+            <outputClientText>
+              <htmlText>Wegen der Fußballspiele des FC Südtirol ist an den betroffenen Tagen die Trienter Straße gesperrt. Dauer der Sperre: 3 Stunden vor Spielbeginn bis zum Ende der Veranstaltung.
+
+Die Streckenführung ist wie folgt:
+
+Stadteinwärts: unverändert bis in die C.-Augusta-Str., Virgltunnel, Innsbrucker Straße, Virglbrücke, Mayr-Nusser-Str. und Verdiplatz.
+Die Haltestellen „Parkstraße“, „Angela-Nikoletti-Platz“, „Untervirgl“, „Trienter Straße“, „Brüder-Bronzetti-Straße“ und „Romstraße Unterführung“ stadteinwärts werden nicht bedient.
+
+Ausnahme: Die Linie 10A bedient die Ersatzhaltestelle „Angela-Nikoletti-Platz“.
+
+Stadtauswärts: unverändert bis Verdiplatz, dann Mayr-Nusser-Str., Virglbrücke, Innsbrucker Straße., Virgltunnel, Ausfahrt Rombrücke, Romstraße, C.-Augusta-Str. usw.
+
+Die Haltestellen „Parkstraße“, „Angela-Nikoletti-Platz“, „Untervirgl“, „Trienter Straße“, „Brüder-Bronzetti-Straße“ und „Romstraße Unterführung“ werden nicht bedient.</htmlText>
+              <wmlText>Bozen: Strecken wegen Fußballspiel geändert / Haltestellen nicht bedient</wmlText>
+            </outputClientText>
+          </infoText>
+        </infoLink>
+        <infoLink language="en" rtStatus="owd">
+          <paramList>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>publisher</name>
+              <value>ems.comm.addinfo</value>
+            </param>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>infoType</name>
+              <value>lineInfo</value>
+            </param>
+            <param edit="0">
+              <type>system</type>
+              <name>infoID</name>
+              <value>sta-ddip-2026-4571510-2026-4571511</value>
+            </param>
+            <param edit="0">
+              <type>system</type>
+              <name>seqID</name>
+              <value>3</value>
+            </param>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>priority</name>
+              <value>normal</value>
+            </param>
+          </paramList>
+          <infoLinkText></infoLinkText>
+          <infoLinkURL>http://nohost</infoLinkURL>
+          <infoText>
+            <content>Due to the football matches of FC Südtirol, Trienter Straße is closed on the affected days. Duration of the closure: 3 hours before kick-off until the end of the event.
+
+The route is as follows:
+
+Towards the city centre: unchanged until C.-Augusta-Str., Virgltunnel, Innsbrucker Straße, Virglbrücke, Mayr-Nusser-Str. and Verdiplatz.
+The stops "Parkstraße", "Angela-Nikoletti-Platz", "Untervirgl", "Trienter Straße", "Brüder-Bronzetti-Straße" and "Romstraße Unterführung" towards the city centre are not served.
+
+Exception: Line 10A serves the replacement stop "Angela-Nikoletti-Platz".
+
+Out of town: unchanged until Verdiplatz, then Mayr-Nusser-Str., Virglbrücke, Innsbrucker Straße., Virgltunnel, exit Rombrücke, Romstraße, C.-Augusta-Str. etc.
+
+The stops "Parkstraße", "Angela-Nikoletti-Platz", "Untervirgl", "Trienter Straße", "Brüder-Bronzetti-Straße" and "Romstraße Unterführung" are not served.</content>
+            <subtitle></subtitle>
+            <subject>Bozen: Routes changed due to football match / Stops not served</subject>
+            <outputClientText>
+              <htmlText>Due to the football matches of FC Südtirol, Trienter Straße is closed on the affected days. Duration of the closure: 3 hours before kick-off until the end of the event.
+
+The route is as follows:
+
+Towards the city centre: unchanged until C.-Augusta-Str., Virgltunnel, Innsbrucker Straße, Virglbrücke, Mayr-Nusser-Str. and Verdiplatz.
+The stops "Parkstraße", "Angela-Nikoletti-Platz", "Untervirgl", "Trienter Straße", "Brüder-Bronzetti-Straße" and "Romstraße Unterführung" towards the city centre are not served.
+
+Exception: Line 10A serves the replacement stop "Angela-Nikoletti-Platz".
+
+Out of town: unchanged until Verdiplatz, then Mayr-Nusser-Str., Virglbrücke, Innsbrucker Straße., Virgltunnel, exit Rombrücke, Romstraße, C.-Augusta-Str. etc.
+
+The stops "Parkstraße", "Angela-Nikoletti-Platz", "Untervirgl", "Trienter Straße", "Brüder-Bronzetti-Straße" and "Romstraße Unterführung" are not served.</htmlText>
+            </outputClientText>
+          </infoText>
+        </infoLink>
+        <infoLink language="it" rtStatus="owd">
+          <paramList>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>publisher</name>
+              <value>ems.comm.addinfo</value>
+            </param>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>infoType</name>
+              <value>lineInfo</value>
+            </param>
+            <param edit="0">
+              <type>system</type>
+              <name>infoID</name>
+              <value>sta-ddip-2026-4571510-2026-4571511</value>
+            </param>
+            <param edit="0">
+              <type>system</type>
+              <name>seqID</name>
+              <value>3</value>
+            </param>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>priority</name>
+              <value>normal</value>
+            </param>
+          </paramList>
+          <infoLinkText></infoLinkText>
+          <infoLinkURL>http://nohost</infoLinkURL>
+          <infoText>
+            <content>Viale Trento, a Bolzano rimane chiuso al traffico in occasione delle partite di calcio del FC Alto Adige. Durata della chiusura: 3 ore prima dell’inizio della partita e fino a fine manifestazione.
+
+Il percorso è il seguente:
+
+In direzione centro: invariato fino in via Claudia Augusta, poi galleria del Virgolo, via Innsbruck, ponte Virgolo, via Mayr Nusser, piazza Verdi, ecc.
+In direzione centro le fermate "via del Parco", "piazza Angela Nikoletti", "Piè di Virgolo", "viale Trento", "via Fratelli Bronzetti" e "via Roma Sottopasso" non vengono servite.
+
+Eccezione: La linea 10A serve la fermata sostitutiva "piazza Angela Nikoletti".
+
+In direzione periferia: invariato fino in piazza Verdi, poi via Mayr Nusser, ponte Virgolo, via Innsbruck, galleria del Virgolo, uscita ponte Roma, via Roma, via Claudia Augusta, ecc.
+
+Le fermate "via del Parco", "piazza Angela Nikoletti", "Piè di Virgolo", "viale Trento", "via Fratelli Bronzetti" e "via Roma Sottopasso" non vengono servite.</content>
+            <subtitle></subtitle>
+            <subject>Bolzano: Percorsi modificati per partita di calcio / fermate non servite</subject>
+            <outputClientText>
+              <htmlText>Viale Trento, a Bolzano rimane chiuso al traffico in occasione delle partite di calcio del FC Alto Adige. Durata della chiusura: 3 ore prima dell’inizio della partita e fino a fine manifestazione.
+
+Il percorso è il seguente:
+
+In direzione centro: invariato fino in via Claudia Augusta, poi galleria del Virgolo, via Innsbruck, ponte Virgolo, via Mayr Nusser, piazza Verdi, ecc.
+In direzione centro le fermate "via del Parco", "piazza Angela Nikoletti", "Piè di Virgolo", "viale Trento", "via Fratelli Bronzetti" e "via Roma Sottopasso" non vengono servite.
+
+Eccezione: La linea 10A serve la fermata sostitutiva "piazza Angela Nikoletti".
+
+In direzione periferia: invariato fino in piazza Verdi, poi via Mayr Nusser, ponte Virgolo, via Innsbruck, galleria del Virgolo, uscita ponte Roma, via Roma, via Claudia Augusta, ecc.
+
+Le fermate "via del Parco", "piazza Angela Nikoletti", "Piè di Virgolo", "viale Trento", "via Fratelli Bronzetti" e "via Roma Sottopasso" non vengono servite.</htmlText>
+            </outputClientText>
+          </infoText>
+        </infoLink>
+        <infoLink language="lad" rtStatus="owd">
+          <paramList>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>publisher</name>
+              <value>ems.comm.addinfo</value>
+            </param>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>infoType</name>
+              <value>lineInfo</value>
+            </param>
+            <param edit="0">
+              <type>system</type>
+              <name>infoID</name>
+              <value>sta-ddip-2026-4571510-2026-4571511</value>
+            </param>
+            <param edit="0">
+              <type>system</type>
+              <name>seqID</name>
+              <value>3</value>
+            </param>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>priority</name>
+              <value>normal</value>
+            </param>
+          </paramList>
+          <infoLinkText></infoLinkText>
+          <infoLinkURL>http://nohost</infoLinkURL>
+          <infoText>
+            <content>Viale Trento, a Bolzano rimane chiuso al traffico in occasione delle partite di calcio del FC Alto Adige. Durata della chiusura: 3 ore prima dell’inizio della partita e fino a fine manifestazione.
+
+Il percorso è il seguente:
+
+In direzione centro: invariato fino in via Claudia Augusta, poi galleria del Virgolo, via Innsbruck, ponte Virgolo, via Mayr Nusser, piazza Verdi, ecc.
+In direzione centro le fermate "via del Parco", "piazza Angela Nikoletti", "Piè di Virgolo", "viale Trento", "via Fratelli Bronzetti" e "via Roma Sottopasso" non vengono servite.
+
+Eccezione: La linea 10A serve la fermata sostitutiva "piazza Angela Nikoletti".
+
+In direzione periferia: invariato fino in piazza Verdi, poi via Mayr Nusser, ponte Virgolo, via Innsbruck, galleria del Virgolo, uscita ponte Roma, via Roma, via Claudia Augusta, ecc.
+
+Le fermate "via del Parco", "piazza Angela Nikoletti", "Piè di Virgolo", "viale Trento", "via Fratelli Bronzetti" e "via Roma Sottopasso" non vengono servite.</content>
+            <subtitle></subtitle>
+            <subject>Bolzano: Percorsi modificati per partita di calcio / fermate non servite</subject>
+            <outputClientText>
+              <htmlText>Viale Trento, a Bolzano rimane chiuso al traffico in occasione delle partite di calcio del FC Alto Adige. Durata della chiusura: 3 ore prima dell’inizio della partita e fino a fine manifestazione.
+
+Il percorso è il seguente:
+
+In direzione centro: invariato fino in via Claudia Augusta, poi galleria del Virgolo, via Innsbruck, ponte Virgolo, via Mayr Nusser, piazza Verdi, ecc.
+In direzione centro le fermate "via del Parco", "piazza Angela Nikoletti", "Piè di Virgolo", "viale Trento", "via Fratelli Bronzetti" e "via Roma Sottopasso" non vengono servite.
+
+Eccezione: La linea 10A serve la fermata sostitutiva "piazza Angela Nikoletti".
+
+In direzione periferia: invariato fino in piazza Verdi, poi via Mayr Nusser, ponte Virgolo, via Innsbruck, galleria del Virgolo, uscita ponte Roma, via Roma, via Claudia Augusta, ecc.
+
+Le fermate "via del Parco", "piazza Angela Nikoletti", "Piè di Virgolo", "viale Trento", "via Fratelli Bronzetti" e "via Roma Sottopasso" non vengono servite.</htmlText>
+            </outputClientText>
+          </infoText>
+        </infoLink>
+        <concernedLines>
+          <line line="80120" number="120" name="Bus 120" supplement=" " direction="H" directionName="Bolzano, Autostazione" partialNet="apb" motType="3" motCode="6" productId="20" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Bolzano, Autostazione</directionText>
+          </line>
+          <line line="80120" number="120" name="Bus 120" supplement=" " direction="R" directionName="Salorno, Autostazione" partialNet="apb" motType="3" motCode="6" productId="20" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Salorno, Autostazione</directionText>
+          </line>
+          <line line="01B07" number="7A" name="Bus 7A" supplement="A" direction="H" directionName="Bolzano, Via Castel Flavon Alta" partialNet="apb" motType="3" motCode="5" productId="22" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Bolzano, Via Castel Flavon Alta</directionText>
+          </line>
+          <line line="01B07" number="7B" name="Bus 7B" supplement="B" direction="H" directionName="Bolzano, Via Castel Flavon Alta" partialNet="apb" motType="3" motCode="5" productId="22" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Bolzano, Via Castel Flavon Alta</directionText>
+          </line>
+          <line line="01B10" number="10A" name="Bus 10A" supplement="A" direction="H" directionName="Bolzano, Ospedale" partialNet="apb" motType="3" motCode="5" productId="22" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Bolzano, Ospedale</directionText>
+          </line>
+          <line line="01B10" number="10B" name="Bus 10B" supplement="B" direction="H" directionName="Bolzano, Ospedale" partialNet="apb" motType="3" motCode="5" productId="22" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Bolzano, Ospedale</directionText>
+          </line>
+        </concernedLines>
+        <concernedStops/>
+        <genericParams>
+          <paramList>
+            <param edit="0">
+              <type>source</type>
+              <name>id</name>
+              <value>2026-4571510</value>
+            </param>
+            <param edit="0">
+              <type>source</type>
+              <name>seqId</name>
+              <value>1</value>
+            </param>
+            <param edit="0">
+              <type>source</type>
+              <name>format</name>
+              <value>SIRI-SX</value>
+            </param>
+            <param edit="0">
+              <type>source</type>
+              <name>producerRef</name>
+              <value>sta-ddip</value>
+            </param>
+            <param edit="0">
+              <type>distributor</type>
+              <name>producerRef</name>
+              <value>STA</value>
+            </param>
+            <param edit="0">
+              <type>distributor</type>
+              <name>deviceRef</name>
+              <value>55115a96393543a4b9963219fb9845b4</value>
+            </param>
+            <param edit="0">
+              <type>distributor</type>
+              <name>messageRef</name>
+              <value>5cd1654a-b33a-5dab-a4dd-e3cd0ac9be70</value>
+            </param>
+            <param edit="0">
+              <type>system</type>
+              <name>eventRef</name>
+              <value>a3024e2c9501419392047f4b0658b49b</value>
+            </param>
+            <param edit="0">
+              <type>ReasonGroup</type>
+              <name>AlertCause</name>
+              <value>specialEvent</value>
+            </param>
+          </paramList>
+        </genericParams>
+      </itdAdditionalTravelInformation>
+<itdAdditionalTravelInformation type="lineInfo" providerCode="sta-ddip" infoID="sta-ddip-2026-4571510-2026-4571512" seqID="3" deactivated="false" priority="normal" publish="1" valid="1" affectTimetable="true" affectAIRequest="true" affectTripRequest="true" affectDMRequest="true" affectPTKernel="false">
+        <sourceSystem>
+          <systemID>STA_EMS_prod</systemID>
+          <systemName>STA_Prod_EMS</systemName>
+          <systemType>EMS</systemType>
+        </sourceSystem>
+        <creationTime>
+          <itdDateTime>
+            <itdDate year="2026" month="11" day="11" weekday="4"/>
+            <itdTime hour="15" minute="08"/>
+          </itdDateTime>
+        </creationTime>
+        <lastModificationTime>
+          <itdDateTime>
+            <itdDate year="2026" month="11" day="18" weekday="4"/>
+            <itdTime hour="14" minute="13"/>
+          </itdDateTime>
+        </lastModificationTime>
+        <publicationDuration>
+          <itdDateTime>
+            <itdDate year="2026" month="11" day="11" weekday="4"/>
+            <itdTime hour="09" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="05" day="08" weekday="7"/>
+            <itdTime hour="23" minute="58" second="00"/>
+          </itdDateTime>
+        </publicationDuration>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2026" month="11" day="21" weekday="7"/>
+            <itdTime hour="12" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="05" day="08" weekday="7"/>
+            <itdTime hour="23" minute="58" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <expirationDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="05" day="08" weekday="7"/>
+            <itdTime hour="23" minute="58"/>
+          </itdDateTime>
+        </expirationDateTime>
+        <infoLink language="de" rtStatus="owd">
+          <paramList>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>publisher</name>
+              <value>ems.comm.addinfo</value>
+            </param>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>infoType</name>
+              <value>lineInfo</value>
+            </param>
+            <param edit="0">
+              <type>system</type>
+              <name>infoID</name>
+              <value>sta-ddip-2026-4571510-2026-4571512</value>
+            </param>
+            <param edit="0">
+              <type>system</type>
+              <name>seqID</name>
+              <value>3</value>
+            </param>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>priority</name>
+              <value>normal</value>
+            </param>
+          </paramList>
+          <infoLinkText></infoLinkText>
+          <infoLinkURL>http://nohost</infoLinkURL>
+          <infoText>
+            <content>Wegen der Fußballspiele des FC Südtirol ist an den betroffenen Tagen die Trienter Straße gesperrt. Dauer der Sperre: 3 Stunden vor Spielbeginn bis zum Ende der Veranstaltung.
+
+Die Streckenführung ist wie folgt:
+
+Stadteinwärts: unverändert bis in die C.-Augusta-Str., Virgltunnel, Innsbrucker Straße, Virglbrücke, Mayr-Nusser-Str. und Verdiplatz.
+Die Haltestellen „Parkstraße“, „Angela-Nikoletti-Platz“, „Untervirgl“, „Trienter Straße“, „Brüder-Bronzetti-Straße“ und „Romstraße Unterführung“ stadteinwärts werden nicht bedient.
+
+Ausnahme: Die Linie 10A bedient die Ersatzhaltestelle „Angela-Nikoletti-Platz“.
+
+Stadtauswärts: unverändert bis Verdiplatz, dann Mayr-Nusser-Str., Virglbrücke, Innsbrucker Straße., Virgltunnel, Ausfahrt Rombrücke, Romstraße, C.-Augusta-Str. usw.
+
+Die Haltestellen „Parkstraße“, „Angela-Nikoletti-Platz“, „Untervirgl“, „Trienter Straße“, „Brüder-Bronzetti-Straße“ und „Romstraße Unterführung“ werden nicht bedient.</content>
+            <subtitle></subtitle>
+            <subject>Bozen: Strecken wegen Fußballspiel geändert / Haltestellen nicht bedient</subject>
+            <outputClientText>
+              <htmlText>Wegen der Fußballspiele des FC Südtirol ist an den betroffenen Tagen die Trienter Straße gesperrt. Dauer der Sperre: 3 Stunden vor Spielbeginn bis zum Ende der Veranstaltung.
+
+Die Streckenführung ist wie folgt:
+
+Stadteinwärts: unverändert bis in die C.-Augusta-Str., Virgltunnel, Innsbrucker Straße, Virglbrücke, Mayr-Nusser-Str. und Verdiplatz.
+Die Haltestellen „Parkstraße“, „Angela-Nikoletti-Platz“, „Untervirgl“, „Trienter Straße“, „Brüder-Bronzetti-Straße“ und „Romstraße Unterführung“ stadteinwärts werden nicht bedient.
+
+Ausnahme: Die Linie 10A bedient die Ersatzhaltestelle „Angela-Nikoletti-Platz“.
+
+Stadtauswärts: unverändert bis Verdiplatz, dann Mayr-Nusser-Str., Virglbrücke, Innsbrucker Straße., Virgltunnel, Ausfahrt Rombrücke, Romstraße, C.-Augusta-Str. usw.
+
+Die Haltestellen „Parkstraße“, „Angela-Nikoletti-Platz“, „Untervirgl“, „Trienter Straße“, „Brüder-Bronzetti-Straße“ und „Romstraße Unterführung“ werden nicht bedient.</htmlText>
+              <wmlText>Bozen: Strecken wegen Fußballspiel geändert / Haltestellen nicht bedient</wmlText>
+            </outputClientText>
+          </infoText>
+        </infoLink>
+        <infoLink language="en" rtStatus="owd">
+          <paramList>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>publisher</name>
+              <value>ems.comm.addinfo</value>
+            </param>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>infoType</name>
+              <value>lineInfo</value>
+            </param>
+            <param edit="0">
+              <type>system</type>
+              <name>infoID</name>
+              <value>sta-ddip-2026-4571510-2026-4571512</value>
+            </param>
+            <param edit="0">
+              <type>system</type>
+              <name>seqID</name>
+              <value>3</value>
+            </param>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>priority</name>
+              <value>normal</value>
+            </param>
+          </paramList>
+          <infoLinkText></infoLinkText>
+          <infoLinkURL>http://nohost</infoLinkURL>
+          <infoText>
+            <content>Due to the football matches of FC Südtirol, Trienter Straße is closed on the affected days. Duration of the closure: 3 hours before kick-off until the end of the event.
+
+The route is as follows:
+
+Towards the city centre: unchanged until C.-Augusta-Str., Virgltunnel, Innsbrucker Straße, Virglbrücke, Mayr-Nusser-Str. and Verdiplatz.
+The stops "Parkstraße", "Angela-Nikoletti-Platz", "Untervirgl", "Trienter Straße", "Brüder-Bronzetti-Straße" and "Romstraße Unterführung" towards the city centre are not served.
+
+Exception: Line 10A serves the replacement stop "Angela-Nikoletti-Platz".
+
+Out of town: unchanged until Verdiplatz, then Mayr-Nusser-Str., Virglbrücke, Innsbrucker Straße., Virgltunnel, exit Rombrücke, Romstraße, C.-Augusta-Str. etc.
+
+The stops "Parkstraße", "Angela-Nikoletti-Platz", "Untervirgl", "Trienter Straße", "Brüder-Bronzetti-Straße" and "Romstraße Unterführung" are not served.</content>
+            <subtitle></subtitle>
+            <subject>Bozen: Routes changed due to football match / Stops not served</subject>
+            <outputClientText>
+              <htmlText>Due to the football matches of FC Südtirol, Trienter Straße is closed on the affected days. Duration of the closure: 3 hours before kick-off until the end of the event.
+
+The route is as follows:
+
+Towards the city centre: unchanged until C.-Augusta-Str., Virgltunnel, Innsbrucker Straße, Virglbrücke, Mayr-Nusser-Str. and Verdiplatz.
+The stops "Parkstraße", "Angela-Nikoletti-Platz", "Untervirgl", "Trienter Straße", "Brüder-Bronzetti-Straße" and "Romstraße Unterführung" towards the city centre are not served.
+
+Exception: Line 10A serves the replacement stop "Angela-Nikoletti-Platz".
+
+Out of town: unchanged until Verdiplatz, then Mayr-Nusser-Str., Virglbrücke, Innsbrucker Straße., Virgltunnel, exit Rombrücke, Romstraße, C.-Augusta-Str. etc.
+
+The stops "Parkstraße", "Angela-Nikoletti-Platz", "Untervirgl", "Trienter Straße", "Brüder-Bronzetti-Straße" and "Romstraße Unterführung" are not served.</htmlText>
+            </outputClientText>
+          </infoText>
+        </infoLink>
+        <infoLink language="it" rtStatus="owd">
+          <paramList>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>publisher</name>
+              <value>ems.comm.addinfo</value>
+            </param>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>infoType</name>
+              <value>lineInfo</value>
+            </param>
+            <param edit="0">
+              <type>system</type>
+              <name>infoID</name>
+              <value>sta-ddip-2026-4571510-2026-4571512</value>
+            </param>
+            <param edit="0">
+              <type>system</type>
+              <name>seqID</name>
+              <value>3</value>
+            </param>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>priority</name>
+              <value>normal</value>
+            </param>
+          </paramList>
+          <infoLinkText></infoLinkText>
+          <infoLinkURL>http://nohost</infoLinkURL>
+          <infoText>
+            <content>Viale Trento, a Bolzano rimane chiuso al traffico in occasione delle partite di calcio del FC Alto Adige. Durata della chiusura: 3 ore prima dell’inizio della partita e fino a fine manifestazione.
+
+Il percorso è il seguente:
+
+In direzione centro: invariato fino in via Claudia Augusta, poi galleria del Virgolo, via Innsbruck, ponte Virgolo, via Mayr Nusser, piazza Verdi, ecc.
+In direzione centro le fermate "via del Parco", "piazza Angela Nikoletti", "Piè di Virgolo", "viale Trento", "via Fratelli Bronzetti" e "via Roma Sottopasso" non vengono servite.
+
+Eccezione: La linea 10A serve la fermata sostitutiva "piazza Angela Nikoletti".
+
+In direzione periferia: invariato fino in piazza Verdi, poi via Mayr Nusser, ponte Virgolo, via Innsbruck, galleria del Virgolo, uscita ponte Roma, via Roma, via Claudia Augusta, ecc.
+
+Le fermate "via del Parco", "piazza Angela Nikoletti", "Piè di Virgolo", "viale Trento", "via Fratelli Bronzetti" e "via Roma Sottopasso" non vengono servite.</content>
+            <subtitle></subtitle>
+            <subject>Bolzano: Percorsi modificati per partita di calcio / fermate non servite</subject>
+            <outputClientText>
+              <htmlText>Viale Trento, a Bolzano rimane chiuso al traffico in occasione delle partite di calcio del FC Alto Adige. Durata della chiusura: 3 ore prima dell’inizio della partita e fino a fine manifestazione.
+
+Il percorso è il seguente:
+
+In direzione centro: invariato fino in via Claudia Augusta, poi galleria del Virgolo, via Innsbruck, ponte Virgolo, via Mayr Nusser, piazza Verdi, ecc.
+In direzione centro le fermate "via del Parco", "piazza Angela Nikoletti", "Piè di Virgolo", "viale Trento", "via Fratelli Bronzetti" e "via Roma Sottopasso" non vengono servite.
+
+Eccezione: La linea 10A serve la fermata sostitutiva "piazza Angela Nikoletti".
+
+In direzione periferia: invariato fino in piazza Verdi, poi via Mayr Nusser, ponte Virgolo, via Innsbruck, galleria del Virgolo, uscita ponte Roma, via Roma, via Claudia Augusta, ecc.
+
+Le fermate "via del Parco", "piazza Angela Nikoletti", "Piè di Virgolo", "viale Trento", "via Fratelli Bronzetti" e "via Roma Sottopasso" non vengono servite.</htmlText>
+            </outputClientText>
+          </infoText>
+        </infoLink>
+        <infoLink language="lad" rtStatus="owd">
+          <paramList>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>publisher</name>
+              <value>ems.comm.addinfo</value>
+            </param>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>infoType</name>
+              <value>lineInfo</value>
+            </param>
+            <param edit="0">
+              <type>system</type>
+              <name>infoID</name>
+              <value>sta-ddip-2026-4571510-2026-4571512</value>
+            </param>
+            <param edit="0">
+              <type>system</type>
+              <name>seqID</name>
+              <value>3</value>
+            </param>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>priority</name>
+              <value>normal</value>
+            </param>
+          </paramList>
+          <infoLinkText></infoLinkText>
+          <infoLinkURL>http://nohost</infoLinkURL>
+          <infoText>
+            <content>Viale Trento, a Bolzano rimane chiuso al traffico in occasione delle partite di calcio del FC Alto Adige. Durata della chiusura: 3 ore prima dell’inizio della partita e fino a fine manifestazione.
+
+Il percorso è il seguente:
+
+In direzione centro: invariato fino in via Claudia Augusta, poi galleria del Virgolo, via Innsbruck, ponte Virgolo, via Mayr Nusser, piazza Verdi, ecc.
+In direzione centro le fermate "via del Parco", "piazza Angela Nikoletti", "Piè di Virgolo", "viale Trento", "via Fratelli Bronzetti" e "via Roma Sottopasso" non vengono servite.
+
+Eccezione: La linea 10A serve la fermata sostitutiva "piazza Angela Nikoletti".
+
+In direzione periferia: invariato fino in piazza Verdi, poi via Mayr Nusser, ponte Virgolo, via Innsbruck, galleria del Virgolo, uscita ponte Roma, via Roma, via Claudia Augusta, ecc.
+
+Le fermate "via del Parco", "piazza Angela Nikoletti", "Piè di Virgolo", "viale Trento", "via Fratelli Bronzetti" e "via Roma Sottopasso" non vengono servite.</content>
+            <subtitle></subtitle>
+            <subject>Bolzano: Percorsi modificati per partita di calcio / fermate non servite</subject>
+            <outputClientText>
+              <htmlText>Viale Trento, a Bolzano rimane chiuso al traffico in occasione delle partite di calcio del FC Alto Adige. Durata della chiusura: 3 ore prima dell’inizio della partita e fino a fine manifestazione.
+
+Il percorso è il seguente:
+
+In direzione centro: invariato fino in via Claudia Augusta, poi galleria del Virgolo, via Innsbruck, ponte Virgolo, via Mayr Nusser, piazza Verdi, ecc.
+In direzione centro le fermate "via del Parco", "piazza Angela Nikoletti", "Piè di Virgolo", "viale Trento", "via Fratelli Bronzetti" e "via Roma Sottopasso" non vengono servite.
+
+Eccezione: La linea 10A serve la fermata sostitutiva "piazza Angela Nikoletti".
+
+In direzione periferia: invariato fino in piazza Verdi, poi via Mayr Nusser, ponte Virgolo, via Innsbruck, galleria del Virgolo, uscita ponte Roma, via Roma, via Claudia Augusta, ecc.
+
+Le fermate "via del Parco", "piazza Angela Nikoletti", "Piè di Virgolo", "viale Trento", "via Fratelli Bronzetti" e "via Roma Sottopasso" non vengono servite.</htmlText>
+            </outputClientText>
+          </infoText>
+        </infoLink>
+        <concernedLines>
+          <line line="80120" number="120" name="Bus 120" supplement=" " direction="H" directionName="Bolzano, Autostazione" partialNet="apb" motType="3" motCode="6" productId="20" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Bolzano, Autostazione</directionText>
+          </line>
+          <line line="80120" number="120" name="Bus 120" supplement=" " direction="R" directionName="Salorno, Autostazione" partialNet="apb" motType="3" motCode="6" productId="20" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Salorno, Autostazione</directionText>
+          </line>
+          <line line="01B07" number="7A" name="Bus 7A" supplement="A" direction="H" directionName="Bolzano, Via Castel Flavon Alta" partialNet="apb" motType="3" motCode="5" productId="22" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Bolzano, Via Castel Flavon Alta</directionText>
+          </line>
+          <line line="01B07" number="7B" name="Bus 7B" supplement="B" direction="H" directionName="Bolzano, Via Castel Flavon Alta" partialNet="apb" motType="3" motCode="5" productId="22" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Bolzano, Via Castel Flavon Alta</directionText>
+          </line>
+          <line line="01B10" number="10A" name="Bus 10A" supplement="A" direction="H" directionName="Bolzano, Ospedale" partialNet="apb" motType="3" motCode="5" productId="22" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Bolzano, Ospedale</directionText>
+          </line>
+          <line line="01B10" number="10B" name="Bus 10B" supplement="B" direction="H" directionName="Bolzano, Ospedale" partialNet="apb" motType="3" motCode="5" productId="22" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Bolzano, Ospedale</directionText>
+          </line>
+        </concernedLines>
+        <concernedStops/>
+        <genericParams>
+          <paramList>
+            <param edit="0">
+              <type>source</type>
+              <name>id</name>
+              <value>2026-4571510</value>
+            </param>
+            <param edit="0">
+              <type>source</type>
+              <name>seqId</name>
+              <value>1</value>
+            </param>
+            <param edit="0">
+              <type>source</type>
+              <name>format</name>
+              <value>SIRI-SX</value>
+            </param>
+            <param edit="0">
+              <type>source</type>
+              <name>producerRef</name>
+              <value>sta-ddip</value>
+            </param>
+            <param edit="0">
+              <type>distributor</type>
+              <name>producerRef</name>
+              <value>STA</value>
+            </param>
+            <param edit="0">
+              <type>distributor</type>
+              <name>deviceRef</name>
+              <value>55115a96393543a4b9963219fb9845b4</value>
+            </param>
+            <param edit="0">
+              <type>distributor</type>
+              <name>messageRef</name>
+              <value>e287e211-218e-5958-a459-faa431b36f4c</value>
+            </param>
+            <param edit="0">
+              <type>system</type>
+              <name>eventRef</name>
+              <value>a3024e2c9501419392047f4b0658b49b</value>
+            </param>
+            <param edit="0">
+              <type>ReasonGroup</type>
+              <name>AlertCause</name>
+              <value>specialEvent</value>
+            </param>
+          </paramList>
+        </genericParams>
+      </itdAdditionalTravelInformation>
+<itdAdditionalTravelInformation type="lineInfo" providerCode="sta-ddip" infoID="sta-ddip-2026-4571510-2026-4571513" seqID="5" deactivated="false" priority="normal" publish="1" valid="1" affectTimetable="true" affectAIRequest="true" affectTripRequest="true" affectDMRequest="true" affectPTKernel="false">
+        <sourceSystem>
+          <systemID>STA_EMS_prod</systemID>
+          <systemName>STA_Prod_EMS</systemName>
+          <systemType>EMS</systemType>
+        </sourceSystem>
+        <creationTime>
+          <itdDateTime>
+            <itdDate year="2026" month="11" day="11" weekday="4"/>
+            <itdTime hour="15" minute="08"/>
+          </itdDateTime>
+        </creationTime>
+        <lastModificationTime>
+          <itdDateTime>
+            <itdDate year="2026" month="11" day="18" weekday="4"/>
+            <itdTime hour="14" minute="13"/>
+          </itdDateTime>
+        </lastModificationTime>
+        <publicationDuration>
+          <itdDateTime>
+            <itdDate year="2026" month="11" day="11" weekday="4"/>
+            <itdTime hour="09" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="05" day="08" weekday="7"/>
+            <itdTime hour="23" minute="58" second="00"/>
+          </itdDateTime>
+        </publicationDuration>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2026" month="11" day="21" weekday="7"/>
+            <itdTime hour="12" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="05" day="08" weekday="7"/>
+            <itdTime hour="23" minute="58" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <expirationDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="05" day="08" weekday="7"/>
+            <itdTime hour="23" minute="58"/>
+          </itdDateTime>
+        </expirationDateTime>
+        <infoLink language="de" rtStatus="owd">
+          <paramList>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>publisher</name>
+              <value>ems.comm.addinfo</value>
+            </param>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>infoType</name>
+              <value>lineInfo</value>
+            </param>
+            <param edit="0">
+              <type>system</type>
+              <name>infoID</name>
+              <value>sta-ddip-2026-4571510-2026-4571513</value>
+            </param>
+            <param edit="0">
+              <type>system</type>
+              <name>seqID</name>
+              <value>5</value>
+            </param>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>priority</name>
+              <value>normal</value>
+            </param>
+          </paramList>
+          <infoLinkText></infoLinkText>
+          <infoLinkURL>http://nohost</infoLinkURL>
+          <infoText>
+            <content>Wegen der Fußballspiele des FC Südtirol ist an den betroffenen Tagen die Trienter Straße gesperrt. Dauer der Sperre: 3 Stunden vor Spielbeginn bis zum Ende der Veranstaltung.
+
+Die Streckenführung ist wie folgt:
+
+Stadteinwärts: unverändert bis in die C.-Augusta-Str., Virgltunnel, Innsbrucker Straße, Virglbrücke, Mayr-Nusser-Str. und Verdiplatz.
+Die Haltestellen „Parkstraße“, „Angela-Nikoletti-Platz“, „Untervirgl“, „Trienter Straße“, „Brüder-Bronzetti-Straße“ und „Romstraße Unterführung“ stadteinwärts werden nicht bedient.
+
+Ausnahme: Die Linie 10A bedient die Ersatzhaltestelle „Angela-Nikoletti-Platz“.
+
+Stadtauswärts: unverändert bis Verdiplatz, dann Mayr-Nusser-Str., Virglbrücke, Innsbrucker Straße., Virgltunnel, Ausfahrt Rombrücke, Romstraße, C.-Augusta-Str. usw.
+
+Die Haltestellen „Parkstraße“, „Angela-Nikoletti-Platz“, „Untervirgl“, „Trienter Straße“, „Brüder-Bronzetti-Straße“ und „Romstraße Unterführung“ werden nicht bedient.</content>
+            <subtitle></subtitle>
+            <subject>Bozen: Strecken wegen Fußballspiel geändert / Haltestellen nicht bedient</subject>
+            <outputClientText>
+              <htmlText>Wegen der Fußballspiele des FC Südtirol ist an den betroffenen Tagen die Trienter Straße gesperrt. Dauer der Sperre: 3 Stunden vor Spielbeginn bis zum Ende der Veranstaltung.
+
+Die Streckenführung ist wie folgt:
+
+Stadteinwärts: unverändert bis in die C.-Augusta-Str., Virgltunnel, Innsbrucker Straße, Virglbrücke, Mayr-Nusser-Str. und Verdiplatz.
+Die Haltestellen „Parkstraße“, „Angela-Nikoletti-Platz“, „Untervirgl“, „Trienter Straße“, „Brüder-Bronzetti-Straße“ und „Romstraße Unterführung“ stadteinwärts werden nicht bedient.
+
+Ausnahme: Die Linie 10A bedient die Ersatzhaltestelle „Angela-Nikoletti-Platz“.
+
+Stadtauswärts: unverändert bis Verdiplatz, dann Mayr-Nusser-Str., Virglbrücke, Innsbrucker Straße., Virgltunnel, Ausfahrt Rombrücke, Romstraße, C.-Augusta-Str. usw.
+
+Die Haltestellen „Parkstraße“, „Angela-Nikoletti-Platz“, „Untervirgl“, „Trienter Straße“, „Brüder-Bronzetti-Straße“ und „Romstraße Unterführung“ werden nicht bedient.</htmlText>
+              <wmlText>Bozen: Strecken wegen Fußballspiel geändert / Haltestellen nicht bedient</wmlText>
+            </outputClientText>
+          </infoText>
+        </infoLink>
+        <infoLink language="en" rtStatus="owd">
+          <paramList>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>publisher</name>
+              <value>ems.comm.addinfo</value>
+            </param>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>infoType</name>
+              <value>lineInfo</value>
+            </param>
+            <param edit="0">
+              <type>system</type>
+              <name>infoID</name>
+              <value>sta-ddip-2026-4571510-2026-4571513</value>
+            </param>
+            <param edit="0">
+              <type>system</type>
+              <name>seqID</name>
+              <value>5</value>
+            </param>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>priority</name>
+              <value>normal</value>
+            </param>
+          </paramList>
+          <infoLinkText></infoLinkText>
+          <infoLinkURL>http://nohost</infoLinkURL>
+          <infoText>
+            <content>Due to the football matches of FC Südtirol, Trienter Straße is closed on the affected days. Duration of the closure: 3 hours before kick-off until the end of the event.
+
+The route is as follows:
+
+Towards the city centre: unchanged until C.-Augusta-Str., Virgltunnel, Innsbrucker Straße, Virglbrücke, Mayr-Nusser-Str. and Verdiplatz.
+The stops "Parkstraße", "Angela-Nikoletti-Platz", "Untervirgl", "Trienter Straße", "Brüder-Bronzetti-Straße" and "Romstraße Unterführung" towards the city centre are not served.
+
+Exception: Line 10A serves the replacement stop "Angela-Nikoletti-Platz".
+
+Out of town: unchanged until Verdiplatz, then Mayr-Nusser-Str., Virglbrücke, Innsbrucker Straße., Virgltunnel, exit Rombrücke, Romstraße, C.-Augusta-Str. etc.
+
+The stops "Parkstraße", "Angela-Nikoletti-Platz", "Untervirgl", "Trienter Straße", "Brüder-Bronzetti-Straße" and "Romstraße Unterführung" are not served.</content>
+            <subtitle></subtitle>
+            <subject>Bozen: Routes changed due to football match / Stops not served</subject>
+            <outputClientText>
+              <htmlText>Due to the football matches of FC Südtirol, Trienter Straße is closed on the affected days. Duration of the closure: 3 hours before kick-off until the end of the event.
+
+The route is as follows:
+
+Towards the city centre: unchanged until C.-Augusta-Str., Virgltunnel, Innsbrucker Straße, Virglbrücke, Mayr-Nusser-Str. and Verdiplatz.
+The stops "Parkstraße", "Angela-Nikoletti-Platz", "Untervirgl", "Trienter Straße", "Brüder-Bronzetti-Straße" and "Romstraße Unterführung" towards the city centre are not served.
+
+Exception: Line 10A serves the replacement stop "Angela-Nikoletti-Platz".
+
+Out of town: unchanged until Verdiplatz, then Mayr-Nusser-Str., Virglbrücke, Innsbrucker Straße., Virgltunnel, exit Rombrücke, Romstraße, C.-Augusta-Str. etc.
+
+The stops "Parkstraße", "Angela-Nikoletti-Platz", "Untervirgl", "Trienter Straße", "Brüder-Bronzetti-Straße" and "Romstraße Unterführung" are not served.</htmlText>
+            </outputClientText>
+          </infoText>
+        </infoLink>
+        <infoLink language="it" rtStatus="owd">
+          <paramList>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>publisher</name>
+              <value>ems.comm.addinfo</value>
+            </param>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>infoType</name>
+              <value>lineInfo</value>
+            </param>
+            <param edit="0">
+              <type>system</type>
+              <name>infoID</name>
+              <value>sta-ddip-2026-4571510-2026-4571513</value>
+            </param>
+            <param edit="0">
+              <type>system</type>
+              <name>seqID</name>
+              <value>5</value>
+            </param>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>priority</name>
+              <value>normal</value>
+            </param>
+          </paramList>
+          <infoLinkText></infoLinkText>
+          <infoLinkURL>http://nohost</infoLinkURL>
+          <infoText>
+            <content>Viale Trento, a Bolzano rimane chiuso al traffico in occasione delle partite di calcio del FC Alto Adige. Durata della chiusura: 3 ore prima dell’inizio della partita e fino a fine manifestazione.
+
+Il percorso è il seguente:
+
+In direzione centro: invariato fino in via Claudia Augusta, poi galleria del Virgolo, via Innsbruck, ponte Virgolo, via Mayr Nusser, piazza Verdi, ecc.
+In direzione centro le fermate "via del Parco", "piazza Angela Nikoletti", "Piè di Virgolo", "viale Trento", "via Fratelli Bronzetti" e "via Roma Sottopasso" non vengono servite.
+
+Eccezione: La linea 10A serve la fermata sostitutiva "piazza Angela Nikoletti".
+
+In direzione periferia: invariato fino in piazza Verdi, poi via Mayr Nusser, ponte Virgolo, via Innsbruck, galleria del Virgolo, uscita ponte Roma, via Roma, via Claudia Augusta, ecc.
+
+Le fermate "via del Parco", "piazza Angela Nikoletti", "Piè di Virgolo", "viale Trento", "via Fratelli Bronzetti" e "via Roma Sottopasso" non vengono servite.</content>
+            <subtitle></subtitle>
+            <subject>Bolzano: Percorsi modificati per partita di calcio / fermate non servite</subject>
+            <outputClientText>
+              <htmlText>Viale Trento, a Bolzano rimane chiuso al traffico in occasione delle partite di calcio del FC Alto Adige. Durata della chiusura: 3 ore prima dell’inizio della partita e fino a fine manifestazione.
+
+Il percorso è il seguente:
+
+In direzione centro: invariato fino in via Claudia Augusta, poi galleria del Virgolo, via Innsbruck, ponte Virgolo, via Mayr Nusser, piazza Verdi, ecc.
+In direzione centro le fermate "via del Parco", "piazza Angela Nikoletti", "Piè di Virgolo", "viale Trento", "via Fratelli Bronzetti" e "via Roma Sottopasso" non vengono servite.
+
+Eccezione: La linea 10A serve la fermata sostitutiva "piazza Angela Nikoletti".
+
+In direzione periferia: invariato fino in piazza Verdi, poi via Mayr Nusser, ponte Virgolo, via Innsbruck, galleria del Virgolo, uscita ponte Roma, via Roma, via Claudia Augusta, ecc.
+
+Le fermate "via del Parco", "piazza Angela Nikoletti", "Piè di Virgolo", "viale Trento", "via Fratelli Bronzetti" e "via Roma Sottopasso" non vengono servite.</htmlText>
+            </outputClientText>
+          </infoText>
+        </infoLink>
+        <infoLink language="lad" rtStatus="owd">
+          <paramList>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>publisher</name>
+              <value>ems.comm.addinfo</value>
+            </param>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>infoType</name>
+              <value>lineInfo</value>
+            </param>
+            <param edit="0">
+              <type>system</type>
+              <name>infoID</name>
+              <value>sta-ddip-2026-4571510-2026-4571513</value>
+            </param>
+            <param edit="0">
+              <type>system</type>
+              <name>seqID</name>
+              <value>5</value>
+            </param>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>priority</name>
+              <value>normal</value>
+            </param>
+          </paramList>
+          <infoLinkText></infoLinkText>
+          <infoLinkURL>http://nohost</infoLinkURL>
+          <infoText>
+            <content>Viale Trento, a Bolzano rimane chiuso al traffico in occasione delle partite di calcio del FC Alto Adige. Durata della chiusura: 3 ore prima dell’inizio della partita e fino a fine manifestazione.
+
+Il percorso è il seguente:
+
+In direzione centro: invariato fino in via Claudia Augusta, poi galleria del Virgolo, via Innsbruck, ponte Virgolo, via Mayr Nusser, piazza Verdi, ecc.
+In direzione centro le fermate "via del Parco", "piazza Angela Nikoletti", "Piè di Virgolo", "viale Trento", "via Fratelli Bronzetti" e "via Roma Sottopasso" non vengono servite.
+
+Eccezione: La linea 10A serve la fermata sostitutiva "piazza Angela Nikoletti".
+
+In direzione periferia: invariato fino in piazza Verdi, poi via Mayr Nusser, ponte Virgolo, via Innsbruck, galleria del Virgolo, uscita ponte Roma, via Roma, via Claudia Augusta, ecc.
+
+Le fermate "via del Parco", "piazza Angela Nikoletti", "Piè di Virgolo", "viale Trento", "via Fratelli Bronzetti" e "via Roma Sottopasso" non vengono servite.</content>
+            <subtitle></subtitle>
+            <subject>Bolzano: Percorsi modificati per partita di calcio / fermate non servite</subject>
+            <outputClientText>
+              <htmlText>Viale Trento, a Bolzano rimane chiuso al traffico in occasione delle partite di calcio del FC Alto Adige. Durata della chiusura: 3 ore prima dell’inizio della partita e fino a fine manifestazione.
+
+Il percorso è il seguente:
+
+In direzione centro: invariato fino in via Claudia Augusta, poi galleria del Virgolo, via Innsbruck, ponte Virgolo, via Mayr Nusser, piazza Verdi, ecc.
+In direzione centro le fermate "via del Parco", "piazza Angela Nikoletti", "Piè di Virgolo", "viale Trento", "via Fratelli Bronzetti" e "via Roma Sottopasso" non vengono servite.
+
+Eccezione: La linea 10A serve la fermata sostitutiva "piazza Angela Nikoletti".
+
+In direzione periferia: invariato fino in piazza Verdi, poi via Mayr Nusser, ponte Virgolo, via Innsbruck, galleria del Virgolo, uscita ponte Roma, via Roma, via Claudia Augusta, ecc.
+
+Le fermate "via del Parco", "piazza Angela Nikoletti", "Piè di Virgolo", "viale Trento", "via Fratelli Bronzetti" e "via Roma Sottopasso" non vengono servite.</htmlText>
+            </outputClientText>
+          </infoText>
+        </infoLink>
+        <concernedLines>
+          <line line="80120" number="120" name="Bus 120" supplement=" " direction="H" directionName="Bolzano, Autostazione" partialNet="apb" motType="3" motCode="6" productId="20" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Bolzano, Autostazione</directionText>
+          </line>
+          <line line="80120" number="120" name="Bus 120" supplement=" " direction="R" directionName="Salorno, Autostazione" partialNet="apb" motType="3" motCode="6" productId="20" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Salorno, Autostazione</directionText>
+          </line>
+          <line line="01B07" number="7A" name="Bus 7A" supplement="A" direction="H" directionName="Bolzano, Via Castel Flavon Alta" partialNet="apb" motType="3" motCode="5" productId="22" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Bolzano, Via Castel Flavon Alta</directionText>
+          </line>
+          <line line="01B07" number="7B" name="Bus 7B" supplement="B" direction="H" directionName="Bolzano, Via Castel Flavon Alta" partialNet="apb" motType="3" motCode="5" productId="22" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Bolzano, Via Castel Flavon Alta</directionText>
+          </line>
+          <line line="01B10" number="10A" name="Bus 10A" supplement="A" direction="H" directionName="Bolzano, Ospedale" partialNet="apb" motType="3" motCode="5" productId="22" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Bolzano, Ospedale</directionText>
+          </line>
+          <line line="01B10" number="10B" name="Bus 10B" supplement="B" direction="H" directionName="Bolzano, Ospedale" partialNet="apb" motType="3" motCode="5" productId="22" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Bolzano, Ospedale</directionText>
+          </line>
+        </concernedLines>
+        <concernedStops/>
+        <genericParams>
+          <paramList>
+            <param edit="0">
+              <type>source</type>
+              <name>id</name>
+              <value>2026-4571510</value>
+            </param>
+            <param edit="0">
+              <type>source</type>
+              <name>seqId</name>
+              <value>1</value>
+            </param>
+            <param edit="0">
+              <type>source</type>
+              <name>format</name>
+              <value>SIRI-SX</value>
+            </param>
+            <param edit="0">
+              <type>source</type>
+              <name>producerRef</name>
+              <value>sta-ddip</value>
+            </param>
+            <param edit="0">
+              <type>distributor</type>
+              <name>producerRef</name>
+              <value>STA</value>
+            </param>
+            <param edit="0">
+              <type>distributor</type>
+              <name>deviceRef</name>
+              <value>55115a96393543a4b9963219fb9845b4</value>
+            </param>
+            <param edit="0">
+              <type>distributor</type>
+              <name>messageRef</name>
+              <value>6c4881ec-7c5d-554c-b604-df3e8789fce2</value>
+            </param>
+            <param edit="0">
+              <type>system</type>
+              <name>eventRef</name>
+              <value>a3024e2c9501419392047f4b0658b49b</value>
+            </param>
+            <param edit="0">
+              <type>ReasonGroup</type>
+              <name>AlertCause</name>
+              <value>specialEvent</value>
+            </param>
+          </paramList>
+        </genericParams>
+      </itdAdditionalTravelInformation>
+<itdAdditionalTravelInformation type="stopInfo" providerCode="sta-ddip" infoID="sta-ddip-2026-4571508-2026-4571509" seqID="3" deactivated="false" priority="normal" publish="1" valid="0" affectTimetable="true" affectAIRequest="true" affectTripRequest="true" affectDMRequest="true" affectPTKernel="false">
+        <sourceSystem>
+          <systemID>STA_EMS_prod</systemID>
+          <systemName>STA_Prod_EMS</systemName>
+          <systemType>EMS</systemType>
+        </sourceSystem>
+        <creationTime>
+          <itdDateTime>
+            <itdDate year="2026" month="11" day="11" weekday="4"/>
+            <itdTime hour="14" minute="28"/>
+          </itdDateTime>
+        </creationTime>
+        <lastModificationTime>
+          <itdDateTime>
+            <itdDate year="2026" month="11" day="13" weekday="6"/>
+            <itdTime hour="12" minute="42"/>
+          </itdDateTime>
+        </lastModificationTime>
+        <publicationDuration>
+          <itdDateTime>
+            <itdDate year="2026" month="08" day="08" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="07" day="31" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </publicationDuration>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2026" month="11" day="21" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2026" month="11" day="21" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2026" month="11" day="28" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2026" month="11" day="28" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2026" month="12" day="05" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2026" month="12" day="05" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2026" month="12" day="12" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2026" month="12" day="12" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2026" month="12" day="19" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2026" month="12" day="19" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2026" month="12" day="26" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2026" month="12" day="26" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2027" month="01" day="02" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="01" day="02" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2027" month="01" day="09" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="01" day="09" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2027" month="01" day="16" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="01" day="16" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2027" month="01" day="23" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="01" day="23" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2027" month="01" day="30" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="01" day="30" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2027" month="02" day="06" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="02" day="06" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2027" month="02" day="13" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="02" day="13" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2027" month="02" day="20" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="02" day="20" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2027" month="02" day="27" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="02" day="27" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2027" month="03" day="06" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="03" day="06" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2027" month="03" day="13" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="03" day="13" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2027" month="03" day="20" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="03" day="20" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2027" month="03" day="27" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="03" day="27" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2027" month="04" day="03" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="04" day="03" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2027" month="04" day="10" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="04" day="10" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2027" month="04" day="17" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="04" day="17" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2027" month="04" day="24" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="04" day="24" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2027" month="05" day="01" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="05" day="01" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2027" month="05" day="08" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="05" day="08" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2027" month="05" day="15" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="05" day="15" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2027" month="05" day="22" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="05" day="22" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2027" month="05" day="29" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="05" day="29" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2027" month="06" day="05" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="06" day="05" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2027" month="06" day="12" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="06" day="12" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2027" month="06" day="19" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="06" day="19" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2027" month="06" day="26" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="06" day="26" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2027" month="07" day="03" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="07" day="03" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2027" month="07" day="10" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="07" day="10" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2027" month="07" day="17" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="07" day="17" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2027" month="07" day="24" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="07" day="24" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <validityPeriod>
+          <itdDateTime>
+            <itdDate year="2027" month="07" day="31" weekday="7"/>
+            <itdTime hour="05" minute="00" second="00"/>
+          </itdDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="07" day="31" weekday="7"/>
+            <itdTime hour="14" minute="00" second="00"/>
+          </itdDateTime>
+        </validityPeriod>
+        <expirationDateTime>
+          <itdDateTime>
+            <itdDate year="2027" month="07" day="31" weekday="7"/>
+            <itdTime hour="14" minute="00"/>
+          </itdDateTime>
+        </expirationDateTime>
+        <infoLink language="de" rtStatus="owd">
+          <paramList>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>publisher</name>
+              <value>ems.comm.addinfo</value>
+            </param>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>infoType</name>
+              <value>stopInfo</value>
+            </param>
+            <param edit="0">
+              <type>system</type>
+              <name>infoID</name>
+              <value>sta-ddip-2026-4571508-2026-4571509</value>
+            </param>
+            <param edit="0">
+              <type>system</type>
+              <name>seqID</name>
+              <value>3</value>
+            </param>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>priority</name>
+              <value>normal</value>
+            </param>
+          </paramList>
+          <infoLinkText></infoLinkText>
+          <infoLinkURL>http://nohost</infoLinkURL>
+          <infoText>
+            <content>Von Samstag, 8. August 2026 bis voraussichtlich Ende Juli 2027 sind jeden Samstag von 05:00 Uhr bis ca. 18:00 Uhr einige Abschnitte der Freiheitsstraße und der Cesare-Battisti-Straße für den Verkehr gesperrt. Grund dafür ist der Samstagmarkt, der wegen Bauarbeiten am Siegesplatz vorübergehend verlegt wird.
+
+In diesem Zeitraum werden die betroffenen Linien über die Manci-Straße und die Diaz-Straße umgeleitet:
+
+- Die Linien 3, 7A, 7B, 8, 110 und 111 bedienen die Haltestellen „Mazziniplatz“ und „Petrarcapark“ (Steig A und B).
+
+- Die Linien 132, 201 und 204 bedienen ausschließlich die Haltestelle „Petrarcapark“ (Steig A und B).
+
+- Die Linien 5, 10A und 10B bedienen die Haltestellen „Mancistraße“ und „Petrarcapark“ (Steig A und B).
+
+- Die Linie 5 in Fahrtrichtung Firmian bedient die Haltestelle „Mazziniplatz“.
+
+Die Online-Fahrplanauskunft ist aktualisiert
+https://www.suedtirolmobil.info/fileadmin/pdf/SIZ/2026-09_Bozen-Longon.pdf</content>
+            <subtitle></subtitle>
+            <subject>Bozen: Umleitung wegen Samstagmarkt</subject>
+            <outputClientText>
+              <htmlText>Von Samstag, 8. August 2026 bis voraussichtlich Ende Juli 2027 sind jeden Samstag von 05:00 Uhr bis ca. 18:00 Uhr einige Abschnitte der Freiheitsstraße und der Cesare-Battisti-Straße für den Verkehr gesperrt. Grund dafür ist der Samstagmarkt, der wegen Bauarbeiten am Siegesplatz vorübergehend verlegt wird.
+
+In diesem Zeitraum werden die betroffenen Linien über die Manci-Straße und die Diaz-Straße umgeleitet:
+
+- Die Linien 3, 7A, 7B, 8, 110 und 111 bedienen die Haltestellen „Mazziniplatz“ und „Petrarcapark“ (Steig A und B).
+
+- Die Linien 132, 201 und 204 bedienen ausschließlich die Haltestelle „Petrarcapark“ (Steig A und B).
+
+- Die Linien 5, 10A und 10B bedienen die Haltestellen „Mancistraße“ und „Petrarcapark“ (Steig A und B).
+
+- Die Linie 5 in Fahrtrichtung Firmian bedient die Haltestelle „Mazziniplatz“.
+
+Die Online-Fahrplanauskunft ist aktualisiert
+https://www.suedtirolmobil.info/fileadmin/pdf/SIZ/2026-09_Bozen-Longon.pdf</htmlText>
+              <wmlText>Bozen: Umleitung wegen Samstagmarkt</wmlText>
+              <smsText>Vom 8.10.2026 bis voraussichtlich Ende Juli 2027 sind jeden Samstag von 05:00 Uhr bis ca. 18:00 Uhr einige Abschnitte der Freiheitsstraße und der Cesare-Battisti-Straße gesperrt.</smsText>
+            </outputClientText>
+          </infoText>
+        </infoLink>
+        <infoLink language="en" rtStatus="owd">
+          <paramList>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>publisher</name>
+              <value>ems.comm.addinfo</value>
+            </param>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>infoType</name>
+              <value>stopInfo</value>
+            </param>
+            <param edit="0">
+              <type>system</type>
+              <name>infoID</name>
+              <value>sta-ddip-2026-4571508-2026-4571509</value>
+            </param>
+            <param edit="0">
+              <type>system</type>
+              <name>seqID</name>
+              <value>3</value>
+            </param>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>priority</name>
+              <value>normal</value>
+            </param>
+          </paramList>
+          <infoLinkText></infoLinkText>
+          <infoLinkURL>http://nohost</infoLinkURL>
+          <infoText>
+            <content>From Saturday, 8 August 2026 until presumably the end of July 2027, some sections of Freiheitsstraße and Cesare-Battisti-Straße will be closed to traffic every Saturday from 05:00 to approx. 18:00. The reason is the Saturday market, which is being temporarily relocated due to construction works at Siegesplatz.
+
+During this period, the affected lines will be diverted via Manci-Straße and Diaz-Straße:
+
+- Lines 3, 7A, 7B, 8, 110 and 111 will serve the stops "Mazziniplatz" and "Petrarcapark" (platform A and B).
+
+- Lines 132, 201 and 204 will serve only the stop "Petrarcapark" (platform A and B).
+
+- Lines 5, 10A and 10B will serve the stops "Mancistraße" and "Petrarcapark" (platform A and B).
+
+- Line 5 in the direction of Firmian will serve the stop "Mazziniplatz".
+
+The online timetable information has been updated
+https://www.suedtirolmobil.info/fileadmin/pdf/SIZ/2026-09_Bozen-Longon.pdf</content>
+            <subtitle></subtitle>
+            <subject>Bozen: Diversion due to Saturday market</subject>
+            <outputClientText>
+              <htmlText>From Saturday, 8 August 2026 until presumably the end of July 2027, some sections of Freiheitsstraße and Cesare-Battisti-Straße will be closed to traffic every Saturday from 05:00 to approx. 18:00. The reason is the Saturday market, which is being temporarily relocated due to construction works at Siegesplatz.
+
+During this period, the affected lines will be diverted via Manci-Straße and Diaz-Straße:
+
+- Lines 3, 7A, 7B, 8, 110 and 111 will serve the stops "Mazziniplatz" and "Petrarcapark" (platform A and B).
+
+- Lines 132, 201 and 204 will serve only the stop "Petrarcapark" (platform A and B).
+
+- Lines 5, 10A and 10B will serve the stops "Mancistraße" and "Petrarcapark" (platform A and B).
+
+- Line 5 in the direction of Firmian will serve the stop "Mazziniplatz".
+
+The online timetable information has been updated
+https://www.suedtirolmobil.info/fileadmin/pdf/SIZ/2026-09_Bozen-Longon.pdf</htmlText>
+              <wmlText>3, 5, 7A, 7B, 8, 10A, 10B, 110, 111, 132, 201, 204: Saturday market in Bozen</wmlText>
+              <smsText>From 8.10.2026 until presumably the end of July 2027, some sections of Freiheitsstraße and Cesare-Battisti-Straße will be closed every Saturday from 05:00 to approx. 18:00.</smsText>
+            </outputClientText>
+          </infoText>
+        </infoLink>
+        <infoLink language="it" rtStatus="owd">
+          <paramList>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>publisher</name>
+              <value>ems.comm.addinfo</value>
+            </param>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>infoType</name>
+              <value>stopInfo</value>
+            </param>
+            <param edit="0">
+              <type>system</type>
+              <name>infoID</name>
+              <value>sta-ddip-2026-4571508-2026-4571509</value>
+            </param>
+            <param edit="0">
+              <type>system</type>
+              <name>seqID</name>
+              <value>3</value>
+            </param>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>priority</name>
+              <value>normal</value>
+            </param>
+          </paramList>
+          <infoLinkText></infoLinkText>
+          <infoLinkURL>http://nohost</infoLinkURL>
+          <infoText>
+            <content>Da sabato 8 agosto 2026 fino presumibilmente a fine luglio 2027, ogni sabato dalle ore 05:00 alle ore 18:00 circa, alcuni tratti di Corso della Libertà e di via Cesare Battisti sono chiusi al traffico. Il motivo è il mercato del sabato, temporaneamente spostato a causa di lavori in piazza Vittoria.
+
+In tale periodo le linee interessate saranno deviate su via Manci e via Diaz:
+
+- Le linee 3, 7A, 7B, 8, 110 e 111 servono le fermate "piazza Mazzini" e "parco Petrarca" (banchina A e B).
+
+- Le linee 132, 201 e 204 servono esclusivamente la fermata "parco Petrarca" (banchina A e B).
+
+- Le linee 5, 10A e 10B servono le fermate "via Manci" e "parco Petrarca" (banchina A e B).
+
+- La linea 5, in direzione Firmian, serve la fermata "piazza Mazzini".
+
+La ricerca online degli orari è aggiornata.
+https://www.suedtirolmobil.info/fileadmin/pdf/SIZ/2026-09_Bozen-Longon.pdf</content>
+            <subtitle></subtitle>
+            <subject>Bolzano: deviazioni per il mercato del sabato</subject>
+            <outputClientText>
+              <htmlText>Da sabato 8 agosto 2026 fino presumibilmente a fine luglio 2027, ogni sabato dalle ore 05:00 alle ore 18:00 circa, alcuni tratti di Corso della Libertà e di via Cesare Battisti sono chiusi al traffico. Il motivo è il mercato del sabato, temporaneamente spostato a causa di lavori in piazza Vittoria.
+
+In tale periodo le linee interessate saranno deviate su via Manci e via Diaz:
+
+- Le linee 3, 7A, 7B, 8, 110 e 111 servono le fermate "piazza Mazzini" e "parco Petrarca" (banchina A e B).
+
+- Le linee 132, 201 e 204 servono esclusivamente la fermata "parco Petrarca" (banchina A e B).
+
+- Le linee 5, 10A e 10B servono le fermate "via Manci" e "parco Petrarca" (banchina A e B).
+
+- La linea 5, in direzione Firmian, serve la fermata "piazza Mazzini".
+
+La ricerca online degli orari è aggiornata.
+https://www.suedtirolmobil.info/fileadmin/pdf/SIZ/2026-09_Bozen-Longon.pdf</htmlText>
+              <wmlText>3, 5, 7A, 7B, 8, 10A, 10B, 110, 111, 132, 201, 204: mercato del sabato a Bolzano</wmlText>
+              <smsText>Dall'8.10.2026 fino presumibilmente a fine luglio 2027, ogni sabato dalle ore 05:00 alle ore 18:00 circa, alcuni tratti di corso della Libertà e di via Cesare Battisti sono chiusi.</smsText>
+            </outputClientText>
+          </infoText>
+        </infoLink>
+        <infoLink language="lad" rtStatus="owd">
+          <paramList>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>publisher</name>
+              <value>ems.comm.addinfo</value>
+            </param>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>infoType</name>
+              <value>stopInfo</value>
+            </param>
+            <param edit="0">
+              <type>system</type>
+              <name>infoID</name>
+              <value>sta-ddip-2026-4571508-2026-4571509</value>
+            </param>
+            <param edit="0">
+              <type>system</type>
+              <name>seqID</name>
+              <value>3</value>
+            </param>
+            <param edit="0">
+              <type>addInfoParam</type>
+              <name>priority</name>
+              <value>normal</value>
+            </param>
+          </paramList>
+          <infoLinkText></infoLinkText>
+          <infoLinkURL>http://nohost</infoLinkURL>
+          <infoText>
+            <content>Da sabato 8 agosto 2026 fino presumibilmente a fine luglio 2027, ogni sabato dalle ore 05:00 alle ore 18:00 circa, alcuni tratti di Corso della Libertà e di via Cesare Battisti sono chiusi al traffico. Il motivo è il mercato del sabato, temporaneamente spostato a causa di lavori in piazza Vittoria.
+
+In tale periodo le linee interessate saranno deviate su via Manci e via Diaz:
+
+- Le linee 3, 7A, 7B, 8, 110 e 111 servono le fermate "piazza Mazzini" e "parco Petrarca" (banchina A e B).
+
+- Le linee 132, 201 e 204 servono esclusivamente la fermata "parco Petrarca" (banchina A e B).
+
+- Le linee 5, 10A e 10B servono le fermate "via Manci" e "parco Petrarca" (banchina A e B).
+
+- La linea 5, in direzione Firmian, serve la fermata "piazza Mazzini".
+
+La ricerca online degli orari è aggiornata.
+https://www.suedtirolmobil.info/fileadmin/pdf/SIZ/2026-09_Bozen-Longon.pdf</content>
+            <subtitle></subtitle>
+            <subject>Bolzano: deviazioni per il mercato del sabato</subject>
+            <outputClientText>
+              <htmlText>Da sabato 8 agosto 2026 fino presumibilmente a fine luglio 2027, ogni sabato dalle ore 05:00 alle ore 18:00 circa, alcuni tratti di Corso della Libertà e di via Cesare Battisti sono chiusi al traffico. Il motivo è il mercato del sabato, temporaneamente spostato a causa di lavori in piazza Vittoria.
+
+In tale periodo le linee interessate saranno deviate su via Manci e via Diaz:
+
+- Le linee 3, 7A, 7B, 8, 110 e 111 servono le fermate "piazza Mazzini" e "parco Petrarca" (banchina A e B).
+
+- Le linee 132, 201 e 204 servono esclusivamente la fermata "parco Petrarca" (banchina A e B).
+
+- Le linee 5, 10A e 10B servono le fermate "via Manci" e "parco Petrarca" (banchina A e B).
+
+- La linea 5, in direzione Firmian, serve la fermata "piazza Mazzini".
+
+La ricerca online degli orari è aggiornata.
+https://www.suedtirolmobil.info/fileadmin/pdf/SIZ/2026-09_Bozen-Longon.pdf</htmlText>
+              <wmlText>3, 5, 7A, 7B, 8, 10A, 10B, 110, 111, 132, 201, 204: mercato del sabato a Bolzano</wmlText>
+              <smsText>Dall'8.10.2026 fino presumibilmente a fine luglio 2027, ogni sabato dalle ore 05:00 alle ore 18:00 circa, alcuni tratti di corso della Libertà e di via Cesare Battisti sono chiusi.</smsText>
+            </outputClientText>
+          </infoText>
+        </infoLink>
+        <concernedLines>
+          <line line="80132" number="132" name="Bus 132" supplement=" " direction="H" directionName="Bolzano, Autostazione" partialNet="apb" motType="3" motCode="6" productId="20" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Bolzano, Autostazione</directionText>
+          </line>
+          <line line="80132" number="132" name="Bus 132" supplement=" " direction="R" directionName="S. Nicolò" partialNet="apb" motType="3" motCode="6" productId="20" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>S. Nicolò</directionText>
+          </line>
+          <line line="80204" number="204" name="Bus 204" supplement=" " direction="H" directionName="Bolzano, Autostazione" partialNet="apb" motType="3" motCode="6" productId="20" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Bolzano, Autostazione</directionText>
+          </line>
+          <line line="80204" number="204" name="Bus 204" supplement=" " direction="R" directionName="Merano, School Village" partialNet="apb" motType="3" motCode="6" productId="20" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Merano, School Village</directionText>
+          </line>
+          <line line="01B03" number="3" name="Bus 3" supplement=" " direction="H" directionName="Bolzano, Stazione di Bolzano Casanova" partialNet="apb" motType="3" motCode="5" productId="22" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Bolzano, Stazione di Bolzano Casanova</directionText>
+          </line>
+          <line line="01B03" number="3" name="Bus 3" supplement=" " direction="R" directionName="Bolzano, Via Alto Adige" partialNet="apb" motType="3" motCode="5" productId="22" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Bolzano, Via Alto Adige</directionText>
+          </line>
+          <line line="01B05" number="5" name="Bus 5" supplement=" " direction="H" directionName="Bolzano, Firmian" partialNet="apb" motType="3" motCode="5" productId="22" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Bolzano, Firmian</directionText>
+          </line>
+          <line line="01B05" number="5" name="Bus 5" supplement=" " direction="R" directionName="Bolzano, Via Alto Adige" partialNet="apb" motType="3" motCode="5" productId="22" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Bolzano, Via Alto Adige</directionText>
+          </line>
+          <line line="01B07" number="7A" name="Bus 7A" supplement="A" direction="H" directionName="Bolzano, Via Castel Flavon Alta" partialNet="apb" motType="3" motCode="5" productId="22" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Bolzano, Via Castel Flavon Alta</directionText>
+          </line>
+          <line line="01B07" number="7B" name="Bus 7B" supplement="B" direction="H" directionName="Bolzano, Via Castel Flavon Alta" partialNet="apb" motType="3" motCode="5" productId="22" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Bolzano, Via Castel Flavon Alta</directionText>
+          </line>
+          <line line="01B08" number="8" name="Bus 8" supplement=" " direction="H" directionName="Bolzano, Ospedale Padiglione W" partialNet="apb" motType="3" motCode="5" productId="22" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Bolzano, Ospedale Padiglione W</directionText>
+          </line>
+          <line line="01B08" number="8" name="Bus 8" supplement=" " direction="R" directionName="Cardano, Via Brennero" partialNet="apb" motType="3" motCode="5" productId="22" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Cardano, Via Brennero</directionText>
+          </line>
+          <line line="01B10" number="10A" name="Bus 10A" supplement="A" direction="H" directionName="Bolzano, Ospedale" partialNet="apb" motType="3" motCode="5" productId="22" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Bolzano, Ospedale</directionText>
+          </line>
+          <line line="01B10" number="10B" name="Bus 10B" supplement="B" direction="H" directionName="Bolzano, Ospedale" partialNet="apb" motType="3" motCode="5" productId="22" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Bolzano, Ospedale</directionText>
+          </line>
+          <line line="01110" number="110" name="Bus 110" supplement=" " direction="R" directionName="Bolzano, Stazione di Bolzano" partialNet="apb" motType="3" motCode="5" productId="22" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Bolzano, Stazione di Bolzano</directionText>
+          </line>
+          <line line="01110" number="110" name="Bus 110" supplement=" " direction="H" directionName="Bronzolo, Raif" partialNet="apb" motType="3" motCode="5" productId="22" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Bronzolo, Raif</directionText>
+          </line>
+          <line line="01111" number="111" name="Bus 111" supplement=" " direction="R" directionName="Bolzano, Stazione di Bolzano" partialNet="apb" motType="3" motCode="5" productId="22" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Bolzano, Stazione di Bolzano</directionText>
+          </line>
+          <line line="01111" number="111" name="Bus 111" supplement=" " direction="H" directionName="Bronzolo, Raif" partialNet="apb" motType="3" motCode="5" productId="22" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Bronzolo, Raif</directionText>
+          </line>
+          <line line="01201" number="201" name="Bus 201" supplement=" " direction="H" directionName="Bolzano, Funivia del Renon" partialNet="apb" motType="3" motCode="5" productId="22" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Bolzano, Funivia del Renon</directionText>
+          </line>
+          <line line="01201" number="201" name="Bus 201" supplement=" " direction="R" directionName="Merano, Via Karl Wolf" partialNet="apb" motType="3" motCode="5" productId="22" mtSubcode="0">
+            <itdOperator>
+              <code>004</code>
+              <name>SASA</name>
+            </itdOperator>
+            <directionText>Merano, Via Karl Wolf</directionText>
+          </line>
+        </concernedLines>
+        <concernedStops>
+          <stop stopID="66000465" name="Bolzano, Via Longon" globalID="it:22021:465">
+            <gids>
+              <gid selected="1" name="Bolzano, Via Longon">it:22021:465:0:5035</gid>
+              <gid selected="1" name="Bolzano, Via Longon">it:22021:465:0:5036</gid>
+            </gids>
+          </stop>
+        </concernedStops>
+        <genericParams>
+          <paramList>
+            <param edit="0">
+              <type>source</type>
+              <name>id</name>
+              <value>2026-4571508</value>
+            </param>
+            <param edit="0">
+              <type>source</type>
+              <name>seqId</name>
+              <value>1</value>
+            </param>
+            <param edit="0">
+              <type>source</type>
+              <name>format</name>
+              <value>SIRI-SX</value>
+            </param>
+            <param edit="0">
+              <type>source</type>
+              <name>producerRef</name>
+              <value>sta-ddip</value>
+            </param>
+            <param edit="0">
+              <type>distributor</type>
+              <name>producerRef</name>
+              <value>STA</value>
+            </param>
+            <param edit="0">
+              <type>distributor</type>
+              <name>deviceRef</name>
+              <value>55115a96393543a4b9963219fb9845b4</value>
+            </param>
+            <param edit="0">
+              <type>distributor</type>
+              <name>messageRef</name>
+              <value>300c599e-bf28-5394-9ef0-e8418ba5a1d0</value>
+            </param>
+            <param edit="0">
+              <type>system</type>
+              <name>eventRef</name>
+              <value>8436fa7995b19c0bcb41e364c601481a</value>
+            </param>
+            <param edit="0">
+              <type>ReasonGroup</type>
+              <name>AlertCause</name>
+              <value>specialEvent</value>
+            </param>
+          </paramList>
+        </genericParams>
+      </itdAdditionalTravelInformation>
+</itdAdditionalTravelInformationList>
+</itdRequest>

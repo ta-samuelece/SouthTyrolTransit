@@ -117,7 +117,9 @@ object LineNames {
 
 /** Merges alerts that describe the same disruption, preferring GTFS-RT data and unioning scopes. */
 object AlertDeduplicator {
-    private fun texts(alert: ServiceAlert) = alert.headers.values.map(TextNormalizer::key).filter { it.length > 3 }.toSet()
+    /** What two alerts must share to be one: their titles, or for an untitled one its texts (EFA repeats a notice per occurrence). */
+    private fun texts(alert: ServiceAlert) = (alert.headers.values.ifEmpty { alert.descriptions.values })
+        .map(TextNormalizer::key).filter { it.length > 3 }.toSet()
 
     fun merge(alerts: List<ServiceAlert>): List<ServiceAlert> {
         val groups = mutableListOf<MutableList<ServiceAlert>>()

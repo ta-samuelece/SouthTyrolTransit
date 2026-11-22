@@ -5,7 +5,7 @@ description: Which EFA fields count as realtime or cancelled, the different dela
 tags: [efa, parsing, xml, realtime, alerts, security]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-10-30T12:00:00Z"
+  at: "2026-11-22T12:30:00Z"
 verified:
   by: claude-code/claude-opus-5-5
   at: "2026-11-13T18:30:00Z"
@@ -79,8 +79,13 @@ status: stable
 # AddInfo (alerts)
 
 Items with `publish="0"`, `deactivated="true"` or an end date in the past are dropped at parse time.
-Header is `infoText/subtitle`, else `infoLinkText` (skipping the literal `Information`); body is `subject`
-plus HTML-stripped `content` (`subject` is not stripped). `stopBlocking`/`lineBlocking` map to
+Header is `infoText/subtitle`, else `infoLinkText` (skipping the literal `Information`), else `subject`
+when there is a `content`; the body is HTML-stripped `content`, preceded by `subject` only when the subject
+did not become the header (`subject` is not stripped). Since November 2026 STA leaves subtitle and link
+text empty on every notice (68 of 68 on 2026-11-22), so the subject is the title; without that fallback
+every card read "Service notice". STA also publishes a recurring notice once per occurrence, with
+identical text and only the `infoID` suffix differing (13 copies of the Bolzano football diversion,
+fixture `efa_addinfo_untitled.xml`); `AlertDeduplicator` merges them. `stopBlocking`/`lineBlocking` map to
 `NO_SERVICE`, everything else `OTHER_EFFECT` - so a new AddInfo type stays non-disruptive until mapped.
 `lineNames` come from `<line number>` (`7A`, `280`). The fixture carries all languages per item although a
 language is requested (inferred: the cache key need not be language-specific).

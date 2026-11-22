@@ -442,7 +442,7 @@ internal fun TransitLeg(leg: Leg, now: Instant, onStop: (String) -> Unit, run: T
             val bikes = run?.trip?.bikes ?: Bikes.UNKNOWN
             if (distance != null || bikes != Bikes.UNKNOWN) {
                 val pill = MaterialTheme.colorScheme.surfaceContainerHighest
-                androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                androidx.compose.foundation.layout.FlexBox(config = { wrap(androidx.compose.foundation.layout.FlexWrap.Wrap); columnGap(8.dp); rowGap(8.dp) }) {
                     if (distance != null) org.southtyrol.transit.feature.common.InfoPill(Format.distance(distance), pill, icon = Icons.Rounded.Straighten)
                     org.southtyrol.transit.feature.common.BikesPill(bikes, pill)
                 }

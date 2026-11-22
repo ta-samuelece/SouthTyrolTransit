@@ -1,5 +1,3 @@
-@file:OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
-
 package org.southtyrol.transit.feature.map
 
 import androidx.compose.foundation.background
@@ -7,7 +5,9 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.FlexAlignItems
+import androidx.compose.foundation.layout.FlexBox
+import androidx.compose.foundation.layout.FlexWrap
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.heightIn
@@ -88,7 +88,7 @@ fun ChargingSheet(p: MobilityPoint, now: Instant) {
     val available = p.available
     val updatedAt = p.updatedAt
     if (c.hasStatus && available != null) {
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp), itemVerticalAlignment = Alignment.CenterVertically) {
+        FlexBox(config = { wrap(FlexWrap.Wrap); columnGap(8.dp); rowGap(4.dp); alignItems(FlexAlignItems.Center) }) {
             Text(pluralStringResource(R.plurals.charging_points_free, available, available, c.points.size), style = MaterialTheme.typography.titleLarge)
             if (updatedAt != null) InfoPill(stringResource(R.string.charging_status_as_of, reportTime(updatedAt, now)), colors.surfaceContainerHighest, icon = Icons.Rounded.Schedule)
         }
@@ -109,7 +109,7 @@ fun ChargingSheet(p: MobilityPoint, now: Instant) {
         if (c.rfid) stringResource(R.string.charging_rfid) else null,
     )
     if (c.fast || pills.isNotEmpty()) {
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlexBox(config = { wrap(FlexWrap.Wrap); columnGap(8.dp); rowGap(8.dp) }) {
             // Spelled out first: the map's bolt badge alone is easy to miss. Its leading badge repeats that bolt.
             if (c.fast) InfoPill(stringResource(R.string.charging_fast), colors.surfaceContainerHighest, leading = { FastBadge() })
             pills.forEach { InfoPill(it, colors.surfaceContainerHighest) }
@@ -154,7 +154,7 @@ private fun ChargingGroupRow(g: ChargingGroup, shape: Shape) {
                 Text(title, style = MaterialTheme.typography.titleMedium)
                 Text(detail, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
                 if (g.hasStatus && g.statuses.size <= MAX_STATUS_SQUARES) {
-                    FlowRow(Modifier.padding(top = 2.dp), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    FlexBox(Modifier.padding(top = 2.dp), config = { wrap(FlexWrap.Wrap); columnGap(4.dp); rowGap(4.dp) }) {
                         g.statuses.sortedBy { it.ordinal }.forEach { StatusSquare(it) }
                     }
                 }

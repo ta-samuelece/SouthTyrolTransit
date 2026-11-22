@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class, FlowPreview::class)
+@file:OptIn(ExperimentalMaterial3Api::class, FlowPreview::class)
 
 package org.southtyrol.transit.feature.common
 
@@ -6,8 +6,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.FlexBox
+import androidx.compose.foundation.layout.FlexWrap
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,8 +21,12 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.InputTransformation
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.clearText
+import androidx.compose.foundation.text.input.maxLengthTrim
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
@@ -271,19 +275,19 @@ fun PlaceSearchSheet(
     }
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(Modifier.padding(horizontal = 16.dp)) {
+            val field = rememberQueryFieldState(state.query, viewModel::query)
             OutlinedTextField(
-                value = state.query,
-                onValueChange = viewModel::query,
+                state = field,
                 modifier = Modifier.fillMaxWidth().focusRequester(focus),
                 placeholder = { Text(hint) },
                 leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
                 trailingIcon = {
-                    if (state.query.isNotEmpty()) IconButton(onClick = { viewModel.query("") }) { Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.action_clear)) }
+                    if (field.text.isNotEmpty()) IconButton(onClick = { field.clearText() }) { Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.action_clear)) }
                 },
-                singleLine = true,
+                lineLimits = TextFieldLineLimits.SingleLine,
                 shape = RoundedCornerShape(28.dp),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = { state.results.firstOrNull()?.let(onChoose) }),
+                onKeyboardAction = { state.results.firstOrNull()?.let(onChoose) },
             )
             Spacer(Modifier.size(8.dp))
         }
@@ -359,7 +363,7 @@ private enum class Slot { HOME, WORK, OTHER }
 fun PlaceEditorSheet(place: Place, existing: SavedItem?, onDismiss: () -> Unit, viewModel: PlacesViewModel = hiltViewModel()) {
     val savedPlaces by viewModel.savedPlaces.collectAsStateWithLifecycle()
     var slot by rememberSaveable { mutableStateOf(Slot.OTHER.name) }
-    var name by rememberSaveable { mutableStateOf(existing?.label ?: place.name.take(MAX_NAME)) }
+    val name = rememberTextFieldState(initialText = existing?.label ?: place.name.take(MAX_NAME))
     var icon by rememberSaveable { mutableStateOf(existing?.icon?.ifBlank { null } ?: PlaceIcon.STAR.key) }
     val chosen = Slot.valueOf(slot)
     val homeLabel = stringResource(R.string.place_home)
@@ -404,16 +408,16 @@ fun PlaceEditorSheet(place: Place, existing: SavedItem?, onDismiss: () -> Unit, 
             }
             if (!fixed && chosen == Slot.OTHER) {
                 OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it.take(MAX_NAME) },
+                    state = name,
+                    inputTransformation = InputTransformation.maxLengthTrim(MAX_NAME),
                     label = { Text(stringResource(R.string.place_name)) },
                     supportingText = { Text(stringResource(R.string.place_name_hint)) },
-                    singleLine = true,
+                    lineLimits = TextFieldLineLimits.SingleLine,
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Text(stringResource(R.string.place_icon), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                FlexBox(config = { wrap(FlexWrap.Wrap); columnGap(8.dp); rowGap(8.dp) }) {
                     PlaceIcon.entries.forEach { option -> IconChoice(option, selected = option.key == icon) { icon = option.key } }
                 }
             }
@@ -425,12 +429,12 @@ fun PlaceEditorSheet(place: Place, existing: SavedItem?, onDismiss: () -> Unit, 
                 } else {
                     TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
                     Button(
-                        enabled = chosen != Slot.OTHER || name.isNotBlank(),
+                        enabled = chosen != Slot.OTHER || name.text.isNotBlank(),
                         onClick = {
                             when (chosen) {
                                 Slot.HOME -> viewModel.save(SavedRepository.HOME, homeLabel, "", place)
                                 Slot.WORK -> viewModel.save(SavedRepository.WORK, workLabel, "", place)
-                                Slot.OTHER -> viewModel.save(existing?.id, name.trim(), icon, place)
+                                Slot.OTHER -> viewModel.save(existing?.id, name.text.toString().trim(), icon, place)
                             }
                             onDismiss()
                         },

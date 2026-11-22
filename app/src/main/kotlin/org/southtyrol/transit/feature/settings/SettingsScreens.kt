@@ -54,7 +54,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.FlexBox
+import androidx.compose.foundation.layout.FlexWrap
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.selection.selectableGroup
@@ -269,7 +270,7 @@ fun SettingsScreen(navigator: Navigator, viewModel: SettingsViewModel = hiltView
                 item { ChoiceRow(stringResource(R.string.map_type), stringResource(mapBaseLabel(prefs.mapBase))) { choice = CHOICE_MAP_BASE } }
                 item {
                     ChipLabel(stringResource(R.string.settings_map_layers))
-                    FlowRow(Modifier.padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FlexBox(Modifier.padding(bottom = 8.dp), config = { wrap(FlexWrap.Wrap); columnGap(8.dp) }) {
                         ToggleChip(stringResource(R.string.map_layer_stops), prefs.showStops) { viewModel.showStops(it) }
                         ToggleChip(stringResource(R.string.map_layer_vehicles), prefs.showVehicles) { viewModel.showVehicles(it) }
                         ToggleChip(stringResource(R.string.map_layer_parking), MobilityKind.PARKING in prefs.mobilityLayers) { viewModel.layer(MobilityKind.PARKING, it) }
@@ -595,7 +596,7 @@ class TicketsViewModel @Inject constructor(val ticketing: TicketingProvider) : V
 /** The launcher icon variants as round previews; the selected one is outlined and checked. */
 @Composable
 private fun AppIconPicker(selected: org.southtyrol.transit.ui.AppIcon?, onPicked: (org.southtyrol.transit.ui.AppIcon) -> Unit) {
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.selectableGroup()) {
+    FlexBox(Modifier.selectableGroup(), config = { wrap(FlexWrap.Wrap); columnGap(12.dp); rowGap(12.dp) }) {
         org.southtyrol.transit.ui.AppIcon.entries.forEach { icon ->
             val isSelected = icon == selected
             val label = stringResource(icon.label)

@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalLayoutApi::class)
-
 package org.southtyrol.transit.feature.planner
 
 import androidx.compose.animation.AnimatedVisibility
@@ -9,8 +7,8 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.FlexBox
+import androidx.compose.foundation.layout.FlexWrap
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -472,7 +470,7 @@ private fun ModesCard(state: PlannerState, viewModel: PlannerViewModel) {
     Surface(shape = RoundedCornerShape(16.dp), color = colors.surface, modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(stringResource(R.string.planner_modes), style = MaterialTheme.typography.titleSmall)
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlexBox(config = { wrap(FlexWrap.Wrap); columnGap(8.dp) }) {
                 listOf(TransportMode.TRAIN, TransportMode.BUS, TransportMode.CITY_BUS, TransportMode.CABLE_CAR, TransportMode.ON_DEMAND).forEach { mode ->
                     val included = mode !in state.excludedModes
                     FilterChip(

@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalLayoutApi::class)
-
 package org.southtyrol.transit.feature.journey
 
 import androidx.compose.animation.animateContentSize
@@ -10,8 +8,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.window.core.layout.WindowSizeClass
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.FlexAlignItems
+import androidx.compose.foundation.layout.FlexBox
+import androidx.compose.foundation.layout.FlexWrap
+import androidx.compose.foundation.layout.FlexJustifyContent
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -247,7 +247,7 @@ fun JourneyCard(journey: Journey, selected: Boolean, onClick: () -> Unit, modifi
                 }
             }
             // Long times (12-hour clock) can leave no room beside them: the duration then moves below, whole.
-            FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalArrangement = Arrangement.spacedBy(4.dp), itemVerticalAlignment = Alignment.Bottom) {
+            FlexBox(Modifier.fillMaxWidth(), config = { wrap(FlexWrap.Wrap); justifyContent(FlexJustifyContent.SpaceBetween); rowGap(4.dp); alignItems(FlexAlignItems.End) }) {
                 Row(verticalAlignment = Alignment.Bottom) {
                     TimeColumn(journey.departure, journey.bestDeparture, journey.cancelled)
                     Text("  –  ", style = TimeStyles.large, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -255,7 +255,7 @@ fun JourneyCard(journey: Journey, selected: Boolean, onClick: () -> Unit, modifi
                 }
                 Text(Format.duration(journey.duration), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false)
             }
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp), itemVerticalAlignment = Alignment.CenterVertically) {
+            FlexBox(config = { wrap(FlexWrap.Wrap); columnGap(6.dp); rowGap(6.dp); alignItems(FlexAlignItems.Center) }) {
                 journey.legs.forEachIndexed { index, leg ->
                     if (index > 0) Icon(Icons.Rounded.ChevronRight, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.outline)
                     if (leg.mode == TransportMode.WALK) {
@@ -281,7 +281,7 @@ fun JourneyCard(journey: Journey, selected: Boolean, onClick: () -> Unit, modifi
             }
             val delay = journey.maxDelaySeconds
             if (journey.cancelled || journey.hasRealtime || journey.hasNotices) {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FlexBox(config = { wrap(FlexWrap.Wrap); columnGap(8.dp) }) {
                     when {
                         journey.cancelled -> StatusPill(stringResource(org.southtyrol.transit.design.R.string.ds_cancelled), status.cancelled, Icons.Rounded.Warning)
                         delay >= 120 -> StatusPill(stringResource(R.string.journey_delayed, (delay / 60).toInt()), status.delayed, Icons.Rounded.Podcasts)

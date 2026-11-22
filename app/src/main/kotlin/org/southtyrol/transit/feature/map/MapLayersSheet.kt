@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@file:OptIn(ExperimentalMaterial3Api::class)
 
 package org.southtyrol.transit.feature.map
 
@@ -8,7 +8,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.FlexBox
+import androidx.compose.foundation.layout.FlexWrap
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -87,18 +88,18 @@ internal fun MapLayersSheet(
 
             // The overlays grouped by how the user travels, so the bike layers sit together.
             SheetHeader(stringResource(R.string.map_layers_transit))
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlexBox(config = { wrap(FlexWrap.Wrap); columnGap(8.dp) }) {
                 ToggleChip(stringResource(R.string.map_layer_stops), prefs.showStops, onStops)
                 ToggleChip(stringResource(R.string.map_layer_vehicles), prefs.showVehicles, onVehicles)
             }
             SheetHeader(stringResource(R.string.map_layers_car))
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlexBox(config = { wrap(FlexWrap.Wrap); columnGap(8.dp) }) {
                 LayerChip(R.string.map_layer_parking, MobilityKind.PARKING, prefs, onLayer)
                 LayerChip(R.string.map_layer_cars, MobilityKind.CAR_SHARING, prefs, onLayer)
                 LayerChip(R.string.map_layer_charging, MobilityKind.CHARGING, prefs, onLayer)
             }
             SheetHeader(stringResource(R.string.map_layers_bike))
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlexBox(config = { wrap(FlexWrap.Wrap); columnGap(8.dp) }) {
                 LayerChip(R.string.map_layer_bike_boxes, MobilityKind.BIKE_PARKING, prefs, onLayer)
                 LayerChip(R.string.map_layer_ebike_sharing, MobilityKind.EBIKE_SHARING, prefs, onLayer)
                 if (MobilityKind.BIKE_SHARING !in hidden) LayerChip(R.string.map_layer_bikes, MobilityKind.BIKE_SHARING, prefs, onLayer)

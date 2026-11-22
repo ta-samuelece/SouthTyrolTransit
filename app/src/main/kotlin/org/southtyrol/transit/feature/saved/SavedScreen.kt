@@ -1,5 +1,3 @@
-@file:OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
-
 package org.southtyrol.transit.feature.saved
 
 import androidx.compose.foundation.layout.PaddingValues
@@ -118,7 +116,7 @@ fun SavedScreen(navigator: Navigator, viewModel: SavedViewModel = hiltViewModel(
         LazyColumn(Modifier.padding(padding).fillMaxSize(), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp)) {
             item {
                 // Saved stops and lines drive the "My stops and lines" alert filter and notifications.
-                androidx.compose.foundation.layout.FlowRow(Modifier.padding(vertical = 8.dp), horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
+                androidx.compose.foundation.layout.FlexBox(Modifier.padding(vertical = 8.dp), config = { wrap(androidx.compose.foundation.layout.FlexWrap.Wrap); columnGap(8.dp) }) {
                     androidx.compose.material3.FilledTonalButton(onClick = { adding = true }) {
                         Icon(Icons.Rounded.Add, contentDescription = null); androidx.compose.foundation.layout.Spacer(Modifier.width(8.dp)); Text(stringResource(R.string.saved_add_stop))
                     }

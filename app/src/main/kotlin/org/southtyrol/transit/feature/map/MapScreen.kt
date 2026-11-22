@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalMaterial3Api::class, FlowPreview::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@file:OptIn(ExperimentalMaterial3Api::class, FlowPreview::class)
 
 package org.southtyrol.transit.feature.map
 
@@ -769,7 +769,7 @@ private fun VehicleSheet(
                 Text(stringResource(R.string.map_next_stop, next.stop.name, Format.time(next.predictedDeparture ?: next.scheduledDeparture)), style = MaterialTheme.typography.bodyLarge)
                 DelayLabel(next.predictedDeparture?.let { java.time.Duration.between(next.scheduledDeparture, it).seconds }, next.state, sel.trip.freshness)
             }
-            androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            androidx.compose.foundation.layout.FlexBox(config = { wrap(androidx.compose.foundation.layout.FlexWrap.Wrap); columnGap(8.dp); rowGap(8.dp) }) {
                 val trip = sel.trip
                 val isFollowed = followed?.isRun(trip.trip.id, trip.serviceDate.toString()) == true
                 if (isFollowed || trip.canFollow(now)) androidx.compose.material3.FilledTonalButton(

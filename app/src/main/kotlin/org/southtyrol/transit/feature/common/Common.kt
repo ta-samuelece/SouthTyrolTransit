@@ -10,7 +10,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.FlexBox
+import androidx.compose.foundation.layout.FlexWrap
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -422,7 +423,7 @@ fun AlertCard(
             }
             val lines = lineNames.distinct().sortedWith(compareBy({ it.takeWhile(Char::isDigit).toIntOrNull() ?: Int.MAX_VALUE }, { it })).take(12)
             if (lines.isNotEmpty()) {
-                FlowRow(Modifier.padding(start = 54.dp), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                FlexBox(Modifier.padding(start = 54.dp), config = { wrap(FlexWrap.Wrap); columnGap(4.dp); rowGap(4.dp) }) {
                     lines.forEach { name -> AlertLineBadge(name, lineRoutes[name], onLine) }
                 }
             }

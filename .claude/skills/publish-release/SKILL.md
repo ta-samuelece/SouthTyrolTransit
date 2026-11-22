@@ -27,6 +27,27 @@ if they have not said. The rules:
 - A preview ranks below its finished version (`0.2.0-preview.2` < `0.2.0`), so promoting a preview means
   publishing `0.2.0` as stable with a new `versionCode`.
 
+## 1b. Open the release issue
+
+**Every published version, preview or stable, gets its own GitHub issue**, opened before the bump.
+First check that none exists (`gh issue list --label release --state all --search "v<versionName>"`).
+The form is `.github/ISSUE_TEMPLATE/release.yml`; `gh issue create` does not fill forms, so write the
+body in the shape GitHub renders a form in - one `### <Label>` heading per field, in the template's
+order (Version, Channel, versionCode, Previous release, What goes in, Checklist, Notes), with the
+template's checklist copied unticked. Title `[Release] v<versionName>`, label `release`. "What goes in"
+is the user-visible changes since the previous tag, with their issue and PR numbers, from
+`git log <previous tag>..HEAD`.
+
+Creating it is a public GitHub change (CLAUDE.md rule 12): show the exact title and body in an
+`AskUserQuestion` and create it only after approval:
+
+```bash
+gh issue create --repo ta-samuelece/SouthTyrolTransit --title "[Release] v0.2.2-preview.1" --label release --body-file <file>
+```
+
+If the repository has no `release` label the command fails; creating the label is a change too, so ask
+first (`gh label create release --color 0E8A16 --description "One published version of the app"`).
+
 ## 2. Bump, write the notes, check, merge
 
 1. On a branch, edit only `versionCode` and `versionName` in `app/build.gradle.kts`.
@@ -41,9 +62,11 @@ if they have not said. The rules:
    `--preview` for a preview), the unit tests and lint of both flavors (CLAUDE.md rule 9). Do not
    release red.
 4. Commit through the `commit-changes` skill (bump and notes together). A version-only commit is titled
-   `Release v0.2.0 (versionCode 7)`; when the bump rides on a feature commit, the version ends the title.
+   `Release v0.2.0 (versionCode 7) (#<issue>)`; when the bump rides on a feature commit, the version
+   ends the title. No `Fixes #<issue>`: merging does not publish, so the issue stays open.
 5. Get it into `main` through a pull request - `main` rejects direct pushes, CI must be green, and the
-   merge needs its own approval (CLAUDE.md rule 2).
+   merge needs its own approval (CLAUDE.md rule 2). The PR body says `Part of #<issue>`. Tick the
+   issue's checklist as steps finish (each edit is a GitHub change: ask).
 
 ## 3. Publish - from GitHub (the usual way)
 
@@ -82,6 +105,10 @@ and only after approval run the same command without `--dry-run`. Do not create 
 only a repository admin may create `v*` tags, so it fails with a 422 under anyone else's credential.
 
 ## 5. After publishing
+
+Close the release issue: in one `AskUserQuestion`, show the closing comment (the release URL, and for a
+stable release whether the Play upload is still the user's to do) and, after approval, run
+`gh issue close <issue> --comment "<text>"`. Leave it open, and say so, if the release failed.
 
 Report the release URL the script prints (in the workflow's log when published from GitHub). Remind the user that phones on that channel get the update on
 their next app start, and that a mistake is fixed by publishing a **newer** version - deleting the GitHub

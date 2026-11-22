@@ -21,7 +21,10 @@ updater offers it to every phone on the matching channel - stable releases to ev
 pre-releases to the Preview channel. You may work out and show the exact `gh pr merge`, `gh workflow run release.yml`, `git tag` or
 `python tools/release.py` command you intend to run, but you must never run it until the user has approved
 it in its own `AskUserQuestion`. `python tools/release.py --dry-run` publishes nothing and is not gated.
-Pushing a feature branch is not gated by this rule. Full procedure: the `publish-release` skill.
+Pushing a feature branch is not gated by this rule. **Every release, preview or stable, has its own
+GitHub issue** from the Release template (`.github/ISSUE_TEMPLATE/release.yml`, label `release`), opened
+before the version bump and closed with the release URL - creating and closing it still need approval
+(rule 12). Full procedure: the `publish-release` skill.
 **Branch names are `<type>/<short-description>`**: type `feature/`, `fix/`, `chore/` or `docs/`, then a
 few lowercase words for the change, joined by dashes (dots allowed, as in a version) - `feature/places-cards`,
 `fix/search-reload-loop`, `chore/release-0.2.1`.

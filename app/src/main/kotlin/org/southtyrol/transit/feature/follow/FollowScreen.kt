@@ -1,5 +1,3 @@
-@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class, androidx.compose.material3.ExperimentalMaterial3Api::class)
-
 package org.southtyrol.transit.feature.follow
 
 import androidx.compose.foundation.layout.Arrangement

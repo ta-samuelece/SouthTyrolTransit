@@ -30,7 +30,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.SystemUpdate
 import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -143,7 +142,7 @@ private fun rememberInstaller(viewModel: UpdateViewModel): (File) -> Unit {
  * App-wide sheet: offers a newer GitHub release on start, then follows it through download and install.
  * It cannot be swiped away during a download, so Android's installer never opens unannounced.
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UpdatePrompt(viewModel: UpdateViewModel = hiltViewModel()) {
     LaunchedEffect(Unit) { viewModel.checkOnStart() }
@@ -232,7 +231,6 @@ fun UpdatePrompt(viewModel: UpdateViewModel = hiltViewModel()) {
     }
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun UpdateHero(state: UpdateState, release: AppRelease, youHave: String) {
     val onContainer = MaterialTheme.colorScheme.onSecondaryContainer

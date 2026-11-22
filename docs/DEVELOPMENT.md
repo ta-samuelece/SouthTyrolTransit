@@ -205,9 +205,9 @@ Background notifications are an **opt-in periodic check (about 30 min, best effo
 
 ## Material 3 Expressive dependency status
 
-- Expressive APIs (`MaterialExpressiveTheme`, `MotionScheme.expressive()`, `LoadingIndicator`/`ContainedLoadingIndicator`, `ToggleButton` connected groups, `SegmentedListItem`, `HorizontalFloatingToolbar`, `LargeFlexibleTopAppBar`, `MaterialShapes`, `LinearWavyProgressIndicator`, expressive `NavigationSuiteScaffold`/`NavigationSuiteItem`) exist only in the **prerelease** line.
-- The project pins `androidx.compose.material3:material3:1.5.0-alpha29` and Compose `1.13.0-alpha01`, the version material3 is built against. Stable 1.4.0 lacks these APIs.
-- Opt-ins are explicit per file (`@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)`), and most usage is wrapped in `core:designsystem`.
+- Expressive APIs (`MaterialExpressiveTheme`, `MotionScheme.expressive()`, `LoadingIndicator`/`ContainedLoadingIndicator`, `ToggleButton` connected groups, `SegmentedListItem`, `HorizontalFloatingToolbar`, `LargeFlexibleTopAppBar`, `MaterialShapes`, `LinearWavyProgressIndicator`, expressive `NavigationSuiteScaffold`/`NavigationSuiteItem`) are part of the stable line.
+- The project uses `androidx.compose.material3:material3:1.5.0` and Compose `1.13.0`, the version it is built for.
+- The APIs still marked experimental need explicit per-file opt-ins: `ExperimentalMaterial3ExpressiveApi` for `MaterialShapes` and `LoadingIndicator`/`ContainedLoadingIndicator`, `ExperimentalMaterial3Api` for `ModalBottomSheet`. Most Expressive usage is wrapped in `core:designsystem`.
 - When animations are disabled system-wide, the theme switches to the standard motion scheme and static progress.
 
 Toolchain: AGP 9.4.1, Kotlin 2.4.20, Gradle 9.8.0, compileSdk 37.1, targetSdk 37, minSdk 26.

@@ -674,6 +674,9 @@
     <string name="trip_next_stop_in">Prossima fermata tra %s</string>
     <string name="planner_bike">Viaggio con la bici</string>
     <string name="journey_bikes_unknown">L\'orario non indica se %s trasporta bici. Verifica prima di partire.</string>
+    <string name="journey_notice_open">Apri l\'avviso</string>
+    <string name="journey_notice_line_alerts">Avvisi per la linea %s</string>
+    <string name="journey_notice_unavailable">L\'avviso completo non è disponibile al momento.</string>
     <plurals name="results_hidden_no_bikes">
         <item quantity="one">%d collegamento nascosto: non trasporta bici</item>
         <item quantity="other">%d collegamenti nascosti: non trasportano bici</item>

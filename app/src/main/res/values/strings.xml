@@ -675,6 +675,9 @@
     <string name="trip_next_stop_in">Next stop in %s</string>
     <string name="planner_bike">Travelling with a bike</string>
     <string name="journey_bikes_unknown">The timetable does not say whether %s takes bikes. Check before you travel.</string>
+    <string name="journey_notice_open">Open the alert</string>
+    <string name="journey_notice_line_alerts">Alerts for line %s</string>
+    <string name="journey_notice_unavailable">The full alert isn\'t available right now.</string>
     <plurals name="results_hidden_no_bikes">
         <item quantity="one">%d connection hidden: it takes no bikes</item>
         <item quantity="other">%d connections hidden: they take no bikes</item>

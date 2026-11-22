@@ -8,14 +8,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -395,8 +392,9 @@ private const val WALK_DOTS = 4
 @Composable
 internal fun WalkLeg(leg: Leg, now: Instant) {
     val walked = (RouteProgress.legFraction(leg, now) * WALK_DOTS).toInt()
-    Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min).padding(start = 12.dp)) {
-        Column(Modifier.width(24.dp).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
+    // The dots stand at the row's top whatever its height: no intrinsic pass to stretch their column.
+    Row(Modifier.fillMaxWidth().padding(start = 12.dp)) {
+        Column(Modifier.width(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             repeat(WALK_DOTS) { dot ->
                 val color = MaterialTheme.colorScheme.outline
                 Box(Modifier.padding(vertical = 3.dp).size(4.dp).clip(CircleShape).background(if (dot < walked) color.copy(alpha = Progress.PASSED_ALPHA) else color))

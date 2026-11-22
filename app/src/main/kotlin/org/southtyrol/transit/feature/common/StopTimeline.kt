@@ -1,19 +1,14 @@
 package org.southtyrol.transit.feature.common
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -40,11 +35,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -53,6 +48,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import org.southtyrol.transit.R
 import org.southtyrol.transit.design.DelayLabel
@@ -159,12 +156,8 @@ fun LegStops(
 /** The tonal "N stops · 32 min" pill, sitting on the rail between the first and the next row shown. */
 @Composable
 private fun StopsPill(count: Int, duration: Duration, expanded: Boolean, rail: Color, onToggle: () -> Unit) {
-    Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
-        Spacer(Modifier.width(88.dp))
-        Box(Modifier.width(28.dp).fillMaxHeight(), contentAlignment = Alignment.Center) {
-            Box(Modifier.width(4.dp).fillMaxHeight().background(rail))
-        }
-        Spacer(Modifier.width(12.dp))
+    Row(Modifier.fillMaxWidth().rail(rail, dashedAbove = false, rail, dashedBelow = false)) {
+        Spacer(Modifier.width(RailStart + RailWidth + 12.dp))
         // 40 dp tall, inside a 48 dp touch target.
         FilledTonalButton(
             onClick = onToggle,
@@ -215,19 +208,16 @@ private fun EarlierStops(
     val liveNow = approach != null && !estimated
     val toggleLabel = stringResource(if (open) R.string.earlier_hide else R.string.earlier_show)
     Row(
-        Modifier.fillMaxWidth().height(IntrinsicSize.Min).heightIn(min = 56.dp)
+        Modifier.fillMaxWidth().heightIn(min = 56.dp)
             .clickable(role = Role.Button, onClickLabel = toggleLabel, onClick = onToggle)
-            .semantics(mergeDescendants = true) { stateDescription = toggleLabel },
+            .semantics(mergeDescendants = true) { stateDescription = toggleLabel }
+            // Closed, the dashed approach runs through this row with the vehicle on it; open, the rows below draw both.
+            .then(if (open) Modifier else Modifier.rail(lineColor.copy(alpha = if (placed) Progress.PASSED_ALPHA else 1f), dashedAbove = true, lineColor, dashedBelow = true)),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Spacer(Modifier.width(88.dp))
-        Box(Modifier.width(28.dp).fillMaxHeight(), contentAlignment = Alignment.Center) {
-            // Closed, the dashed approach runs through this row with the vehicle on it; open, the rows below draw both.
+        Spacer(Modifier.width(RailStart))
+        Box(Modifier.width(RailWidth), contentAlignment = Alignment.Center) {
             if (!open) {
-                Column(Modifier.fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
-                    RailSegment(lineColor.copy(alpha = if (placed) Progress.PASSED_ALPHA else 1f), dashed = true)
-                    RailSegment(lineColor, dashed = true)
-                }
                 if (placed) Surface(
                     shape = CircleShape, color = if (estimated) status.stale else lineColor, contentColor = Color.White,
                     shadowElevation = 2.dp, modifier = Modifier.size(24.dp),
@@ -250,12 +240,8 @@ private fun EarlierStops(
     }
     if (!open) return
     val first = if (showAll) 0 else before.firstShown
-    if (first > 0) Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
-        Spacer(Modifier.width(88.dp))
-        Column(Modifier.width(28.dp).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
-            RailSegment(lineColor.copy(alpha = Progress.PASSED_ALPHA), dashed = true)
-        }
-        Spacer(Modifier.width(4.dp))
+    if (first > 0) Row(Modifier.fillMaxWidth().rail(lineColor.copy(alpha = Progress.PASSED_ALPHA), dashedAbove = true, lineColor.copy(alpha = Progress.PASSED_ALPHA), dashedBelow = true, continuous = true)) {
+        Spacer(Modifier.width(RailStart + RailWidth + 4.dp))
         TextButton(onClick = { showAll = true }, modifier = Modifier.heightIn(min = 48.dp)) {
             Text(pluralStringResource(R.plurals.earlier_show_more, first, first, before.stops.first().stop.name))
         }
@@ -279,18 +265,46 @@ private fun EarlierStops(
     }
 }
 
-/** One stretch of a stop timeline's rail: solid, or dashed where the user is not on board yet. */
-@Composable
-private fun ColumnScope.RailSegment(color: Color, dashed: Boolean) {
-    val modifier = Modifier.width(4.dp).weight(1f)
-    if (!dashed) Box(modifier.background(color))
-    else Box(
-        // The dash pattern is built once per size, not on every frame the list scrolls.
-        modifier.drawWithCache {
-            val dash = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 5.dp.toPx()))
-            onDrawBehind { drawLine(color, Offset(size.width / 2, 0f), Offset(size.width / 2, size.height), size.width, pathEffect = dash) }
-        },
-    )
+/** Where a timeline row's rail column starts (after the times), and how wide it is. */
+private val RailStart = 88.dp
+private val RailWidth = 28.dp
+
+/** A stop's dot on the rail: [size] across, filled with [fill] inside a 3 dp ring in [ring]. */
+private class RailDot(val size: Dp, val fill: Color, val ring: Color)
+
+/**
+ * A stop timeline's rail, drawn behind the row in the middle of its rail column: [above] down to the
+ * row's middle (or to its [dot]), [below] from there on, each solid or dashed (where the user is not on
+ * board yet); [Color.Transparent] leaves a stretch out. [continuous] draws one line, in [above], from
+ * top to bottom. Drawn rather than laid out, the rail spans the row however tall its texts make it,
+ * without measuring the row twice (intrinsics) to stretch a column to its height.
+ */
+private fun Modifier.rail(
+    above: Color, dashedAbove: Boolean, below: Color, dashedBelow: Boolean,
+    dot: RailDot? = null, continuous: Boolean = false,
+) = drawWithCache {
+    // Built once per size, not on every frame the list scrolls.
+    val start = (RailStart + RailWidth / 2).toPx()
+    val x = if (layoutDirection == LayoutDirection.Ltr) start else size.width - start
+    val width = 4.dp.toPx()
+    val dash = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 5.dp.toPx()))
+    val middle = size.height / 2
+    val radius = dot?.size?.toPx()?.div(2) ?: 0f
+    val ring = 3.dp.toPx()
+    onDrawBehind {
+        fun segment(color: Color, dashed: Boolean, from: Float, to: Float) {
+            if (color.alpha > 0f && to > from) drawLine(color, Offset(x, from), Offset(x, to), width, pathEffect = if (dashed) dash else null)
+        }
+        if (continuous) segment(above, dashedAbove, 0f, size.height)
+        else {
+            segment(above, dashedAbove, 0f, middle - radius)
+            segment(below, dashedBelow, middle + radius, size.height)
+        }
+        if (dot != null) {
+            drawCircle(dot.fill, radius, Offset(x, middle))
+            drawCircle(dot.ring, radius - ring / 2, Offset(x, middle), style = Stroke(ring))
+        }
+    }
 }
 
 /** Where the vehicle is drawn on a stop timeline: between the previous stop and this one, or at this stop. */
@@ -327,58 +341,54 @@ fun StopTimelineRow(
     // Text on the marked row's highlight pairs with it, as on the following card.
     val onMarked = MaterialTheme.colorScheme.onSecondaryContainer
     val textColor = if (marked) onMarked else Color.Unspecified
-    Row(
-        Modifier.fillMaxWidth().height(IntrinsicSize.Min)
+    val rail = lineColor.copy(alpha = railAlpha)
+    val dot = RailDot(if (next) 18.dp else 12.dp, if (next) lineColor else MaterialTheme.colorScheme.surface, rail)
+    Box(
+        Modifier.fillMaxWidth()
             // A shaped fill, not a clip: the vehicle bubble above the stop draws past the row's top.
             .then(if (marked) Modifier.background(MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(16.dp)) else Modifier)
             .clickable(role = Role.Button, onClick = onClick).heightIn(min = 52.dp)
             .semantics(mergeDescendants = true) {
                 contentDescription = listOfNotNull(stop.stop.name, markedText, timeText, delayText, note, vehicleText, distance).joinToString(", ")
                 if (passedText != null) stateDescription = passedText
-            },
-    ) {
-        Column(Modifier.width(88.dp).padding(vertical = 8.dp)) {
-            Text(timeText, style = TimeStyles.medium, color = textColor, maxLines = 1, softWrap = false, textDecoration = if (skipped) TextDecoration.LineThrough else null)
-            if (predicted != null && predicted != scheduled) Text(Format.time(scheduled), style = MaterialTheme.typography.labelSmall, color = textColor, textDecoration = TextDecoration.LineThrough)
-        }
-        Box(Modifier.width(28.dp).fillMaxHeight(), contentAlignment = Alignment.Center) {
-            Column(Modifier.fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
-                RailSegment(if (first) Color.Transparent else lineColor.copy(alpha = railAlpha), dashedAbove)
-                Box(
-                    Modifier.size(if (next) 18.dp else 12.dp).clip(CircleShape)
-                        .background(if (next) lineColor else MaterialTheme.colorScheme.surface)
-                        .border(3.dp, lineColor.copy(alpha = railAlpha), CircleShape),
-                )
-                RailSegment(if (last) Color.Transparent else lineColor.copy(alpha = railAlpha), dashedBelow)
             }
-            // The vehicle itself: on the line just before this stop (on its way) or on this stop (dwelling).
-            if (vehicle != VehicleMarker.NONE) {
-                Surface(
-                    shape = CircleShape,
-                    color = lineColor.copy(alpha = if (estimated) 0.85f else 1f),
-                    contentColor = Color.White,
-                    shadowElevation = 2.dp,
-                    modifier = Modifier.align(if (vehicle == VehicleMarker.AT_STOP) Alignment.Center else Alignment.TopCenter)
-                        .then(if (vehicle == VehicleMarker.AT_STOP) Modifier else Modifier.offset(y = (-12).dp)).size(24.dp),
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(mode.icon(), contentDescription = null, modifier = Modifier.size(16.dp))
-                    }
+            .rail(if (first) Color.Transparent else rail, dashedAbove, if (last) Color.Transparent else rail, dashedBelow, dot),
+    ) {
+        Row(Modifier.fillMaxWidth()) {
+            Column(Modifier.width(RailStart).padding(vertical = 8.dp)) {
+                Text(timeText, style = TimeStyles.medium, color = textColor, maxLines = 1, softWrap = false, textDecoration = if (skipped) TextDecoration.LineThrough else null)
+                if (predicted != null && predicted != scheduled) Text(Format.time(scheduled), style = MaterialTheme.typography.labelSmall, color = textColor, textDecoration = TextDecoration.LineThrough)
+            }
+            Spacer(Modifier.width(RailWidth + 12.dp))
+            Column(Modifier.weight(1f).padding(vertical = 8.dp)) {
+                Text(stop.stop.name, style = MaterialTheme.typography.bodyLarge, fontWeight = if (next) FontWeight.SemiBold else FontWeight.Normal, color = if (marked) onMarked else if (passed) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface)
+                if (note != null) Text(note, style = MaterialTheme.typography.labelMedium, color = if (marked) onMarked else MaterialTheme.colorScheme.primary)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (stop.stop.platform.isNotBlank()) Text(stringResource(DesignR.string.ds_platform_short, stop.stop.platform), style = MaterialTheme.typography.labelMedium, color = textColor)
+                    DelayLabel(delaySeconds, stop.state, if (predicted != null && live) Freshness.LIVE else Freshness.SCHEDULED)
+                }
+            }
+            if (distance != null) Text(
+                distance, style = MaterialTheme.typography.labelMedium, color = if (marked) onMarked.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1,
+                modifier = Modifier.padding(start = 8.dp, top = 10.dp),
+            )
+        }
+        // The vehicle itself: on the line just before this stop (on its way) or on this stop (dwelling), over
+        // the rail's middle. Sized to the row once it is measured, so it needs no second pass either.
+        if (vehicle != VehicleMarker.NONE) Box(Modifier.matchParentSize()) {
+            val atStop = vehicle == VehicleMarker.AT_STOP
+            Surface(
+                shape = CircleShape,
+                color = lineColor.copy(alpha = if (estimated) 0.85f else 1f),
+                contentColor = Color.White,
+                shadowElevation = 2.dp,
+                modifier = Modifier.align(if (atStop) Alignment.CenterStart else Alignment.TopStart)
+                    .offset(x = RailStart + (RailWidth - 24.dp) / 2, y = if (atStop) 0.dp else (-12).dp).size(24.dp),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(mode.icon(), contentDescription = null, modifier = Modifier.size(16.dp))
                 }
             }
         }
-        Spacer(Modifier.width(12.dp))
-        Column(Modifier.weight(1f).padding(vertical = 8.dp)) {
-            Text(stop.stop.name, style = MaterialTheme.typography.bodyLarge, fontWeight = if (next) FontWeight.SemiBold else FontWeight.Normal, color = if (marked) onMarked else if (passed) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface)
-            if (note != null) Text(note, style = MaterialTheme.typography.labelMedium, color = if (marked) onMarked else MaterialTheme.colorScheme.primary)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (stop.stop.platform.isNotBlank()) Text(stringResource(DesignR.string.ds_platform_short, stop.stop.platform), style = MaterialTheme.typography.labelMedium, color = textColor)
-                DelayLabel(delaySeconds, stop.state, if (predicted != null && live) Freshness.LIVE else Freshness.SCHEDULED)
-            }
-        }
-        if (distance != null) Text(
-            distance, style = MaterialTheme.typography.labelMedium, color = if (marked) onMarked.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1,
-            modifier = Modifier.padding(start = 8.dp, top = 10.dp),
-        )
     }
 }

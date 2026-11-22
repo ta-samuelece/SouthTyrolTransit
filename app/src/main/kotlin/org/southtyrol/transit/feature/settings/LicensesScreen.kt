@@ -82,7 +82,7 @@ fun LicensesScreen(navigator: Navigator) {
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 )
             }
-            items(list, key = { it.uniqueId }) { library ->
+            items(list, key = { it.uniqueId }, contentType = { "library" }) { library ->
                 Column(
                     Modifier.fillMaxWidth().clickable { open = library }.padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(2.dp),

@@ -49,7 +49,10 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.constrainHeight
+import androidx.compose.ui.unit.offset
 import androidx.compose.ui.unit.dp
 
 /** The lip's title and its rank, which sets the direction it slides in. */
@@ -121,9 +124,10 @@ fun TopLip(
             }
             if (lipContent != null) {
                 // The open panel follows 12 dp below the dashboard; on its own the dashboard ends the lip [lipContentGap] below.
-                val gap by animateDpAsState(if (expanded) 12.dp else lipContentGap, motion.defaultSpatialSpec(), label = "lipGap")
+                // Read only while measuring: the gap animates without recomposing the dashboard on every frame.
+                val gap = animateDpAsState(if (expanded) 12.dp else lipContentGap, motion.defaultSpatialSpec(), label = "lipGap")
                 Column(
-                    Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = gap),
+                    Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp).bottomGap { gap.value },
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     content = lipContent,
                 )
@@ -167,4 +171,11 @@ fun TopLip(
             }
         }
     }
+}
+
+/** Space of [gap] below the content, read in the layout phase, so animating it recomposes nothing. */
+private fun Modifier.bottomGap(gap: () -> Dp) = layout { measurable, constraints ->
+    val px = gap().roundToPx().coerceAtLeast(0)
+    val placeable = measurable.measure(constraints.offset(vertical = -px))
+    layout(placeable.width, constraints.constrainHeight(placeable.height + px)) { placeable.place(0, 0) }
 }

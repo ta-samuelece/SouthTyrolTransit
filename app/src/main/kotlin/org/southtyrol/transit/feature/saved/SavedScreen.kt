@@ -137,8 +137,10 @@ fun SavedScreen(navigator: Navigator, viewModel: SavedViewModel = hiltViewModel(
             }
             // Home and Work first, then the user's own places, which alone can be renamed and reordered.
             val own = placeItems.filterNot { it.isHomeOrWork }
+            // Each row's place among the user's own, looked up instead of searched for in every row.
+            val ownIndex = own.withIndex().associate { (i, item) -> item.id to i }
             section(R.string.saved_places, placeItems) { item, index ->
-                val position = own.indexOf(item)
+                val position = ownIndex[item.id] ?: -1
                 SavedPlaceRow(
                     item, index, placeItems.size,
                     onRename = if (item.isHomeOrWork) null else { { renaming = item.id } },

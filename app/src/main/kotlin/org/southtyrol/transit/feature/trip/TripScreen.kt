@@ -311,7 +311,7 @@ private fun TripContent(
         if (vehicleFreshness == Freshness.LIVE) org.southtyrol.transit.model.RouteDistance.of(detail.shape, detail.stops, position) else null
     }
     val firstDistance = detail.stops.firstOrNull()?.distanceMeters
-    val routeLine = detail.shape.takeIf { it.size >= 2 } ?: detail.stops.map { it.stop.point }.filter { it.isValid }
+    val routeLine = remember(detail) { detail.shape.takeIf { it.size >= 2 } ?: detail.stops.map { it.stop.point }.filter { it.isValid } }
     val hasMap = routeLine.size >= 2
     // Bikes, from the timetable only when it is published, and a cancelled run sit under the header.
     val bikes = detail.trip.bikes != org.southtyrol.transit.model.Bikes.UNKNOWN

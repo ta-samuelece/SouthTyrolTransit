@@ -1,0 +1,20 @@
+{ "highlights": [
+  { "icon": "language",
+    "title": { "en": "Stop names in your language", "de": "Haltestellennamen in deiner Sprache", "it": "Nomi delle fermate nella tua lingua" },
+    "body": {
+      "en": "Choose German or Italian stop names in Settings, separately from the app's language.",
+      "de": "Wähle in den Einstellungen deutsche oder italienische Haltestellennamen, unabhängig von der Sprache der App.",
+      "it": "Scegli nelle Impostazioni i nomi delle fermate in tedesco o in italiano, indipendentemente dalla lingua dell'app." } },
+  { "icon": "notification",
+    "title": { "en": "Follow a bus to your stop", "de": "Dem Bus bis zu deiner Haltestelle folgen", "it": "Segui l'autobus fino alla tua fermata" },
+    "body": {
+      "en": "Follow a bus from a stop's board and see how many minutes until it reaches that stop.",
+      "de": "Folge einem Bus von der Abfahrtstafel aus und sieh, in wie vielen Minuten er deine Haltestelle erreicht.",
+      "it": "Segui un autobus dal tabellone di una fermata e vedi tra quanti minuti ci arriva." } },
+  { "icon": "alert",
+    "title": { "en": "Notices in full", "de": "Meldungen vollständig", "it": "Avvisi completi" },
+    "body": {
+      "en": "Tap a notice on a journey to read its full alert. Repeated notices now show only once.",
+      "de": "Tippe auf einen Hinweis in einer Verbindung, um die ganze Meldung zu lesen. Wiederholte Meldungen erscheinen nur noch einmal.",
+      "it": "Tocca un avviso in un viaggio per leggerlo per intero. Gli avvisi ripetuti ora compaiono una sola volta." } }
+] }

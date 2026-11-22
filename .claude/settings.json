@@ -29,10 +29,19 @@
       "Bash(gh pr checks:*)",
       "Bash(gh release list:*)",
       "Bash(gh release view:*)",
-      "Bash(gh search issues:*)"
+      "Bash(gh search issues:*)",
+      "Bash(git push * feature/*)",
+      "Bash(git push * fix/*)",
+      "Bash(git push * chore/*)",
+      "Bash(git push * docs/*)"
     ],
     "ask": [
-      "Bash(git push:*)",
+      "Bash(git push * main*)",
+      "Bash(git push *--tags*)",
+      "Bash(git push * v*)",
+      "Bash(git push * refs/tags/*)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
       "Bash(git tag:*)",
       "Bash(python tools/release.py:*)",
       "Bash(gh issue create:*)",

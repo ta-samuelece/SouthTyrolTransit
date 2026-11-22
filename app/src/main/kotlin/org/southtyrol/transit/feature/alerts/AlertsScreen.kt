@@ -302,14 +302,16 @@ fun AlertsScreen(navigator: Navigator, viewModel: AlertsViewModel = hiltViewMode
             ) {
                 val current = ui
                 if (current == null) { TransitLoading(contained = true); return@PullToRefreshBox }
-                val picked: (ServiceAlert) -> Boolean = when (filter) {
-                    AlertFilter.ALL -> { _ -> true }
-                    AlertFilter.LINES -> { alert -> viewModel.onSavedLine(alert, current) }
-                    AlertFilter.STOPS -> { alert -> viewModel.atSavedStop(alert, current) }
+                // Filtered and searched only when one of these changes, not when the cards slim or a refresh spins.
+                val (inForce, comingUp) = remember(current, filter, scopes, query, language, now) {
+                    val picked: (ServiceAlert) -> Boolean = when (filter) {
+                        AlertFilter.ALL -> { _ -> true }
+                        AlertFilter.LINES -> { alert -> viewModel.onSavedLine(alert, current) }
+                        AlertFilter.STOPS -> { alert -> viewModel.atSavedStop(alert, current) }
+                    }
+                    val shown = current.state.alerts.filter { picked(it) && viewModel.matches(it, scopes[it.id], query, language) }
+                    shown.filter { it.active(now) } to shown.filter { it.upcoming(now) }
                 }
-                val shown = current.state.alerts.filter { picked(it) && viewModel.matches(it, scopes[it.id], query, language) }
-                val inForce = shown.filter { it.active(now) }
-                val comingUp = shown.filter { it.upcoming(now) }
                 val showAll = { filter = AlertFilter.ALL }
                 // Alerts form grouped lists (2 dp apart); the heading and section labels keep their own spacing.
                 LazyColumn(
@@ -392,6 +394,9 @@ private fun AlertsUi.dashboardCards(now: java.time.Instant): Set<AlertFilter> {
     }
 }
 
+/** The dashboard's numbers: saved lines and stops with an alert in force, and how many more have one coming up. */
+private data class DashboardCounts(val linesNow: List<Line>, val linesLater: Int, val stopsNow: Map<String, String>, val stopsLater: Int)
+
 /**
  * The lip's dashboard: the saved lines and the saved stops, each a card with how many have an alert in force
  * now, how many more have one coming up, and the affected ones as marks. A card is a toggle for its filter.
@@ -406,12 +411,18 @@ private fun AlertDashboard(
     compact: Boolean,
     onFilter: (AlertFilter) -> Unit,
 ) {
-    val inForce = ui.state.alerts.filter { it.active(now) }
-    val comingUp = ui.state.alerts.filter { it.upcoming(now) }
-    val linesNow = ui.savedLines.filter { line -> inForce.any { AlertMatcher.affectsLine(it, line) } }
-    val linesLater = ui.savedLines.count { line -> line !in linesNow && comingUp.any { AlertMatcher.affectsLine(it, line) } }
-    val stopsNow = ui.savedStops.filter { (key, _) -> inForce.any { AlertMatcher.affectsStop(it, key) } }
-    val stopsLater = ui.savedStops.count { (key, _) -> key !in stopsNow && comingUp.any { AlertMatcher.affectsStop(it, key) } }
+    // Counted once per alerts update or clock tick, not again when the cards slim or toggle.
+    val counts = remember(ui, now) {
+        val inForce = ui.state.alerts.filter { it.active(now) }
+        val comingUp = ui.state.alerts.filter { it.upcoming(now) }
+        val linesNow = ui.savedLines.filter { line -> inForce.any { AlertMatcher.affectsLine(it, line) } }
+        val stopsNow = ui.savedStops.filter { (key, _) -> inForce.any { AlertMatcher.affectsStop(it, key) } }
+        DashboardCounts(
+            linesNow, ui.savedLines.count { line -> line !in linesNow && comingUp.any { AlertMatcher.affectsLine(it, line) } },
+            stopsNow, ui.savedStops.count { (key, _) -> key !in stopsNow && comingUp.any { AlertMatcher.affectsStop(it, key) } },
+        )
+    }
+    val (linesNow, linesLater, stopsNow, stopsLater) = counts
     val wide = cards.size == 1
     val lineMarks = if (wide) MAX_LINE_MARKS_WIDE else MAX_LINE_MARKS
     val stopMarks = if (wide) 2 else 1

@@ -12,6 +12,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.semantics.heading
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.consumeWindowInsets
+import org.southtyrol.transit.feature.common.withPadding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -176,7 +178,7 @@ private fun SubScreen(title: String, navigator: Navigator, showBack: Boolean = t
             )
         },
     ) { padding ->
-        LazyColumn(Modifier.padding(padding), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 32.dp), content = content)
+        LazyColumn(Modifier.consumeWindowInsets(padding), contentPadding = padding.withPadding(start = 16.dp, end = 16.dp, bottom = 32.dp), content = content)
     }
 }
 

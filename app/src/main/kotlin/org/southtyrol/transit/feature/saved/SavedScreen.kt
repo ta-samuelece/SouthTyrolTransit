@@ -1,6 +1,8 @@
 package org.southtyrol.transit.feature.saved
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.consumeWindowInsets
+import org.southtyrol.transit.feature.common.withPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -117,7 +119,7 @@ fun SavedScreen(navigator: Navigator, viewModel: SavedViewModel = hiltViewModel(
         val stops = items.filter { it.kind == SavedKind.STOP }
         val lines = items.filter { it.kind == SavedKind.LINE }
         val journeys = items.filter { it.kind == SavedKind.JOURNEY }
-        LazyColumn(Modifier.padding(padding).fillMaxSize(), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp)) {
+        LazyColumn(Modifier.fillMaxSize().consumeWindowInsets(padding), contentPadding = padding.withPadding(start = 16.dp, end = 16.dp, bottom = 24.dp)) {
             item {
                 // Saved stops and lines drive the "My stops and lines" alert filter and notifications.
                 androidx.compose.foundation.layout.FlexBox(Modifier.padding(vertical = 8.dp), config = { wrap(androidx.compose.foundation.layout.FlexWrap.Wrap); columnGap(8.dp) }) {
@@ -137,8 +139,10 @@ fun SavedScreen(navigator: Navigator, viewModel: SavedViewModel = hiltViewModel(
             }
             // Home and Work first, then the user's own places, which alone can be renamed and reordered.
             val own = placeItems.filterNot { it.isHomeOrWork }
+            // Each row's place among the user's own, looked up instead of searched for in every row.
+            val ownIndex = own.withIndex().associate { (i, item) -> item.id to i }
             section(R.string.saved_places, placeItems) { item, index ->
-                val position = own.indexOf(item)
+                val position = ownIndex[item.id] ?: -1
                 SavedPlaceRow(
                     item, index, placeItems.size,
                     onRename = if (item.isHomeOrWork) null else { { renaming = item.id } },

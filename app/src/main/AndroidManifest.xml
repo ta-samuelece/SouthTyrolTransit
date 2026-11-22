@@ -196,7 +196,8 @@
             android:exported="true"
             android:excludeFromRecents="true"
             android:label="@string/widget_choose_stop"
-            android:theme="@style/Theme.Transit">
+            android:theme="@style/Theme.Transit"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>

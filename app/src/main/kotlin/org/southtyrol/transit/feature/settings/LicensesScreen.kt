@@ -4,6 +4,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.consumeWindowInsets
+import org.southtyrol.transit.feature.common.withPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -73,7 +75,7 @@ fun LicensesScreen(navigator: Navigator) {
             TransitLoading(contained = true, modifier = Modifier.padding(padding))
             return@Scaffold
         }
-        LazyColumn(Modifier.padding(padding).fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
+        LazyColumn(Modifier.fillMaxSize().consumeWindowInsets(padding), contentPadding = padding.withPadding(bottom = 24.dp)) {
             item {
                 Text(
                     stringResource(R.string.licenses_intro, list.size),
@@ -82,7 +84,7 @@ fun LicensesScreen(navigator: Navigator) {
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 )
             }
-            items(list, key = { it.uniqueId }) { library ->
+            items(list, key = { it.uniqueId }, contentType = { "library" }) { library ->
                 Column(
                     Modifier.fillMaxWidth().clickable { open = library }.padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(2.dp),

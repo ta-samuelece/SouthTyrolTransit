@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+
 package org.southtyrol.transit.feature.journey
 
 import androidx.compose.animation.AnimatedVisibility

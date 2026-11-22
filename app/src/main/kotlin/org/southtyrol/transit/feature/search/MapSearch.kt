@@ -20,6 +20,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.clearText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Close
@@ -88,6 +90,7 @@ import org.southtyrol.transit.design.TransitLoading
 import org.southtyrol.transit.feature.common.groupGap
 import org.southtyrol.transit.feature.common.groupedItemColors
 import org.southtyrol.transit.feature.common.rememberLocationPermission
+import org.southtyrol.transit.feature.common.rememberQueryFieldState
 import org.southtyrol.transit.feature.common.searchPending
 import org.southtyrol.transit.location.LocationProvider
 import org.southtyrol.transit.location.LocationResult
@@ -251,11 +254,12 @@ fun MapSearchView(viewModel: MapSearchViewModel, navigator: Navigator, modifier:
 
     Surface(modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
         Column(Modifier.statusBarsPadding().imePadding()) {
+            val field = rememberQueryFieldState(search.query, viewModel::query)
             TextField(
-                value = search.query, onValueChange = viewModel::query, singleLine = true,
+                state = field, lineLimits = TextFieldLineLimits.SingleLine,
                 placeholder = { Text(stringResource(R.string.map_search_hint)) },
                 leadingIcon = { IconButton(onClick = viewModel::close) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.action_back)) } },
-                trailingIcon = { if (search.query.isNotEmpty()) IconButton(onClick = { viewModel.query("") }) { Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.action_clear)) } },
+                trailingIcon = { if (field.text.isNotEmpty()) IconButton(onClick = { field.clearText() }) { Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.action_clear)) } },
                 shape = RoundedCornerShape(28.dp),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh, unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,

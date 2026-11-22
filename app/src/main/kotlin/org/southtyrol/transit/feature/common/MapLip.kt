@@ -6,6 +6,7 @@ import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.runtime.computedStateOf
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.ui.draw.drawBehind
@@ -156,7 +157,7 @@ fun MapLipPage(
         val currentRange by rememberUpdatedState(range)
         // Read only in the layout and draw phases (and through derived states), so scrolling recomposes nothing.
         val covered = remember { { if (currentRange > 0f) (collapse / currentRange).coerceIn(0f, 1f) else 0f } }
-        val mapCovered by remember { derivedStateOf { covered() >= 0.5f } }
+        val mapCovered by remember { computedStateOf { covered() >= 0.5f } }
         val currentOpen by rememberUpdatedState(open)
         val currentList by rememberUpdatedState(listState)
         val scrollConnection = remember {
@@ -349,7 +350,7 @@ private fun DragHandle(
     val density = LocalDensity.current
     val drag by rememberUpdatedState(onDrag)
     val draggable = rememberDraggableState { delta -> drag(with(density) { delta.toDp() }) }
-    val usable by remember { derivedStateOf { covered() < 0.5f } }
+    val usable by remember { computedStateOf { covered() < 0.5f } }
     Box(
         Modifier.fillMaxWidth().height(HANDLE)
             .draggable(

@@ -1,11 +1,11 @@
 ---
 type: Reference
 title: Map and design-system conventions - MapContent, styles, attribution, colours, reduced motion
-description: Map content is one immutable value pushed layer by layer and marker ids must be unique across stops, vehicles and POIs; without a timetable the map's stops come from the EFA coordinate search; the journey, following, stop and trip screens have a map lip (MapLipPage) instead of a top bar, which scrolling covers with a plain header, the line page still an ExpandableMapPage; the one convention for showing progress along a run; the dark style falls back to the light override; four map types from one provider catalogue, Province rasters under the transit layers, credit per style and the font every style must serve; feed route colours are already used; the colour scheme (own palette by default, optional wallpaper colours and pure black); which Material 3 Expressive component to use for a choice, a hero, a grouped list and data freshness; the top lips of Plan and Alerts; the map's locate button is a FAB menu opened by a long press, with the layers button above it, and its tap cycles free, following and following with heading; reduced motion is read once.
+description: Map content is one immutable value pushed layer by layer and marker ids must be unique across stops, vehicles and POIs; without a timetable the map's stops come from the EFA coordinate search; the journey, following, stop and trip screens have a map lip (MapLipPage) instead of a top bar, which scrolling covers with a plain header, the line page still an ExpandableMapPage; the one convention for showing progress along a run; the dark style falls back to the light override; four map types from one provider catalogue, Province rasters under the transit layers, credit per style and the font every style must serve; feed route colours are already used; the colour scheme (own palette by default, optional wallpaper colours and pure black); which Material 3 Expressive component to use for a choice, a text field (TextFieldState through rememberQueryFieldState), a wrapping row (FlexBox), a hero, a grouped list and data freshness; the top lips of Plan and Alerts; the map's locate button is a FAB menu opened by a long press, with the layers button above it, and its tap cycles free, following and following with heading; reduced motion is read once.
 tags: [map, maplibre, design-system, colors, accessibility]
 generated:
   by: claude-code/claude-opus-5-5
-  at: "2026-11-21T12:00:00Z"
+  at: "2026-11-22T12:00:00Z"
 status: stable
 ---
 
@@ -193,6 +193,16 @@ Settled on 2026-10-13 after a review of every screen against the Expressive guid
   they vanish: pass `uncheckedContainerColor` (the Settings theme group uses `surfaceContainerHighest`;
   the planner's routing options, inside the top lip, use `surface`). The `ToggleButtonDefaults` colour
   factory is `colors(...)` in material3 1.5.0, not `toggleButtonColors`.
+- **Text fields use the `TextFieldState` overloads** of `TextField` / `OutlinedTextField` (`lineLimits`,
+  `onKeyboardAction`, `inputTransformation`), never `value`/`onValueChange`. A search query stays owned by
+  its ViewModel (debounce, `SavedStateHandle`); the field mirrors it through `rememberQueryFieldState`
+  (`feature/common/QueryField.kt`), which reports each edit and copies a change the ViewModel makes itself
+  (a reset, a clear on close) into the field. The clear button calls `clearText()`. A field the screen owns,
+  like the place name, takes `rememberTextFieldState`; its length cap is `InputTransformation.maxLengthTrim`
+  (`maxLength` is deprecated in Compose 1.13).
+- **Wrapping rows of chips, pills or labels are a `FlexBox`**, not `FlowRow`: a `FlexBoxConfig` with
+  `wrap(FlexWrap.Wrap)`, `columnGap` / `rowGap` for the gaps and `alignItems` for the cross-axis alignment.
+  It needs no `ExperimentalLayoutApi` opt-in.
 - **Plan's top is a `TopLip`** (`core/designsystem/.../TopLip.kt`), not a `TopAppBar`: a
   `secondaryContainer` band from under the status bar (the Scaffold's content insets drop the top side)
   with the title between the routing-options icon toggle and the Settings gear, and the page as a

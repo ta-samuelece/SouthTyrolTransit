@@ -1,12 +1,10 @@
-@file:OptIn(ExperimentalLayoutApi::class)
-
 package org.southtyrol.transit.feature.stop
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.FlexBox
+import androidx.compose.foundation.layout.FlexWrap
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -368,7 +366,7 @@ private fun DirectionButton(
                         served.size == lines.size -> org.southtyrol.transit.feature.common.InfoPill(
                             stringResource(R.string.stop_direction_all_lines), MaterialTheme.colorScheme.surfaceContainerHighest,
                         )
-                        else -> FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        else -> FlexBox(config = { wrap(FlexWrap.Wrap); columnGap(4.dp); rowGap(4.dp) }) {
                             served.forEach { LineBadge(it.name, it.mode, color = it.color, textColor = it.textColor, showIcon = false) }
                         }
                     }

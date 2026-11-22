@@ -30,6 +30,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.clearText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Close
@@ -163,11 +165,12 @@ fun StopSearchSheet(onPick: (Stop) -> Unit, onDismiss: () -> Unit, viewModel: St
     LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(Modifier.padding(horizontal = 16.dp)) {
+            val field = rememberQueryFieldState(state.query, viewModel::query)
             OutlinedTextField(
-                value = state.query, onValueChange = viewModel::query, singleLine = true,
+                state = field, lineLimits = TextFieldLineLimits.SingleLine,
                 placeholder = { Text(stringResource(R.string.departures_search_hint)) },
                 leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
-                trailingIcon = { if (state.query.isNotEmpty()) IconButton(onClick = { viewModel.query("") }) { Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.action_clear)) } },
+                trailingIcon = { if (field.text.isNotEmpty()) IconButton(onClick = { field.clearText() }) { Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.action_clear)) } },
                 shape = RoundedCornerShape(28.dp), modifier = Modifier.fillMaxWidth().focusRequester(focus),
             )
         }
@@ -225,11 +228,12 @@ fun LineSearchSheet(onPick: (org.southtyrol.transit.model.Line) -> Unit, onDismi
     LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(Modifier.padding(horizontal = 16.dp)) {
+            val field = rememberQueryFieldState(state.query, viewModel::query)
             OutlinedTextField(
-                value = state.query, onValueChange = viewModel::query, singleLine = true,
+                state = field, lineLimits = TextFieldLineLimits.SingleLine,
                 placeholder = { Text(stringResource(R.string.lines_search_hint)) },
                 leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
-                trailingIcon = { if (state.query.isNotEmpty()) IconButton(onClick = { viewModel.query("") }) { Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.action_clear)) } },
+                trailingIcon = { if (field.text.isNotEmpty()) IconButton(onClick = { field.clearText() }) { Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.action_clear)) } },
                 shape = RoundedCornerShape(28.dp), modifier = Modifier.fillMaxWidth().focusRequester(focus),
             )
         }

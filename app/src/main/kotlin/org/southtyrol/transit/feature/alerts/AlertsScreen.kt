@@ -27,8 +27,9 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.clearText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.CheckCircle
@@ -112,6 +113,7 @@ import org.southtyrol.transit.di.AppLanguage
 import org.southtyrol.transit.feature.common.AlertCard
 import org.southtyrol.transit.feature.common.PollWhileVisible
 import org.southtyrol.transit.feature.common.groupShape
+import org.southtyrol.transit.feature.common.rememberQueryFieldState
 import org.southtyrol.transit.model.Freshness
 import org.southtyrol.transit.model.Line
 import org.southtyrol.transit.model.ServiceAlert
@@ -531,17 +533,18 @@ private fun DashboardCard(
 /** The search field at the bottom of the lip, in the `surface` tone so it stands out from the lip. */
 @Composable
 private fun AlertSearchField(query: String, onQuery: (String) -> Unit, onDone: () -> Unit, modifier: Modifier = Modifier) {
+    val field = rememberQueryFieldState(query, onQuery)
     TextField(
-        value = query, onValueChange = onQuery, singleLine = true,
+        state = field, lineLimits = TextFieldLineLimits.SingleLine,
         placeholder = { Text(stringResource(R.string.alerts_search_hint)) },
         leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
         trailingIcon = {
-            if (query.isNotEmpty()) IconButton(onClick = { onQuery("") }) {
+            if (field.text.isNotEmpty()) IconButton(onClick = { field.clearText() }) {
                 Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.action_clear))
             }
         },
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-        keyboardActions = KeyboardActions(onSearch = { onDone() }),
+        onKeyboardAction = { onDone() },
         shape = RoundedCornerShape(28.dp),
         colors = TextFieldDefaults.colors(
             focusedContainerColor = MaterialTheme.colorScheme.surface,

@@ -1,5 +1,3 @@
-@file:OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
-
 package org.southtyrol.transit.feature.map
 
 import androidx.compose.foundation.background
@@ -7,7 +5,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.FlexBox
+import androidx.compose.foundation.layout.FlexWrap
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -192,10 +191,7 @@ private fun Legend() {
     val colors = MaterialTheme.colorScheme
     val square = Modifier.size(10.dp)
     val shape = RoundedCornerShape(3.dp)
-    FlowRow(
-        horizontalArrangement = Arrangement.spacedBy(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = Modifier.clearAndSetSemantics { },
-    ) {
+    FlexBox(Modifier.clearAndSetSemantics { }, config = { wrap(FlexWrap.Wrap); columnGap(16.dp); rowGap(4.dp) }) {
         LegendItem(stringResource(R.string.parking_forecast_legend_past)) { Box(square.background(colors.outline, shape)) }
         LegendItem(stringResource(R.string.parking_forecast_now)) { Box(square.background(colors.primary, shape)) }
         LegendItem(stringResource(R.string.parking_forecast_legend_forecast)) {

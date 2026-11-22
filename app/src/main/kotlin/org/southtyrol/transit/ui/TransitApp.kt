@@ -18,7 +18,7 @@ import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.ui.Modifier
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.CapturedAnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Column
@@ -30,10 +30,7 @@ import org.southtyrol.transit.feature.follow.RideStrip
 import org.southtyrol.transit.feature.follow.journeyStripColor
 import org.southtyrol.transit.feature.follow.rideStripColor
 import org.southtyrol.transit.follow.FollowSession
-import org.southtyrol.transit.follow.FollowView
-import org.southtyrol.transit.follow.Followed
 import org.southtyrol.transit.follow.RideSession
-import org.southtyrol.transit.follow.RideView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.draw.clip
 import androidx.compose.animation.core.animateDp
@@ -245,16 +242,13 @@ fun TransitApp(
     val followed by follow.followed.collectAsStateWithLifecycle()
     val followView by follow.view.collectAsStateWithLifecycle()
     val rideView by follow.rideView.collectAsStateWithLifecycle()
-    // The last state stays while the strip slides away after following ended.
-    val strip = remember { mutableStateOf<StripState?>(null) }
-    followed?.let { strip.value = StripState(it, followView, rideView) }
     val onOwnScreen = when (val f = followed) {
         is FollowSession -> entry?.destination?.hasRoute(FollowRoute::class) == true
         is RideSession -> entry?.takeIf { it.destination.hasRoute(TripRoute::class) }?.toRoute<TripRoute>()?.let { f.isRun(it.tripId, it.serviceDate) } == true
         null -> false
     }
     val showStrip = followed != null && !hideBar && !onOwnScreen
-    val stripColor = strip.value.let { if (it?.followed is RideSession) rideStripColor(it.rideView) else journeyStripColor(it?.journeyView) }
+    val stripColor = if (followed is RideSession) rideStripColor(rideView) else journeyStripColor(followView)
     Column(
         // Behind the bar's rounded bottom corners the strip's colour shows: its "lips".
         Modifier.fillMaxSize().then(if (showStrip) Modifier.background(stripColor) else Modifier),
@@ -304,22 +298,19 @@ fun TransitApp(
                 screen<TicketsRoute> { TicketsScreen(navigator) }
             }
         }
-        AnimatedVisibility(
+        // Slides out as a captured image of its last frame, so nothing has to outlive the followed session.
+        CapturedAnimatedVisibility(
             visible = showStrip,
             enter = if (reduced) EnterTransition.None else expandVertically(tween(250)) + fadeIn(tween(250)),
             exit = if (reduced) ExitTransition.None else shrinkVertically(tween(200)) + fadeOut(tween(200)),
         ) {
-            val shown = strip.value
-            when (val f = shown?.followed) {
-                is RideSession -> RideStrip(f, shown.rideView, onOpen = { navigator.trip(f.tripId, f.serviceDate.toString(), f.liveRef) })
-                else -> JourneyStrip(shown?.journeyView, onOpen = navigator::follow)
+            when (val f = followed) {
+                is RideSession -> RideStrip(f, rideView, onOpen = { navigator.trip(f.tripId, f.serviceDate.toString(), f.liveRef) })
+                else -> JourneyStrip(followView, onOpen = navigator::follow)
             }
         }
     }
 }
-
-/** What the follow strip shows: what is followed and its latest view. */
-private data class StripState(val followed: Followed, val journeyView: FollowView?, val rideView: RideView?)
 
 private const val BACK_MS = 350
 

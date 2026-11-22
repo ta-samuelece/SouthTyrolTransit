@@ -1,5 +1,3 @@
-@file:OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
-
 package org.southtyrol.transit.feature.map
 
 import androidx.compose.foundation.background
@@ -7,7 +5,9 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.FlexAlignItems
+import androidx.compose.foundation.layout.FlexBox
+import androidx.compose.foundation.layout.FlexWrap
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -73,7 +73,7 @@ fun BikeParkingSheet(p: MobilityPoint, now: Instant, nearest: Pair<MobilityPoint
     val live = p.freshness == Freshness.LIVE
     when {
         p.outOfService -> Text(stringResource(R.string.mobility_out_of_service), style = MaterialTheme.typography.bodyLarge)
-        live && available != null -> FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp), itemVerticalAlignment = Alignment.CenterVertically) {
+        live && available != null -> FlexBox(config = { wrap(FlexWrap.Wrap); columnGap(8.dp); rowGap(4.dp); alignItems(FlexAlignItems.Center) }) {
             val count = when {
                 capacity == null -> pluralStringResource(R.plurals.charging_free, available, available)
                 b.depot -> pluralStringResource(R.plurals.bike_places_free_of, capacity, available, capacity)
@@ -115,7 +115,7 @@ fun BikeParkingSheet(p: MobilityPoint, now: Instant, nearest: Pair<MobilityPoint
         if (b.bookingRequired) Icons.Rounded.EventAvailable to stringResource(R.string.bike_parking_booking) else null,
     )
     if (facts.isNotEmpty()) {
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlexBox(config = { wrap(FlexWrap.Wrap); columnGap(8.dp); rowGap(8.dp) }) {
             facts.forEach { (icon, text) -> InfoPill(text, colors.surfaceContainerHighest, icon = icon) }
         }
     }
@@ -144,7 +144,7 @@ fun EbikeSharingSheet(p: MobilityPoint, now: Instant) {
     val live = p.freshness == Freshness.LIVE
     when {
         p.outOfService -> Text(stringResource(R.string.mobility_out_of_service), style = MaterialTheme.typography.bodyLarge)
-        live && bikes != null -> FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp), itemVerticalAlignment = Alignment.CenterVertically) {
+        live && bikes != null -> FlexBox(config = { wrap(FlexWrap.Wrap); columnGap(8.dp); rowGap(4.dp); alignItems(FlexAlignItems.Center) }) {
             Text(pluralStringResource(R.plurals.ebike_to_rent, bikes, bikes), style = MaterialTheme.typography.titleLarge)
             FreshnessIndicator(p.freshness, p.updatedAt, now, compact = true)
         }

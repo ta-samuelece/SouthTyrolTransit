@@ -5,10 +5,9 @@ ksp = "2.3.12"
 hilt = "2.60.1"
 androidx-hilt = "1.4.0"
 room = "2.8.5"
-# Material 3 Expressive APIs (MaterialExpressiveTheme, ButtonGroup, LoadingIndicator, ...) are only in the 1.5 alpha line.
-material3 = "1.5.0-alpha29"
-# Pinned to the Compose version material3 1.5.0-alpha29 is built against.
-compose = "1.13.0-alpha01"
+# The Material 3 Expressive APIs the design system uses (MaterialExpressiveTheme, ButtonGroup, LoadingIndicator, ...) are stable from 1.5.0, which is built for Compose 1.13.
+material3 = "1.5.0"
+compose = "1.13.0"
 adaptive = "1.3.0"
 lifecycle = "2.11.0"
 coroutines = "1.11.0"

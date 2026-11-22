@@ -185,9 +185,10 @@ minute. For trains EFA is the only live source - GTFS-RT carries buses only - an
 on the map, since nothing gives their positions. Details:
 [live times on boards](docs/ai/notes/live-times-two-sources.md).
 
-**Material 3 Expressive is pinned to an alpha** (`material3` 1.5.0-alpha, Compose 1.13.0-alpha). Do not
-"upgrade" to the stable line - it lacks the Expressive APIs the design system uses. Opt-ins are per file
-(`@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)`). See `docs/DEVELOPMENT.md`.
+**Material 3 Expressive comes from the stable line** (`material3` 1.5.0, Compose 1.13.0), where most of
+the Expressive APIs the design system uses are no longer experimental. The few still marked experimental
+(`MaterialShapes`, `LoadingIndicator`, and `ModalBottomSheet` under `ExperimentalMaterial3Api`) need
+per-file opt-ins (`@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)`). See `docs/DEVELOPMENT.md`.
 
 **MapLibre must stay on the OpenGL ES build** (`org.maplibre.gl:android-sdk-opengl`). The default Vulkan
 build crashed the emulator's software GPU and is riskier on old devices at minSdk 26. MapLibre code lives

@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class, FlowPreview::class)
+@file:OptIn(ExperimentalMaterial3Api::class, FlowPreview::class)
 
 package org.southtyrol.transit.feature.common
 
@@ -39,7 +39,6 @@ import androidx.compose.material.icons.rounded.Map
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -394,7 +393,6 @@ fun MapPickerDialog(
  * headline, which swaps the mode instantly: the picker is recreated in the other mode, keeping the
  * selected date. [onConfirm] receives the selected day as UTC midnight milliseconds.
  */
-@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun TransitDatePickerDialog(
     initialMillis: Long, confirmText: String, onConfirm: (Long) -> Unit, onDismiss: () -> Unit,
@@ -569,7 +567,6 @@ fun <T> ChoiceSheet(
 }
 
 /** Date then time picker (in South Tyrol time); [onPicked] receives the chosen moment. */
-@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun DateTimePickerDialogs(initial: java.time.Instant?, onPicked: (java.time.Instant) -> Unit, onDismiss: () -> Unit) {
     val start = (initial ?: java.time.Instant.now()).atZone(org.southtyrol.transit.model.TransitZone)

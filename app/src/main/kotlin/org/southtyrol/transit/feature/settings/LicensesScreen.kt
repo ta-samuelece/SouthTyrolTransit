@@ -49,7 +49,6 @@ import org.southtyrol.transit.ui.Navigator
  * at build time by the AboutLibraries Gradle plugin (res/raw/aboutlibraries.json), so they always match
  * what the APK contains; Apache 2.0 and the BSD licences ask for these notices to ship with the app.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LicensesScreen(navigator: Navigator) {
     val context = LocalContext.current

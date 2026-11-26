@@ -205,7 +205,8 @@ Settled on 2026-10-13 after a review of every screen against the Expressive guid
   It needs no `ExperimentalLayoutApi` opt-in.
 - **Plan's top is a `TopLip`** (`core/designsystem/.../TopLip.kt`), not a `TopAppBar`: a
   `secondaryContainer` band from under the status bar (the Scaffold's content insets drop the top side)
-  with the title between the routing-options icon toggle and the Settings gear, and the page as a
+  with the title between the routing-options icon toggle and the More options menu (Trip schedules,
+  Settings), and the page as a
   `surface` sheet with 28 dp top corners. The title is an `AnimatedContent` that slides up when
   `titleLevel` rises and down when it falls (app name 0, "Where to?" 1 after 1.6 s, "Routing options" 2);
   with reduced motion Plan starts on "Where to?". The routing options open inside the lip and push the

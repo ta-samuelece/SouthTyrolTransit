@@ -726,4 +726,36 @@
     <string name="update_new_in_hero">App aggiornata</string>
     <string name="update_from_play">Gli aggiornamenti arrivano tramite Google Play.</string>
     <string name="settings_whats_new">Novità di questa versione</string>
+    <!-- Trip schedules -->
+    <string name="planner_more_options">Altre opzioni</string>
+    <string name="schedules_title">Viaggi programmati</string>
+    <string name="schedules_add">Aggiungi viaggio</string>
+    <string name="schedules_empty">Ancora nessun viaggio programmato</string>
+    <string name="schedules_empty_hint">Un viaggio programmato è un viaggio che fai regolarmente, per esempio al lavoro nei giorni feriali. Salva una volta luoghi, giorni e fascia oraria, poi aprilo per vedere i prossimi collegamenti in quella fascia.</string>
+    <string name="schedule_options">Opzioni per %1$s</string>
+    <string name="schedule_edit">Modifica</string>
+    <string name="schedule_delete">Elimina</string>
+    <string name="schedule_leave_window">Partenza %1$s–%2$s</string>
+    <string name="schedule_arrive_window">Arrivo %1$s–%2$s</string>
+    <string name="schedule_new_title">Nuovo viaggio</string>
+    <string name="schedule_edit_title">Modifica viaggio</string>
+    <string name="schedule_name">Nome</string>
+    <string name="schedule_name_missing">Inserisci un nome</string>
+    <string name="schedule_same_place">Da e A devono essere luoghi diversi</string>
+    <string name="schedule_days">Giorni</string>
+    <string name="schedule_no_days">Scegli almeno un giorno</string>
+    <string name="schedule_leave_between">Partenza tra</string>
+    <string name="schedule_arrive_between">Arrivo tra</string>
+    <string name="schedule_start">Inizio</string>
+    <string name="schedule_end">Fine</string>
+    <string name="schedule_times">L\'inizio deve essere prima della fine</string>
+    <string name="schedule_missing">Questo viaggio programmato non esiste più</string>
+    <string name="schedule_none">Nessun collegamento in questa fascia oraria</string>
+    <string name="schedule_none_hint">Il pianificatore non ha trovato collegamenti che partono o arrivano nella fascia oraria del viaggio.</string>
+    <string name="schedule_leave_by">Parti entro le %1$s</string>
+    <string name="schedule_follow">Segui</string>
+    <string name="schedule_window_today_leave">Oggi, partenza %1$s–%2$s</string>
+    <string name="schedule_window_today_arrive">Oggi, arrivo %1$s–%2$s</string>
+    <string name="schedule_window_day_leave">%1$s, partenza %2$s–%3$s</string>
+    <string name="schedule_window_day_arrive">%1$s, arrivo %2$s–%3$s</string>
 </resources>

@@ -26,6 +26,8 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.int
+import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.json.put
@@ -65,10 +67,14 @@ import org.southtyrol.transit.model.TextNormalizer
 import org.southtyrol.transit.model.TransitScheduleDataSource
 import org.southtyrol.transit.model.TransportMode
 import org.southtyrol.transit.model.TripDetail
+import org.southtyrol.transit.model.TripSchedule
 import org.southtyrol.transit.model.Vehicle
+import java.time.DayOfWeek
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 // ---------------------------------------------------------------------------------------------
 // Serialization of small user-owned values (saved places, recent searches, cached alerts).
@@ -101,6 +107,28 @@ object Codec {
     fun route(text: String): Pair<Place, Place>? = runCatching {
         val o = json.parseToJsonElement(text).jsonObject
         place(o.getValue("from").jsonObject) to place(o.getValue("to").jsonObject)
+    }.getOrNull()
+
+    private val hourMinute = DateTimeFormatter.ofPattern("HH:mm")
+
+    /** A trip schedule without its id, which is the saved row's: days as ISO numbers 1-7, times as "HH:mm". */
+    fun schedule(s: TripSchedule): String = buildJsonObject {
+        put("name", s.name); put("from", placeObject(s.from)); put("to", placeObject(s.to))
+        put("days", JsonArray(s.days.sorted().map { JsonPrimitive(it.value) }))
+        put("start", s.start.format(hourMinute)); put("end", s.end.format(hourMinute))
+        put("arriveBy", s.arriveBy); put("enabled", s.enabled)
+    }.toString()
+
+    fun schedule(text: String): TripSchedule? = runCatching {
+        val o = json.parseToJsonElement(text).jsonObject
+        TripSchedule(
+            id = "", name = o.getValue("name").jsonPrimitive.content,
+            from = place(o.getValue("from").jsonObject), to = place(o.getValue("to").jsonObject),
+            days = o.getValue("days").jsonArray.map { DayOfWeek.of(it.jsonPrimitive.int) }.toSet(),
+            start = LocalTime.parse(o.getValue("start").jsonPrimitive.content, hourMinute),
+            end = LocalTime.parse(o.getValue("end").jsonPrimitive.content, hourMinute),
+            arriveBy = o.getValue("arriveBy").jsonPrimitive.boolean, enabled = o.getValue("enabled").jsonPrimitive.boolean,
+        )
     }.getOrNull()
 
     /** A line as the search history keeps it: enough to draw its badge and open it, without its routes. */
@@ -482,11 +510,12 @@ class ScheduleRepository(private val store: ScheduleStore) {
     }
 }
 
-enum class SavedKind { STOP, LINE, PLACE, JOURNEY }
+enum class SavedKind { STOP, LINE, PLACE, JOURNEY, TRIP_SCHEDULE }
 
 data class SavedItem(val kind: SavedKind, val id: String, val label: String, val subtitle: String, val payload: String, val icon: String = "") {
     val place: Place? get() = if (kind == SavedKind.PLACE || kind == SavedKind.STOP) Codec.place(payload) else null
     val route: Pair<Place, Place>? get() = if (kind == SavedKind.JOURNEY) Codec.route(payload) else null
+    val tripSchedule: TripSchedule? get() = if (kind == SavedKind.TRIP_SCHEDULE) Codec.schedule(payload)?.copy(id = id) else null
     /** Home or Work: one fixed slot each, always listed before the user's own places. */
     val isHomeOrWork: Boolean get() = kind == SavedKind.PLACE && (id == SavedRepository.HOME || id == SavedRepository.WORK)
 
@@ -559,6 +588,20 @@ class SavedRepository(private val user: UserDao, private val clock: () -> Instan
     suspend fun saveJourney(from: Place, to: Place) = user.save(SavedRow(SavedKind.JOURNEY.name, "${from.id}|${from.name}->${to.id}|${to.name}", "${from.name} → ${to.name}", "", Codec.route(from, to), clock().toEpochMilli()))
     suspend fun remove(kind: SavedKind, id: String) = user.unsave(kind.name, id)
 
+    /**
+     * Saves [schedule] and returns its id: a new one (blank id) gets `schedule:<uuid>` and goes to the end of the
+     * list; replacing one keeps its position and creation time, so schedules stay in creation order.
+     */
+    suspend fun saveSchedule(schedule: TripSchedule): String {
+        val rows = user.saved(SavedKind.TRIP_SCHEDULE.name)
+        val id = schedule.id.ifBlank { SCHEDULE_PREFIX + java.util.UUID.randomUUID() }
+        val old = rows.firstOrNull { it.id == id }
+        val position = old?.position ?: ((rows.maxOfOrNull { it.position } ?: -1) + 1)
+        val subtitle = "${schedule.from.name} → ${schedule.to.name}"
+        user.save(SavedRow(SavedKind.TRIP_SCHEDULE.name, id, schedule.name, subtitle, Codec.schedule(schedule), old?.created ?: clock().toEpochMilli(), position))
+        return id
+    }
+
     fun recentPlaces(limit: Int = 8): Flow<List<RecentItem>> = user.recent(KIND_PLACE, limit).map { rows -> rows.map { RecentItem(it.id, it.label, it.subtitle, it.payload, Instant.ofEpochMilli(it.used)) } }
     fun recentJourneys(limit: Int = 6): Flow<List<RecentItem>> = user.recent(KIND_JOURNEY, limit).map { rows -> rows.map { RecentItem(it.id, it.label, it.subtitle, it.payload, Instant.ofEpochMilli(it.used)) } }
 
@@ -602,6 +645,7 @@ class SavedRepository(private val user: UserDao, private val clock: () -> Instan
         const val WORK = "work"
         /** Prefix of the ids of the user's own places, so they never collide with [HOME] or [WORK]. */
         const val CUSTOM_PREFIX = "place:"
+        const val SCHEDULE_PREFIX = "schedule:"
     }
 }
 

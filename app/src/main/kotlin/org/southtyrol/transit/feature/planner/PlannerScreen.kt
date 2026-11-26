@@ -55,7 +55,11 @@ import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.only
+import androidx.compose.material.icons.rounded.EventRepeat
+import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import kotlinx.coroutines.delay
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.selection.toggleable
@@ -216,11 +220,7 @@ fun PlannerScreen(navigator: Navigator, viewModel: PlannerViewModel = hiltViewMo
                     ),
                 ) { Icon(Icons.Rounded.Tune, contentDescription = stringResource(R.string.planner_options)) }
             },
-            end = {
-                IconButton(onClick = navigator::settings) {
-                    Icon(Icons.Rounded.Settings, contentDescription = stringResource(R.string.settings_title))
-                }
-            },
+            end = { MoreMenu(navigator) },
             expanded = showOptions,
             onDismiss = { showOptions = false },
             expandedContent = { RoutingOptions(state, viewModel) },
@@ -364,6 +364,27 @@ private fun EndpointField(label: String, place: Place?, icon: ImageVector, top: 
                     )
                 }
             }
+        }
+    }
+}
+
+/** The lip's overflow menu: trip schedules and Settings. */
+@Composable
+private fun MoreMenu(navigator: Navigator) {
+    var open by remember { mutableStateOf(false) }
+    Box {
+        IconButton(onClick = { open = true }) { Icon(Icons.Rounded.MoreVert, contentDescription = stringResource(R.string.planner_more_options)) }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.schedules_title)) },
+                leadingIcon = { Icon(Icons.Rounded.EventRepeat, contentDescription = null) },
+                onClick = { open = false; navigator.tripSchedules() },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.settings_title)) },
+                leadingIcon = { Icon(Icons.Rounded.Settings, contentDescription = null) },
+                onClick = { open = false; navigator.settings() },
+            )
         }
     }
 }

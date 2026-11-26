@@ -727,4 +727,36 @@
     <string name="update_new_in_hero">App updated</string>
     <string name="update_from_play">Updates come through Google Play.</string>
     <string name="settings_whats_new">What\'s new in this version</string>
+    <!-- Trip schedules -->
+    <string name="planner_more_options">More options</string>
+    <string name="schedules_title">Trip schedules</string>
+    <string name="schedules_add">Add schedule</string>
+    <string name="schedules_empty">No trip schedules yet</string>
+    <string name="schedules_empty_hint">A trip schedule is a trip you make regularly, such as to work on weekdays. Save its places, days and time window once, then open it to see the next connections in that window.</string>
+    <string name="schedule_options">Options for %1$s</string>
+    <string name="schedule_edit">Edit</string>
+    <string name="schedule_delete">Delete</string>
+    <string name="schedule_leave_window">Leave %1$s–%2$s</string>
+    <string name="schedule_arrive_window">Arrive %1$s–%2$s</string>
+    <string name="schedule_new_title">New schedule</string>
+    <string name="schedule_edit_title">Edit schedule</string>
+    <string name="schedule_name">Name</string>
+    <string name="schedule_name_missing">Enter a name</string>
+    <string name="schedule_same_place">From and To must be different places</string>
+    <string name="schedule_days">Days</string>
+    <string name="schedule_no_days">Choose at least one day</string>
+    <string name="schedule_leave_between">Leave between</string>
+    <string name="schedule_arrive_between">Arrive between</string>
+    <string name="schedule_start">Start</string>
+    <string name="schedule_end">End</string>
+    <string name="schedule_times">The start must be before the end</string>
+    <string name="schedule_missing">This schedule no longer exists</string>
+    <string name="schedule_none">No connections in this window</string>
+    <string name="schedule_none_hint">The planner found no connection that leaves or arrives within the schedule\'s time window.</string>
+    <string name="schedule_leave_by">Leave by %1$s</string>
+    <string name="schedule_follow">Follow</string>
+    <string name="schedule_window_today_leave">Today, leave %1$s–%2$s</string>
+    <string name="schedule_window_today_arrive">Today, arrive %1$s–%2$s</string>
+    <string name="schedule_window_day_leave">%1$s, leave %2$s–%3$s</string>
+    <string name="schedule_window_day_arrive">%1$s, arrive %2$s–%3$s</string>
 </resources>

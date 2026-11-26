@@ -712,4 +712,36 @@
     <string name="update_new_in_hero">App aktualisiert</string>
     <string name="update_from_play">Updates kommen über Google Play.</string>
     <string name="settings_whats_new">Neu in dieser Version</string>
+    <!-- Trip schedules -->
+    <string name="planner_more_options">Weitere Optionen</string>
+    <string name="schedules_title">Fahrtpläne</string>
+    <string name="schedules_add">Fahrtplan hinzufügen</string>
+    <string name="schedules_empty">Noch keine Fahrtpläne</string>
+    <string name="schedules_empty_hint">Ein Fahrtplan ist eine Fahrt, die du regelmäßig machst, etwa werktags zur Arbeit. Speichere Orte, Tage und Zeitfenster einmal und öffne ihn dann, um die nächsten Verbindungen in diesem Zeitfenster zu sehen.</string>
+    <string name="schedule_options">Optionen für %1$s</string>
+    <string name="schedule_edit">Bearbeiten</string>
+    <string name="schedule_delete">Löschen</string>
+    <string name="schedule_leave_window">Abfahrt %1$s–%2$s</string>
+    <string name="schedule_arrive_window">Ankunft %1$s–%2$s</string>
+    <string name="schedule_new_title">Neuer Fahrtplan</string>
+    <string name="schedule_edit_title">Fahrtplan bearbeiten</string>
+    <string name="schedule_name">Name</string>
+    <string name="schedule_name_missing">Gib einen Namen ein</string>
+    <string name="schedule_same_place">Von und Nach müssen verschiedene Orte sein</string>
+    <string name="schedule_days">Tage</string>
+    <string name="schedule_no_days">Wähle mindestens einen Tag</string>
+    <string name="schedule_leave_between">Abfahrt zwischen</string>
+    <string name="schedule_arrive_between">Ankunft zwischen</string>
+    <string name="schedule_start">Beginn</string>
+    <string name="schedule_end">Ende</string>
+    <string name="schedule_times">Der Beginn muss vor dem Ende liegen</string>
+    <string name="schedule_missing">Diesen Fahrtplan gibt es nicht mehr</string>
+    <string name="schedule_none">Keine Verbindungen in diesem Zeitfenster</string>
+    <string name="schedule_none_hint">Die Fahrplanauskunft hat keine Verbindung gefunden, die im Zeitfenster des Fahrtplans abfährt oder ankommt.</string>
+    <string name="schedule_leave_by">Spätestens los um %1$s</string>
+    <string name="schedule_follow">Folgen</string>
+    <string name="schedule_window_today_leave">Heute, Abfahrt %1$s–%2$s</string>
+    <string name="schedule_window_today_arrive">Heute, Ankunft %1$s–%2$s</string>
+    <string name="schedule_window_day_leave">%1$s, Abfahrt %2$s–%3$s</string>
+    <string name="schedule_window_day_arrive">%1$s, Ankunft %2$s–%3$s</string>
 </resources>

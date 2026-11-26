@@ -81,6 +81,9 @@ import org.southtyrol.transit.feature.lines.LinesScreen
 import org.southtyrol.transit.feature.map.MapScreen
 import org.southtyrol.transit.feature.planner.PlannerScreen
 import org.southtyrol.transit.feature.saved.SavedScreen
+import org.southtyrol.transit.feature.schedules.NextTripsScreen
+import org.southtyrol.transit.feature.schedules.TripScheduleEditScreen
+import org.southtyrol.transit.feature.schedules.TripSchedulesScreen
 import org.southtyrol.transit.feature.settings.AboutScreen
 import org.southtyrol.transit.feature.settings.SettingsScreen
 import org.southtyrol.transit.feature.settings.TicketsScreen
@@ -133,6 +136,9 @@ class Navigator(private val nav: NavHostController, start: TopLevel) {
     fun about() = nav.navigate(AboutRoute) { launchSingleTop = true }
     fun licenses() = nav.navigate(LicensesRoute) { launchSingleTop = true }
     fun tickets() = nav.navigate(TicketsRoute) { launchSingleTop = true }
+    fun tripSchedules() = nav.navigate(TripSchedulesRoute) { launchSingleTop = true }
+    fun editTripSchedule(id: String = "") = nav.navigate(TripScheduleEditRoute(id)) { launchSingleTop = true }
+    fun tripSchedule(id: String) = nav.navigate(TripScheduleRoute(id)) { launchSingleTop = true }
     fun plan() = select(TopLevel.PLAN)
 
     /**
@@ -296,6 +302,9 @@ fun TransitApp(
                 screen<AboutRoute> { AboutScreen(navigator) }
                 screen<LicensesRoute> { org.southtyrol.transit.feature.settings.LicensesScreen(navigator) }
                 screen<TicketsRoute> { TicketsScreen(navigator) }
+                screen<TripSchedulesRoute> { TripSchedulesScreen(navigator) }
+                screen<TripScheduleEditRoute> { TripScheduleEditScreen(navigator) }
+                screen<TripScheduleRoute> { NextTripsScreen(navigator) }
             }
         }
         // Slides out as a captured image of its last frame, so nothing has to outlive the followed session.

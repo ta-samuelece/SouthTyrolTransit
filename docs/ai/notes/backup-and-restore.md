@@ -26,6 +26,8 @@ device-to-device transfer, and nothing unless the backup is end-to-end encrypted
 The included files are `databases/user.db` (+ `-wal`) and `files/datastore/settings.preferences_pb`.
 Whole files are restored, so the rules cannot pick tables or keys. Everything else - the timetable,
 WorkManager's database, Glance widget state, AppCompat's locale file - is outside the rules.
+Trip schedules are saved items (`saved` rows of kind `TRIP_SCHEDULE`), so they travel with the backup
+like saved stops and places ([trip schedules](./trip-schedules.md)).
 
 # What happens on restore
 

@@ -21,3 +21,8 @@ import kotlinx.serialization.Serializable
 @Serializable object AboutRoute
 @Serializable object LicensesRoute
 @Serializable object TicketsRoute
+@Serializable object TripSchedulesRoute
+/** An empty [id] is a new schedule. */
+@Serializable data class TripScheduleEditRoute(val id: String = "")
+/** A schedule's next trips. */
+@Serializable data class TripScheduleRoute(val id: String)
